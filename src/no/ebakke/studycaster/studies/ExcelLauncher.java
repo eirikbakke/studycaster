@@ -1,18 +1,22 @@
 package no.ebakke.studycaster.studies;
 
 import no.ebakke.studycaster.StudyCaster;
+import no.ebakke.studycaster.StudyCasterUI;
+import no.ebakke.studycaster.StudyDefinition;
 
 public class ExcelLauncher {
   public static void main(String args[]) throws Exception {
-    StudyCaster sc = new StudyCaster("http://www.sieuferd.com/studycaster/server.php");
-    // StudyCaster.log.info("message from the launcher");
-    /*
-    try {
-      new FileInputStream(new File(""));
-    } catch (Exception e) {
-      StudyCaster.log.log(Level.WARNING, "yo", e);
-    }
-    */
-    sc.concludeStudy();
+    StudyDefinition def = new StudyDefinition() {
+      @Override
+      public String getServerURL() {
+        return "http://www.sieuferd.com/studycaster/server.php";
+      }
+
+      @Override
+      public void runStudy(StudyCaster sc) {
+        throw new UnsupportedOperationException("Not supported yet.");
+      }
+    };
+    StudyCasterUI scui = new StudyCasterUI(def);
   }
 }

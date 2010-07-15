@@ -11,15 +11,16 @@ public class Ticket {
     new Random().nextBytes(value);
   }
 
-  public Ticket(String s) throws NumberFormatException {
+  public Ticket(String s) throws StudyCasterException {
     if (s.length() != TICKET_BYTES * 2)
-      throw new NumberFormatException();
+      throw new StudyCasterException("Incorrect ticket length.");
     value = new byte[TICKET_BYTES];
     for (int i = 0; i < TICKET_BYTES; i++) {
-      value[i] = (byte) (
-                 ((Character.digit(s.charAt(i * 2 + 0), 16)) << 4) |
-                 ((Character.digit(s.charAt(i * 2 + 1), 16)) << 0)
-                 );
+      int dig1 = Character.digit(s.charAt(i * 2 + 0), 16);
+      int dig0 = Character.digit(s.charAt(i * 2 + 1), 16);
+      if (dig1 < 0 || dig0 < 0)
+        throw new StudyCasterException("Not a hex string.");
+      value[i] = (byte) ((dig1 << 4) | (dig0 << 0));
     }
   }
 

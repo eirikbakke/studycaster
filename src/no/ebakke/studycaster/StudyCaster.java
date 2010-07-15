@@ -7,8 +7,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringBufferInputStream;
-import java.io.StringReader;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -25,6 +24,7 @@ import no.ebakke.studycaster.util.Pair;
 public class StudyCaster {
   public static final Logger log = Logger.getLogger("no.ebakke.studycaster");
   private final List<LogRecord> logEntries = new ArrayList<LogRecord>();
+  private StudyDefinition studyDefinition;
   private URL    serverURL;
   private Ticket firstRunTicket;
   private Ticket currentRunTicket;
@@ -56,11 +56,16 @@ public class StudyCaster {
   }
 
   /* Note: URL must point directly to PHP script, end with a slash to use index.php (otherwise POST requests fail). */
-  public StudyCaster(String serverURLstr) throws Exception {
+  public StudyCaster(StudyDefinition studyDefinition) throws StudyCasterException {
+    this.studyDefinition = studyDefinition;
     // TODO: Remove after uploading.
     log.addHandler(logHandler);
     try {
-      serverURL        = new URL(serverURLstr);
+      try {
+        serverURL        = new URL(this.studyDefinition.getServerURL());
+      } catch (MalformedURLException e) {
+        throw new StudyCasterException(e);
+      }
       currentRunTicket = new Ticket();
 
       File ticketStore = new File(System.getProperty("java.io.tmpdir") + File.separator + "~studycaster.txt");
@@ -86,7 +91,12 @@ public class StudyCaster {
         firstRunTicket = currentRunTicket;
 
       long timeBef = System.currentTimeMillis();
-      Pair<Ticket, Long> si = ServerRequest.getServerInfo(serverURL, allTickets());
+      Pair<Ticket, Long> si;
+      try {
+        si = ServerRequest.getServerInfo(serverURL, allTickets());
+      } catch (IOException e) {
+        throw new StudyCasterException(e);
+      }
       long timeAft = System.currentTimeMillis();
       serverSecondsAhead = si.getLast() - ((timeBef / 2 + timeAft / 2) / 1000L);
       log.info("Server time ahead by " + serverSecondsAhead + " seconds.");
@@ -110,7 +120,7 @@ public class StudyCaster {
       }
 
       log.info("first_run = " + firstRunTicket + ", current_run = " + currentRunTicket + ", first_server = " + firstServerTicket + ", cur_server = " + currentServerTicket);
-    } catch (Exception e) {
+    } catch (StudyCasterException e) {
       log.log(Level.SEVERE, "Error initializing StudyCaster.", e);
       log.removeHandler(logHandler);
       throw e;
@@ -157,7 +167,7 @@ public class StudyCaster {
   }
 
   @Override
-  protected void finalize() throws Throwable {
+  protected void finalize() {
     concludeStudy();
   }
 }
