@@ -1,5 +1,6 @@
 package no.ebakke.studycaster;
 
+import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -19,6 +20,7 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import javax.swing.SwingUtilities;
 import no.ebakke.studycaster.util.Pair;
 
 public class StudyCaster {
@@ -56,7 +58,6 @@ public class StudyCaster {
 
   /* Note: URL must point directly to PHP script, end with a slash to use index.php (otherwise POST requests fail). */
   public StudyCaster(String serverURLstring) throws StudyCasterException {
-    // TODO: Remove after uploading.
     log.addHandler(logHandler);
     try {
       try {
