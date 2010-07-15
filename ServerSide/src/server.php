@@ -1,8 +1,10 @@
 <?php
-  define("MAX_FILE_SIZE", 5000000);
-  define("DEBUG_LOG_FILE", "debug.log");
+  define("MAX_FILE_SIZE" , 5000000);
+  define("DOWNLOAD_DIR"  , "downloads");
+  define("UPLOAD_DIR"    , "uploads");
   define("STUDY_LOG_FILE", "study.log");
   define("FAIL_LOG_FILE" , "fail.log");
+  define("DEBUG_LOG_FILE" , "debug.log");
 
   function debuglog($msg) {
     $f = fopen(constant("DEBUG_LOG_FILE"), "a");
@@ -13,55 +15,73 @@
   function studylog($tickets, $msg) {
     $f = fopen(constant("STUDY_LOG_FILE"), "a");
     $ipstart = strtok(trim($_SERVER['REMOTE_ADDR']), ".") . "/" . strtok(".");
-    fwrite($f, date("Y-m-d H:i:s") . "\t" . $ipstart . "\t" . $tickets . "\t" . $msg . "\n");
+    fwrite($f, gmdate("Y-m-d H:i:s") . "\t" . $ipstart . "\t" . $tickets . "\t" . $msg . "\n");
     fclose($f);
   }
 
-  function sane_string($s, $allowed_chars) {
-    return strlen($s) < 200 && (ereg_replace($allowed_chars, "", $s) == $s);
+  function sane_string($s, $allowed_regex) {
+    return strlen($s) < 200 && count(preg_grep($allowed_regex, array($s))) == 1;
   }
 
   function process() {
-    if (!array_key_exists("ct" , $_POST) || !array_key_exists("cmd", $_POST) || !sane_string($_POST["ct"], "[^0-9a-fN\t]"))
-      return true;
+    if (!array_key_exists("ct" , $_POST) || !array_key_exists("cmd", $_POST) || !sane_string($_POST["ct"], "/^[0-9a-fN\t]*$/"))
+      return "bad base parameters";
 
-    $cta = explode("\t", $_POST["ct"]);
-    if (count($cta) != 4 || strlen($cta[0]) == 0 || strlen($cta[1]) == 0)
-      return true;
+    $ata = explode("\t", $_POST["ct"]);
+    if (count($ata) != 4 || strlen($ata[0]) == 0 || strlen($ata[1]) == 0)
+      return "bad tickets";
 
-    $server_ticket = strtolower(substr(sha1("stick " . trim($_SERVER["REMOTE_ADDR"])), 0, strlen($cta[0])));
-    if ($cta[2] == "N")
-      $cta[2] = $server_ticket;
-    if ($cta[3] == "N")
-      $cta[3] = $server_ticket;
-    if ($cta[3] != $server_ticket) {
-      debuglog("server ticket mismatch");
-      return true;
+    $server_ticket = strtolower(substr(sha1("stick " . trim($_SERVER["REMOTE_ADDR"])), 0, strlen($ata[0])));
+    if ($ata[2] == "N")
+      $ata[2] = $server_ticket;
+    if ($ata[3] == "N")
+      $ata[3] = $server_ticket;
+    if ($ata[3] != $server_ticket) {
+      return "server ticket mismatch";
     }
-    $ct = implode("\t", $cta);
+    $at = implode("\t", $ata);
 
     $cmd = $_POST["cmd"];
     if        ($cmd == "gsi") {
       header("X-StudyCaster-ServerTicket: " . $server_ticket);
       header("X-StudyCaster-ServerTime: " . time());
-      studylog($ct, "gsi");
-      return false;
-    } else if ($cmd == "up" && array_key_exists("file", $_FILES) && sane_filename($_FILES["file"]["name"]) &&
-               $_FILES["file"]["size"] < constant("MAX_FILE_SIZE"))
-    {
-
-    } else if ($cmd == "dn") {
+      studylog($at, "gsi\t-");
+      return "SUCCESS";
+    } else if ($cmd == "upl") {
+      if (!array_key_exists("file", $_FILES)) {
+        return "no uploaded file found";
+      } else if ($_FILES["f"]["error"] != 0) {
+        return "nonzero internal error code";
+      } else if (!sane_string($_FILES["file"]["name"], "/^[0-9a-zA-Z_.]+$/")) {
+        return "insane filename";
+        return true;
+      } else if ($_FILES["file"]["size"] > constant("MAX_FILE_SIZE")) {
+        return "file too large";
+      }
+      $fullpath = constant("UPLOAD_DIR") . "/" . $_FILES["file"]["name"];
+      if (file_exists($fullpath))
+        return "file already exists";
+      if (move_uploaded_file($_FILES["file"]["tmp_name"], $fullpath) == false)
+        return "move failed";
+      studylog($at, "upl\t" . $_FILES["file"]["size"] . "," . $_FILES["file"]["name"]);
+      header("X-StudyCaster-UploadOK: true");
+      return "SUCCESS";
+    } else if ($cmd == "dnl") {
+      return "unimplemented";
+    } else {
+      return "unknown command";
     }
-    return true;
   }
 
   function main() {
-    if (process() && !(empty($_POST) && empty($_GET))) {
+    $result = process();
+    if ($result != "SUCCESS" && !(empty($_POST) && empty($_GET))) {
       header("HTTP/1.0 400 Bad Request");
 
       $flog = fopen(constant("FAIL_LOG_FILE"), "a");
       fwrite($flog, "================== Unsuccessful request ==================\n");
       fwrite($flog, "TIME = " . date("Y-m-d H:i:s") . "\n");
+      fwrite($flog, "CAUSE = " . $result . "\n");
       foreach ($_SERVER as $i => $value)
         fwrite($flog, "SERVER," . $i . " = " . $_SERVER[$i] . "\n");
       foreach ($_POST as $i => $value)

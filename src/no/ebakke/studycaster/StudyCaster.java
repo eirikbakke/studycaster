@@ -1,12 +1,21 @@
 package no.ebakke.studycaster;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringBufferInputStream;
+import java.io.StringReader;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -122,11 +131,29 @@ public class StudyCaster {
     }
     log.info("Concluding study...");
     log.removeHandler(logHandler);
-    /*
+
+    StringBuffer logBuf = new StringBuffer();
+    DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    df.setTimeZone(TimeZone.getTimeZone("GMT:00"));
     for (LogRecord r : logEntries) {
-      System.out.println("YEAH : " + r.getMessage());
+      String time = df.format(new Date(r.getMillis() + serverSecondsAhead * 1000L));
+      logBuf.append(time + "\t" + r.getLevel() + "\t" + r.getSourceClassName() + "\t" + r.getMessage() + "\n");
+      if (r.getThrown() != null) {
+        logBuf.append("  " + r.getThrown().getClass().getName() + ": " + r.getThrown().getMessage() + "\n");
+        for (StackTraceElement ste : r.getThrown().getStackTrace())
+          logBuf.append("    at " + ste.toString() + "\n");
+        if (r.getThrown().getCause() != null)
+          logBuf.append("  cause was a " + r.getThrown().getCause().toString() + "\n");
+      }
     }
-    */
+
+    // TODO: See if there is a better way...
+    InputStream is = new ByteArrayInputStream(logBuf.toString().getBytes());
+    try {
+      ServerRequest.uploadFile(serverURL, allTickets(), "clientlog_" + currentRunTicket + ".txt", is);
+    } catch (IOException e) {
+      log.log(Level.SEVERE, "Failed to upload log.", e);
+    }
   }
 
   @Override

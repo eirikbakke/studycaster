@@ -6,6 +6,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.AbstractMap;
@@ -15,32 +18,38 @@ import no.ebakke.studycaster.util.Pair;
 
 public class ServerRequest {
   private static final String HEADER_STM = "X-StudyCaster-ServerTime";
-  private static final String HEADER_LCH = "X-StudyCaster-ServerTicket";
+  private static final String HEADER_STK = "X-StudyCaster-ServerTicket";
+  private static final String HEADER_UPK = "X-StudyCaster-UploadOK";
   private static int BUF_SIZE = 8192;
 
-  public static Pair<Ticket, Long> getServerInfo(URL url, String ct) throws IOException {
+  public static Pair<Ticket, Long> getServerInfo(URL url, String at) throws IOException {
     Map<String, String> fromHeader = new LinkedHashMap<String,String>();
     fromHeader.put(HEADER_STM, null);
-    fromHeader.put(HEADER_LCH, null);
-    issuePost(url, params(ct, "gsi"), noFileData(), fromHeader).close();
+    fromHeader.put(HEADER_STK, null);
+    issuePost(url, params(at, "gsi"), noFileData(), fromHeader).close();
     Long serverTime;
     try {
       serverTime = Long.parseLong(fromHeader.get(HEADER_STM));
     } catch (NumberFormatException e) {
       throw new IOException("Got bad time format from server", e);
     }
-    return new Pair<Ticket, Long>(new Ticket(fromHeader.get(HEADER_LCH)), serverTime);
+    return new Pair<Ticket, Long>(new Ticket(fromHeader.get(HEADER_STK)), serverTime);
   }
 
-  //public static Map<String,Map.Entry<String,InputStream>> oneFile(String fieldName, String fileName, InputStream stream) {
-  public static Map<String,String> params(String ct, String cmd) {
+  public static void uploadFile(URL url, String at, String fileName, InputStream is) throws IOException {
+    Map<String, String> fromHeader = new LinkedHashMap<String,String>();
+    fromHeader.put(HEADER_UPK, null);
+    issuePost(url, params(at, "upl"), oneFile("file", fileName, is), fromHeader);
+  }
+
+  private static Map<String,String> params(String at, String cmd) {
     Map<String, String> ret = new LinkedHashMap<String, String>();
-    ret.put("ct", ct);
+    ret.put("ct", at);
     ret.put("cmd", cmd);
     return ret;
   }
 
-  public static Map<String,Map.Entry<String,InputStream>> oneFile(String fieldName, String fileName, InputStream stream) {
+  private static Map<String,Map.Entry<String,InputStream>> oneFile(String fieldName, String fileName, InputStream stream) {
     Map<String,Map.Entry<String,InputStream>> ret = noFileData();
     ret.put(fieldName, new AbstractMap.SimpleEntry<String, InputStream>(fileName, stream));
     return ret;
