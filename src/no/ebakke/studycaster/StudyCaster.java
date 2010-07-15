@@ -24,7 +24,6 @@ import no.ebakke.studycaster.util.Pair;
 public class StudyCaster {
   public static final Logger log = Logger.getLogger("no.ebakke.studycaster");
   private final List<LogRecord> logEntries = new ArrayList<LogRecord>();
-  private StudyDefinition studyDefinition;
   private URL    serverURL;
   private Ticket firstRunTicket;
   private Ticket currentRunTicket;
@@ -56,13 +55,12 @@ public class StudyCaster {
   }
 
   /* Note: URL must point directly to PHP script, end with a slash to use index.php (otherwise POST requests fail). */
-  public StudyCaster(StudyDefinition studyDefinition) throws StudyCasterException {
-    this.studyDefinition = studyDefinition;
+  public StudyCaster(String serverURLstring) throws StudyCasterException {
     // TODO: Remove after uploading.
     log.addHandler(logHandler);
     try {
       try {
-        serverURL        = new URL(this.studyDefinition.getServerURL());
+        serverURL        = new URL(serverURLstring);
       } catch (MalformedURLException e) {
         throw new StudyCasterException(e);
       }
@@ -169,5 +167,15 @@ public class StudyCaster {
   @Override
   protected void finalize() {
     concludeStudy();
+  }
+
+  public File downloadFile(String remoteName) throws StudyCasterException {
+    try {
+      File ret = ServerRequest.downloadFile(serverURL, allTickets(), remoteName);
+      log.info("Downloaded to " + ret.getAbsolutePath());
+      return ret;
+    } catch (IOException e) {
+      throw new StudyCasterException(e);
+    }
   }
 }

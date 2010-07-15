@@ -1,14 +1,14 @@
 package no.ebakke.studycaster;
 
+import no.ebakke.studycaster.util.Util;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.AbstractMap;
@@ -20,13 +20,14 @@ public class ServerRequest {
   private static final String HEADER_STM = "X-StudyCaster-ServerTime";
   private static final String HEADER_STK = "X-StudyCaster-ServerTicket";
   private static final String HEADER_UPK = "X-StudyCaster-UploadOK";
+  private static final String HEADER_DNK = "X-StudyCaster-DownloadOK";
   private static int BUF_SIZE = 8192;
 
-  public static Pair<Ticket, Long> getServerInfo(URL url, String at) throws IOException {
+  public static Pair<Ticket, Long> getServerInfo(URL url, String at) throws IOException, StudyCasterException {
     Map<String, String> fromHeader = new LinkedHashMap<String,String>();
     fromHeader.put(HEADER_STM, null);
     fromHeader.put(HEADER_STK, null);
-    issuePost(url, params(at, "gsi"), noFileData(), fromHeader).close();
+    issuePost(url, standardParams(at, "gsi"), noFileData(), fromHeader).close();
     Long serverTime;
     try {
       serverTime = Long.parseLong(fromHeader.get(HEADER_STM));
@@ -39,10 +40,29 @@ public class ServerRequest {
   public static void uploadFile(URL url, String at, String fileName, InputStream is) throws IOException {
     Map<String, String> fromHeader = new LinkedHashMap<String,String>();
     fromHeader.put(HEADER_UPK, null);
-    issuePost(url, params(at, "upl"), oneFile("file", fileName, is), fromHeader);
+    issuePost(url, standardParams(at, "upl"), oneFile("file", fileName, is), fromHeader).close();
   }
 
-  private static Map<String,String> params(String at, String cmd) {
+  public static File downloadFile(URL url, String at, String remoteName) throws IOException {
+    File ret = File.createTempFile("sc_", "_" + remoteName);
+    Map<String, String> fromHeader = new LinkedHashMap<String,String>();
+    fromHeader.put(HEADER_DNK, null);
+    Map<String,String> params = standardParams(at, "dnl");
+    params.put("file", remoteName);
+    InputStream is = issuePost(url, params, noFileData(), fromHeader);
+    FileOutputStream os = null;
+    try {
+      os = new FileOutputStream(ret);
+      Util.streamCopy(is, os);
+    } finally {
+      if (os != null)
+        os.close();
+    }
+    is.close();
+    return ret;
+  }
+
+  private static Map<String,String> standardParams(String at, String cmd) {
     Map<String, String> ret = new LinkedHashMap<String, String>();
     ret.put("ct", at);
     ret.put("cmd", cmd);
@@ -118,21 +138,28 @@ public class ServerRequest {
     for (Map.Entry<String,String> ent : fromHeader.entrySet()) {
       ent.setValue(conn.getHeaderField(ent.getKey()));
       if (ent.getValue() == null) {
-        StringBuffer sb = new StringBuffer();
-        BufferedReader br = null;
-        try {
-          br = new BufferedReader(new InputStreamReader(retBuffer));
-          String line;
-          while ((line = br.readLine()) != null)
-            sb.append("  " + line + "\n");
-          br.close();
-        } catch (IOException e) {
-          throw new IOException("Couldn't retrieve result after missing header " + ent.getKey() + ".", e);
-        } finally {
-          if (br != null)
+        String contentType = conn.getHeaderField("Content-Type");
+        if (contentType != null && contentType.startsWith("text/")) {
+          StringBuffer sb = new StringBuffer();
+          System.out.println();
+          BufferedReader br = null;
+          try {
+            br = new BufferedReader(new InputStreamReader(retBuffer));
+            String line;
+            while ((line = br.readLine()) != null)
+              sb.append("  " + line + "\n");
             br.close();
+          } catch (IOException e) {
+            throw new IOException("Couldn't retrieve result after missing header " + ent.getKey() + ".", e);
+          } finally {
+            if (br != null)
+              br.close();
+          }
+          throw new IOException("No header " + ent.getKey() + " returned, got the following result:\n" + sb.toString());
+        } else {
+          throw new IOException("No header " + ent.getKey() + " returned, got " +
+                  (contentType != null ? ("content type " + contentType) : "unknown content type."));
         }
-        throw new IOException("No header " + ent.getKey() + " returned, got the following result:\n" + sb.toString());
       }
     }
 

@@ -53,7 +53,7 @@
       } else if ($_FILES["f"]["error"] != 0) {
         return "nonzero internal error code";
       } else if (!sane_string($_FILES["file"]["name"], "/^[0-9a-zA-Z_.]+$/")) {
-        return "insane filename";
+        return "insane filename specified";
         return true;
       } else if ($_FILES["file"]["size"] > constant("MAX_FILE_SIZE")) {
         return "file too large";
@@ -67,7 +67,19 @@
       header("X-StudyCaster-UploadOK: true");
       return "SUCCESS";
     } else if ($cmd == "dnl") {
-      return "unimplemented";
+      if (!array_key_exists("file", $_POST))
+        return "no filename specified";
+      if (!sane_string($_POST["file"], "/^[0-9a-zA-Z_.]+$/"))
+        return "insane filename requested";
+      $fullpath = constant("DOWNLOAD_DIR") . "/" . $_POST["file"];
+      if (!file_exists($fullpath))
+        return "file does not exist";
+      header("Content-Type: application/octet-stream");
+      header('Content-Disposition: attachment; filename="' . basename($fullname) . '"');
+      header("Content-Length: " . filesize($fullpath));
+      header("X-StudyCaster-DownloadOK: true");
+      readfile($fullpath);
+      return "SUCCESS";
     } else {
       return "unknown command";
     }

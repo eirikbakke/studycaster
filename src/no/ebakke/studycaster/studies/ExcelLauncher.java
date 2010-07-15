@@ -1,22 +1,25 @@
 package no.ebakke.studycaster.studies;
 
 import no.ebakke.studycaster.StudyCaster;
+import no.ebakke.studycaster.StudyCasterException;
 import no.ebakke.studycaster.StudyCasterUI;
-import no.ebakke.studycaster.StudyDefinition;
 
 public class ExcelLauncher {
-  public static void main(String args[]) throws Exception {
-    StudyDefinition def = new StudyDefinition() {
-      @Override
-      public String getServerURL() {
-        return "http://www.sieuferd.com/studycaster/server.php";
-      }
-
-      @Override
-      public void runStudy(StudyCaster sc) {
-        throw new UnsupportedOperationException("Not supported yet.");
-      }
-    };
-    StudyCasterUI scui = new StudyCasterUI(def);
+  public static void main(String args[]) {
+    StudyCasterUI scui = new StudyCasterUI();
+    StudyCaster sc = null;
+    try {
+      sc = new StudyCaster("http://www.sieuferd.com/studycaster/server.php");
+      scui.getProgressBarUI().setTaskAppearance("", false);
+      scui.setUploadEnabled(true);
+      sc.downloadFile("exflat.xls");
+    } catch (StudyCasterException e) {
+      scui.exitWithError("Can't Load User Study", e);
+      e.printStackTrace();
+      if (sc != null)
+        sc.concludeStudy();
+      return;
+    }
+    sc.concludeStudy();
   }
 }
