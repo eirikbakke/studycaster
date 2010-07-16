@@ -2,3 +2,7 @@
 
 Icon was from the Tango Icon Library:
 http://tango.freedesktop.org/Tango_Icon_Library
+
+ScreenCasting library was from java-remote-control:
+http://code.google.com/p/java-remote-control/wiki/UsingTheScreenRecorder
+

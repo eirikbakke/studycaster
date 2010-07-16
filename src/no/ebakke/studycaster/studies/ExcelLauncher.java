@@ -1,7 +1,6 @@
 package no.ebakke.studycaster.studies;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.logging.Level;
 import javax.swing.JOptionPane;
 import no.ebakke.studycaster.StudyCaster;
@@ -40,6 +39,7 @@ public class ExcelLauncher {
       scui.setUploadEnabled(true);
       scui.getProgressBarUI().setTaskAppearance("", false);
       scui.getProgressBarUI().setProgress(0);
+      sc.startRecording();
     } catch (StudyCasterException e) {
       scui.showMessageDialog("Can't Load User Study", e.getLocalizedMessage(), JOptionPane.WARNING_MESSAGE, true);
       scui.disposeUI();
@@ -80,10 +80,16 @@ public class ExcelLauncher {
                 "<html>Please close the Excel document, then try again.</html>"
                 , JOptionPane.WARNING_MESSAGE, false);
         } else {
-          scui.getProgressBarUI().setTaskAppearance("Uploading document...", true);
-          StudyCaster.log.info("Uploaded file now last modified " + sc.getServerTimeFormat(nowLastModified));
+          scui.getProgressBarUI().setTaskAppearance("Preparing to upload...", true);
+          sc.stopRecording();
           try {
-            sc.uploadFile(excelFile);
+            scui.getProgressBarUI().setTaskAppearance("Uploading document...", true);
+            StudyCaster.log.info("Uploaded file now last modified " + sc.getServerTimeFormat(nowLastModified));
+            sc.uploadFile(excelFile,  "saveddoc_" + sc.getCurrentRunTicket() + ".xls");
+            scui.getProgressBarUI().setTaskAppearance("Uploading screencast...", true);
+            sc.uploadFile(sc.getRecordFile(), "screencast_" + sc.getCurrentRunTicket() + ".rec");
+            scui.getProgressBarUI().setTaskAppearance("Uploading log...", true);
+            sc.concludeStudy();
             scui.getProgressBarUI().setTaskAppearance("", false);
             scui.showConfirmationCodeDialog(sc.getCurrentRunTicket().toString(), true);
             scui.disposeUI();
@@ -96,5 +102,7 @@ public class ExcelLauncher {
       scui.setUploadEnabled(true);
     } while (action != UIAction.CLOSE);
     sc.concludeStudy();
+    // Shut down the force-shutdown thread in StudyCasterUI.
+    System.exit(0);
   }
 }

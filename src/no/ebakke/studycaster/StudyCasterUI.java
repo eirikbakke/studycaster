@@ -3,6 +3,7 @@ package no.ebakke.studycaster;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.logging.Level;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -14,9 +15,7 @@ public class StudyCasterUI {
     CLOSE,
     UPLOAD
   }
-
   private StatusFrame sf;
-  private final Object actionCondition = new Object();
   private UIAction actionTaken = UIAction.NO_ACTION;
   private Blocker actionBlocker = new Blocker();
 
@@ -33,6 +32,17 @@ public class StudyCasterUI {
             public void windowClosed(java.awt.event.WindowEvent evt) {
               actionTaken = UIAction.CLOSE;
               actionBlocker.releaseBlockingThreads();
+              new Thread(new Runnable() {
+                public void run() {
+                  try {
+                    Thread.sleep(5000);
+                  } catch (InterruptedException e) {
+                    StudyCaster.log.log(Level.WARNING, "Sleep was interrupted.", e);
+                  }
+                  StudyCaster.log.warning("Forcing exit five seconds after window closure.");
+                  System.exit(0);
+                }
+              }).start();
             }
           });
           sf.getUploadButton().addActionListener(new ActionListener() {

@@ -154,7 +154,7 @@ public class ServerRequest {
 
       @Override
       public int read() throws IOException {
-        byte [] ret = new byte[1];
+        byte ret[] = new byte[1];
         read(ret, 0, 1);
         return ret[0];
       }

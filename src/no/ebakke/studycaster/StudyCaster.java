@@ -24,8 +24,12 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import no.ebakke.studycaster.util.Blocker;
 import no.ebakke.studycaster.util.Pair;
 import no.ebakke.studycaster.util.Util;
+import org.one.stone.soup.screen.recorder.DesktopScreenRecorder;
+import org.one.stone.soup.screen.recorder.ScreenRecorder;
+import org.one.stone.soup.screen.recorder.ScreenRecorderListener;
 
 public class StudyCaster {
   public static final Logger log = Logger.getLogger("no.ebakke.studycaster");
@@ -37,7 +41,10 @@ public class StudyCaster {
   private Ticket currentServerTicket;
   private Ticket firstServerTicket;
   private long   serverSecondsAhead;
+  private ScreenRecorder recorder;
+  private File recordFile;
   private boolean concluded = false;
+  private Blocker recorderBlocker = new Blocker();
   private Handler logHandler = new Handler() {
       @Override
       public void publish(LogRecord record) {
@@ -91,7 +98,7 @@ public class StudyCaster {
       }
       currentRunTicket = new Ticket();
 
-      File ticketStore = new File(System.getProperty("java.io.tmpdir") + File.separator + "~studycaster.txt");
+      File ticketStore = new File(System.getProperty("java.io.tmpdir") + File.separator + "sc_7403204709139484951.tmp");
       boolean writeTicketStore = false;
       try {
         if (ticketStore.exists()) {
@@ -161,6 +168,9 @@ public class StudyCaster {
         return;
       concluded = true;
     }
+    stopRecording();
+    if (recordFile != null)
+      recordFile.delete();
     try {
       Runtime.getRuntime().removeShutdownHook(shutdownHook);
     } catch (IllegalStateException e) {
@@ -171,7 +181,6 @@ public class StudyCaster {
 
     StringBuffer logBuf = new StringBuffer();
     for (LogRecord r : logEntries) {
-      String time = dateFormat.format(new Date(r.getMillis() + serverSecondsAhead * 1000L));
       logBuf.append(getServerTimeFormat(r.getMillis()) + "\t" + r.getLevel() + "\t" + r.getSourceClassName() + "\t" + r.getMessage() + "\n");
       if (r.getThrown() != null) {
         logBuf.append("  " + r.getThrown().getClass().getName() + ": " + r.getThrown().getMessage() + "\n");
@@ -223,7 +232,7 @@ public class StudyCaster {
     }
   }
 
-  public void uploadFile(File f) throws StudyCasterException {
+  public void uploadFile(File f, String remoteName) throws StudyCasterException {
     InputStream is = null;
     try {
       try {
@@ -231,7 +240,7 @@ public class StudyCaster {
       } catch (FileNotFoundException e) {
         throw new StudyCasterException(e);
       }
-      ServerRequest.uploadFile(serverURL, allTickets(), "saveddoc_" + currentRunTicket + ".xls", is);
+      ServerRequest.uploadFile(serverURL, allTickets(), remoteName, is);
       is.close();
       is = null;
     } catch (IOException e) {
@@ -251,4 +260,81 @@ public class StudyCaster {
       throw new StudyCasterException("Failed to open the file " + f.getName() + "; do you have " + requiredApp + " installed?", e);
     }
   }
+
+  public void startRecording() throws StudyCasterException {
+    if (recorder != null)
+      throw new IllegalStateException();
+
+    final OutputStream os;
+    try {
+      recordFile = File.createTempFile("sc_", ".tmp");
+      os = new FileOutputStream(recordFile);
+    } catch (IOException e) {
+      StudyCaster.log.log(Level.SEVERE, "Can't open temporary file.", e);
+      throw new StudyCasterException(e);
+    }
+
+    new Thread(new Runnable() {
+      int frames = 0;
+
+      public void run() {
+        recorder = new DesktopScreenRecorder(os, new ScreenRecorderListener() {
+          boolean loggedYet = false;
+
+          public void frameRecorded(boolean fullFrame) throws IOException {
+            if (!loggedYet)
+              log.info("Recorded the first frame.");
+            loggedYet = true;
+            //System.out.println("Frame #" + ++frames);
+          }
+
+          public void recordingStopped() {
+            log.info("Recording stopped.");
+            recorderBlocker.releaseBlockingThreads();
+          }
+        });
+        recorder.startRecording();
+      }
+    }).start();
+  }
+
+  public void stopRecording() {
+    if (recorder == null)
+      return;
+    new Thread(new Runnable() {
+      public void run() {
+        recorder.stopRecording();
+      }
+    }).start();
+    recorderBlocker.blockUntilReleased(10000);
+    recorder = null;
+  }
+
+  public File getRecordFile() {
+    return recordFile;
+  }
+  /*
+   // TODO: Redirect stdout/stderr to an actual log file, e.g. as follows:
+
+    final PrintStream olderr = System.err;
+    System.setErr(new PrintStream(new OutputStream() {
+      @Override
+      public void write(int b) throws IOException {
+        byte ret[] = new byte[1];
+        ret[0] = (byte) b;
+        write(ret, 0, 1);
+      }
+
+      @Override
+      public void write(byte[] b, int off, int len) throws IOException {
+        olderr.write(b, off, len);
+      }
+
+      @Override
+      public void flush() throws IOException {
+        olderr.flush();
+      }
+    }));
+  */
+
 }
