@@ -65,7 +65,12 @@ public class StudyCasterUI {
     });
   }
 
-  public void showMessageDialog(final String title, final String message, final int messageType) {
+  public void showMessageDialog(final String title, final String message, final int messageType, boolean block) {
+    // TODO: Clean up or refactor the synchonization mess in this class.
+    final Object doneCondition = new Object();
+    final boolean doneYet[] = new boolean[1];
+    doneYet[0] = false;
+
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
         JDialog positionDialog = new JDialog(sf, true);
@@ -74,8 +79,21 @@ public class StudyCasterUI {
         positionDialog.setLocation(sdim.width - wdim.width - 100, sdim.height - wdim.height - 150);
         JOptionPane.showMessageDialog(positionDialog, message, title, messageType);
         positionDialog.dispose();
+        synchronized (doneCondition) {
+          doneYet[0] = true;
+          doneCondition.notifyAll();
+        }
       }
     });
+    if (block) {
+      synchronized (doneCondition) {
+        while (!doneYet[0]) {
+          try {
+            doneCondition.wait();
+          } catch (InterruptedException e) { }
+        }
+      }
+    }
   }
 
   public ProgressBarUI getProgressBarUI() {

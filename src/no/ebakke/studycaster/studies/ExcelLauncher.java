@@ -40,7 +40,7 @@ public class ExcelLauncher {
       scui.getProgressBarUI().setTaskAppearance("", false);
       scui.getProgressBarUI().setProgress(0);
     } catch (StudyCasterException e) {
-      scui.showMessageDialog("Can't Load User Study", e.getLocalizedMessage(), JOptionPane.WARNING_MESSAGE);
+      scui.showMessageDialog("Can't Load User Study", e.getLocalizedMessage(), JOptionPane.WARNING_MESSAGE, true);
       scui.disposeUI();
       e.printStackTrace();
       if (sc != null)
@@ -48,7 +48,6 @@ public class ExcelLauncher {
       return;
     }
 
-    boolean exit = false;
     UserAction action;
     do {
       action = scui.waitForUserAction();
@@ -61,7 +60,7 @@ public class ExcelLauncher {
           scui.showMessageDialog("Upload",
                   "<html>Please edit, save, and close the Excel document, then try again.<br><br>" +
                   "(The document should have opened in a new window, possibly in the background.)</html>"
-                  , JOptionPane.WARNING_MESSAGE);
+                  , JOptionPane.WARNING_MESSAGE, false);
           if (!stillOpen) {
             scui.getProgressBarUI().setTaskAppearance("Reopening document...", true);
             try {
@@ -77,15 +76,15 @@ public class ExcelLauncher {
           StudyCaster.log.info("Got upload on changed but still open document.");
           scui.showMessageDialog("Upload",
                 "<html>Please close the Excel document, then try again.</html>"
-                , JOptionPane.WARNING_MESSAGE);
+                , JOptionPane.WARNING_MESSAGE, false);
         } else {
           scui.getProgressBarUI().setTaskAppearance("Uploading document...", true);
           try {
             sc.uploadFile(excelFile);
-            scui.showMessageDialog("Upload", "Upload successful", JOptionPane.INFORMATION_MESSAGE);
-            //scui.disposeUI(); // Can't do this here.
+            scui.showMessageDialog("Upload", "Upload successful", JOptionPane.INFORMATION_MESSAGE, true);
+            scui.disposeUI();
           } catch (StudyCasterException e) {
-            scui.showMessageDialog("Failed to upload file", e.getLocalizedMessage(), JOptionPane.WARNING_MESSAGE);
+            scui.showMessageDialog("Failed to upload file", e.getLocalizedMessage(), JOptionPane.WARNING_MESSAGE, false);
           }
           scui.getProgressBarUI().setTaskAppearance("", false);
         }
