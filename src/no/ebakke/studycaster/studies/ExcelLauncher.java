@@ -82,7 +82,7 @@ public class ExcelLauncher {
           try {
             sc.uploadFile(excelFile);
             scui.getProgressBarUI().setTaskAppearance("", false);
-            scui.showMessageDialog("Upload", "Upload successful", JOptionPane.INFORMATION_MESSAGE, true);
+            scui.showConfirmationCodeDialog(sc.getCurrentRunTicket().toString(), true);
             scui.disposeUI();
           } catch (StudyCasterException e) {
             scui.showMessageDialog("Failed to upload file", e.getLocalizedMessage(), JOptionPane.WARNING_MESSAGE, false);

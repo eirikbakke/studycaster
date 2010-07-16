@@ -54,6 +54,22 @@ public class StudyCaster {
       }
     });
 
+  public Ticket getFirstRunTicket() {
+    return firstRunTicket;
+  }
+
+  public Ticket getCurrentRunTicket() {
+    return currentRunTicket;
+  }
+
+  public Ticket getFirstServerTicket() {
+    return firstServerTicket;
+  }
+
+  public Ticket getCurrentServerTicket() {
+    return currentServerTicket;
+  }
+
   private String allTickets() {
     return firstRunTicket + "\t" + currentRunTicket + "\t" +
            ((firstServerTicket   != null) ? firstServerTicket   : "N") + "\t" +

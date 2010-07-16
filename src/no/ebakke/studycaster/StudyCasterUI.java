@@ -1,7 +1,6 @@
 package no.ebakke.studycaster;
 
-import java.awt.Dimension;
-import java.awt.Toolkit;
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JDialog;
@@ -64,17 +63,30 @@ public class StudyCasterUI {
     });
   }
 
+  public void showPaneInDialog(Component comp) {
+    
+  }
+
+  // TODO: Reduce code duplication between the next two methods.
+  public void showConfirmationCodeDialog(final String confirmationCode, boolean block) {
+    final Blocker blocker = new Blocker();
+    SwingUtilities.invokeLater(new Runnable() {
+      public void run() {
+        ConfirmationCodeDialog.show(sf, confirmationCode);
+        blocker.releaseBlockingThreads();
+      }
+    });
+    if (block)
+      blocker.blockUntilReleased();
+  }
+
   public void showMessageDialog(final String title, final String message, final int messageType, boolean block) {
     final Blocker blocker = new Blocker();
 
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
-        JDialog positionDialog = new JDialog(sf, true);
-        Dimension sdim = Toolkit.getDefaultToolkit().getScreenSize();
-        Dimension wdim = positionDialog.getSize();
-        positionDialog.setLocation(sdim.width - wdim.width - 100, sdim.height - wdim.height - 150);
+        JDialog positionDialog = new JDialog(sf);
         JOptionPane.showMessageDialog(positionDialog, message, title, messageType);
-        positionDialog.dispose();
         blocker.releaseBlockingThreads();
       }
     });
