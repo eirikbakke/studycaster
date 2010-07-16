@@ -57,16 +57,23 @@ public class StudyCasterUI {
     }
   }
 
-  public void exitWithError(final String errorDialogTitle, final StudyCasterException showException) {
+  public void disposeUI() {
+    SwingUtilities.invokeLater(new Runnable() {
+      public void run() {
+        sf.dispose();
+      }
+    });
+  }
+
+  public void showMessageDialog(final String title, final String message, final int messageType) {
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
         JDialog positionDialog = new JDialog(sf, true);
         Dimension sdim = Toolkit.getDefaultToolkit().getScreenSize();
         Dimension wdim = positionDialog.getSize();
         positionDialog.setLocation(sdim.width - wdim.width - 100, sdim.height - wdim.height - 150);
-        JOptionPane.showMessageDialog(positionDialog, showException.getLocalizedMessage(), errorDialogTitle, JOptionPane.WARNING_MESSAGE);
+        JOptionPane.showMessageDialog(positionDialog, message, title, messageType);
         positionDialog.dispose();
-        sf.dispose();
       }
     });
   }

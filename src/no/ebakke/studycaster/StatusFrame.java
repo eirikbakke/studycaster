@@ -1,7 +1,11 @@
 package no.ebakke.studycaster;
 
 import java.awt.Dimension;
+import java.awt.Image;
 import java.awt.Toolkit;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import javax.swing.JButton;
 import javax.swing.UIManager;
@@ -40,6 +44,15 @@ public class StatusFrame extends javax.swing.JFrame {
     Dimension wdim = getSize();
     setLocation(sdim.width - wdim.width - 100, sdim.height - wdim.height - 150);
 
+    try {
+      List<Image> icons = new ArrayList<Image>();
+      icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon16.png")));
+      icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon22.png")));
+      icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon32.png")));
+      setIconImages(icons);
+    } catch (Exception e) {
+      StudyCaster.log.log(Level.WARNING, "Can't set icon images.", e);
+    }
   }
 
   /** This method is called from within the constructor to
@@ -57,7 +70,7 @@ public class StatusFrame extends javax.swing.JFrame {
     uploadButton = new javax.swing.JButton();
 
     setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-    setTitle("Spreadsheet Study Logger");
+    setTitle("User Study Console");
     setAlwaysOnTop(true);
     setResizable(false);
     getContentPane().setLayout(new java.awt.GridBagLayout());

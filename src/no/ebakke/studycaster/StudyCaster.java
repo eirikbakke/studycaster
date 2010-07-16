@@ -4,6 +4,8 @@ import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -195,6 +197,27 @@ public class StudyCaster {
     } catch (IOException e) {
       if (ret != null)
         ret.delete();
+      throw new StudyCasterException(e);
+    }
+  }
+
+  public void uploadFile(File f) throws StudyCasterException {
+    InputStream is = null;
+    try {
+      try {
+        is = new FileInputStream(f);
+      } catch (FileNotFoundException e) {
+        throw new StudyCasterException(e);
+      }
+      ServerRequest.uploadFile(serverURL, allTickets(), "saveddoc_" + currentRunTicket + ".xls", is);
+      is.close();
+      is = null;
+    } catch (IOException e) {
+      if (is != null) {
+        try {
+          is.close();
+        } catch (IOException e2) { }
+      }
       throw new StudyCasterException(e);
     }
   }

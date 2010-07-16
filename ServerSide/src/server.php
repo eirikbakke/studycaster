@@ -58,9 +58,13 @@
       } else if ($_FILES["file"]["size"] > constant("MAX_FILE_SIZE")) {
         return "file too large";
       }
-      $fullpath = constant("UPLOAD_DIR") . "/" . $_FILES["file"]["name"];
-      if (file_exists($fullpath))
-        return "file already exists";
+      $prefix = constant("UPLOAD_DIR") . "/" . $_FILES["file"]["name"];
+      $fullpath = $prefix;
+      $i = 0;
+      while (file_exists($fullpath)) {
+        $i++;
+        $fullpath = $prefix . "_" . $i;
+      }
       if (move_uploaded_file($_FILES["file"]["tmp_name"], $fullpath) == false)
         return "move failed";
       studylog($at, $_POST["cmd"], $_FILES["file"]["size"], $_FILES["file"]["name"]);
