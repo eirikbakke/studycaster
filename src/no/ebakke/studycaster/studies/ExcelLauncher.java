@@ -1,6 +1,7 @@
 package no.ebakke.studycaster.studies;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.logging.Level;
 import javax.swing.JOptionPane;
 import no.ebakke.studycaster.StudyCaster;
@@ -52,7 +53,8 @@ public class ExcelLauncher {
     do {
       action = scui.waitForUserAction();
       if (action == UIAction.UPLOAD) {
-        boolean unchanged = (excelFile.lastModified() == lastModified1 || excelFile.lastModified() == lastModified2);
+        long nowLastModified = excelFile.lastModified();
+        boolean unchanged = (nowLastModified == lastModified1 || nowLastModified == lastModified2);
         boolean stillOpen = Util.fileAvailableExclusive(excelFile);
 
         if (unchanged) {
@@ -79,6 +81,7 @@ public class ExcelLauncher {
                 , JOptionPane.WARNING_MESSAGE, false);
         } else {
           scui.getProgressBarUI().setTaskAppearance("Uploading document...", true);
+          StudyCaster.log.info("Uploaded file now last modified " + sc.getServerTimeFormat(nowLastModified));
           try {
             sc.uploadFile(excelFile);
             scui.getProgressBarUI().setTaskAppearance("", false);

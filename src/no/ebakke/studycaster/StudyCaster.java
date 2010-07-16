@@ -30,6 +30,7 @@ import no.ebakke.studycaster.util.Util;
 public class StudyCaster {
   public static final Logger log = Logger.getLogger("no.ebakke.studycaster");
   private final List<LogRecord> logEntries = new ArrayList<LogRecord>();
+  private DateFormat dateFormat;
   private URL    serverURL;
   private Ticket firstRunTicket;
   private Ticket currentRunTicket;
@@ -78,6 +79,9 @@ public class StudyCaster {
 
   /* Note: URL must point directly to PHP script, end with a slash to use index.php (otherwise POST requests fail). */
   public StudyCaster(String serverURLstring) throws StudyCasterException {
+    dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    dateFormat.setTimeZone(TimeZone.getTimeZone("GMT:00"));
+
     log.addHandler(logHandler);
     try {
       try {
@@ -147,6 +151,10 @@ public class StudyCaster {
     Runtime.getRuntime().addShutdownHook(shutdownHook);
   }
 
+  public String getServerTimeFormat(long millis) {
+    return dateFormat.format(new Date(millis + serverSecondsAhead * 1000L));
+  }
+
   public void concludeStudy() {
     synchronized (this) {
       if (concluded)
@@ -162,11 +170,9 @@ public class StudyCaster {
     log.removeHandler(logHandler);
 
     StringBuffer logBuf = new StringBuffer();
-    DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    df.setTimeZone(TimeZone.getTimeZone("GMT:00"));
     for (LogRecord r : logEntries) {
-      String time = df.format(new Date(r.getMillis() + serverSecondsAhead * 1000L));
-      logBuf.append(time + "\t" + r.getLevel() + "\t" + r.getSourceClassName() + "\t" + r.getMessage() + "\n");
+      String time = dateFormat.format(new Date(r.getMillis() + serverSecondsAhead * 1000L));
+      logBuf.append(getServerTimeFormat(r.getMillis()) + "\t" + r.getLevel() + "\t" + r.getSourceClassName() + "\t" + r.getMessage() + "\n");
       if (r.getThrown() != null) {
         logBuf.append("  " + r.getThrown().getClass().getName() + ": " + r.getThrown().getMessage() + "\n");
         for (StackTraceElement ste : r.getThrown().getStackTrace())
