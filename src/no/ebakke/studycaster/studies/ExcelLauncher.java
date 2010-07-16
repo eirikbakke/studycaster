@@ -6,7 +6,7 @@ import javax.swing.JOptionPane;
 import no.ebakke.studycaster.StudyCaster;
 import no.ebakke.studycaster.StudyCasterException;
 import no.ebakke.studycaster.StudyCasterUI;
-import no.ebakke.studycaster.StudyCasterUI.UserAction;
+import no.ebakke.studycaster.StudyCasterUI.UIAction;
 import no.ebakke.studycaster.util.Util;
 
 public class ExcelLauncher {
@@ -48,10 +48,10 @@ public class ExcelLauncher {
       return;
     }
 
-    UserAction action;
+    UIAction action;
     do {
       action = scui.waitForUserAction();
-      if (action == UserAction.UPLOAD) {
+      if (action == UIAction.UPLOAD) {
         boolean unchanged = (excelFile.lastModified() == lastModified1 || excelFile.lastModified() == lastModified2);
         boolean stillOpen = Util.fileAvailableExclusive(excelFile);
 
@@ -91,7 +91,7 @@ public class ExcelLauncher {
         }
       }
       scui.setUploadEnabled(true);
-    } while (action != UserAction.CLOSE);
+    } while (action != UIAction.CLOSE);
     sc.concludeStudy();
   }
 }

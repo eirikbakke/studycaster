@@ -7,9 +7,10 @@ import java.awt.event.ActionListener;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import no.ebakke.studycaster.util.Blocker;
 
 public class StudyCasterUI {
-  public enum UserAction {
+  public enum UIAction {
     NO_ACTION,
     CLOSE,
     UPLOAD
@@ -17,7 +18,8 @@ public class StudyCasterUI {
 
   private StatusFrame sf;
   private final Object actionCondition = new Object();
-  private UserAction actionTaken = UserAction.NO_ACTION;
+  private UIAction actionTaken = UIAction.NO_ACTION;
+  private Blocker actionBlocker = new Blocker();
 
   public StudyCasterUI(final String instructions) {
     final Object initedCondition = new Object();
@@ -30,19 +32,15 @@ public class StudyCasterUI {
           sf.addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosed(java.awt.event.WindowEvent evt) {
-              synchronized (actionCondition) {
-                actionTaken = UserAction.CLOSE;
-                actionCondition.notifyAll();
-              }
+              actionTaken = UIAction.CLOSE;
+              actionBlocker.releaseBlockingThreads();
             }
           });
           sf.getUploadButton().addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-              synchronized (actionCondition) {
-                actionTaken = UserAction.UPLOAD;
-                actionCondition.notifyAll();
-                sf.getUploadButton().setEnabled(false);
-              }
+              sf.getUploadButton().setEnabled(false);
+              actionTaken = UIAction.UPLOAD;
+              actionBlocker.releaseBlockingThreads();
             }
           });
           initedCondition.notify();
@@ -67,10 +65,7 @@ public class StudyCasterUI {
   }
 
   public void showMessageDialog(final String title, final String message, final int messageType, boolean block) {
-    // TODO: Clean up or refactor the synchonization mess in this class.
-    final Object doneCondition = new Object();
-    final boolean doneYet[] = new boolean[1];
-    doneYet[0] = false;
+    final Blocker blocker = new Blocker();
 
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
@@ -80,21 +75,11 @@ public class StudyCasterUI {
         positionDialog.setLocation(sdim.width - wdim.width - 100, sdim.height - wdim.height - 150);
         JOptionPane.showMessageDialog(positionDialog, message, title, messageType);
         positionDialog.dispose();
-        synchronized (doneCondition) {
-          doneYet[0] = true;
-          doneCondition.notifyAll();
-        }
+        blocker.releaseBlockingThreads();
       }
     });
-    if (block) {
-      synchronized (doneCondition) {
-        while (!doneYet[0]) {
-          try {
-            doneCondition.wait();
-          } catch (InterruptedException e) { }
-        }
-      }
-    }
+    if (block)
+      blocker.blockUntilReleased();
   }
 
   public ProgressBarUI getProgressBarUI() {
@@ -109,16 +94,9 @@ public class StudyCasterUI {
     });
   }
 
-  public UserAction waitForUserAction() {
-    UserAction ret;
-    synchronized (actionCondition) {
-      while ((ret = actionTaken) == UserAction.NO_ACTION) {
-        try {
-          actionCondition.wait();
-        } catch (InterruptedException e) { }
-      }
-      actionTaken = UserAction.NO_ACTION;
-    }
-    return ret;
+  public UIAction waitForUserAction() {
+    actionBlocker.blockUntilReleased();
+    actionBlocker = new Blocker();
+    return actionTaken;
   }
 }
