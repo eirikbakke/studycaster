@@ -175,7 +175,9 @@ public class StudyCaster {
   public File downloadFile(String remoteName) throws StudyCasterException {
     File ret = null;
     try {
-      ret = File.createTempFile("sc_", "_" + remoteName);
+      int dot = remoteName.lastIndexOf(".");
+      String extension = (dot == -1) ? "" : remoteName.substring(dot, remoteName.length());
+      ret = File.createTempFile("sc_", extension);
       OutputStream os = null;
       InputStream  is = null;
       try {

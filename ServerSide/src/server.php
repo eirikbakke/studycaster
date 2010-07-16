@@ -12,10 +12,10 @@
     fclose($f);
   }
 
-  function studylog($tickets, $msg) {
+  function studylog($tickets, $cmd, $fsize, $fname) {
     $f = fopen(constant("STUDY_LOG_FILE"), "a");
-    $ipstart = strtok(trim($_SERVER['REMOTE_ADDR']), ".") . "/" . strtok(".");
-    fwrite($f, gmdate("Y-m-d H:i:s") . "\t" . $ipstart . "\t" . $tickets . "\t" . $msg . "\n");
+    $ipstart = sprintf("%3s/%-3s", strtok(trim($_SERVER['REMOTE_ADDR']), ".") , strtok("."));
+    fwrite($f, gmdate("Y-m-d H:i:s") . "\t" . $ipstart . "\t" . $tickets . "\t" . $cmd . "\t" . sprintf("%9s", $fsize) . "\t". $fname . "\n");
     fclose($f);
   }
 
@@ -45,7 +45,7 @@
     if        ($cmd == "gsi") {
       header("X-StudyCaster-ServerTicket: " . $server_ticket);
       header("X-StudyCaster-ServerTime: " . time());
-      studylog($at, "gsi\t-");
+      studylog($at, $_POST["cmd"], "(N/A)", "(N/A)");
       return "SUCCESS";
     } else if ($cmd == "upl") {
       if (!array_key_exists("file", $_FILES)) {
@@ -63,7 +63,7 @@
         return "file already exists";
       if (move_uploaded_file($_FILES["file"]["tmp_name"], $fullpath) == false)
         return "move failed";
-      studylog($at, "upl\t" . $_FILES["file"]["size"] . "," . $_FILES["file"]["name"]);
+      studylog($at, $_POST["cmd"], $_FILES["file"]["size"], $_FILES["file"]["name"]);
       header("X-StudyCaster-UploadOK: true");
       return "SUCCESS";
     } else if ($cmd == "dnl") {
@@ -76,9 +76,11 @@
         return "file does not exist";
       header("Content-Type: application/octet-stream");
       header('Content-Disposition: attachment; filename="' . basename($fullname) . '"');
-      header("Content-Length: " . filesize($fullpath));
+      $fsize = filesize($fullpath);
+      header("Content-Length: " . $fsize);
       header("X-StudyCaster-DownloadOK: true");
       readfile($fullpath);
+      studylog($at, $_POST["cmd"], $fsize, $_POST["file"]);
       return "SUCCESS";
     } else {
       return "unknown command";

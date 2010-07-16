@@ -3,18 +3,23 @@ package no.ebakke.studycaster;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.util.logging.Level;
+import javax.swing.JButton;
 import javax.swing.UIManager;
 
 public class StatusFrame extends javax.swing.JFrame {
   private static final long serialVersionUID = -49886778462745844L;
   private ProgressBarUI pbui;
-
+  
   public ProgressBarUI getProgressBarUI() {
     return pbui;
   }
 
   public void setUploadEnabled(boolean enabled) {
     uploadButton.setEnabled(enabled);
+  }
+
+  public JButton getUploadButton() {
+    return uploadButton;
   }
 
   public static void setSystemLookAndFeel() {
@@ -82,6 +87,7 @@ public class StatusFrame extends javax.swing.JFrame {
     gridBagConstraints.insets = new java.awt.Insets(15, 15, 15, 15);
     getContentPane().add(instructionLabel, gridBagConstraints);
 
+    uploadButton.setMnemonic('U');
     uploadButton.setText("Upload and Retrieve Confirmation Code...");
     uploadButton.setEnabled(false);
     gridBagConstraints = new java.awt.GridBagConstraints();

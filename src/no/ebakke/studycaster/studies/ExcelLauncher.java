@@ -9,7 +9,7 @@ public class ExcelLauncher {
   private static final String instructions =
     "<html><b>Instructions:</b><ol>" +
     "<li>Edit the spreadsheet that opened in another window." +
-    "<li>Save the spreadsheet." +
+    "<li>Save and close the spreadsheet." +
     "<li>Click the button below." +
     "<li>Paste the confirmation code into the HIT." +
     "</ol><p align=\"right\">Thanks!<br><a href=\"mailto:ebakke@mit.edu\">ebakke@mit.edu</a></p></html>";
@@ -36,6 +36,17 @@ public class ExcelLauncher {
       if (sc != null)
         sc.concludeStudy();
       return;
+    }
+
+    boolean exit = false;
+    while (!exit) {
+      switch (scui.waitForUserAction()) {
+        case        UPLOAD:
+          System.out.println("Update selected.");
+        break; case CLOSE:
+          System.out.println("Close selected.");
+          exit = true;
+      }
     }
     sc.concludeStudy();
   }

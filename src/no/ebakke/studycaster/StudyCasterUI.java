@@ -2,28 +2,56 @@ package no.ebakke.studycaster;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 public class StudyCasterUI {
+  public enum UserAction {
+    NO_ACTION,
+    CLOSE,
+    UPLOAD
+  }
+
   private StatusFrame sf;
+  private final Object actionCondition = new Object();
+  private UserAction actionTaken = UserAction.NO_ACTION;
 
   public StudyCasterUI(final String instructions) {
+    final Object initedCondition = new Object();
     StatusFrame.setSystemLookAndFeel();
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
-        synchronized (StudyCasterUI.this) {
+        synchronized (initedCondition) {
           sf = new StatusFrame(instructions);
           sf.setVisible(true);
-          StudyCasterUI.this.notify();
+          sf.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosed(java.awt.event.WindowEvent evt) {
+              synchronized (actionCondition) {
+                actionTaken = UserAction.CLOSE;
+                actionCondition.notifyAll();
+              }
+            }
+          });
+          sf.getUploadButton().addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+              synchronized (actionCondition) {
+                actionTaken = UserAction.UPLOAD;
+                actionCondition.notifyAll();
+              }
+            }
+          });
+          initedCondition.notify();
         }
       }
     });
-    synchronized (this) {
+    synchronized (initedCondition) {
       while (sf == null) {
         try {
-          wait();
+          initedCondition.wait();
         } catch (InterruptedException e) { }
       }
     }
@@ -55,11 +83,16 @@ public class StudyCasterUI {
     });
   }
 
-  public void setUIVisible(final boolean visible) {
-    SwingUtilities.invokeLater(new Runnable() {
-      public void run() {
-        sf.setVisible(false);
+  public UserAction waitForUserAction() {
+    UserAction ret;
+    synchronized (actionCondition) {
+      while ((ret = actionTaken) == UserAction.NO_ACTION) {
+        try {
+          actionCondition.wait();
+        } catch (InterruptedException e) { }
       }
-    });
+      actionTaken = UserAction.NO_ACTION;
+    }
+    return ret;
   }
 }
