@@ -81,6 +81,7 @@ public class ExcelLauncher {
           scui.getProgressBarUI().setTaskAppearance("Uploading document...", true);
           try {
             sc.uploadFile(excelFile);
+            scui.getProgressBarUI().setTaskAppearance("", false);
             scui.showMessageDialog("Upload", "Upload successful", JOptionPane.INFORMATION_MESSAGE, true);
             scui.disposeUI();
           } catch (StudyCasterException e) {
@@ -89,6 +90,7 @@ public class ExcelLauncher {
           scui.getProgressBarUI().setTaskAppearance("", false);
         }
       }
+      scui.setUploadEnabled(true);
     } while (action != UserAction.CLOSE);
     sc.concludeStudy();
   }

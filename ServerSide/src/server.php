@@ -67,7 +67,7 @@
       }
       if (move_uploaded_file($_FILES["file"]["tmp_name"], $fullpath) == false)
         return "move failed";
-      studylog($at, $_POST["cmd"], $_FILES["file"]["size"], $_FILES["file"]["name"]);
+      studylog($at, $_POST["cmd"], $_FILES["file"]["size"], basename($fullpath));
       header("X-StudyCaster-UploadOK: true");
       return "SUCCESS";
     } else if ($cmd == "dnl") {

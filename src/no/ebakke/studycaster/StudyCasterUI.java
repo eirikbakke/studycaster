@@ -41,6 +41,7 @@ public class StudyCasterUI {
               synchronized (actionCondition) {
                 actionTaken = UserAction.UPLOAD;
                 actionCondition.notifyAll();
+                sf.getUploadButton().setEnabled(false);
               }
             }
           });
