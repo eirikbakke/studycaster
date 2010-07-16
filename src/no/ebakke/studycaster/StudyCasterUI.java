@@ -1,11 +1,7 @@
 package no.ebakke.studycaster;
 
-import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Toolkit;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -63,29 +59,6 @@ public class StudyCasterUI {
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
         sf.setVisible(false);
-      }
-    });
-  }
-
-  public void desktopOpenFile(File f) throws StudyCasterException {
-    try {
-      SwingUtilities.invokeAndWait(new Runnable() {
-        public void run() {
-          sf.setAlwaysOnTop(false);
-          System.err.println("Now turned off");
-        }
-      });
-    } catch (InterruptedException e) {
-    } catch (InvocationTargetException e) {
-    }
-    try {
-      Desktop.getDesktop().open(f);
-    } catch (IOException e) {
-      throw new StudyCasterException("Failed to open the file " + f.getName() + " with the user's default application.", e);
-    }
-    SwingUtilities.invokeLater(new Runnable() {
-      public void run() {
-        sf.setAlwaysOnTop(true);
       }
     });
   }

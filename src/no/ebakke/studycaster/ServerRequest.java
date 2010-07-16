@@ -1,11 +1,8 @@
 package no.ebakke.studycaster;
 
-import no.ebakke.studycaster.util.Util;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -43,23 +40,12 @@ public class ServerRequest {
     issuePost(url, standardParams(at, "upl"), oneFile("file", fileName, is), fromHeader).close();
   }
 
-  public static File downloadFile(URL url, String at, String remoteName) throws IOException {
-    File ret = File.createTempFile("sc_", "_" + remoteName);
+  public static InputStream downloadFile(URL url, String at, String remoteName) throws IOException {
     Map<String, String> fromHeader = new LinkedHashMap<String,String>();
     fromHeader.put(HEADER_DNK, null);
     Map<String,String> params = standardParams(at, "dnl");
     params.put("file", remoteName);
-    InputStream is = issuePost(url, params, noFileData(), fromHeader);
-    FileOutputStream os = null;
-    try {
-      os = new FileOutputStream(ret);
-      Util.streamCopy(is, os);
-    } finally {
-      if (os != null)
-        os.close();
-    }
-    is.close();
-    return ret;
+    return issuePost(url, params, noFileData(), fromHeader);
   }
 
   private static Map<String,String> standardParams(String at, String cmd) {

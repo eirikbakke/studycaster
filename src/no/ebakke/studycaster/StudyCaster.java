@@ -4,10 +4,12 @@ import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;
@@ -20,8 +22,8 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import javax.swing.SwingUtilities;
 import no.ebakke.studycaster.util.Pair;
+import no.ebakke.studycaster.util.Util;
 
 public class StudyCaster {
   public static final Logger log = Logger.getLogger("no.ebakke.studycaster");
@@ -171,12 +173,35 @@ public class StudyCaster {
   }
 
   public File downloadFile(String remoteName) throws StudyCasterException {
+    File ret = null;
     try {
-      File ret = ServerRequest.downloadFile(serverURL, allTickets(), remoteName);
-      log.info("Downloaded to " + ret.getAbsolutePath());
+      ret = File.createTempFile("sc_", "_" + remoteName);
+      OutputStream os = null;
+      InputStream  is = null;
+      try {
+        os = new FileOutputStream(ret);
+        is = ServerRequest.downloadFile(serverURL, allTickets(), remoteName);
+        Util.streamCopy(is, os);
+        log.info("Downloaded to " + ret.getAbsolutePath());
+      } finally {
+        if (os != null)
+          os.close();
+        if (is != null)
+          is.close();
+      }
       return ret;
     } catch (IOException e) {
+      if (ret != null)
+        ret.delete();
       throw new StudyCasterException(e);
+    }
+  }
+
+  public void desktopOpenFile(File f, String requiredApp) throws StudyCasterException {
+    try {
+      Desktop.getDesktop().open(f);
+    } catch (IOException e) {
+      throw new StudyCasterException("Failed to open the file " + f.getName() + "; do you have " + requiredApp + " installed?", e);
     }
   }
 }

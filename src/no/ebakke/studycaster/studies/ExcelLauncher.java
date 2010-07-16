@@ -25,7 +25,7 @@ public class ExcelLauncher {
       File excelFile = sc.downloadFile("exflat.xls");
       scui.getProgressBarUI().setProgress(67);
       scui.getProgressBarUI().setTaskAppearance("Opening sample document...", false);
-      scui.desktopOpenFile(excelFile);
+      sc.desktopOpenFile(excelFile, "Excel or a compatible spreadsheet application");
       scui.getProgressBarUI().setProgress(100);
       scui.setUploadEnabled(true);
       scui.getProgressBarUI().setTaskAppearance("", false);
