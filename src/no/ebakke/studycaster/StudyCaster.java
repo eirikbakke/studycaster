@@ -285,7 +285,12 @@ public class StudyCaster {
             if (!loggedYet)
               log.info("Recorded the first frame.");
             loggedYet = true;
-            //System.out.println("Frame #" + ++frames);
+
+            //System.err.println(recordFile.length());
+            if (recordFile.length() > 5000000) {
+              log.warning("Recording size passed limit.");
+              stopRecording();
+            }
           }
 
           public void recordingStopped() {

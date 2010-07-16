@@ -29,7 +29,7 @@ public class ExcelLauncher {
       sc = new StudyCaster("http://www.sieuferd.com/studycaster/server.php");
       scui.getProgressBarUI().setProgress(33);
       scui.getProgressBarUI().setTaskAppearance("Downloading sample document...", false);
-      excelFile = sc.downloadFile("exflat.xls");
+      excelFile = sc.downloadFile("currencies.xls");
       lastModified1 = excelFile.lastModified();
       scui.getProgressBarUI().setProgress(67);
       scui.getProgressBarUI().setTaskAppearance("Opening sample document...", false);

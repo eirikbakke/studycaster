@@ -158,6 +158,21 @@ public abstract class ScreenRecorder implements Runnable{
 		rawData = new int[frameSize];
 
 		bImage.getRGB(0,0,recordArea.width,recordArea.height,rawData,0,recordArea.width);
+
+    ////////////////////////////////////////////////////
+    // See http://syfran.com/2009/07/rgb_tograyscale_java/
+    for (int i = 0; i < frameSize ; i++) {
+      int RGB = rawData[i];
+      int blue2 = (RGB & 0x000000FF);
+      int green2 = (RGB & 0x0000FF00) >> 8;
+      int red2 = (RGB & 0x00FF0000) >> 16;
+      int average = (int) ((.11 * blue2) + (.59 * green2) + (.3 * red2));
+      average = average & 0xF0;
+      int newRGB = 0xFF000000 + (average << 16) + (average << 8) + average;
+      rawData[i] = newRGB;
+    }
+    ////////////////////////////////////////////////////
+
 		//long t3 = System.currentTimeMillis();
 		
 		//packToStream(rawData,newRawData);

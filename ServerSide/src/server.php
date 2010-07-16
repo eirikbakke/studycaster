@@ -1,5 +1,5 @@
 <?php
-  define("MAX_FILE_SIZE" , 5000000);
+  define("MAX_FILE_SIZE" , 50000000);
   define("DOWNLOAD_DIR"  , "downloads");
   define("UPLOAD_DIR"    , "uploads");
   define("STUDY_LOG_FILE", "study.log");

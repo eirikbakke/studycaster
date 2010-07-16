@@ -1,5 +1,6 @@
 package org.one.stone.soup.screen.recorder;
 
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -95,7 +96,7 @@ public class FrameCompressor {
 				red = (byte) ((newData[inCursor] & 0x00FF0000) >>> 16);
 				green = (byte) ((newData[inCursor] & 0x0000FF00) >>> 8);
 				blue = (byte) ((newData[inCursor] & 0x000000FF));
-				
+
 				if(red==0 && green==0 && blue==0)
 				{
 					blue = 1;
