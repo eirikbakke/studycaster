@@ -9,15 +9,17 @@ http://code.google.com/p/java-remote-control/wiki/UsingTheScreenRecorder
 
 19:02 2010-07-18
 TODO
-* Ask for Excel to be closed prior to screencasting (to avoid capturing other Excel documents).
-* Don't capture other windows than Excel when in foreground
+* Requires Win32 Access
+  * Don't capture other windows than Excel when in foreground
+  * Strip user names from saved files.
+  * Not useful until the above have been implemented
+    * Ask for Excel to be closed prior to screencasting (to avoid capturing other Excel documents).
 * Ask for permission to screencast
 * Dump Java console output to log.
 * Have a real progress bar.
 * Optimize screencast encoding.
-* Strip user names from saved files.
 * Don't use a temporary directory that contains the user name in its path.
-* Store IP prefix in separate file so it's easy to delete it after review.
+* Store less IP information (e.g. a shorter hash or a separate file).
 
 Later
 * Java screencast.
