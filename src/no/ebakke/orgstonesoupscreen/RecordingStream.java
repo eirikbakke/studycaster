@@ -1,23 +1,18 @@
-package org.one.stone.soup.screen.recording.converter;
+package no.ebakke.orgstonesoupscreen;
 
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.one.stone.soup.screen.recorder.FrameDecompressor;
+import no.ebakke.orgstonesoupscreen.FrameDecompressor;
 
 public class RecordingStream {
   private Rectangle area;
-  private Rectangle outputArea;
   private FrameDecompressor decompressor;
   private long frameTime;
   private boolean finished = false;
-
-  public RecordingStream(InputStream iStream, int width, int height) {
-    this(iStream);
-    outputArea = new Rectangle(width, height);
-  }
+  private int[] frameData;
 
   public RecordingStream(InputStream iStream) {
     try {
@@ -28,7 +23,6 @@ public class RecordingStream {
       height = height << 8;
       height += iStream.read();
       area = new Rectangle(width, height);
-      outputArea = area;
       decompressor = new FrameDecompressor(iStream, width * height);
     } catch (Exception e) {
       e.printStackTrace();
@@ -36,33 +30,33 @@ public class RecordingStream {
   }
 
   public BufferedImage readFrame() throws IOException {
+    if (readFrameData())
+      return null;
+    BufferedImage bufferedImage = new BufferedImage(area.width, area.height, BufferedImage.TYPE_INT_RGB);
+    bufferedImage.setRGB(0, 0, area.width, area.height, getFrameData(), 0, area.width);
+    return bufferedImage;
+  }
+
+  public boolean readFrameData() throws IOException {
     FrameDecompressor.FramePacket frame = decompressor.unpack();
     frameTime = frame.getTimeStamp();
+    frameData = frame.getData();
     int result = frame.getResult();
     if (result == 0) {
-      return null;
+      return true;
     } else if (result == -1) {
       finished = true;
-      return null;
+      return true;
     }
-    BufferedImage bufferedImage = new BufferedImage(area.width,
-            area.height, BufferedImage.TYPE_INT_RGB);
-    bufferedImage.setRGB(0, 0, area.width, area.height, frame.getData(), 0,
-            area.width);
-    if (area == outputArea) {
-      return bufferedImage;
-    }
-    BufferedImage scaledBufferedImage = new BufferedImage(outputArea.width,
-            outputArea.height, BufferedImage.TYPE_INT_RGB);
-    scaledBufferedImage.getGraphics().drawImage(
-            bufferedImage.getScaledInstance(outputArea.width,
-            outputArea.height, BufferedImage.SCALE_SMOOTH), 0, 0,
-            outputArea.width, outputArea.height, null);
-    return scaledBufferedImage;
+    return false;
+  }
+
+  public int[] getFrameData() {
+    return frameData;
   }
 
   public Rectangle getArea() {
-    return outputArea;
+    return area;
   }
 
   public long getFrameTime() {

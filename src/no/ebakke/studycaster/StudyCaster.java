@@ -27,9 +27,9 @@ import java.util.logging.Logger;
 import no.ebakke.studycaster.util.Blocker;
 import no.ebakke.studycaster.util.Pair;
 import no.ebakke.studycaster.util.Util;
-import org.one.stone.soup.screen.recorder.DesktopScreenRecorder;
-import org.one.stone.soup.screen.recorder.ScreenRecorder;
-import org.one.stone.soup.screen.recorder.ScreenRecorderListener;
+import no.ebakke.orgstonesoupscreen.DesktopScreenRecorder;
+import no.ebakke.orgstonesoupscreen.ScreenRecorder;
+import no.ebakke.orgstonesoupscreen.ScreenRecorderListener;
 
 public class StudyCaster {
   public static final Logger log = Logger.getLogger("no.ebakke.studycaster");

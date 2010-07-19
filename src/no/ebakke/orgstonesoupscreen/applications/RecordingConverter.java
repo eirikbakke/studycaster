@@ -1,5 +1,6 @@
-package org.one.stone.soup.screen.recording.converter;
+package no.ebakke.orgstonesoupscreen.applications;
 
+import no.ebakke.orgstonesoupscreen.RecordingStream;
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -34,33 +35,14 @@ import javax.media.protocol.FileTypeDescriptor;
 import javax.media.protocol.PullBufferDataSource;
 import javax.media.protocol.PullBufferStream;
 
-import org.one.stone.soup.stringhelper.FileNameHelper;
-
 public class RecordingConverter implements ControllerListener, DataSinkListener {
   public static void main(String[] args) {
-    main2(new String[]{"z:\\rectest\\testfile.rec"});
-  }
-
-  public static void main2(String[] args) {
     try {
-      if (args.length == 1) {
-        String[] newArgs = new String[2];
-        newArgs[0] = args[0];
-        String ext = FileNameHelper.getExt(args[0]);
-        newArgs[1] = args[0].substring(0, args[0].length() - (ext.length() + 1)) + ".mov";
-        args = newArgs;
-      }
-
-      if (args.length != 2 && args.length != 4) {
-        System.out.println("Usage: JavaRecordingToMovie <screenRecording> <movieFile (currenly .mov or .avi supported)> [width height (optional)]");
-        return;
-      }
       RecordingConverter recordingConverter = new RecordingConverter();
-      if (args.length == 2) {
-        recordingConverter.process(args[0], args[1], -1, -1);
-      } else {
-        recordingConverter.process(args[0], args[1], Integer.parseInt(args[2]), Integer.parseInt(args[3]));
-      }
+      // FileTypeDescriptor.QUICKTIME  // MOV
+      // FileTypeDescriptor.MSVIDEO    // AVI
+      recordingConverter.process("z:\\rectest\\testfile.rec", "z:\\rectest\\testfile.mov",
+              FileTypeDescriptor.QUICKTIME);
     } catch (Exception e) {
       e.printStackTrace();
     } finally {
@@ -79,22 +61,25 @@ public class RecordingConverter implements ControllerListener, DataSinkListener 
   PlayerSourceStream playerSourceStream;
 
   class PlayerDataSource extends PullBufferDataSource {
-
+    MediaLocator mediaLocator;
     PlayerSourceStream streams[];
 
-    PlayerDataSource(String screenRecordingFileName, int width, int height)
+    PlayerDataSource(String screenRecordingFileName, MediaLocator mediaLocator)
             throws IOException {
+      this.mediaLocator = mediaLocator;
       streams = new PlayerSourceStream[1];
-      playerSourceStream = new PlayerSourceStream(
-              screenRecordingFileName, width, height);
+      playerSourceStream = new PlayerSourceStream(screenRecordingFileName);
       streams[0] = playerSourceStream;
     }
 
+    @Override
     public void setLocator(MediaLocator source) {
+      mediaLocator = source;
     }
 
+    @Override
     public MediaLocator getLocator() {
-      return null;
+      return mediaLocator;
     }
 
     /**
@@ -159,23 +144,18 @@ public class RecordingConverter implements ControllerListener, DataSinkListener 
   class PlayerSourceStream implements PullBufferStream {
 
     FileInputStream inStream;
-    RecordingStream recordingStream;
+    RecordingStream recStr;
     int width, height, frameRate;
     VideoFormat format;
     BufferedImage image;
     int nextImage = 0; // index of the next image to be read.
     boolean ended = false;
 
-    public PlayerSourceStream(String screenRecordingFileName, int width,
-            int height) throws IOException {
+    public PlayerSourceStream(String screenRecordingFileName) throws IOException {
       inStream = new FileInputStream(screenRecordingFileName);
-      if (width != -1) {
-        recordingStream = new RecordingStream(inStream, width, height);
-      } else {
-        recordingStream = new RecordingStream(inStream);
-      }
-      width = (int) recordingStream.getArea().getWidth();
-      height = (int) recordingStream.getArea().getHeight();
+      recStr = new RecordingStream(inStream);
+      width = (int) recStr.getArea().getWidth();
+      height = (int) recStr.getArea().getHeight();
       frameRate = 4;
       format = new VideoFormat(VideoFormat.JPEG,
               new Dimension(width, height),
@@ -202,7 +182,7 @@ public class RecordingConverter implements ControllerListener, DataSinkListener 
      */
     public void read(Buffer buffer) throws IOException {
       // Check if we've finished all the frames.
-      if (recordingStream.isFinished()) {
+      if (recStr.isFinished()) {
         // We are done. Set EndOfMedia.
         System.err.println("Done reading all images.");
         buffer.setEOM(true);
@@ -212,9 +192,9 @@ public class RecordingConverter implements ControllerListener, DataSinkListener 
         return;
       }
       ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-      BufferedImage newImage = recordingStream.readFrame();
-      if (newImage != null) {
-        image = newImage;
+      if (!recStr.readFrameData()) {
+        image = new BufferedImage(recStr.getArea().width, recStr.getArea().height, BufferedImage.TYPE_INT_RGB);
+        image.setRGB(0, 0, recStr.getArea().width, recStr.getArea().height, recStr.getFrameData(), 0, recStr.getArea().width);
       }
       ImageIO.write(image, "JPEG", outputStream);
       byte[] data = outputStream.toByteArray();
@@ -260,11 +240,9 @@ public class RecordingConverter implements ControllerListener, DataSinkListener 
   public RecordingConverter() throws Exception {
   }
 
-  public void process(String recordingFile, String movieFile, int width,
-          int height) throws Exception {
+  public void process(String recordingFile, String movieFile, String type) throws Exception {
     MediaLocator mediaLocator = new MediaLocator(new File(movieFile).toURI().toURL());
-    PlayerDataSource playerDataSource = new PlayerDataSource(recordingFile,
-            width, height);
+    PlayerDataSource playerDataSource = new PlayerDataSource(recordingFile, mediaLocator);
     Processor processor = Manager.createProcessor(playerDataSource);
     processor.addControllerListener(this);
     processor.configure();
@@ -272,16 +250,7 @@ public class RecordingConverter implements ControllerListener, DataSinkListener 
       System.err.println("Failed to configure the processor.");
       return;
     }
-    String ext = FileNameHelper.getExt(movieFile).toLowerCase();
-    if (ext.equals("mov")) {
-      processor.setContentDescriptor(new ContentDescriptor(
-              FileTypeDescriptor.QUICKTIME));
-    } else if (ext.equals("avi")) {
-      processor.setContentDescriptor(new ContentDescriptor(
-              FileTypeDescriptor.MSVIDEO));
-    } else {
-      throw new IOException("Unrecognised Movie File Type " + ext);
-    }
+    processor.setContentDescriptor(new ContentDescriptor(type));
     TrackControl trackControl[] = processor.getTrackControls();
     Format format[] = trackControl[0].getSupportedFormats();
     trackControl[0].setFormat(format[0]);
@@ -302,7 +271,7 @@ public class RecordingConverter implements ControllerListener, DataSinkListener 
     dataSink.close();
     processor.removeControllerListener(this);
   }
-  Object waitFileSync = new Object();
+  final Object waitFileSync = new Object();
   boolean fileDone = false;
   boolean fileSuccess = true;
 
@@ -342,7 +311,7 @@ public class RecordingConverter implements ControllerListener, DataSinkListener 
       }
     }
   }
-  Object waitSync = new Object();
+  final Object waitSync = new Object();
   boolean stateTransitionOK = true;
 
   /**

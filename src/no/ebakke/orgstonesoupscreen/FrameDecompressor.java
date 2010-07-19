@@ -1,4 +1,4 @@
-package org.one.stone.soup.screen.recorder;
+package no.ebakke.orgstonesoupscreen;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

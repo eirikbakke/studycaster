@@ -1,4 +1,4 @@
-package org.one.stone.soup.screen.recorder.application;
+package no.ebakke.orgstonesoupscreen.applications;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
@@ -7,14 +7,14 @@ import java.io.File;
 import java.io.FileOutputStream;
 
 import javax.swing.JButton;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 
-import org.one.stone.soup.screen.recorder.DesktopScreenRecorder;
-import org.one.stone.soup.screen.recorder.ScreenRecorder;
-import org.one.stone.soup.screen.recorder.ScreenRecorderListener;
-import org.one.stone.soup.swing.JRootFrame;
+import no.ebakke.orgstonesoupscreen.DesktopScreenRecorder;
+import no.ebakke.orgstonesoupscreen.ScreenRecorder;
+import no.ebakke.orgstonesoupscreen.ScreenRecorderListener;
 
-public class JRecorder extends JRootFrame implements ScreenRecorderListener, ActionListener {
+public class JRecorder extends JFrame implements ScreenRecorderListener, ActionListener {
   private ScreenRecorder recorder;
   private File temp;
   private JButton control;
@@ -23,7 +23,7 @@ public class JRecorder extends JRootFrame implements ScreenRecorderListener, Act
   private String toFile = "z:\\rectest\\testfile.rec";
 
   public JRecorder() {
-    super("Screen Recorder", new String[]{});
+    super("Screen Recorder");
 
     control = new JButton("Start Recording");
     control.setActionCommand("start");
@@ -38,7 +38,7 @@ public class JRecorder extends JRootFrame implements ScreenRecorderListener, Act
   }
 
   public JRecorder(String command, String fileName) {
-    super("Screen Recorder", new String[]{});
+    super("Screen Recorder");
 
     if (command.equals("stop")) {
       System.out.println("Requested Stop Recording to " + fileName);

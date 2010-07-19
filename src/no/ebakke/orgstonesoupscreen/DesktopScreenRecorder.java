@@ -1,4 +1,4 @@
-package org.one.stone.soup.screen.recorder;
+package no.ebakke.orgstonesoupscreen;
 
 import java.awt.AWTException;
 import java.awt.Color;

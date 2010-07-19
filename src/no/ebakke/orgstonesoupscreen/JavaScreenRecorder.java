@@ -1,4 +1,4 @@
-package org.one.stone.soup.screen.recorder;
+package no.ebakke.orgstonesoupscreen;
 
 import java.awt.Component;
 import java.awt.Graphics;
@@ -9,7 +9,6 @@ import java.awt.image.ImageObserver;
 import java.io.OutputStream;
 
 public class JavaScreenRecorder extends ScreenRecorder {
-
   private boolean waitingForCapture = false;
   private BufferedImage renderedImage = null;
   private Graphics heldGraphics = null;

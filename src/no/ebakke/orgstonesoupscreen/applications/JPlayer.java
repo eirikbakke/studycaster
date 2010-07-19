@@ -1,4 +1,4 @@
-package org.one.stone.soup.screen.player.application;
+package no.ebakke.orgstonesoupscreen.applications;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -12,14 +12,13 @@ import java.io.FileInputStream;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-import org.one.stone.soup.screen.recorder.ScreenPlayer;
-import org.one.stone.soup.screen.recorder.ScreenPlayerListener;
-import org.one.stone.soup.stringhelper.StringGenerator;
-import org.one.stone.soup.swing.JRootFrame;
+import no.ebakke.orgstonesoupscreen.ScreenPlayer;
+import no.ebakke.orgstonesoupscreen.ScreenPlayerListener;
 
 /**
  * @author A364061
@@ -27,7 +26,7 @@ import org.one.stone.soup.swing.JRootFrame;
  * To change the template for this generated type comment go to
  * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
-public class JPlayer extends JRootFrame implements ScreenPlayerListener, ActionListener {
+public class JPlayer extends JFrame implements ScreenPlayerListener, ActionListener {
 
   private ScreenPlayer player;
   private ImageIcon icon;
@@ -42,7 +41,7 @@ public class JPlayer extends JRootFrame implements ScreenPlayerListener, ActionL
   private long startTime;
 
   public JPlayer() {
-    super("Screen Player", new String[]{});
+    super("Screen Player");
 
     JPanel panel = new JPanel();
     panel.setLayout(new GridLayout(1, 4));
@@ -170,10 +169,7 @@ public class JPlayer extends JRootFrame implements ScreenPlayerListener, ActionL
 
     frameCount++;
     long time = System.currentTimeMillis() - startTime;
-    String seconds = "" + time / 1000;
-    String milliseconds = "" + time % 1000;
-    milliseconds = StringGenerator.pad(milliseconds, 4, '0') + milliseconds;
-    frameLabel.setText("Frame:" + frameCount + " Time:" + seconds + "." + milliseconds);
+    frameLabel.setText("Frame:" + frameCount + " Time:" + time / 1000.0);
   }
 
   public static void main(String[] args) {

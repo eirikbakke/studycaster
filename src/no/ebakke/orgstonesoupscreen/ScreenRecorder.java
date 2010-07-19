@@ -1,13 +1,13 @@
-package org.one.stone.soup.screen.recorder;
+package no.ebakke.orgstonesoupscreen;
 
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
-import org.one.stone.soup.util.Queue;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public abstract class ScreenRecorder implements Runnable {
-
   private Rectangle recordArea;
   private int frameSize;
   private int[] rawData;
@@ -30,8 +30,7 @@ public abstract class ScreenRecorder implements Runnable {
   }
 
   private class StreamPacker implements Runnable {
-
-    private Queue<DataPack> queue = new Queue<DataPack>();
+    private Queue<DataPack> queue = new LinkedList<DataPack>();
     private FrameCompressor compressor;
 
     public StreamPacker(OutputStream oStream, int frameSize) {
@@ -47,13 +46,13 @@ public abstract class ScreenRecorder implements Runnable {
         } catch (Exception e) {
         }
       }
-      queue.post(pack);
+      queue.add(pack);
     }
 
     public void run() {
       while (recording) {
         while (queue.isEmpty() == false) {
-          DataPack pack = (DataPack) queue.get();
+          DataPack pack = queue.poll();
           try {
             compressor.pack(pack.newData, pack.frameTime, reset);
 
