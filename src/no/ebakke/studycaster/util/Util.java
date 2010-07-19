@@ -6,6 +6,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.logging.Level;
+import no.ebakke.studycaster.StudyCaster;
 
 public class Util {
   private static int BUF_SIZE = 8192;
@@ -23,10 +25,19 @@ public class Util {
       FileOutputStream exclusive = new FileOutputStream(f, true);
       exclusive.close();
     } catch (FileNotFoundException e) {
-      return true;
+      return false;
     } catch (IOException e) {
-      return true;
+      return false;
     }
-    return false;
+    return true;
+  }
+
+  public static String getPathTo(File f) {
+    try {
+      return f.getCanonicalPath();
+    } catch (IOException e) {
+      StudyCaster.log.log(Level.WARNING, "Couldn't get canonical path.", e);
+      return f.getAbsolutePath();
+    }
   }
 }

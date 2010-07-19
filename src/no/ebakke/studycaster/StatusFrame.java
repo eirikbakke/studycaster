@@ -3,15 +3,20 @@ package no.ebakke.studycaster;
 import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.Toolkit;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
 public class StatusFrame extends javax.swing.JFrame {
   private static final long serialVersionUID = -49886778462745844L;
   private ProgressBarUI pbui;
+  private JDialog positionDialog;
   
   public ProgressBarUI getProgressBarUI() {
     return pbui;
@@ -25,6 +30,10 @@ public class StatusFrame extends javax.swing.JFrame {
     return uploadButton;
   }
 
+  public JDialog getPositionDialog() {
+    return positionDialog;
+  }
+
   public static void setSystemLookAndFeel() {
     try {
       UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -34,6 +43,7 @@ public class StatusFrame extends javax.swing.JFrame {
   }
 
   public StatusFrame(String instructions) {
+    positionDialog = new JDialog(this);
     initComponents();
     pbui = new ProgressBarUI(progressBar);
     progressBar.setIndeterminate(true);
@@ -41,7 +51,13 @@ public class StatusFrame extends javax.swing.JFrame {
     pack();
     Dimension sdim = Toolkit.getDefaultToolkit().getScreenSize();
     Dimension wdim = getSize();
-    setLocation(sdim.width - wdim.width - 100, sdim.height - wdim.height - 150);
+    final int XMARGIN_MIN = 40;
+    final int YMARGIN_MIN = 110;
+    int xmargin = (int) (sdim.width  * 0.14) - wdim.width  / 2;
+    int ymargin = (int) (sdim.height * 0.22) - wdim.height / 2;
+    xmargin = Math.max(XMARGIN_MIN, xmargin);
+    ymargin = Math.max(YMARGIN_MIN, ymargin);
+    setLocation(sdim.width - wdim.width - xmargin, sdim.height - wdim.height - ymargin);
 
     try {
       List<Image> icons = new ArrayList<Image>();
@@ -52,6 +68,17 @@ public class StatusFrame extends javax.swing.JFrame {
     } catch (Exception e) {
       StudyCaster.log.log(Level.WARNING, "Can't set icon images.", e);
     }
+
+    addWindowListener(new WindowAdapter() {
+      @Override
+      public void windowClosing(WindowEvent e) {
+        int decision = JOptionPane.showConfirmDialog(getPositionDialog(),
+                "If you exit the User Study Console without uploading first, your changes will be lost.", "Exit Without Uploading?",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (decision == JOptionPane.OK_OPTION)
+          dispose();
+      }
+    });
   }
 
   /** This method is called from within the constructor to
@@ -68,7 +95,7 @@ public class StatusFrame extends javax.swing.JFrame {
     instructionLabel = new javax.swing.JLabel();
     uploadButton = new javax.swing.JButton();
 
-    setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+    setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
     setTitle("User Study Console");
     setAlwaysOnTop(true);
     setResizable(false);

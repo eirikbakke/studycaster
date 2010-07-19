@@ -1,6 +1,7 @@
 package no.ebakke.studycaster.studies;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.logging.Level;
 import javax.swing.JOptionPane;
 import no.ebakke.studycaster.StudyCaster;
@@ -14,7 +15,7 @@ public class ExcelLauncher {
     "<html><b>Instructions:</b><ol>" +
     "<li>Edit the spreadsheet that opened in another window<br>" +
     "(according to the instructions in the HIT)." +
-    "<li>Save and close the spreadsheet." +
+    "<li>Save and close the spreadsheet<br>" +
     "<li>Click the button below." +
     "<li>Paste the confirmation code into the HIT." +
     "</ol><p align=\"right\">Thanks!<br><a href=\"mailto:ebakke@mit.edu\">ebakke@mit.edu</a></p></html>";
@@ -41,11 +42,11 @@ public class ExcelLauncher {
       scui.getProgressBarUI().setProgress(0);
       sc.startRecording();
     } catch (StudyCasterException e) {
-      scui.showMessageDialog("Can't Load User Study", e.getLocalizedMessage(), JOptionPane.WARNING_MESSAGE, true);
-      scui.disposeUI();
-      e.printStackTrace();
+      StudyCaster.log.log(Level.SEVERE, "Can't Load User Study.", e);
       if (sc != null)
         sc.concludeStudy();
+      scui.showMessageDialog("Can't Load User Study", e.getLocalizedMessage(), JOptionPane.WARNING_MESSAGE, true);
+      scui.disposeUI();
       return;
     }
 
@@ -54,27 +55,15 @@ public class ExcelLauncher {
       action = scui.waitForUserAction();
       if (action == UIAction.UPLOAD) {
         long nowLastModified = excelFile.lastModified();
-        boolean unchanged = (nowLastModified == lastModified1 || nowLastModified == lastModified2);
-        boolean stillOpen = Util.fileAvailableExclusive(excelFile);
+        if (nowLastModified == lastModified1 || nowLastModified == lastModified2) {
+          StudyCaster.log.info("Got upload on unchanged document; exclusive=" + Util.fileAvailableExclusive(excelFile));
 
-        if (unchanged) {
-          StudyCaster.log.info("Got upload on unchanged document.");
           scui.showMessageDialog("Upload",
                   "<html>Please edit, save, and close the Excel document, then try again.<br><br>" +
-                  "(The document should have opened in a new window, possibly in the background.)</html>"
+                  "(The document should have opened in a new window, possibly in the background.)<br>" +
+                  "</html>"
                   , JOptionPane.WARNING_MESSAGE, false);
-          if (!stillOpen) {
-            scui.getProgressBarUI().setTaskAppearance("Reopening document...", true);
-            try {
-              StudyCaster.log.info("Attempting to reopen document.");
-              sc.desktopOpenFile(excelFile, "Excel or a compatible spreadsheet application");
-              lastModified2 = excelFile.lastModified();
-            } catch (StudyCasterException e) {
-              StudyCaster.log.log(Level.WARNING, "Error trying to reopen document.", e);
-            }
-            scui.getProgressBarUI().setTaskAppearance("", false);
-          }
-        } else if (stillOpen) {
+        } else if (!Util.fileAvailableExclusive(excelFile)) {
           StudyCaster.log.info("Got upload on changed but still open document.");
           scui.showMessageDialog("Upload",
                 "<html>Please close the Excel document, then try again.</html>"

@@ -3,6 +3,7 @@ package no.ebakke.studycaster;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
 import java.util.logging.Level;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
@@ -20,49 +21,41 @@ public class StudyCasterUI {
   private Blocker actionBlocker = new Blocker();
 
   public StudyCasterUI(final String instructions) {
-    final Object initedCondition = new Object();
+    final Blocker initedBlocker = new Blocker();
     StatusFrame.setSystemLookAndFeel();
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
-        synchronized (initedCondition) {
-          sf = new StatusFrame(instructions);
-          sf.setVisible(true);
-          sf.addWindowListener(new java.awt.event.WindowAdapter() {
-            @Override
-            public void windowClosed(java.awt.event.WindowEvent evt) {
-              actionTaken = UIAction.CLOSE;
-              actionBlocker.releaseBlockingThreads();
-              new Thread(new Runnable() {
-                public void run() {
-                  try {
-                    Thread.sleep(5000);
-                  } catch (InterruptedException e) {
-                    StudyCaster.log.log(Level.WARNING, "Sleep was interrupted.", e);
-                  }
-                  StudyCaster.log.warning("Forcing exit five seconds after window closure.");
-                  System.exit(0);
+        sf = new StatusFrame(instructions);
+        sf.addWindowListener(new java.awt.event.WindowAdapter() {
+          @Override
+          public void windowClosed(java.awt.event.WindowEvent evt) {
+            actionTaken = UIAction.CLOSE;
+            actionBlocker.releaseBlockingThread();
+            new Thread(new Runnable() {
+              public void run() {
+                try {
+                  Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                  StudyCaster.log.log(Level.WARNING, "Sleep was interrupted.", e);
                 }
-              }).start();
-            }
-          });
-          sf.getUploadButton().addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-              sf.getUploadButton().setEnabled(false);
-              actionTaken = UIAction.UPLOAD;
-              actionBlocker.releaseBlockingThreads();
-            }
-          });
-          initedCondition.notify();
-        }
+                StudyCaster.log.warning("Forcing exit five seconds after window closure.");
+                System.exit(0);
+              }
+            }).start();
+          }
+        });
+        sf.getUploadButton().addActionListener(new ActionListener() {
+          public void actionPerformed(ActionEvent e) {
+            sf.getUploadButton().setEnabled(false);
+            actionTaken = UIAction.UPLOAD;
+            actionBlocker.releaseBlockingThread();
+          }
+        });
+        sf.setVisible(true);
+        initedBlocker.releaseBlockingThread();
       }
     });
-    synchronized (initedCondition) {
-      while (sf == null) {
-        try {
-          initedCondition.wait();
-        } catch (InterruptedException e) { }
-      }
-    }
+    initedBlocker.blockUntilReleased();
   }
 
   public void disposeUI() {
@@ -83,7 +76,7 @@ public class StudyCasterUI {
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
         ConfirmationCodeDialog.show(sf, confirmationCode);
-        blocker.releaseBlockingThreads();
+        blocker.releaseBlockingThread();
       }
     });
     if (block)
@@ -95,9 +88,8 @@ public class StudyCasterUI {
 
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
-        JDialog positionDialog = new JDialog(sf);
-        JOptionPane.showMessageDialog(positionDialog, message, title, messageType);
-        blocker.releaseBlockingThreads();
+        JOptionPane.showMessageDialog(sf.getPositionDialog(), message, title, messageType);
+        blocker.releaseBlockingThread();
       }
     });
     if (block)

@@ -98,7 +98,7 @@ public class StudyCaster {
       }
       currentRunTicket = new Ticket();
 
-      File ticketStore = new File(System.getProperty("java.io.tmpdir") + File.separator + "sc_7403204709139484951.tmp");
+      File ticketStore = new File(System.getProperty("java.io.tmpdir") + File.separator + "sc_tickets.tmp");
       boolean writeTicketStore = false;
       try {
         if (ticketStore.exists()) {
@@ -295,7 +295,7 @@ public class StudyCaster {
 
           public void recordingStopped() {
             log.info("Recording stopped.");
-            recorderBlocker.releaseBlockingThreads();
+            recorderBlocker.releaseBlockingThread();
           }
         });
         recorder.startRecording();

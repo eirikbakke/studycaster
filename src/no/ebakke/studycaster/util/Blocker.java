@@ -1,13 +1,17 @@
 package no.ebakke.studycaster.util;
 
 public class Blocker {
-  private final Object  lock = new Object();
+  private final Object lock = new Object();
   private boolean releasedYet = false;
+  private boolean blockedYet = false;
 
   public void blockUntilReleased(long timeOut) {
-    long startTime = System.currentTimeMillis();
-    long waitTimeOut;
     synchronized (lock) {
+      long startTime = System.currentTimeMillis();
+      long waitTimeOut;
+      if (blockedYet)
+        throw new IllegalStateException("Expected only one blocking thread.");
+      blockedYet = true;
       while (!releasedYet) {
         if (timeOut == 0) {
           waitTimeOut = 0;
@@ -27,10 +31,10 @@ public class Blocker {
     blockUntilReleased(0);
   }
 
-  public void releaseBlockingThreads() {
+  public void releaseBlockingThread() {
     synchronized (lock) {
       releasedYet = true;
-      lock.notifyAll();
+      lock.notify();
     }
   }
 }

@@ -6,3 +6,31 @@ http://tango.freedesktop.org/Tango_Icon_Library
 ScreenCasting library was from java-remote-control:
 http://code.google.com/p/java-remote-control/wiki/UsingTheScreenRecorder
 
+
+19:02 2010-07-18
+TODO
+* Ask for Excel to be closed prior to screencasting (to avoid capturing other Excel documents).
+* Don't capture other windows than Excel when in foreground
+* Ask for permission to screencast
+* Dump Java console output to log.
+* Have a real progress bar.
+* Optimize screencast encoding.
+* Strip user names from saved files.
+* Don't use a temporary directory that contains the user name in its path.
+* Store IP prefix in separate file so it's easy to delete it after review.
+
+Later
+* Java screencast.
+* Consider real-time screencast uploading.
+* Verify timing of videos.
+* Find the double-upload bug.
+* Sign the JAR.
+
+Done
+V Don't reopen; dangerous.
+V Have a confirmation dialog if the window is closed before uploading.
+V Fix window positioning for all resolutions.
+
+Considered, decided to make no change:
+* Add notice about not having to save the document elsewhere.
+* Add notice about possibly closed document.
