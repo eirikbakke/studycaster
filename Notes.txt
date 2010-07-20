@@ -7,13 +7,16 @@ ScreenCasting library was from java-remote-control:
 http://code.google.com/p/java-remote-control/wiki/UsingTheScreenRecorder
 
 
-19:02 2010-07-18
+19:02 2010-07-18 (updated 22:49 2010-07-19)
 TODO
 * Requires Win32 Access
   * Don't capture other windows than Excel when in foreground
   * Strip user names from saved files.
   * Not useful until the above have been implemented
     * Ask for Excel to be closed prior to screencasting (to avoid capturing other Excel documents).
+* Requires $$$
+  * Add SSL support
+  * Sign JAR
 * Ask for permission to screencast
 * Dump Java console output to log.
 * Have a real progress bar.
@@ -36,3 +39,14 @@ V Fix window positioning for all resolutions.
 Considered, decided to make no change:
 * Add notice about not having to save the document elsewhere.
 * Add notice about possibly closed document.
+
+21:37 2010-07-19
+* Renewed logging/screencasting functionality
+  * One class queues up stderr/stdout output, mouse pointer movements, log entries, and screenshots.
+    These can be queued even before the server has been contacted.
+  * Another class intercepts stderr/stdout and the default logger, routing things different places.
+  * Another class transmits as soon as the server has been contacted.
+  * Philosophy: make the logging entirely independent of the rest, don't require proper shutdown.
+* Other notes
+  * Might need to send keepalive packets
+

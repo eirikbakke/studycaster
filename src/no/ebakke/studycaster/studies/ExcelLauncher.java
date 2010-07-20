@@ -1,7 +1,6 @@
 package no.ebakke.studycaster.studies;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.logging.Level;
 import javax.swing.JOptionPane;
 import no.ebakke.studycaster.StudyCaster;

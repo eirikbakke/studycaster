@@ -1,14 +1,16 @@
 package no.ebakke.orgstonesoupscreen;
 
-import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
 
 public class FrameCompressor {
-
   public class FramePacket {
+    private OutputStream oStream;
+    private long frameTime;
+    private int[] previousData;
+    private int[] newData;
 
     private FramePacket(OutputStream oStream, int frameSize) {
       this.oStream = oStream;
@@ -28,10 +30,6 @@ public class FrameCompressor {
         this.newData = frameData;//new int[frameData.length];
       }
     }
-    private OutputStream oStream;
-    private long frameTime;
-    private int[] previousData;
-    private int[] newData;
   }
   private FramePacket frame;
 

@@ -1,11 +1,8 @@
 package no.ebakke.orgstonesoupscreen;
 
 import java.awt.Rectangle;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
-
-import no.ebakke.orgstonesoupscreen.FrameDecompressor;
 
 public class RecordingStream {
   private Rectangle area;
@@ -27,14 +24,6 @@ public class RecordingStream {
     } catch (Exception e) {
       e.printStackTrace();
     }
-  }
-
-  public BufferedImage readFrame() throws IOException {
-    if (readFrameData())
-      return null;
-    BufferedImage bufferedImage = new BufferedImage(area.width, area.height, BufferedImage.TYPE_INT_RGB);
-    bufferedImage.setRGB(0, 0, area.width, area.height, getFrameData(), 0, area.width);
-    return bufferedImage;
   }
 
   public boolean readFrameData() throws IOException {

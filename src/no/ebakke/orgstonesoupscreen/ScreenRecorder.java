@@ -1,5 +1,4 @@
 package no.ebakke.orgstonesoupscreen;
-
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -20,7 +19,6 @@ public abstract class ScreenRecorder implements Runnable {
   private ScreenRecorderListener listener;
 
   private class DataPack {
-
     public DataPack(int[] newData, long frameTime) {
       this.newData = newData;
       this.frameTime = frameTime;
@@ -35,11 +33,12 @@ public abstract class ScreenRecorder implements Runnable {
 
     public StreamPacker(OutputStream oStream, int frameSize) {
       compressor = new FrameCompressor(oStream, frameSize);
-
       new Thread(this, "Stream Packer").start();
     }
 
     public void packToStream(DataPack pack) {
+      System.out.println(queue.size());
+      // TODO: May decrease this to one or zero.
       while (queue.size() > 2) {
         try {
           Thread.sleep(10);
@@ -55,6 +54,12 @@ public abstract class ScreenRecorder implements Runnable {
           DataPack pack = queue.poll();
           try {
             compressor.pack(pack.newData, pack.frameTime, reset);
+            /*
+                try {
+              Thread.sleep(500);
+            } catch (Exception e) {
+            }
+            */
 
             if (reset == true) {
               reset = false;
@@ -80,7 +85,6 @@ public abstract class ScreenRecorder implements Runnable {
   private StreamPacker streamPacker;
 
   public ScreenRecorder(OutputStream oStream, ScreenRecorderListener listener) {
-
     this.listener = listener;
     this.oStream = oStream;
   }
@@ -139,8 +143,16 @@ public abstract class ScreenRecorder implements Runnable {
     frameTime = System.currentTimeMillis() - startTime;
     //long t2 = System.currentTimeMillis();
 
+    /*
+    System.out.println("getting frameSize " + frameSize);
+    long heapSize = Runtime.getRuntime().totalMemory();
+    long heapMaxSize = Runtime.getRuntime().maxMemory();
+    long heapFreeSize = Runtime.getRuntime().freeMemory();
+    System.out.println("hsize: " + heapSize + " hmax: "+  heapMaxSize + " hfree: " +  heapFreeSize);
+    */
     rawData = new int[frameSize];
 
+    // TODO: Avoid this memory copy.
     bImage.getRGB(0, 0, recordArea.width, recordArea.height, rawData, 0, recordArea.width);
 
     ////////////////////////////////////////////////////
@@ -182,7 +194,6 @@ public abstract class ScreenRecorder implements Runnable {
     try {
       oStream.write((recordArea.width & 0x0000FF00) >>> 8);
       oStream.write((recordArea.width & 0x000000FF));
-
       oStream.write((recordArea.height & 0x0000FF00) >>> 8);
       oStream.write((recordArea.height & 0x000000FF));
     } catch (Exception e) {
