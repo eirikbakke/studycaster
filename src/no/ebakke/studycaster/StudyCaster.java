@@ -1,5 +1,6 @@
 package no.ebakke.studycaster;
 
+import no.ebakke.studycaster2.Ticket;
 import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -32,7 +33,8 @@ import no.ebakke.orgstonesoupscreen.ScreenRecorder;
 import no.ebakke.orgstonesoupscreen.ScreenRecorderListener;
 
 public class StudyCaster {
-  public static final Logger log = Logger.getLogger("no.ebakke.studycaster");
+  public static final int RUN_TICKET_LENGTH    = 6;
+  public  static final Logger log = Logger.getLogger("no.ebakke.studycaster");
   private final List<LogRecord> logEntries = new ArrayList<LogRecord>();
   private DateFormat dateFormat;
   private URL    serverURL;
@@ -96,15 +98,15 @@ public class StudyCaster {
       } catch (MalformedURLException e) {
         throw new StudyCasterException(e);
       }
-      currentRunTicket = new Ticket();
+      currentRunTicket = new Ticket(RUN_TICKET_LENGTH);
 
-      File ticketStore = new File(System.getProperty("java.io.tmpdir") + File.separator + "sc_tickets.tmp");
+      File ticketStore = new File(System.getProperty("java.io.tmpdir") + File.separator + "sc_7403204709139484951.tmp");
       boolean writeTicketStore = false;
       try {
         if (ticketStore.exists()) {
           BufferedReader br = new BufferedReader(new FileReader(ticketStore));
           try {
-            firstRunTicket    = new Ticket(br.readLine());
+            firstRunTicket    = new Ticket(br.readLine(), RUN_TICKET_LENGTH);
             firstServerTicket = new Ticket(br.readLine());
             log.info("Read from ticket store.");
           } finally {

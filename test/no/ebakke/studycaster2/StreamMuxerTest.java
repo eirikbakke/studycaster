@@ -1,5 +1,6 @@
-package no.ebakke.studycaster.packetstream;
+package no.ebakke.studycaster2;
 
+import no.ebakke.studycaster2.StreamMuxer;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -16,14 +17,14 @@ import org.junit.Test;
 
 public class StreamMuxerTest {
   private static final int DATA_AMOUNT = 500000;
-  private static final int NO_THREADS = 255;
+  private static final int NO_THREADS = 100;
 
   @Test
   public void testBaseFunctionality() throws Exception {
 
     File tempFile = File.createTempFile("StreamMuxerTest", ".tmp");
-    System.out.println(tempFile.getCanonicalPath());
-    //tempFile.deleteOnExit();
+    //System.out.println(tempFile.getCanonicalPath());
+    tempFile.deleteOnExit();
     StreamMuxer underTest = new StreamMuxer(new FileOutputStream(tempFile));
     List<Thread> threads = new ArrayList<Thread>();
     List<TestDataProducer> testDataProducers = new ArrayList<TestDataProducer>();

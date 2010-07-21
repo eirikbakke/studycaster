@@ -37,7 +37,7 @@ public abstract class ScreenRecorder implements Runnable {
     }
 
     public void packToStream(DataPack pack) {
-      System.out.println(queue.size());
+      //System.out.println(queue.size());
       // TODO: May decrease this to one or zero.
       while (queue.size() > 2) {
         try {

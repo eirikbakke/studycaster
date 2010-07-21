@@ -1,5 +1,6 @@
 package no.ebakke.studycaster;
 
+import no.ebakke.studycaster2.Ticket;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -78,7 +79,7 @@ public class ServerRequest {
         http://www.faqs.org/rfcs/rfc1867.html
         http://www.w3.org/TR/html401/interact/forms.html
     */
-    String boundary = new Ticket().toString();
+    String boundary = new Ticket(20).toString();
     URLConnection conn = url.openConnection();
     conn.setDoOutput(true);
     conn.setDoInput(true);

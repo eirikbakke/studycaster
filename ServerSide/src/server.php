@@ -1,10 +1,13 @@
 <?php
-  define("MAX_FILE_SIZE" , 50000000);
-  define("DOWNLOAD_DIR"  , "downloads");
-  define("UPLOAD_DIR"    , "uploads");
-  define("STUDY_LOG_FILE", "study.log");
-  define("FAIL_LOG_FILE" , "fail.log");
-  define("DEBUG_LOG_FILE" , "debug.log");
+  define("MAX_FILE_SIZE"      , 50000000);
+  // TODO: Get this from the client.
+  define("SERVER_TICKET_BYTES", 3);
+  define("DOWNLOAD_DIR"       , "downloads");
+  define("UPLOAD_DIR"         , "uploads");
+  define("STUDY_LOG_FILE"     , "study.log");
+  define("STUDYP_LOG_FILE"    , "studyp.log");
+  define("FAIL_LOG_FILE"      , "fail.log");
+  define("DEBUG_LOG_FILE"     , "debug.log");
 
   function debuglog($msg) {
     $f = fopen(constant("DEBUG_LOG_FILE"), "a");
@@ -14,8 +17,12 @@
 
   function studylog($tickets, $cmd, $fsize, $fname) {
     $f = fopen(constant("STUDY_LOG_FILE"), "a");
-    $ipstart = sprintf("%3s/%-3s", strtok(trim($_SERVER['REMOTE_ADDR']), ".") , strtok("."));
-    fwrite($f, gmdate("Y-m-d H:i:s") . "\t" . $ipstart . "\t" . $tickets . "\t" . $cmd . "\t" . sprintf("%9s", $fsize) . "\t". $fname . "\n");
+    fwrite($f, gmdate("Y-m-d H:i:s") . "\t" . implode("\t", $tickets) . "\t" . $cmd . "\t" . sprintf("%9s", $fsize) . "\t". $fname . "\n");
+    fclose($f);
+
+    $f = fopen(constant("STUDYP_LOG_FILE"), "a");
+    $prefix = sprintf("%3s/%-3s", strtok(trim($_SERVER['REMOTE_ADDR']), ".") , strtok("."));
+    fwrite($f, gmdate("Y-m-d H:i:s") . "\t" . $prefix . "\t" . implode("\t", $tickets) . "\t" . $cmd . "\t" . sprintf("%9s", $fsize) . "\t". $fname . "\n");
     fclose($f);
   }
 
@@ -27,25 +34,24 @@
     if (!array_key_exists("ct" , $_POST) || !array_key_exists("cmd", $_POST) || !sane_string($_POST["ct"], "/^[0-9a-fN\t]*$/"))
       return "bad base parameters";
 
-    $ata = explode("\t", $_POST["ct"]);
-    if (count($ata) != 4 || strlen($ata[0]) == 0 || strlen($ata[1]) == 0)
+    $tickets = explode("\t", $_POST["ct"]);
+    if (count($tickets) != 4 || strlen($tickets[0]) == 0 || strlen($tickets[1]) == 0)
       return "bad tickets";
 
-    $server_ticket = strtolower(substr(sha1("stick " . trim($_SERVER["REMOTE_ADDR"])), 0, strlen($ata[0])));
-    if ($ata[2] == "N")
-      $ata[2] = $server_ticket;
-    if ($ata[3] == "N")
-      $ata[3] = $server_ticket;
-    if ($ata[3] != $server_ticket) {
+    $server_ticket = strtolower(substr(sha1("stick " . trim($_SERVER["REMOTE_ADDR"])), 0, constant("SERVER_TICKET_BYTES") * 2));
+    if ($tickets[2] == "N")
+      $tickets[2] = $server_ticket;
+    if ($tickets[3] == "N")
+      $tickets[3] = $server_ticket;
+    if ($tickets[3] != $server_ticket) {
       return "server ticket mismatch";
     }
-    $at = implode("\t", $ata);
 
     $cmd = $_POST["cmd"];
     if        ($cmd == "gsi") {
       header("X-StudyCaster-ServerTicket: " . $server_ticket);
       header("X-StudyCaster-ServerTime: " . time());
-      studylog($at, $_POST["cmd"], "(N/A)", "(N/A)");
+      studylog($tickets, $_POST["cmd"], "(N/A)", "(N/A)");
       return "SUCCESS";
     } else if ($cmd == "upl") {
       if (!array_key_exists("file", $_FILES)) {
@@ -67,7 +73,7 @@
       }
       if (move_uploaded_file($_FILES["file"]["tmp_name"], $fullpath) == false)
         return "move failed";
-      studylog($at, $_POST["cmd"], $_FILES["file"]["size"], basename($fullpath));
+      studylog($tickets, $_POST["cmd"], $_FILES["file"]["size"], basename($fullpath));
       header("X-StudyCaster-UploadOK: true");
       return "SUCCESS";
     } else if ($cmd == "dnl") {
@@ -84,7 +90,7 @@
       header("Content-Length: " . $fsize);
       header("X-StudyCaster-DownloadOK: true");
       readfile($fullpath);
-      studylog($at, $_POST["cmd"], $fsize, $_POST["file"]);
+      studylog($tickets, $_POST["cmd"], $fsize, $_POST["file"]);
       return "SUCCESS";
     } else {
       return "unknown command";

@@ -7,7 +7,7 @@ ScreenCasting library was from java-remote-control:
 http://code.google.com/p/java-remote-control/wiki/UsingTheScreenRecorder
 
 
-19:02 2010-07-18 (updated 22:49 2010-07-19)
+19:02 2010-07-18 (updated 22:49 2010-07-19, 17:40 2010-07-20)
 TODO
 * Requires Win32 Access
   * Don't capture other windows than Excel when in foreground
@@ -23,6 +23,7 @@ TODO
 * Optimize screencast encoding.
 * Don't use a temporary directory that contains the user name in its path.
 * Store less IP information (e.g. a shorter hash or a separate file).
+* Confirm that application does not hang around in Add/Remove programs
 
 Later
 * Java screencast.

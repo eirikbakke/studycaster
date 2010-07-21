@@ -1,4 +1,4 @@
-package no.ebakke.studycaster.packetstream;
+package no.ebakke.studycaster2;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
