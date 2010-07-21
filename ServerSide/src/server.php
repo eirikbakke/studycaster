@@ -31,17 +31,17 @@
   }
 
   function process() {
-    if (!array_key_exists("ct" , $_POST) || !array_key_exists("cmd", $_POST) || !sane_string($_POST["ct"], "/^[0-9a-fN\t]*$/"))
+    if (!array_key_exists("ct" , $_POST) || !array_key_exists("cmd", $_POST) || !sane_string($_POST["ct"], "/^[0-9a-f,]*$/"))
       return "bad base parameters";
 
-    $tickets = explode("\t", $_POST["ct"]);
+    $tickets = explode(",", $_POST["ct"]);
     if (count($tickets) != 4 || strlen($tickets[0]) == 0 || strlen($tickets[1]) == 0)
       return "bad tickets";
 
     $server_ticket = strtolower(substr(sha1("stick " . trim($_SERVER["REMOTE_ADDR"])), 0, constant("SERVER_TICKET_BYTES") * 2));
-    if ($tickets[2] == "N")
+    if ($tickets[2] == "")
       $tickets[2] = $server_ticket;
-    if ($tickets[3] == "N")
+    if ($tickets[3] == "")
       $tickets[3] = $server_ticket;
     if ($tickets[3] != $server_ticket) {
       return "server ticket mismatch";

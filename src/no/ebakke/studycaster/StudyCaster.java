@@ -33,15 +33,17 @@ import no.ebakke.orgstonesoupscreen.ScreenRecorder;
 import no.ebakke.orgstonesoupscreen.ScreenRecorderListener;
 
 public class StudyCaster {
-  public static final int RUN_TICKET_LENGTH    = 6;
+  private static final String TICKET_STORE_FILENAME = "sc_7403204709139484951.tmp";
+  public static final int CLIENT_TICKET_BYTES = 6;
+  public static final int SERVER_TICKET_BYTES = 3;
   public  static final Logger log = Logger.getLogger("no.ebakke.studycaster");
   private final List<LogRecord> logEntries = new ArrayList<LogRecord>();
   private DateFormat dateFormat;
   private URL    serverURL;
-  private Ticket firstRunTicket;
-  private Ticket currentRunTicket;
-  private Ticket currentServerTicket;
-  private Ticket firstServerTicket;
+  private Ticket ticketFC;
+  private Ticket ticketCC;
+  private Ticket ticketCS;
+  private Ticket ticketFS;
   private long   serverSecondsAhead;
   private ScreenRecorder recorder;
   private File recordFile;
@@ -65,25 +67,25 @@ public class StudyCaster {
     });
 
   public Ticket getFirstRunTicket() {
-    return firstRunTicket;
+    return ticketFC;
   }
 
   public Ticket getCurrentRunTicket() {
-    return currentRunTicket;
+    return ticketCC;
   }
 
   public Ticket getFirstServerTicket() {
-    return firstServerTicket;
+    return ticketFS;
   }
 
   public Ticket getCurrentServerTicket() {
-    return currentServerTicket;
+    return ticketCS;
   }
 
   private String allTickets() {
-    return firstRunTicket + "\t" + currentRunTicket + "\t" +
-           ((firstServerTicket   != null) ? firstServerTicket   : "N") + "\t" +
-           ((currentServerTicket != null) ? currentServerTicket : "N");
+    return ticketFC + "," + ticketCC + "," +
+           ((ticketFS   != null) ? ticketFS   : "") + "," +
+           ((ticketCS != null) ? ticketCS : "");
   }
 
   /* Note: URL must point directly to PHP script, end with a slash to use index.php (otherwise POST requests fail). */
@@ -98,16 +100,16 @@ public class StudyCaster {
       } catch (MalformedURLException e) {
         throw new StudyCasterException(e);
       }
-      currentRunTicket = new Ticket(RUN_TICKET_LENGTH);
+      ticketCC = new Ticket(CLIENT_TICKET_BYTES);
 
-      File ticketStore = new File(System.getProperty("java.io.tmpdir") + File.separator + "sc_7403204709139484951.tmp");
+      File ticketStore = new File(System.getProperty("java.io.tmpdir") + File.separator + TICKET_STORE_FILENAME);
       boolean writeTicketStore = false;
       try {
         if (ticketStore.exists()) {
           BufferedReader br = new BufferedReader(new FileReader(ticketStore));
           try {
-            firstRunTicket    = new Ticket(br.readLine(), RUN_TICKET_LENGTH);
-            firstServerTicket = new Ticket(br.readLine());
+            ticketFC = new Ticket(br.readLine(), CLIENT_TICKET_BYTES);
+            ticketFS = new Ticket(br.readLine(), SERVER_TICKET_BYTES);
             log.info("Read from ticket store.");
           } finally {
             br.close();
@@ -119,8 +121,8 @@ public class StudyCaster {
         writeTicketStore = true;
         log.log(Level.WARNING, "Problem reading ticket file.", e);
       }
-      if (firstRunTicket == null)
-        firstRunTicket = currentRunTicket;
+      if (ticketFC == null)
+        ticketFC = ticketCC;
 
       long timeBef = System.currentTimeMillis();
       Pair<Ticket, Long> si;
@@ -132,16 +134,16 @@ public class StudyCaster {
       long timeAft = System.currentTimeMillis();
       serverSecondsAhead = si.getLast() - ((timeBef / 2 + timeAft / 2) / 1000L);
       log.info("Server time ahead by " + serverSecondsAhead + " seconds.");
-      currentServerTicket = si.getFirst();
-      if (firstServerTicket == null)
-        firstServerTicket = currentServerTicket;
+      ticketCS = si.getFirst();
+      if (ticketFS == null)
+        ticketFS = ticketCS;
 
       if (writeTicketStore) {
         try {
           FileWriter fw = new FileWriter(ticketStore);
           try {
-            fw.write(firstRunTicket.toString() + "\n");
-            fw.write(firstServerTicket.toString() + "\n");
+            fw.write(ticketFC.toString() + "\n");
+            fw.write(ticketFS.toString() + "\n");
             log.info("Wrote to ticket store.");
           } finally {
             fw.close();
@@ -151,7 +153,7 @@ public class StudyCaster {
         }
       }
 
-      log.info("first_run = " + firstRunTicket + ", current_run = " + currentRunTicket + ", first_server = " + firstServerTicket + ", cur_server = " + currentServerTicket);
+      log.info("first_run = " + ticketFC + ", current_run = " + ticketCC + ", first_server = " + ticketFS + ", cur_server = " + ticketCS);
     } catch (StudyCasterException e) {
       log.log(Level.SEVERE, "Error initializing StudyCaster.", e);
       log.removeHandler(logHandler);
@@ -196,7 +198,7 @@ public class StudyCaster {
     // TODO: See if there is a better way...
     InputStream is = new ByteArrayInputStream(logBuf.toString().getBytes());
     try {
-      ServerRequest.uploadFile(serverURL, allTickets(), "clientlog_" + currentRunTicket + ".txt", is);
+      ServerRequest.uploadFile(serverURL, allTickets(), "clientlog_" + ticketCC + ".txt", is);
     } catch (IOException e) {
       log.log(Level.SEVERE, "Failed to upload log.", e);
     }

@@ -1,10 +1,8 @@
 package no.ebakke.studycaster2;
 
-import no.ebakke.studycaster2.StreamMuxer;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -12,12 +10,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import junit.framework.Assert;
 import org.junit.Test;
 
 public class StreamMuxerTest {
-  private static final int DATA_AMOUNT = 500000;
-  private static final int NO_THREADS = 100;
+  private static final int DATA_AMOUNT = 1000000;
+  private static final int NO_THREADS = 255;
 
   @Test
   public void testBaseFunctionality() throws Exception {
@@ -47,39 +44,12 @@ public class StreamMuxerTest {
 
     Map<String, OutputStream> outputStreams = new LinkedHashMap<String, OutputStream>();
     for (int i = 0; i < NO_THREADS; i++)
-      outputStreams.put("testStream-" + Long.toString(i), new ExpectOutputStream(i));
+      outputStreams.put("testStream-" + Long.toString(i), new ExpectRandomOutputStream(i, 0, DATA_AMOUNT));
     InputStream is = new FileInputStream(tempFile);
     StreamMuxer.demux(is, outputStreams);
     for (OutputStream os : outputStreams.values())
       os.close();
     is.close();
-  }
-
-  private class ExpectOutputStream extends OutputStream {
-    private Random rangen;
-    private int myAmount;
-    private int pos;
-
-    public ExpectOutputStream(long seed) {
-      this.rangen = new Random(seed);
-      this.myAmount = Math.max((int) (rangen.nextDouble() * DATA_AMOUNT), 1);
-      //this.myAmount = 2;
-    }
-
-    @Override
-    public void write(int b) throws IOException {
-      //System.out.println("got a " + b);
-      Assert.assertTrue(pos < myAmount);
-      byte buf[] = new byte[1];
-      rangen.nextBytes(buf);
-      Assert.assertEquals(buf[0], b);
-      pos++;
-    }
-
-    @Override
-    public void close() throws IOException {
-      Assert.assertEquals(myAmount, pos);
-    }
   }
 
   private class TestDataProducer implements Runnable {
@@ -96,7 +66,7 @@ public class StreamMuxerTest {
 
     public TestDataProducer(long seed, StreamMuxer muxer, String streamName) {
       this.rangen = new Random(seed);
-      this.myAmount = Math.max((int) (rangen.nextDouble() * DATA_AMOUNT), 1);
+      this.myAmount = Math.max((int) (rangen.nextDouble() * DATA_AMOUNT), 0);
       //this.myAmount = 2;
       this.muxer  = muxer;
       this.streamName = streamName;

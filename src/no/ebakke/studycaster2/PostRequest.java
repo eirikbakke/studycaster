@@ -1,6 +1,5 @@
-package no.ebakke.studycaster;
+package no.ebakke.studycaster2;
 
-import no.ebakke.studycaster2.Ticket;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -12,58 +11,21 @@ import java.net.URLConnection;
 import java.util.AbstractMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import no.ebakke.studycaster.util.Pair;
 
-public class ServerRequest {
-  private static final String HEADER_STM = "X-StudyCaster-ServerTime";
-  private static final String HEADER_STK = "X-StudyCaster-ServerTicket";
-  private static final String HEADER_UPK = "X-StudyCaster-UploadOK";
-  private static final String HEADER_DNK = "X-StudyCaster-DownloadOK";
+/** Deals with the protocol details of sending an HTTP POST request, possibly including file transfers. */
+public final class PostRequest {
   private static int BUF_SIZE = 8192;
 
-  public static Pair<Ticket, Long> getServerInfo(URL url, String at) throws IOException, StudyCasterException {
-    Map<String,String> fromHeader = new LinkedHashMap<String,String>();
-    fromHeader.put(HEADER_STM, null);
-    fromHeader.put(HEADER_STK, null);
-    issuePost(url, standardParams(at, "gsi"), noFileData(), fromHeader).close();
-    Long serverTime;
-    try {
-      serverTime = Long.parseLong(fromHeader.get(HEADER_STM));
-    } catch (NumberFormatException e) {
-      throw new IOException("Got bad time format from server", e);
-    }
-    return new Pair<Ticket, Long>(new Ticket(fromHeader.get(HEADER_STK)), serverTime);
-  }
+  private PostRequest() { }
 
-  public static void uploadFile(URL url, String at, String fileName, InputStream is) throws IOException {
-    Map<String,String> fromHeader = new LinkedHashMap<String,String>();
-    fromHeader.put(HEADER_UPK, null);
-    issuePost(url, standardParams(at, "upl"), oneFile("file", fileName, is), fromHeader).close();
-  }
-
-  public static InputStream downloadFile(URL url, String at, String remoteName) throws IOException {
-    Map<String,String> fromHeader = new LinkedHashMap<String,String>();
-    fromHeader.put(HEADER_DNK, null);
-    Map<String,String> params = standardParams(at, "dnl");
-    params.put("file", remoteName);
-    return issuePost(url, params, noFileData(), fromHeader);
-  }
-
-  private static Map<String,String> standardParams(String at, String cmd) {
-    Map<String,String> ret = new LinkedHashMap<String,String>();
-    ret.put("ct", at);
-    ret.put("cmd", cmd);
+  public static Map<String,Map.Entry<String,InputStream>> oneFile(String fieldName, String fileName, InputStream stream) {
+    Map<String,Map.Entry<String,InputStream>> ret = emptyMap();
+    ret.put(fieldName, new AbstractMap.SimpleEntry<String,InputStream>(fileName, stream));
     return ret;
   }
 
-  private static Map<String,Map.Entry<String,InputStream>> oneFile(String fieldName, String fileName, InputStream stream) {
-    Map<String,Map.Entry<String,InputStream>> ret = noFileData();
-    ret.put(fieldName, new AbstractMap.SimpleEntry<String, InputStream>(fileName, stream));
-    return ret;
-  }
-
-  public static Map<String,Map.Entry<String,InputStream>> noFileData() {
-    return new LinkedHashMap<String,Map.Entry<String,InputStream>>();
+  public static <V> Map<String,V> emptyMap() {
+    return new LinkedHashMap<String,V>();
   }
 
   /** Note: Caller's responsibility to close supplied InputStream objects. */
@@ -86,7 +48,6 @@ public class ServerRequest {
     conn.setUseCaches(false);
     conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
     BufferedOutputStream os = new BufferedOutputStream(conn.getOutputStream());
-    //PrintStream os = System.out;
     os.write(("Content-Type: multipart/form-data; boundary=" + boundary + "\r\n\r\n").getBytes());
     try {
       // TODO: Form field names should be encoded using RFC 1522.
