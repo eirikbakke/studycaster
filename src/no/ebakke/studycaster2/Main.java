@@ -1,7 +1,5 @@
 package no.ebakke.studycaster2;
 
-import java.net.URL;
-
 public class Main {
   public static void main(String args[]) throws Exception {
     //ServerContext sc = new ServerContext(new URL("http://www.sieuferd.com/studycaster/server.php"));
@@ -13,6 +11,7 @@ public class Main {
     //System.load(fileName);
     //System.out.println("OOOO " + System.getProperty("java.library.path"));
     System.loadLibrary("libSCNative");
+
     while (true) {
       Thread.sleep(1000);
       System.out.println(NativeLibrary.getWindowArea("Notepad"));

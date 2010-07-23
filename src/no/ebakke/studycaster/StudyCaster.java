@@ -31,6 +31,7 @@ import no.ebakke.studycaster.util.Util;
 import no.ebakke.orgstonesoupscreen.DesktopScreenRecorder;
 import no.ebakke.orgstonesoupscreen.ScreenRecorder;
 import no.ebakke.orgstonesoupscreen.ScreenRecorderListener;
+import no.ebakke.studycaster2.NativeLibrary;
 
 public class StudyCaster {
   private static final String TICKET_STORE_FILENAME = "sc_7403204709139484951.tmp";
@@ -268,6 +269,13 @@ public class StudyCaster {
   public void startRecording() throws StudyCasterException {
     if (recorder != null)
       throw new IllegalStateException();
+
+    try {
+      System.loadLibrary("libSCNative");
+      NativeLibrary.getWindowArea("");
+    } catch (Exception e) {
+      throw new StudyCasterException("Can't initialize window position detector library.", e);
+    };
 
     final OutputStream os;
     try {

@@ -25,6 +25,8 @@ public class JRecorder extends JFrame implements ScreenRecorderListener, ActionL
   public JRecorder() {
     super("Screen Recorder");
 
+    System.loadLibrary("libSCNative");
+
     control = new JButton("Start Recording");
     control.setActionCommand("start");
     control.addActionListener(this);

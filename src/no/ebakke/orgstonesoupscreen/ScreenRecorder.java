@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.LinkedList;
 import java.util.Queue;
+import no.ebakke.studycaster.util.Pair;
 
 public abstract class ScreenRecorder implements Runnable {
   private Rectangle recordArea;
@@ -135,11 +136,13 @@ public abstract class ScreenRecorder implements Runnable {
 
   public abstract Rectangle initialiseScreenCapture();
 
-  public abstract BufferedImage captureScreen(Rectangle recordArea);
+  public abstract Pair<Rectangle,BufferedImage> captureScreen(Rectangle recordArea);
 
   public void recordFrame() throws IOException {
     //long t1 = System.currentTimeMillis();
-    BufferedImage bImage = captureScreen(recordArea);
+    Pair<Rectangle,BufferedImage> capSc = captureScreen(recordArea);
+    BufferedImage bImage = capSc.getLast();
+    Rectangle focusArea = capSc.getFirst();
     frameTime = System.currentTimeMillis() - startTime;
     //long t2 = System.currentTimeMillis();
 
@@ -157,18 +160,42 @@ public abstract class ScreenRecorder implements Runnable {
 
     ////////////////////////////////////////////////////
     // See http://syfran.com/2009/07/rgb_tograyscale_java/
-    /*
+/*
     for (int i = 0; i < frameSize; i++) {
-      int RGB = rawData[i];
-      int blue2 = (RGB & 0x000000FF);
-      int green2 = (RGB & 0x0000FF00) >> 8;
-      int red2 = (RGB & 0x00FF0000) >> 16;
+      int oldRGB = rawData[i];
+      int blue2 = (oldRGB & 0x000000FF);
+      int green2 = (oldRGB & 0x0000FF00) >> 8;
+      int red2 = (oldRGB & 0x00FF0000) >> 16;
       int average = (int) ((.11 * blue2) + (.59 * green2) + (.3 * red2));
       average = average & 0xF0;
       int newRGB = 0xFF000000 + (average << 16) + (average << 8) + average;
       rawData[i] = newRGB;
     }
-    */
+*/
+    //recordArea.width * recordArea.height
+    int i = 0;
+    int curblur;
+    final int BLUR_WIDTH = 15;
+    for (int y = 0; y < recordArea.height; y++) {
+      curblur = 0;
+      for (int x = 0; x < recordArea.width; x++) {
+        int oldRGB = rawData[i];
+
+        int colB = (oldRGB & 0x000000FF);
+        int colG = (oldRGB & 0x0000FF00) >> 8;
+        int colR = (oldRGB & 0x00FF0000) >> 16;
+        int average = (int) ((.11 * colB) + (.59 * colG) + (.3 * colR));
+
+        curblur = (int) (((float) curblur) * (1.0 - 1.0 / BLUR_WIDTH) + ((float) average) / ((float)BLUR_WIDTH));
+        int level;
+        if (!focusArea.contains(x, y))
+          level = curblur & 0xE0;
+        else
+          level = average & 0xF0;
+        rawData[i++] = 0xFF000000 + (level << 16) + (level << 8) + level;
+      }
+    }
+
     ////////////////////////////////////////////////////
 
     //long t3 = System.currentTimeMillis();

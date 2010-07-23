@@ -7,6 +7,7 @@ import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
 import java.io.OutputStream;
+import no.ebakke.studycaster.util.Pair;
 
 public class JavaScreenRecorder extends ScreenRecorder {
   private boolean waitingForCapture = false;
@@ -28,7 +29,7 @@ public class JavaScreenRecorder extends ScreenRecorder {
     return new Rectangle(width, height);
   }
 
-  public BufferedImage captureScreen(Rectangle recordArea) {
+  public Pair<Rectangle,BufferedImage> captureScreen(Rectangle recordArea) {
     waitingForCapture = true;
     int count = 0;
     while (waitingForCapture && count < 50) {
@@ -46,7 +47,7 @@ public class JavaScreenRecorder extends ScreenRecorder {
       }
     }
 
-    return renderedImage;
+    return new Pair<Rectangle,BufferedImage>(recordArea,renderedImage);
   }
 
   public Graphics prePaint(Graphics grfx, int width, int height) {
