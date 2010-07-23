@@ -8,7 +8,7 @@ public class RandomInputStream extends InputStream {
   private Random rangen;
   private boolean closed = false;
 
-  public boolean isClosed() {
+  public synchronized boolean isClosed() {
     return closed;
   }
 
@@ -19,11 +19,9 @@ public class RandomInputStream extends InputStream {
   }
 
   @Override
-  public int read() throws IOException {
-    if (remainingBytes <= 0) {
-      //System.out.println("End of stream");
+  public synchronized  int read() throws IOException {
+    if (remainingBytes <= 0)
       return -1;
-    }
     remainingBytes--;
     byte buf[] = new byte[1];
     rangen.nextBytes(buf);
@@ -31,7 +29,7 @@ public class RandomInputStream extends InputStream {
   }
 
   @Override
-  public void close() throws IOException {
+  public synchronized  void close() throws IOException {
     if (remainingBytes > 0)
       throw new IOException("Closed too early.");
     closed = true;

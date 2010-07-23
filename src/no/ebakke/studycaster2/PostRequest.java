@@ -82,14 +82,12 @@ public final class PostRequest {
 
     final BufferedInputStream retBuffer = new BufferedInputStream(conn.getInputStream());
     final int contentLength = conn.getContentLength();
-
     for (Map.Entry<String,String> ent : fromHeader.entrySet()) {
       ent.setValue(conn.getHeaderField(ent.getKey()));
       if (ent.getValue() == null) {
         String contentType = conn.getHeaderField("Content-Type");
         if (contentType != null && contentType.startsWith("text/")) {
           StringBuffer sb = new StringBuffer();
-          System.out.println();
           BufferedReader br = null;
           try {
             br = new BufferedReader(new InputStreamReader(retBuffer));
@@ -123,7 +121,7 @@ public final class PostRequest {
       }
 
       @Override
-      public int read(byte[] b, int off, int len) throws IOException {
+      public synchronized int read(byte[] b, int off, int len) throws IOException {
         if (remainingBytes == 0)
           return -1;
         int readMax = (remainingBytes >= 0 && len > remainingBytes) ? remainingBytes : len;

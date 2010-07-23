@@ -5,7 +5,7 @@ import java.io.OutputStream;
 import java.net.URL;
 import org.junit.Test;
 
-public class ServerContextTest {
+public class ServerContextPostRequestTester {
   /** Note: To run this test, upload dir must be set equal to download dir in server.php. */
   @Test
   public void testEverything() throws Exception {
@@ -15,7 +15,7 @@ public class ServerContextTest {
     tf.delete();
     System.out.println(remoteName);
     sc.uploadFile(remoteName, new RandomInputStream(43, 50000, 50000));
-    InputStream returnedFile = sc.downloadFile(remoteName);
+    InputStream returnedFile = sc.downloadFile(sc.getTicketCC().toString() + "/" + remoteName);
     OutputStream os = new ExpectRandomOutputStream(43, 50000, 50000);
     int c;
     while ((c = returnedFile.read()) != -1) {

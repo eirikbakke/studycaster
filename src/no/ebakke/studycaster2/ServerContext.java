@@ -14,7 +14,7 @@ import java.util.logging.Level;
 import no.ebakke.studycaster.StudyCasterException;
 
 /** Handles protocol details specific to our server-side PHP script. */
-public class ServerContext {
+public class ServerContext implements ServerScript {
   private static final String HEADER_STM = "X-StudyCaster-ServerTime";
   private static final String HEADER_STK = "X-StudyCaster-ServerTicket";
   private static final String HEADER_UPK = "X-StudyCaster-UploadOK";
@@ -91,7 +91,7 @@ public class ServerContext {
     if (ticketFS == null)
       ticketFS = ticketCS;
 
-    StudyCaster2.log.info(String.format("Tickets: FC = %s, CC = %s, FS = %s, CS = %s", ticketFC, ticketCC, ticketFS, ticketCS));
+    logEnvironmentInfo();
 
     // Write ticket store.
     if (writeTicketStore) {
@@ -124,4 +124,21 @@ public class ServerContext {
     return PostRequest.issuePost(serverScriptURL, params, PostRequest.<Map.Entry<String,InputStream>>emptyMap(), fromHeader);
   }
 
+  public Ticket getTicketCC() {
+    return ticketCC;
+  }
+
+  private void logEnvironmentInfo() {
+    StudyCaster2.log.info(String.format("Tickets: FC = %s, CC = %s, FS = %s, CS = %s", ticketFC, ticketCC, ticketFS, ticketCS));
+
+    String propkeys[] = new String[]
+      {"java.vendor", "java.version", "java.class.version", "os.name", "os.arch", "os.version", "user.language", "user.region", "user.timezone"};
+    StringBuffer props = new StringBuffer();
+    boolean first = true;
+    for (String key : propkeys) {
+      props.append((first ? "" : ", ") + key + "=" + System.getProperty(key));
+      first = false;
+    }
+    StudyCaster2.log.info("Environment: " + props);
+  }
 }

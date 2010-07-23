@@ -22,7 +22,10 @@ public class Blocker {
         }
         try {
           lock.wait(waitTimeOut);
-        } catch (InterruptedException e) { }
+        } catch (InterruptedException e) {
+          // TODO: Rethrow.
+          Thread.currentThread().interrupt();
+        }
       }
     }
   }

@@ -51,3 +51,6 @@ Considered, decided to make no change:
 * Other notes
   * Might need to send keepalive packets
 
+01:44 2010-07-22
+http://msdn.microsoft.com/en-us/library/ff468919%28v=VS.85%29.aspx
+

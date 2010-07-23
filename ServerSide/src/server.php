@@ -30,6 +30,12 @@
     return strlen($s) < 200 && count(preg_grep($allowed_regex, array($s))) == 1;
   }
 
+  function sane_path($f, $indir) {
+    $rindir = realpath($indir);
+    $rf     = realpath($f);
+    return ($rindir && $rf && strncmp($rindir, $rf, strlen($rindir)) == 0);
+  }
+
   function process() {
     if (!array_key_exists("ct" , $_POST) || !array_key_exists("cmd", $_POST) || !sane_string($_POST["ct"], "/^[0-9a-f,]*$/"))
       return "bad base parameters";
@@ -54,17 +60,20 @@
       studylog($tickets, $_POST["cmd"], "(N/A)", "(N/A)");
       return "SUCCESS";
     } else if ($cmd == "upl") {
+      $updir = constant("UPLOAD_DIR") . DIRECTORY_SEPARATOR . $tickets[1];
       if (!array_key_exists("file", $_FILES)) {
         return "no uploaded file found";
-      } else if ($_FILES["f"]["error"] != 0) {
+      } else if ($_FILES["file"]["error"] != 0) {
         return "nonzero internal error code";
       } else if (!sane_string($_FILES["file"]["name"], "/^[0-9a-zA-Z_.]+$/")) {
         return "insane filename specified";
         return true;
       } else if ($_FILES["file"]["size"] > constant("MAX_FILE_SIZE")) {
         return "file too large";
+      } else if (!file_exists($updir) && !mkdir($updir)) {
+        return "failed to create client upload directory";
       }
-      $prefix = constant("UPLOAD_DIR") . "/" . $_FILES["file"]["name"];
+      $prefix = $updir . DIRECTORY_SEPARATOR . $_FILES["file"]["name"];
       $fullpath = $prefix;
       $i = 0;
       while (file_exists($fullpath)) {
@@ -73,17 +82,15 @@
       }
       if (move_uploaded_file($_FILES["file"]["tmp_name"], $fullpath) == false)
         return "move failed";
-      studylog($tickets, $_POST["cmd"], $_FILES["file"]["size"], basename($fullpath));
       header("X-StudyCaster-UploadOK: true");
+      studylog($tickets, $_POST["cmd"], $_FILES["file"]["size"], basename($fullpath));
       return "SUCCESS";
     } else if ($cmd == "dnl") {
       if (!array_key_exists("file", $_POST))
         return "no filename specified";
-      if (!sane_string($_POST["file"], "/^[0-9a-zA-Z_.]+$/"))
-        return "insane filename requested";
-      $fullpath = constant("DOWNLOAD_DIR") . "/" . $_POST["file"];
-      if (!file_exists($fullpath))
-        return "file does not exist";
+      $fullpath = constant("DOWNLOAD_DIR") . DIRECTORY_SEPARATOR . $_POST["file"];
+      if (!sane_path($fullpath, constant("DOWNLOAD_DIR")))
+        return "invalid path or file does not exist";
       header("Content-Type: application/octet-stream");
       header('Content-Disposition: attachment; filename="' . basename($fullname) . '"');
       $fsize = filesize($fullpath);
