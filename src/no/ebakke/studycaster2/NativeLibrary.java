@@ -1,11 +1,19 @@
 package no.ebakke.studycaster2;
 
-/* To generate header:
-/cygdrive/c/Program\ Files/Java/jdk1.6.0_17/bin/javah.exe -o NativeLibrary.h -classpath build/classes no.ebakke.studycaster2.NativeLibrary
-*/
+import java.awt.Rectangle;
 
 public final class NativeLibrary {
   public NativeLibrary() { }
 
-  public static native String getTestString();
+  public static native void getWindowArea_internal(String titleMustInclude, int result[]);
+
+  public static Rectangle getWindowArea(String titleMustInclude) {
+    int result[] = new int[4];
+    getWindowArea_internal(titleMustInclude, result);
+    if (result[0] == 0 && result[1] == 0 && result[2] == 0 && result[3] == 0) {
+      return null;
+    } else {
+      return new Rectangle(result[0], result[1], result[2], result[3]);
+    }
+  }
 }

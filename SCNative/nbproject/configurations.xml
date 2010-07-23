@@ -4,7 +4,7 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
-      <itemPath>NativeLibrary.h</itemPath>
+      <itemPath>Z:/Unfinished/ResearchRepo/archive/100713_StudyCaster/SCNative/NativeLibrary.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
@@ -47,6 +47,7 @@
         <linkerTool>
           <commandlineTool>gcc.exe</commandlineTool>
           <linkerLibItems>
+            <linkerLibLibItem>gdi32</linkerLibLibItem>
           </linkerLibItems>
           <commandLine>-Wl,--kill-at -shared</commandLine>
         </linkerTool>
@@ -81,6 +82,7 @@
         <linkerTool>
           <commandlineTool>gcc.exe</commandlineTool>
           <linkerLibItems>
+            <linkerLibLibItem>gdi32</linkerLibLibItem>
           </linkerLibItems>
           <commandLine>-Wl,--kill-at -shared</commandLine>
         </linkerTool>
