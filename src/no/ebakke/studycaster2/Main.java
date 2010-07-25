@@ -1,5 +1,7 @@
 package no.ebakke.studycaster2;
 
+import java.util.Arrays;
+
 public class Main {
   public static void main(String args[]) throws Exception {
     //ServerContext sc = new ServerContext(new URL("http://www.sieuferd.com/studycaster/server.php"));
@@ -14,7 +16,7 @@ public class Main {
 
     while (true) {
       Thread.sleep(1000);
-      System.out.println(NativeLibrary.getWindowArea("Notepad"));
+      System.out.println(NativeLibrary.getPermittedRecordingArea(Arrays.asList(new String[] {"Notepad", "Calc"}), true));
     }
     //System.out.println("String from native library: " + NativeLibrary.getTestString());
   }

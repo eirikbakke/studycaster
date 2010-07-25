@@ -12,6 +12,8 @@ import java.awt.Robot;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.List;
 import no.ebakke.studycaster.util.Pair;
 import no.ebakke.studycaster2.NativeLibrary;
 
@@ -39,14 +41,14 @@ public class DesktopScreenRecorder extends ScreenRecorder {
   }
 
   public Pair<Rectangle,BufferedImage> captureScreen(Rectangle recordArea) {
-    final String windowName = "Excel";
+    final List<String> permittedWindowNames = Arrays.asList(new String[] {"Excel", "User Study Console"});
     BufferedImage image;
 
     Rectangle rect1, rect2;
     do {
-      rect1 = NativeLibrary.getWindowArea(windowName);
+      rect1 = NativeLibrary.getPermittedRecordingArea(permittedWindowNames, true);
       image = robot.createScreenCapture(recordArea);
-      rect2 = NativeLibrary.getWindowArea(windowName);
+      rect2 = NativeLibrary.getPermittedRecordingArea(permittedWindowNames, true);
     } while (!rect1.equals(rect2));
 
     Polygon pointer = new Polygon(new int[]{0, 16, 10, 8}, new int[]{0, 8, 10, 16}, 4);

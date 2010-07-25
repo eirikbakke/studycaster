@@ -46,7 +46,7 @@ public class StatusFrame extends javax.swing.JFrame {
     positionDialog = new JDialog(this);
     initComponents();
     pbui = new ProgressBarUI(progressBar);
-    progressBar.setIndeterminate(true);
+    //progressBar.setIndeterminate(true);
     instructionLabel.setText(instructions);
     pack();
     Dimension sdim = Toolkit.getDefaultToolkit().getScreenSize();
@@ -68,7 +68,10 @@ public class StatusFrame extends javax.swing.JFrame {
     } catch (Exception e) {
       StudyCaster.log.log(Level.WARNING, "Can't set icon images.", e);
     }
-
+    /*
+    int decision = JOptionPane.showConfirmDialog(getPositionDialog(),
+                "If you exit the User Study Console without uploading first, your changes will be lost.", "Exit Without Uploading?",
+    */
     addWindowListener(new WindowAdapter() {
       @Override
       public void windowClosing(WindowEvent e) {

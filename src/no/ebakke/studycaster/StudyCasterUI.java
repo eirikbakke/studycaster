@@ -3,9 +3,6 @@ package no.ebakke.studycaster;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowEvent;
-import java.util.logging.Level;
-import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import no.ebakke.studycaster.util.Blocker;
@@ -36,7 +33,7 @@ public class StudyCasterUI {
                 try {
                   Thread.sleep(5000);
                 } catch (InterruptedException e) {
-                  StudyCaster.log.log(Level.WARNING, "Sleep was interrupted.", e);
+                  Thread.currentThread().interrupt();
                 }
                 StudyCaster.log.warning("Forcing exit five seconds after window closure.");
                 System.exit(0);
@@ -52,6 +49,16 @@ public class StudyCasterUI {
           }
         });
         sf.setVisible(true);
+        int decision = JOptionPane.showConfirmDialog(sf.getPositionDialog(),
+                "<html>This tool will record the contents of your screen while you perform the HIT,<br>" +
+                "so we can learn about how different people approached the task.<br><br>" +
+                "OK to start recording?</html>",
+                "Screencasting",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+        if (decision == JOptionPane.CANCEL_OPTION) {
+          sf.dispose();
+          waitForUserAction();
+        }
         initedBlocker.releaseBlockingThread();
       }
     });
@@ -112,5 +119,9 @@ public class StudyCasterUI {
     actionBlocker.blockUntilReleased();
     actionBlocker = new Blocker();
     return actionTaken;
+  }
+
+  public boolean wasClosed() {
+    return actionTaken == UIAction.CLOSE;
   }
 }

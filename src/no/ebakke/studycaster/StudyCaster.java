@@ -272,10 +272,10 @@ public class StudyCaster {
 
     try {
       System.loadLibrary("libSCNative");
-      NativeLibrary.getWindowArea("");
+      NativeLibrary.getPermittedRecordingArea(new ArrayList<String>(), true);
     } catch (Exception e) {
       throw new StudyCasterException("Can't initialize window position detector library.", e);
-    };
+    }
 
     final OutputStream os;
     try {

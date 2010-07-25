@@ -21,6 +21,8 @@ public class ExcelLauncher {
 
   public static void main(String args[]) {
     StudyCasterUI scui = new StudyCasterUI(instructions);
+    if (scui.wasClosed())
+      return;
     StudyCaster sc = null;
     long lastModified1, lastModified2;
     File excelFile;
@@ -29,7 +31,7 @@ public class ExcelLauncher {
       sc = new StudyCaster("http://www.sieuferd.com/studycaster/server.php");
       scui.getProgressBarUI().setProgress(33);
       scui.getProgressBarUI().setTaskAppearance("Downloading sample document...", false);
-      excelFile = sc.downloadFile("currencies.xls");
+      excelFile = sc.downloadFile("exflat.xls");
       lastModified1 = excelFile.lastModified();
       scui.getProgressBarUI().setProgress(67);
       scui.getProgressBarUI().setTaskAppearance("Opening sample document...", false);
@@ -39,6 +41,7 @@ public class ExcelLauncher {
       scui.setUploadEnabled(true);
       scui.getProgressBarUI().setTaskAppearance("", false);
       scui.getProgressBarUI().setProgress(0);
+
       sc.startRecording();
     } catch (StudyCasterException e) {
       StudyCaster.log.log(Level.SEVERE, "Can't Load User Study.", e);
