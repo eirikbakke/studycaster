@@ -2,8 +2,8 @@
   define("MAX_FILE_SIZE"      , 50000000);
   // TODO: Get this from the client.
   define("SERVER_TICKET_BYTES", 3);
-  define("DOWNLOAD_DIR"       , "downloads");
-  define("UPLOAD_DIR"         , "uploads");
+  define("DOWNLOAD_DIR"       , "files");
+  define("UPLOAD_DIR"         , "files/uploads");
   define("STUDY_LOG_FILE"     , "study.log");
   define("STUDYP_LOG_FILE"    , "studyp.log");
   define("FAIL_LOG_FILE"      , "fail.log");
@@ -36,11 +36,12 @@
     return ($rindir && $rf && strncmp($rindir, $rf, strlen($rindir)) == 0);
   }
 
-  function process() {
-    if (!array_key_exists("ct" , $_POST) || !array_key_exists("cmd", $_POST) || !sane_string($_POST["ct"], "/^[0-9a-f,]*$/"))
+  function process(&$success) {
+    $success = false;
+    if (!array_key_exists("tickets" , $_POST) || !array_key_exists("cmd", $_POST) || !sane_string($_POST["tickets"], "/^[0-9a-f,]*$/"))
       return "bad base parameters";
 
-    $tickets = explode(",", $_POST["ct"]);
+    $tickets = explode(",", $_POST["tickets"]);
     if (count($tickets) != 4 || strlen($tickets[0]) == 0 || strlen($tickets[1]) == 0)
       return "bad tickets";
 
@@ -58,13 +59,14 @@
       header("X-StudyCaster-ServerTicket: " . $server_ticket);
       header("X-StudyCaster-ServerTime: " . time());
       studylog($tickets, $_POST["cmd"], "(N/A)", "(N/A)");
-      return "SUCCESS";
+      $success = true;
+      return "get server info ok";
     } else if ($cmd == "upl") {
       $updir = constant("UPLOAD_DIR") . DIRECTORY_SEPARATOR . $tickets[1];
       if (!array_key_exists("file", $_FILES)) {
         return "no uploaded file found";
       } else if ($_FILES["file"]["error"] != 0) {
-        return "nonzero internal error code";
+        return "nonzero internal error code (" . $_FILES["file"]["error"] . ")";
       } else if (!sane_string($_FILES["file"]["name"], "/^[0-9a-zA-Z_.]+$/")) {
         return "insane filename specified";
         return true;
@@ -84,13 +86,18 @@
         return "move failed";
       header("X-StudyCaster-UploadOK: true");
       studylog($tickets, $_POST["cmd"], $_FILES["file"]["size"], basename($fullpath));
-      return "SUCCESS";
+      $success = true;
+      return "upload ok";
     } else if ($cmd == "dnl") {
       if (!array_key_exists("file", $_POST))
         return "no filename specified";
       $fullpath = constant("DOWNLOAD_DIR") . DIRECTORY_SEPARATOR . $_POST["file"];
-      if (!sane_path($fullpath, constant("DOWNLOAD_DIR")))
+      if (!sane_path($fullpath, constant("DOWNLOAD_DIR"))) {
+        header("HTTP/1.0 404 Not Found");
+        studylog($tickets, $_POST["cmd"], "not found", $_POST["file"]);
+        $success = true;
         return "invalid path or file does not exist";
+      }
       header("Content-Type: application/octet-stream");
       header('Content-Disposition: attachment; filename="' . basename($fullname) . '"');
       $fsize = filesize($fullpath);
@@ -98,21 +105,24 @@
       header("X-StudyCaster-DownloadOK: true");
       readfile($fullpath);
       studylog($tickets, $_POST["cmd"], $fsize, $_POST["file"]);
-      return "SUCCESS";
+      $success = true;
+      return "download ok";
     } else {
       return "unknown command";
     }
   }
 
   function main() {
-    $result = process();
-    if ($result != "SUCCESS" && !(empty($_POST) && empty($_GET))) {
+    session_cache_limiter('nocache');
+    $success = false;
+    $message = process($success);
+    if (!success && !(empty($_POST) && empty($_GET))) {
       header("HTTP/1.0 400 Bad Request");
 
       $flog = fopen(constant("FAIL_LOG_FILE"), "a");
       fwrite($flog, "================== Unsuccessful request ==================\n");
       fwrite($flog, "TIME = " . date("Y-m-d H:i:s") . "\n");
-      fwrite($flog, "CAUSE = " . $result . "\n");
+      fwrite($flog, "CAUSE = " . $message . "\n");
       foreach ($_SERVER as $i => $value)
         fwrite($flog, "SERVER," . $i . " = " . $_SERVER[$i] . "\n");
       foreach ($_POST as $i => $value)
@@ -128,12 +138,4 @@
   }
 
   main();
-
-/*
-  $fullname = "downloads/exflat.xls";
-  header("Content-type: application/octet-stream");
-  header('Content-Disposition: attachment; filename="' . basename($fullname) . '"');
-  header("Content-Length: ". filesize($fullname));
-  readfile($fullname);
-*/
 ?>

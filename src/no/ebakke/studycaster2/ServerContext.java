@@ -36,7 +36,7 @@ public class ServerContext implements ServerScript {
            ((ticketFS != null) ? ticketFS : "") + "," +
            ((ticketCS != null) ? ticketCS : "");
     Map<String,String> ret = new LinkedHashMap<String,String>();
-    ret.put("ct", allTickets);
+    ret.put("tickets", allTickets);
     ret.put("cmd", cmd);
     return ret;
   }

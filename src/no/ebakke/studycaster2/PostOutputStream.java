@@ -5,16 +5,19 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 
 public class PostOutputStream extends OutputStream {
-  private static int MAX_UPLOAD_SECONDS = 30;
-  private static int MAX_UPLOAD_BYTES   = 5000;
+  // Used for testing: 650, 499999.
+  private static int MAX_UPLOAD_MILLIS = 20000;
+  private static int MAX_UPLOAD_BYTES  = 5000000;
+  private StringSequenceGenerator fileNames;
   private ServerScript script;
   private OutputStream currentFile;
   private long currentFileStartTime;
-  private StringSequenceGenerator fileNames;
   private int currentFileBytes;
   private boolean closed;
   private Exception storedException;
   private Thread currentFileUploadThread;
+  private Thread currentFileTimeOutThread;
+  private final Object lock = new Object();
 
   public PostOutputStream(StringSequenceGenerator fileNames, ServerScript script) {
     this.script = script;
@@ -27,62 +30,97 @@ public class PostOutputStream extends OutputStream {
   }
 
   @Override
-  public synchronized void write(byte[] b, int off, int len) throws IOException {
-    if (closed)
-      throw new IllegalStateException("Stream closed.");
-    if (storedException != null)
-      throw new IOException("Problem with upload", storedException);
+  public void write(byte[] b, int off, int len) throws IOException {
+    synchronized (lock) {
+      if (closed)
+        throw new IllegalStateException("Stream closed.");
+      if (storedException != null)
+        throw new IOException("Problem with upload", storedException);
 
-    if (currentFile == null) {
-      final PipedInputStream is = new PipedInputStream();
-      currentFile = new PipedOutputStream(is);
-      currentFileStartTime = System.currentTimeMillis();
-      currentFileBytes = 0;
+      if (currentFile == null) {
+        final PipedInputStream is = new PipedInputStream();
+        currentFile = new PipedOutputStream(is);
+        currentFileStartTime = System.currentTimeMillis();
+        currentFileBytes = 0;
 
-      final String fileName = fileNames.nextString();
-      currentFileUploadThread = new Thread(new Runnable() {
-        public void run() {
-          try {
-            script.uploadFile(fileName, is);
-          } catch (IOException e) {
-            storedException = e;
+        final String fileName = fileNames.nextString();
+        currentFileUploadThread = new Thread(new Runnable() {
+          public void run() {
+            try {
+              script.uploadFile(fileName, is);
+            } catch (IOException e) {
+              storedException = e;
+            }
           }
-        }
-      }, "Upload thread (" + fileName + ")");
-      currentFileUploadThread.start();
+        }, "Upload thread (" + fileName + ")");
+        currentFileUploadThread.start();
+        currentFileTimeOutThread = new Thread(new Runnable() {
+          public void run() {
+            long remainingTime;
+            while (!Thread.interrupted()) {
+              synchronized (lock) {
+                if (currentFile == null)
+                  break;
+
+                remainingTime = MAX_UPLOAD_MILLIS + currentFileStartTime - System.currentTimeMillis();
+                if (remainingTime <= 0) {
+                  try {
+                    closeCurrentFile();
+                  } catch (IOException e) {
+                    storedException = e;
+                  }
+                  break;
+                } else {
+                  try {
+                    // Note: No notify() anywhere; we're doing it just for the timeout and locking semantics.
+                    lock.wait(remainingTime);
+                  } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                  }
+                }
+              }
+            }
+          }
+        }, "Upload timeout thread (" + fileName + ")");
+        currentFileTimeOutThread.start();
+      }
+      int writeNow = Math.min(MAX_UPLOAD_BYTES - currentFileBytes, len);
+      assert(writeNow > 0);
+      currentFile.write(b, off, writeNow);
+      currentFileBytes += writeNow;
+
+      assert(currentFileBytes <= MAX_UPLOAD_BYTES);
+      if (currentFileBytes == MAX_UPLOAD_BYTES)
+        closeCurrentFile();
+
+      if (writeNow < len)
+        write(b, off + writeNow, len - writeNow);
     }
-    int writeNow = Math.min(MAX_UPLOAD_BYTES - currentFileBytes, len);
-    assert(writeNow > 0);
-    currentFile.write(b, off, writeNow);
-    currentFileBytes += writeNow;
+  }
 
-    assert(currentFileBytes <= MAX_UPLOAD_BYTES);
-    if (currentFileBytes == MAX_UPLOAD_BYTES)
+  @Override
+  public void flush() throws IOException {
+    synchronized (lock) {
+      if (closed)
+        throw new IllegalStateException("Stream closed.");
+      if (storedException != null)
+        throw new IOException("Problem with upload", storedException);
+      if (currentFile != null)
+        currentFile.flush();
+    }
+  }
+
+  @Override
+  public void close() throws IOException {
+    synchronized (lock) {
+      if (closed)
+        throw new IllegalStateException("Already closed");
+      closed = true;
       closeCurrentFile();
-
-    if (writeNow < len)
-      write(b, off + writeNow, len - writeNow);
+    }
   }
 
-  @Override
-  public synchronized void flush() throws IOException {
-    if (closed)
-      throw new IllegalStateException("Stream closed.");
-    if (storedException != null)
-      throw new IOException("Problem with upload", storedException);
-    if (currentFile != null)
-      currentFile.flush();
-  }
-
-  @Override
-  public synchronized void close() throws IOException {
-    if (closed)
-      throw new IllegalStateException("Already closed.");
-    closed = true;
-    closeCurrentFile();
-  }
-
-  private synchronized void closeCurrentFile() throws IOException {
+  private void closeCurrentFile() throws IOException {
     if (currentFile != null) {
       currentFile.close();
       currentFile = null;
@@ -94,5 +132,6 @@ public class PostOutputStream extends OutputStream {
       if (storedException != null)
         throw new IOException("Problem with upload", storedException);
     }
+    currentFileTimeOutThread.interrupt();
   }
 }

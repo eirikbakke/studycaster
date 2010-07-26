@@ -18,7 +18,6 @@ public class StreamMuxerTest {
 
   @Test
   public void testBaseFunctionality() throws Exception {
-
     File tempFile = File.createTempFile("StreamMuxerTest", ".tmp");
     //System.out.println(tempFile.getCanonicalPath());
     tempFile.deleteOnExit();

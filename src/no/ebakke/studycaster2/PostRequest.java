@@ -115,8 +115,11 @@ public final class PostRequest {
       @Override
       public int read() throws IOException {
         byte ret[] = new byte[1];
-        if (read(ret, 0, 1) < 0)
+        int got = read(ret);
+        if (got != 1) {
+          assert got == -1;
           return -1;
+        }
         return ret[0] & 0xFF;
       }
 
@@ -130,8 +133,8 @@ public final class PostRequest {
           if (remainingBytes > 0)
             throw new IOException("Server returned too few bytes.");
         } else {
-          if (remainingBytes > 0)
-            remainingBytes -= ret;
+          assert ret > 0;
+          remainingBytes -= ret;
         }
         return ret;
       }
