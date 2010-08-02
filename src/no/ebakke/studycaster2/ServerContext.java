@@ -90,7 +90,8 @@ public class ServerContext implements ServerScript {
     if (ticketFS == null)
       ticketFS = ticketCS;
 
-    logEnvironmentInfo();
+    StudyCaster2.log.info(String.format("Tickets: FC = %s, CC = %s, FS = %s, CS = %s", ticketFC, ticketCC, ticketFS, ticketCS));
+    Util.logEnvironmentInfo();
 
     // Write ticket store.
     if (writeTicketStore) {
@@ -127,17 +128,7 @@ public class ServerContext implements ServerScript {
     return ticketCC;
   }
 
-  private void logEnvironmentInfo() {
-    StudyCaster2.log.info(String.format("Tickets: FC = %s, CC = %s, FS = %s, CS = %s", ticketFC, ticketCC, ticketFS, ticketCS));
-
-    String propkeys[] = new String[]
-      {"java.vendor", "java.version", "java.class.version", "os.name", "os.arch", "os.version", "user.language", "user.region", "user.timezone"};
-    StringBuffer props = new StringBuffer();
-    boolean first = true;
-    for (String key : propkeys) {
-      props.append((first ? "" : ", ") + key + "=" + System.getProperty(key));
-      first = false;
-    }
-    StudyCaster2.log.info("Environment: " + props);
+  public long getServerSecondsAhead() {
+    return serverSecondsAhead;
   }
 }

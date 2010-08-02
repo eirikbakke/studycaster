@@ -1,16 +1,29 @@
 package no.ebakke.studycaster2;
 
+import java.io.FileNotFoundException;
 import java.io.OutputStream;
 import java.net.URL;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Main {
   public static void main(String args[]) throws Exception {
     NonBlockingOutputStream nbos = new NonBlockingOutputStream(1024 * 128);
     ConsoleTee conTee = new ConsoleTee(nbos);
+    ServerTimeLogFormatter logFormatter = new ServerTimeLogFormatter();
+    logFormatter.install();
     ServerContext sc = new ServerContext(new URL("http://www.sieuferd.com/studycaster/server.php"));
+    logFormatter.setServerSecondsAhead(sc.getServerSecondsAhead());
 
     OutputStream out = new PostOutputStream(new StringSequenceGenerator("console_", ".tmp"), sc);
     nbos.connect(out);
+
+    //Logger.g
+    //LogManager.getLogManager().reset();
+
+    //System.out.println(Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).getHandlers());
+
+    Logger.getLogger("").log(Level.WARNING, "testmessage", new Exception("Test exception", new FileNotFoundException()));
     /*
     System.setErr(new TeePrintStream(uploadSink, System.err));
     System.setOut(new TeePrintStream(uploadSink, System.out));
@@ -19,10 +32,13 @@ public class Main {
     System.out.println("Doesn't make it.");
     System.out.println("Doesn't make it (stderr).");
     */
+
     System.out.println("Does make it.");
-    Thread.sleep(5000);
+    //Thread.sleep(5000);
     System.err.println("Does make it (to stderr).");
     System.out.println("Does make it, too.");
+    //Thread.sleep(25000);
+    System.out.println("Here's a later one, too.");
     conTee.disconnect();
     System.out.println("Doesn't make it, nah.");
     System.out.println("Doesn't make it, nah (stderr).");
