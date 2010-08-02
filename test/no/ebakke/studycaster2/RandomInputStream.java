@@ -12,6 +12,10 @@ public class RandomInputStream extends InputStream {
     return closed;
   }
 
+  public RandomInputStream(long seed, int length) {
+    this(seed, length, length);
+  }
+
   public RandomInputStream(long seed, int minLength, int maxLength) {
     this.rangen = new Random(seed);
     this.remainingBytes = Math.max((int) (rangen.nextDouble() * maxLength), minLength);

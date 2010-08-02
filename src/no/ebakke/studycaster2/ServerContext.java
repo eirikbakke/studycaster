@@ -47,7 +47,6 @@ public class ServerContext implements ServerScript {
 
     // Read ticket store.
     File ticketStore = new File(System.getProperty("java.io.tmpdir") + File.separator + TICKET_STORE_FILENAME);
-    System.out.println(ticketStore.getAbsolutePath());
     boolean writeTicketStore = true;
     try {
       BufferedReader br = new BufferedReader(new FileReader(ticketStore));

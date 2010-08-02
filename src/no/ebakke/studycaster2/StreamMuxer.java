@@ -15,18 +15,23 @@ import java.util.Set;
 
 public class StreamMuxer {
   private final DataOutputStream out;
-  private final Set<String> streamNames = new LinkedHashSet<String>();
+  private Set<String> streamNames = new LinkedHashSet<String>();
   private int nextStreamID = 1;
+  private List<OutputStream> subStreams = new ArrayList<OutputStream>();
 
   public StreamMuxer(OutputStream out) {
     this.out = new DataOutputStream(out);
   }
 
   public void flush() throws IOException {
+    for (OutputStream s : subStreams)
+      s.flush();
     out.flush();
   }
 
   public void close() throws IOException {
+    for (OutputStream s : subStreams)
+      s.close();
     out.close();
   }
 
@@ -38,7 +43,9 @@ public class StreamMuxer {
         throw new IllegalStateException("Substream " + streamName + " already exists.");
       out.writeByte(0);
       out.writeUTF(streamName);
-      return new BufferedOutputStream(new MuxedOutputStream(nextStreamID++));
+      OutputStream ret = new BufferedOutputStream(new MuxedOutputStream(nextStreamID++));
+      subStreams.add(ret);
+      return ret;
     }
   }
 

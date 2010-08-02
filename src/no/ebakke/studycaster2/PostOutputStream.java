@@ -113,10 +113,10 @@ public class PostOutputStream extends OutputStream {
   @Override
   public void close() throws IOException {
     synchronized (lock) {
-      if (closed)
-        throw new IllegalStateException("Already closed");
-      closed = true;
-      closeCurrentFile();
+      if (!closed) {
+        closed = true;
+        closeCurrentFile();
+      }
     }
   }
 

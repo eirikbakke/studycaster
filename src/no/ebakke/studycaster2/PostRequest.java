@@ -14,8 +14,6 @@ import java.util.Map;
 
 /** Deals with the protocol details of sending an HTTP POST request, possibly including file transfers. */
 public final class PostRequest {
-  private static int BUF_SIZE = 8192;
-
   private PostRequest() { }
 
   public static Map<String,Map.Entry<String,InputStream>> oneFile(String fieldName, String fileName, InputStream stream) {
@@ -28,7 +26,6 @@ public final class PostRequest {
     return new LinkedHashMap<String,V>();
   }
 
-  /** Note: Caller's responsibility to close supplied InputStream objects. */
   public static InputStream issuePost(URL url,
           Map<String,String> textData,
           Map<String,Map.Entry<String,InputStream>> fileData,
@@ -68,10 +65,7 @@ public final class PostRequest {
           "\r\n"
           ).getBytes());
 
-        int  got;
-        byte buf[] = new byte[BUF_SIZE];
-        while ((got = ent.getValue().getValue().read(buf)) >= 0)
-          os.write(buf, 0, got);
+        StreamUtil.hookupStreams(ent.getValue().getValue(), os);
         os.write(("\r\n").getBytes());
       }
       os.write(("--" + boundary + "\r\n").getBytes());

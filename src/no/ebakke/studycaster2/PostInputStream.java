@@ -34,7 +34,6 @@ public class PostInputStream extends InputStream {
     }
   }
 
-
   @Override
   public int read(byte[] b, int off, int len) throws IOException {
     synchronized (lock) {
