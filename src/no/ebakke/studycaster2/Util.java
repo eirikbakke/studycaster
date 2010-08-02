@@ -1,5 +1,8 @@
 package no.ebakke.studycaster2;
 
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+
 public final class Util {
   private Util() { }
 
@@ -13,5 +16,10 @@ public final class Util {
       first = false;
     }
     StudyCaster2.log.info("Environment: " + props);
+
+    for (GraphicsDevice gd : GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()) {
+      StudyCaster2.log.info("Found a screen " + gd.getDisplayMode().getWidth() + "x" + gd.getDisplayMode().getHeight()
+          + ((gd.equals(GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice())) ? " (default)" : ""));
+    }
   }
 }
