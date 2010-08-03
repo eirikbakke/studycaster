@@ -70,6 +70,7 @@ public class FrameCompressor {
         lastEntry = true;
       }
 
+      /* Encode difference from previous frame. */
       if (newData[inCursor] == frame.previousData[inCursor]) {
         red = 0;
         green = 0;
@@ -83,10 +84,8 @@ public class FrameCompressor {
           blue = 1;
         }
       }
-
-      if (blockRed == red
-              && blockGreen == green
-              && blockBlue == blue) {
+      /***************************************************************/
+      if (blockRed == red && blockGreen == green && blockBlue == blue) {
         if (inBlock == false) {
           if (uncompressedCursor > -1) {
             blocks++;
@@ -185,6 +184,9 @@ public class FrameCompressor {
       inCursor++;
       blockSize++;
     }
+    /***************************************************************/
+
+    /* Now write frame metadata. */
 
     frame.oStream.write(((int) frame.frameTime & 0xFF000000) >>> 24);
     frame.oStream.write(((int) frame.frameTime & 0x00FF0000) >>> 16);
@@ -202,9 +204,11 @@ public class FrameCompressor {
       frame.oStream.flush();
     }
 
+    /* Now write out packed (length outCursor) through a GZIPOutputStream. */
+
     ByteArrayOutputStream bO = new ByteArrayOutputStream();
 
-    byte[] bA = new byte[0];
+    byte[] bA;
 
     GZIPOutputStream zO = new GZIPOutputStream(bO);
 

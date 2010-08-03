@@ -1,26 +1,59 @@
-package no.ebakke.studycaster2;
+package no.ebakke.studycaster2.screencasting;
 
-import com.xuggle.mediatool.IMediaWriter;
-import com.xuggle.mediatool.ToolFactory;
-import com.xuggle.xuggler.IRational;
+import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
-import java.util.concurrent.TimeUnit;
+import java.io.OutputStream;
+import java.net.URL;
+import no.ebakke.studycaster2.PostOutputStream;
+import no.ebakke.studycaster2.ServerContext;
+import no.ebakke.studycaster2.StringSequenceGenerator;
 
 public class ScreenCastExperiments {
   public static void main(String args[]) throws Exception {
-    /*
     Rectangle screenRect = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
     Robot r = new Robot();
+    OutputStream os = new FileOutputStream("z:\\rectest\\testfile_newcodec.nc");
+    //ServerContext sc = new ServerContext(new URL("http://www.sieuferd.com/studycaster/server.php"));
+    //OutputStream os = new PostOutputStream(new StringSequenceGenerator("screencast_", ".ebc"), sc);
+    CodecEncoder comp = new CodecEncoder(os, new Dimension(screenRect.width, screenRect.height));
 
-    for (int i = 0; i < 100; i++) {
-      System.out.println("Capturing a frame");
-      BufferedImage bi = r.createScreenCapture(screenRect);
+    long bef, diff;
+    BufferedImage bi = null;
+    for (int i = 0; i < 300; i++) {
+      bef = System.currentTimeMillis();
+      //for (int j = 0; j < 10; j++) {
+      bi = r.createScreenCapture(screenRect);
+      //}
+      diff = System.currentTimeMillis() - bef;
+      System.out.println("capture took " + diff);
+      /*
+      bef = System.currentTimeMillis();
+      convertToType(bi, BufferedImage.TYPE_BYTE_GRAY);
+      diff = System.currentTimeMillis() - bef;
+      System.out.println("conversion took " + diff);
+      */
+      /*
+      int rawData[] = new int[screenRect.width * screenRect.height];
+      bef = System.currentTimeMillis();
+      for (int j = 0; j < 10; j++) {
+        bi.getRGB(0, 0, screenRect.width, screenRect.height, rawData, 0, screenRect.width);
+      }
+      diff = System.currentTimeMillis() - bef;
+      System.out.println("copy took " + diff);
+      */
+      bef = System.currentTimeMillis();
+      //for (int j = 0; j < 10; j++) {
+        comp.compressFrame(bi, System.currentTimeMillis());
+      //}
+      diff = System.currentTimeMillis() - bef;
+      System.out.println("compress took " + diff);
     }
-    */
+    os.close();
 
+/*
    final IRational FRAME_RATE = IRational.make(5, 1);
    final int SECONDS_TO_RUN_FOR = 5;
 
@@ -55,7 +88,7 @@ public class ScreenCastExperiments {
    }
    // Finally we tell the writer to close and write the trailer if needed.
    writer.close();
-
+*/
   }
 
   public static BufferedImage convertToType(BufferedImage sourceImage, int targetType) {
@@ -66,9 +99,9 @@ public class ScreenCastExperiments {
     } else {
       // otherwise create a new image of the target type and draw the new image
       image = new BufferedImage(sourceImage.getWidth(), sourceImage.getHeight(), targetType);
-      image.getGraphics().drawImage(sourceImage, 0, 0, null);
+      if (!image.getGraphics().drawImage(sourceImage, 0, 0, null))
+        throw new AssertionError("Expected immediate image conversion");
     }
-
     return image;
   }
 
