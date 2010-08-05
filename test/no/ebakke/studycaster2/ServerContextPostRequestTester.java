@@ -1,19 +1,20 @@
 package no.ebakke.studycaster2;
-import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URL;
+import java.net.URI;
 import org.junit.Test;
 
 public class ServerContextPostRequestTester {
   @Test
   public void testEverything() throws Exception {
-    ServerContext sc = new ServerContext(new URL("http://www.sieuferd.com/studycaster/server.php"));
-    File tf = File.createTempFile("ServerContextTest_", ".tmp");
-    String remoteName = tf.getName();
-    tf.delete();
-    System.out.println(remoteName);
-    sc.uploadFile(remoteName, new RandomInputStream(43, 50000, 50000));
+    ServerContext sc = new ServerContext(new URI("http://www.sieuferd.com/studycaster/server.php"));
+    String remoteName = "ServerContextPostRequestTester.tmp";
+    
+    OutputStream uploadOS = sc.uploadFile(remoteName);
+    RandomInputStream ris = new RandomInputStream(43, 50000, 50000);
+    StreamUtil.hookupStreams(ris, uploadOS);
+    uploadOS.close();
+
     InputStream returnedFile = sc.downloadFile("uploads/" + sc.getTicketCC().toString() + "/" + remoteName);
     OutputStream os = new ExpectRandomOutputStream(43, 50000, 50000);
 

@@ -1,49 +1,46 @@
 package no.ebakke.studycaster2;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.io.OutputStream;
+import java.net.URI;
 import java.util.logging.Level;
 import no.ebakke.studycaster.StudyCasterException;
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.ContentBody;
+import org.apache.http.entity.mime.content.InputStreamBody;
+import org.apache.http.entity.mime.content.StringBody;
+import org.apache.http.impl.client.DefaultHttpClient;
 
 /** Handles protocol details specific to our server-side PHP script. */
-public class ServerContext implements ServerScript {
-  private static final String HEADER_STM = "X-StudyCaster-ServerTime";
-  private static final String HEADER_STK = "X-StudyCaster-ServerTicket";
-  private static final String HEADER_UPK = "X-StudyCaster-UploadOK";
-  private static final String HEADER_DNK = "X-StudyCaster-DownloadOK";
+public class ServerContext {
+  private static final int DEF_UPLOAD_CHUNK_SZ = 32 * 1024;
   private static final String TICKET_STORE_FILENAME = "sc_7403204709139484951.tmp";
   private static final int CLIENT_TICKET_BYTES = 6;
   private static final int SERVER_TICKET_BYTES = 3;
-  private URL    serverScriptURL;
+  private URI    serverScriptURI;
   private Ticket ticketFC; // First client ticket on this machine
   private Ticket ticketCC; // Current client ticket
   private Ticket ticketFS; // First server ticket on this machine
   private Ticket ticketCS; // Current server ticket
   private long   serverSecondsAhead;
+  private HttpClient httpClient;
 
-  private Map<String,String> serverParams(String cmd) {
-    String allTickets =
-            ticketFC + "," +
-            ticketCC + "," +
-           ((ticketFS != null) ? ticketFS : "") + "," +
-           ((ticketCS != null) ? ticketCS : "");
-    Map<String,String> ret = new LinkedHashMap<String,String>();
-    ret.put("tickets", allTickets);
-    ret.put("cmd", cmd);
-    return ret;
-  }
-
-  public ServerContext(URL serverScriptURL) throws StudyCasterException {
-    this.serverScriptURL = serverScriptURL;
+  public ServerContext(URI serverScriptURI) throws StudyCasterException {
+    this.serverScriptURI = serverScriptURI;
     ticketCC = new Ticket(CLIENT_TICKET_BYTES);
+    httpClient = new DefaultHttpClient();
 
     // Read ticket store.
     File ticketStore = new File(System.getProperty("java.io.tmpdir") + File.separator + TICKET_STORE_FILENAME);
@@ -68,25 +65,28 @@ public class ServerContext implements ServerScript {
       ticketFC = ticketCC;
 
     // Get server info.
-    Map<String,String> fromHeader = PostRequest.emptyMap();
-    fromHeader.put(HEADER_STM, null);
-    fromHeader.put(HEADER_STK, null);
+    Header headerSTM, headerSTK;
     long timeBef, timeAft;
     try {
       timeBef = System.currentTimeMillis();
-      PostRequest.issuePost(this.serverScriptURL, serverParams("gsi"), PostRequest.<Map.Entry<String,InputStream>>emptyMap(), fromHeader).close();
+      HttpResponse response = requestHelper("gsi", null);
       timeAft = System.currentTimeMillis();
+      headerSTM = response.getFirstHeader("X-StudyCaster-ServerTime");
+      headerSTK = response.getFirstHeader("X-StudyCaster-ServerTicket");
+      response.getEntity().consumeContent();
+      if (headerSTM == null || headerSTK == null)
+        throw new StudyCasterException("Server response missing initialization headers.");
     } catch (IOException e) {
       throw new StudyCasterException("Cannot retrieve server info.", e);
     }
     try {
-      serverSecondsAhead = Long.parseLong(fromHeader.get(HEADER_STM)) - ((timeBef / 2 + timeAft / 2) / 1000L);
+      serverSecondsAhead = Long.parseLong(headerSTM.getValue()) - ((timeBef / 2 + timeAft / 2) / 1000L);
       StudyCaster2.log.info("Server time ahead by " + serverSecondsAhead + " seconds.");
     } catch (NumberFormatException e) {
       StudyCaster2.log.log(Level.WARNING, "Got bad time format from server", e);
     }
     // Let this exception propagate.
-    ticketCS = new Ticket(fromHeader.get(HEADER_STK));
+    ticketCS = new Ticket(headerSTK.getValue());
     if (ticketFS == null)
       ticketFS = ticketCS;
 
@@ -110,18 +110,68 @@ public class ServerContext implements ServerScript {
     }
   }
 
-  public void uploadFile(String fileName, InputStream is) throws IOException {
-    Map<String,String> fromHeader = new LinkedHashMap<String,String>();
-    fromHeader.put(HEADER_UPK, null);
-    PostRequest.issuePost(serverScriptURL, serverParams("upl"), PostRequest.oneFile("file", fileName, is), fromHeader).close();
+  private HttpResponse requestHelper(String cmd, ContentBody fileBody) throws IOException {
+    // System.out.println("Called with cmd " + cmd + " fileBody " + fileBody);
+    HttpPost httpPost = new HttpPost(serverScriptURI);
+    MultipartEntity params = new MultipartEntity();
+    String allTickets =
+            ticketFC + "," +
+            ticketCC + "," +
+           ((ticketFS != null) ? ticketFS : "") + "," +
+           ((ticketCS != null) ? ticketCS : "");
+    params.addPart("tickets", new StringBody(allTickets));
+    params.addPart("cmd", new StringBody(cmd));
+    if (fileBody != null)
+      params.addPart("file", fileBody);
+    httpPost.setEntity(params);
+    HttpResponse response = httpClient.execute(httpPost);
+    if (response.getEntity() == null)
+      throw new IOException("Failed to get response entity.");
+    try {
+      if (response.getStatusLine().getStatusCode() != 200) {
+        if (response.getStatusLine().getStatusCode() == 404)
+          throw new FileNotFoundException();
+        throw new IOException("Got bad status code " + response.getStatusLine().getReasonPhrase());
+      }
+      Header okHeader = response.getFirstHeader("X-StudyCaster-OK");
+      if (okHeader == null)
+        throw new IOException("Failed to get StudyCaster response header");
+      if (!okHeader.getValue().equals(cmd))
+        throw new IOException("Got invalid StudyCaster response header: " + okHeader.getValue());
+      return response;
+    } catch (IOException e) {
+      response.getEntity().consumeContent();
+      throw e;
+    } catch (RuntimeException e) {
+      response.getEntity().consumeContent();
+      throw e;
+    }
+  }
+
+  public OutputStream uploadFile(final String remoteName) throws IOException {
+    requestHelper("upc", new StringBody(remoteName)).getEntity().consumeContent();
+    
+    return new BufferedOutputStream(new OutputStream() {
+      @Override
+      public void write(int b) throws IOException {
+         write(new byte[] { (byte) b }, 0, 1);
+      }
+
+      @Override
+      public void write(byte[] b, int off, final int len) throws IOException {
+        InputStreamBody isb = new InputStreamBody(new ByteArrayInputStream(b, off, len), remoteName) {
+          @Override
+          public long getContentLength() {
+            return len;
+          }
+        };
+        requestHelper("upa", isb).getEntity().consumeContent();
+      }
+    }, DEF_UPLOAD_CHUNK_SZ);
   }
 
   public InputStream downloadFile(String remoteName) throws IOException {
-    Map<String,String> fromHeader = new LinkedHashMap<String,String>();
-    fromHeader.put(HEADER_DNK, null);
-    Map<String,String> params = serverParams("dnl");
-    params.put("file", remoteName);
-    return PostRequest.issuePost(serverScriptURL, params, PostRequest.<Map.Entry<String,InputStream>>emptyMap(), fromHeader);
+    return requestHelper("dnl", new StringBody(remoteName)).getEntity().getContent();
   }
 
   public Ticket getTicketCC() {

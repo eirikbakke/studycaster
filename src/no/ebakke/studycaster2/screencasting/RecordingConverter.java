@@ -16,11 +16,7 @@ import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.concurrent.TimeUnit;
-import no.ebakke.studycaster2.PostInputStream;
-import no.ebakke.studycaster2.ServerContext;
-import no.ebakke.studycaster2.StringSequenceGenerator;
 
 public final class RecordingConverter {
   private RecordingConverter() { }

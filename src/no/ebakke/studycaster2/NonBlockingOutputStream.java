@@ -10,6 +10,7 @@ public class NonBlockingOutputStream extends PipedOutputStream {
   private IOException storedException;
   private PipedInputStream inPipe;
   private Thread writerThread;
+  private volatile boolean flushDue;
 
   public void connect(final OutputStream out) {
     if (writerThread != null)
@@ -18,7 +19,19 @@ public class NonBlockingOutputStream extends PipedOutputStream {
       public void run() {
         try {
           try {
-            StreamUtil.hookupStreams(inPipe, out);
+            byte buffer[] = new byte[16 * 1024];
+            try {
+              int got;
+              while ((got = inPipe.read(buffer)) >= 0) {
+                out.write(buffer, 0, got);
+                if (flushDue && inPipe.available() == 0) {
+                  out.flush();
+                  flushDue = false;
+                }
+              }
+            } finally {
+              inPipe.close();
+            }
           } finally {
             out.close();
           }
@@ -28,6 +41,10 @@ public class NonBlockingOutputStream extends PipedOutputStream {
       }
     });
     writerThread.start();
+  }
+
+  public int getBufferBytes() throws IOException {
+    return inPipe.available();
   }
 
   public NonBlockingOutputStream(final OutputStream out, int bufferLimit) {
@@ -61,5 +78,7 @@ public class NonBlockingOutputStream extends PipedOutputStream {
   public synchronized void flush() throws IOException {
     /* PipedOutputStream.flush() does not actually seem to block, only notify, so we can keep the default implementation. */
     super.flush();
+    /* Relaxed interpretation of flush; just flush the underlying output stream as soon as we've gotten around to write to it. */
+    flushDue = true;
   }
 }

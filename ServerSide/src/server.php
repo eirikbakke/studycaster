@@ -1,5 +1,6 @@
 <?php
   define("MAX_FILE_SIZE"      , 50000000);
+  define("MAX_APPEND_CHUNK"   , 1024 * 256);
   // TODO: Get this from the client.
   define("SERVER_TICKET_BYTES", 3);
   define("DOWNLOAD_DIR"       , "files");
@@ -55,39 +56,64 @@
     }
 
     $cmd = $_POST["cmd"];
+    $updir = constant("UPLOAD_DIR") . DIRECTORY_SEPARATOR . $tickets[1];
     if        ($cmd == "gsi") {
       header("X-StudyCaster-ServerTicket: " . $server_ticket);
       header("X-StudyCaster-ServerTime: " . time());
+      header("X-StudyCaster-OK: gsi");
       studylog($tickets, $_POST["cmd"], "(N/A)", "(N/A)");
       $success = true;
       return "get server info ok";
-    } else if ($cmd == "upl") {
-      $updir = constant("UPLOAD_DIR") . DIRECTORY_SEPARATOR . $tickets[1];
-      if (!array_key_exists("file", $_FILES)) {
-        return "no uploaded file found";
-      } else if ($_FILES["file"]["error"] != 0) {
-        return "nonzero internal error code (" . $_FILES["file"]["error"] . ")";
-      } else if (!sane_string($_FILES["file"]["name"], "/^[0-9a-zA-Z_.]+$/")) {
+    } else if ($cmd == "upc") {
+      if (!array_key_exists("file", $_POST))
+        return "no filename specified";
+      if (!sane_string($_POST["file"], "/^[0-9a-zA-Z_.]+$/"))
         return "insane filename specified";
-        return true;
-      } else if ($_FILES["file"]["size"] > constant("MAX_FILE_SIZE")) {
-        return "file too large";
-      } else if (!file_exists($updir) && !mkdir($updir)) {
+      $fullpath = $updir . DIRECTORY_SEPARATOR . $_POST["file"];
+      if (!file_exists($updir) && !mkdir($updir))
         return "failed to create client upload directory";
-      }
-      $prefix = $updir . DIRECTORY_SEPARATOR . $_FILES["file"]["name"];
-      $fullpath = $prefix;
-      $i = 0;
-      while (file_exists($fullpath)) {
-        $i++;
-        $fullpath = $prefix . "_" . $i;
-      }
-      if (move_uploaded_file($_FILES["file"]["tmp_name"], $fullpath) == false)
-        return "move failed";
-      header("X-StudyCaster-UploadOK: true");
+      if (($cfile = fopen($fullpath, "xb")) == false)
+        return "file already exists or failed to create file";
+      if (!fclose($cfile))
+        return "failed to close newly created file";
+      header("X-StudyCaster-OK: upc");
+      studylog($tickets, $_POST["cmd"], 0, basename($fullpath));
+      $success = true;
+      return "create ok";
+    } else if ($cmd == "upa") {
+      if (!array_key_exists("file", $_FILES))
+        return "no uploaded file found";
+      if (!sane_string($_FILES["file"]["name"], "/^[0-9a-zA-Z_.]+$/"))
+        return "insane filename specified";
+      if ($_FILES["file"]["error"] != 0)
+        return "nonzero internal error code (" . $_FILES["file"]["error"] . ")";
+      if ($_FILES["file"]["size"] > constant("MAX_APPEND_CHUNK"))
+        return "append source too large";
+      $fullpath = $updir . DIRECTORY_SEPARATOR . $_FILES["file"]["name"];
+      if (!file_exists($fullpath))
+        return "append target does not exist";
+      if (($oldSize = filesize($fullpath)) < 0)
+        return "failed to get size of append target";
+      if ($oldSize + $_FILES["file"]["size"] > constant("MAX_FILE_SIZE"))
+        return "concatenated file too large";
+      if (($data = file_get_contents($_FILES["file"]["tmp_name"])) == false)
+        return "failed to read append source";
+      if (($atarget = fopen($fullpath, "ab")) == false)
+        return "failed to open append target " . $fullpath;
+      if ($_FILES["file"]["size"] != strlen($data))
+        return "inconsistent length after reading file";
+      $fwr = fwrite($atarget, $data, $_FILES["file"]["size"]);
+      if ($fwr == false)
+        return "write failed";
+      if ($fwr != $_FILES["file"]["size"])
+        return "unexpected short write";
+      if (!fclose($atarget))
+        return "failed to close append target";
+
+      header("X-StudyCaster-OK: upa");
       studylog($tickets, $_POST["cmd"], $_FILES["file"]["size"], basename($fullpath));
       $success = true;
-      return "upload ok";
+      return "append ok";
     } else if ($cmd == "dnl") {
       if (!array_key_exists("file", $_POST))
         return "no filename specified";
@@ -102,7 +128,7 @@
       header('Content-Disposition: attachment; filename="' . basename($fullname) . '"');
       $fsize = filesize($fullpath);
       header("Content-Length: " . $fsize);
-      header("X-StudyCaster-DownloadOK: true");
+      header("X-StudyCaster-OK: dnl");
       readfile($fullpath);
       studylog($tickets, $_POST["cmd"], $fsize, $_POST["file"]);
       $success = true;
@@ -116,7 +142,8 @@
     session_cache_limiter('nocache');
     $success = false;
     $message = process($success);
-    if (!success && !(empty($_POST) && empty($_GET))) {
+    // debuglog("Result was: " . $message);
+    if (!$success && !(empty($_POST) && empty($_GET) && empty($_FILES))) {
       header("HTTP/1.0 400 Bad Request");
 
       $flog = fopen(constant("FAIL_LOG_FILE"), "a");

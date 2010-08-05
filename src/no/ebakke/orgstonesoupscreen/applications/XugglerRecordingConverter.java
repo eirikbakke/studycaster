@@ -14,7 +14,7 @@ public final class XugglerRecordingConverter {
   private XugglerRecordingConverter() { }
   
   public static void main(String args[]) throws IOException {
-    convert("z:\\rectest\\testfile.rec", "z:\\rectest\\testfile.mp4");
+    convert("C:\\DOCUME~1\\ADMINI~1\\LOCALS~1\\Temp\\sc_6585879656423605096.tmp", "z:\\rectest\\moo.mp4");
   }
 
   public static void convert(String fileFrom, String fileTo) throws IOException {

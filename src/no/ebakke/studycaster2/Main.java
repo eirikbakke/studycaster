@@ -1,10 +1,7 @@
 package no.ebakke.studycaster2;
 
-import java.io.FileNotFoundException;
 import java.io.OutputStream;
-import java.net.URL;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.net.URI;
 
 public class Main {
   public static void main(String args[]) throws Exception {
@@ -12,90 +9,27 @@ public class Main {
     ConsoleTee conTee = new ConsoleTee(nbos);
     ServerTimeLogFormatter logFormatter = new ServerTimeLogFormatter();
     logFormatter.install();
-    ServerContext sc = new ServerContext(new URL("http://www.sieuferd.com/studycaster/server.php"));
+    ServerContext sc = new ServerContext(new URI("http://www.sieuferd.com/studycaster/server.php"));
     logFormatter.setServerSecondsAhead(sc.getServerSecondsAhead());
 
-    OutputStream out = new PostOutputStream(new StringSequenceGenerator("console_", ".tmp"), sc);
+    sc.downloadFile("exflat.xls").close();
+    sc.downloadFile("exflat.xls").close();
+    sc.downloadFile("exflat.xls").close();
+
+    OutputStream out = sc.uploadFile("console.txt");
     nbos.connect(out);
 
-    //Logger.g
-    //LogManager.getLogManager().reset();
-
-    //System.out.println(Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).getHandlers());
-
+    StudyCaster2.log.info("Log 1");
+    StudyCaster2.log.info("Log 3");
+    Thread.sleep(500);
+    StudyCaster2.log.info("Log 4");
+    nbos.close();
+    out.close();
+    
+    /*
     Logger.getLogger("").log(Level.WARNING, "testmessage", new Exception("Test exception", new FileNotFoundException()));
-    /*
-    System.setErr(new TeePrintStream(uploadSink, System.err));
-    System.setOut(new TeePrintStream(uploadSink, System.out));
-    */
-    /*
     System.out.println("Doesn't make it.");
     System.out.println("Doesn't make it (stderr).");
     */
-
-    System.out.println("Does make it.");
-    //Thread.sleep(5000);
-    System.err.println("Does make it (to stderr).");
-    System.out.println("Does make it, too.");
-    //Thread.sleep(25000);
-    System.out.println("Here's a later one, too.");
-    conTee.disconnect();
-    System.out.println("Doesn't make it, nah.");
-    System.out.println("Doesn't make it, nah (stderr).");
-
-    /*
-    PipedOutputStream uploadSink = new PipedOutputStream();
-    PipedInputStream  uploadSource = new PipedInputStream(uploadSink, 1024 * 1024 * 4);
-    StreamMuxer uploadMux = new StreamMuxer(uploadSink);
-
-    //System.setErr(new TeePrintStream(System.err, out));
-    //System.setOut(new TeePrintStream(System.out, out));
-
-    System.setErr(new TeePrintStream(System.err, uploadMux.createOutputStream("stderr")));
-    System.setOut(new TeePrintStream(System.out, uploadMux.createOutputStream("stdout")));
-    */
-
-    /*
-    PrintStream testPrintStream = new PrintStream(uploadQueue);
-    System.out.println("Got here 1!");
-    System.out.println("Available: " + uploadSource.available());
-    testPrintStream.print("One message");
-    System.out.println("Got here 2!");
-    System.out.println("Available: " + uploadSource.available());
-    testPrintStream.print("Two messages");
-    System.out.println("Got here 3!");
-    System.out.println("Available: " + uploadSource.available());
-    testPrintStream.flush();
-    System.out.println("Got here 4!");
-    System.out.println("Available: " + uploadSource.available());
-    uploadQueue.flush();
-    System.out.println("Got here 5!");
-    System.out.println("Available: " + uploadSource.available());
-    testPrintStream.close();
-    System.out.println("Got here 6!");
-    System.out.println("Available: " + uploadSource.available());
-    uploadQueue.close();
-    System.out.println("Got here 7!");
-    System.out.println("Available: " + uploadSource.available());
-    */
-
-
-
-    //ServerContext sc = new ServerContext(new URL("http://www.sieuferd.com/studycaster/server.php"));
-    //URL libLoc = Main.class.getClassLoader().getResource("no/ebakke/studycaster2/libNativeLib.dll");
-    //String fileName = new File(libLoc.getFile()).getAbsolutePath();
-    //String fileName = "Z:/Unfinished/ResearchRepo/archive/100713_StudyCaster/build/classes/no/ebakke/studycaster2/libNativeLib.dll";
-    String fileName = "Z:/Unfinished/ResearchRepo/archive/100713_StudyCaster/NativeLib/libNativeLib.dll";
-    //System.out.println(fileName);
-    //System.load(fileName);
-    //System.out.println("OOOO " + System.getProperty("java.library.path"));
-    System.loadLibrary("libSCNative");
-/*
-    while (true) {
-      Thread.sleep(1000);
-      System.out.println(NativeLibrary.getPermittedRecordingArea(Arrays.asList(new String[] {"Notepad", "Calc"}), true));
-    }
-*/
-    //System.out.println("String from native library: " + NativeLibrary.getTestString());
   }
 }

@@ -12,8 +12,9 @@ public final class StreamUtil {
     byte buffer[] = new byte[16 * 1024];
     try {
       int got;
-      while ((got = is.read(buffer)) >= 0)
+      while ((got = is.read(buffer)) >= 0) {
         os.write(buffer, 0, got);
+      }
     } finally {
       is.close();
     }

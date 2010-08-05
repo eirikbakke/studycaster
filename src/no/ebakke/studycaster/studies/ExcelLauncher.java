@@ -75,14 +75,14 @@ public class ExcelLauncher {
           sc.stopRecording();
           try {
             scui.getProgressBarUI().setTaskAppearance("Uploading document...", true);
-            StudyCaster.log.info("Uploaded file now last modified " + sc.getServerTimeFormat(nowLastModified));
-            sc.uploadFile(excelFile,  "saveddoc_" + sc.getCurrentRunTicket() + ".xls");
+            //StudyCaster.log.info("Uploaded file now last modified " + sc.getServerTimeFormat(nowLastModified));
+            sc.uploadFile(excelFile,  "saveddoc.xls");
             scui.getProgressBarUI().setTaskAppearance("Uploading screencast...", true);
-            sc.uploadFile(sc.getRecordFile(), "screencast_" + sc.getCurrentRunTicket() + ".rec");
+            sc.uploadFile(sc.getRecordFile(), "screencast.rec");
             scui.getProgressBarUI().setTaskAppearance("Uploading log...", true);
             sc.concludeStudy();
             scui.getProgressBarUI().setTaskAppearance("", false);
-            scui.showConfirmationCodeDialog(sc.getCurrentRunTicket().toString(), true);
+            scui.showConfirmationCodeDialog(sc.getServerContext().getTicketCC().toString(), true);
             scui.disposeUI();
           } catch (StudyCasterException e) {
             scui.showMessageDialog("Failed to upload file", e.getLocalizedMessage(), JOptionPane.WARNING_MESSAGE, false);
