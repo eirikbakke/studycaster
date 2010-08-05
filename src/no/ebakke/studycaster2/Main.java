@@ -23,6 +23,7 @@ public class Main {
     StudyCaster2.log.info("Log 3");
     Thread.sleep(500);
     StudyCaster2.log.info("Log 4");
+    conTee.disconnect();
     nbos.close();
     out.close();
     

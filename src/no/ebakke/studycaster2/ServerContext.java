@@ -35,12 +35,10 @@ public class ServerContext {
   private Ticket ticketFS; // First server ticket on this machine
   private Ticket ticketCS; // Current server ticket
   private long   serverSecondsAhead;
-  private HttpClient httpClient;
 
   public ServerContext(URI serverScriptURI) throws StudyCasterException {
     this.serverScriptURI = serverScriptURI;
     ticketCC = new Ticket(CLIENT_TICKET_BYTES);
-    httpClient = new DefaultHttpClient();
 
     // Read ticket store.
     File ticketStore = new File(System.getProperty("java.io.tmpdir") + File.separator + TICKET_STORE_FILENAME);
@@ -69,11 +67,16 @@ public class ServerContext {
     long timeBef, timeAft;
     try {
       timeBef = System.currentTimeMillis();
-      HttpResponse response = requestHelper("gsi", null);
-      timeAft = System.currentTimeMillis();
-      headerSTM = response.getFirstHeader("X-StudyCaster-ServerTime");
-      headerSTK = response.getFirstHeader("X-StudyCaster-ServerTicket");
-      response.getEntity().consumeContent();
+      HttpClient httpClient = new DefaultHttpClient();
+      try {
+        HttpResponse response = requestHelper(httpClient, "gsi", null);
+        timeAft = System.currentTimeMillis();
+        headerSTM = response.getFirstHeader("X-StudyCaster-ServerTime");
+        headerSTK = response.getFirstHeader("X-StudyCaster-ServerTicket");
+        response.getEntity().consumeContent();
+      } finally {
+        httpClient.getConnectionManager().shutdown();
+      }
       if (headerSTM == null || headerSTK == null)
         throw new StudyCasterException("Server response missing initialization headers.");
     } catch (IOException e) {
@@ -110,7 +113,7 @@ public class ServerContext {
     }
   }
 
-  private HttpResponse requestHelper(String cmd, ContentBody fileBody) throws IOException {
+  private HttpResponse requestHelper(HttpClient httpClient, String cmd, ContentBody fileBody) throws IOException {
     // System.out.println("Called with cmd " + cmd + " fileBody " + fileBody);
     HttpPost httpPost = new HttpPost(serverScriptURI);
     MultipartEntity params = new MultipartEntity();
@@ -149,9 +152,12 @@ public class ServerContext {
   }
 
   public OutputStream uploadFile(final String remoteName) throws IOException {
-    requestHelper("upc", new StringBody(remoteName)).getEntity().consumeContent();
+    final HttpClient httpClient = new DefaultHttpClient();
+    requestHelper(httpClient, "upc", new StringBody(remoteName)).getEntity().consumeContent();
     
     return new BufferedOutputStream(new OutputStream() {
+      private boolean closed;
+
       @Override
       public void write(int b) throws IOException {
          write(new byte[] { (byte) b }, 0, 1);
@@ -159,19 +165,53 @@ public class ServerContext {
 
       @Override
       public void write(byte[] b, int off, final int len) throws IOException {
+        if (closed)
+          throw new IOException("Stream closed");
         InputStreamBody isb = new InputStreamBody(new ByteArrayInputStream(b, off, len), remoteName) {
           @Override
           public long getContentLength() {
             return len;
           }
         };
-        requestHelper("upa", isb).getEntity().consumeContent();
+        requestHelper(httpClient, "upa", isb).getEntity().consumeContent();
+      }
+
+      @Override
+      public void close() throws IOException {
+        if (closed)
+          return;
+        closed = true;
+        httpClient.getConnectionManager().shutdown();
       }
     }, DEF_UPLOAD_CHUNK_SZ);
   }
 
   public InputStream downloadFile(String remoteName) throws IOException {
-    return requestHelper("dnl", new StringBody(remoteName)).getEntity().getContent();
+    final HttpClient httpClient = new DefaultHttpClient();
+    final InputStream ret = requestHelper(httpClient, "dnl", new StringBody(remoteName)).getEntity().getContent();
+    return new InputStream() {
+      boolean closed;
+
+      @Override
+      public int read() throws IOException {
+        return ret.read();
+      }
+      @Override
+      public int read(byte[] b, int off, int len) throws IOException {
+        return ret.read(b, off, len);
+      }
+      @Override
+      public void close() throws IOException {
+        if (closed)
+          return;
+        closed = true;
+        try {
+          ret.close();
+        } finally {
+          httpClient.getConnectionManager().shutdown();
+        }
+      }
+    };
   }
 
   public Ticket getTicketCC() {
