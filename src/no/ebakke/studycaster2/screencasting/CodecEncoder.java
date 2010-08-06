@@ -30,10 +30,10 @@ public class CodecEncoder extends Codec {
   }
 
   public void captureMouseLocation() {
-    addMeta(MetaStamp.Type.TYPE_PERIODIC);
+    addMeta(FrameType.PERIODIC);
   }
 
-  private void addMeta(MetaStamp.Type type) {
+  private void addMeta(FrameType type) {
     long time = System.currentTimeMillis();
     PointerInfo pi = MouseInfo.getPointerInfo();
     Point mouseLoc = (pi == null) ? null : pi.getLocation();
@@ -70,9 +70,9 @@ public class CodecEncoder extends Codec {
   }
 
   public synchronized void captureFrame() throws IOException {
-    addMeta(MetaStamp.Type.TYPE_BEFORE_CAPTURE);
+    addMeta(FrameType.BEFORE_CAPTURE);
     BufferedImage image = robot.createScreenCapture(screenRect);
-    addMeta(MetaStamp.Type.TYPE_AFTER_CAPTURE);
+    addMeta(FrameType.AFTER_CAPTURE);
     flushMeta();
     compressAndOutputFrame(image);
   }

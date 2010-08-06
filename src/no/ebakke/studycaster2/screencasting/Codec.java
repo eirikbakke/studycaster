@@ -11,6 +11,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public abstract class Codec {
+  protected enum FrameType { PERIODIC, BEFORE_CAPTURE, AFTER_CAPTURE; };
   protected static final String MAGIC_STRING = "StudyCaster Screencast";
   protected static final byte MARKER_FRAME = 1;
   protected static final byte MARKER_META  = 2;
@@ -20,13 +21,11 @@ public abstract class Codec {
   protected final Queue<MetaStamp> metaStamps = new ConcurrentLinkedQueue<MetaStamp>();
 
   protected static class MetaStamp {
-    public enum Type {TYPE_PERIODIC, TYPE_BEFORE_CAPTURE, TYPE_AFTER_CAPTURE};
-
     private long timeMillis;
     private Point mouseLocation;
-    private Type type;
+    private FrameType type;
 
-    public MetaStamp(long timeMillis, Point mouseLocation, Type type) {
+    public MetaStamp(long timeMillis, Point mouseLocation, FrameType type) {
       this.timeMillis = timeMillis;
       this.mouseLocation = mouseLocation;
       this.type = type;
@@ -41,12 +40,12 @@ public abstract class Codec {
 
     public static MetaStamp readFromStream(DataInputStream din) throws IOException {
       byte type = din.readByte();
-      if (type < 0 || type >= Type.values().length)
+      if (type < 0 || type >= FrameType.values().length)
         throw new IOException("Invalid metadata stamp type");
       long time = din.readLong();
       int x = din.readInt();
       int y = din.readInt();
-      return new MetaStamp(time, (x == Integer.MIN_VALUE) ? null : new Point(x, y), Type.values()[type]);
+      return new MetaStamp(time, (x == Integer.MIN_VALUE) ? null : new Point(x, y), FrameType.values()[type]);
     }
 
     public Point getMouseLocation() {
@@ -57,7 +56,7 @@ public abstract class Codec {
       return timeMillis;
     }
 
-    public Type getType() {
+    public FrameType getType() {
       return type;
     }
   }

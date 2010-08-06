@@ -1,7 +1,12 @@
-package no.ebakke.studycaster2;
+package no.ebakke.studycaster2.experiments;
 
 import java.io.OutputStream;
 import java.net.URI;
+import no.ebakke.studycaster2.ConsoleTee;
+import no.ebakke.studycaster2.NonBlockingOutputStream;
+import no.ebakke.studycaster2.ServerContext;
+import no.ebakke.studycaster2.ServerTimeLogFormatter;
+import no.ebakke.studycaster2.StudyCaster2;
 
 public class Main {
   public static void main(String args[]) throws Exception {

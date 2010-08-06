@@ -21,11 +21,11 @@ public final class RecordingConverter {
   public static void main(String args[]) throws Exception {
     //ServerContext sc = new ServerContext(new URI("http://www.sieuferd.com/studycaster/server.php"));
     //newConvert(sc.downloadFile("uploads/1875c96d2d6c/screencast.ebc"), "z:\\rectest\\downconv.ogv");
-    newConvert(new FileInputStream("z:\\rectest\\screencast.ebc"), "z:\\rectest\\fileconv.ogv");
+    convert(new FileInputStream("z:\\rectest\\screencast.ebc"), "z:\\rectest\\fileconv.ogv");
   }
 
-  public static void newConvert(InputStream inStream, String fileTo) throws Exception {
-    CodecDecoder dec = new CodecDecoder(inStream);
+  public static void convert(InputStream input, String fileTo) throws Exception {
+    CodecDecoder dec = new CodecDecoder(input);
 
     IContainer outContainer = IContainer.make();
     if (outContainer.open(fileTo, IContainer.Type.WRITE, null) < 0)
@@ -36,7 +36,6 @@ public final class RecordingConverter {
     // com.xuggle.xuggler.ICodec@53617504[type=CODEC_TYPE_VIDEO;id=CODEC_ID_THEORA;name=libtheora
     //ICodec codec = ICodec.findDecodingCodec(ICodec.ID.CODEC_ID_THEORA);
     ICodec codec = ICodec.guessEncodingCodec(null, null, fileTo, null, ICodec.Type.CODEC_TYPE_VIDEO);
-    System.out.println(codec);
     IRational frameRate = IRational.make(15, 1);
     IPixelFormat.Type pixelFormat = IPixelFormat.Type.YUV420P; /* YUV420P, YUV422P, YUV444P */
     outStreamCoder.setCodec(codec);
@@ -56,7 +55,8 @@ public final class RecordingConverter {
     BufferedImage image;
     int index = 0;
     while ((image = dec.nextFrame()) != null) {
-      if (index++ % 3 != 0)
+      index++;
+      if (index % 3 != 0)
         continue;
 
       BufferedImage converted = convertToType(image, BufferedImage.TYPE_3BYTE_BGR);
@@ -73,7 +73,7 @@ public final class RecordingConverter {
     outContainer.writeTrailer();
     outStreamCoder.close();
     outContainer.close();
-    inStream.close();
+    input.close();
   }
 
   private static BufferedImage convertToType(BufferedImage sourceImage, int targetType) {

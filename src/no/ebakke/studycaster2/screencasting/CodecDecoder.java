@@ -72,15 +72,16 @@ public class CodecDecoder extends Codec {
       } else if (headerMarker == MARKER_META) {
         ms = MetaStamp.readFromStream(dis);
         switch (ms.getType()) {
-          case        TYPE_BEFORE_CAPTURE:
+          case        BEFORE_CAPTURE:
             lastBeforeCaptureTime = ms.getTimeMillis();
-          break; case TYPE_AFTER_CAPTURE:
+          break; case AFTER_CAPTURE:
             if (lastBeforeCaptureTime < 0)
               throw new IOException("Missing before-capture timestamp");
             //nextCaptureTime = lastBeforeCaptureTime / 2 + ms.getTimeMillis() / 2;
-            nextCaptureTime = lastBeforeCaptureTime - 0;
+            // Mouse pointer information seems delayed by 200ms on my machine; may compensate for it here.
+            nextCaptureTime = lastBeforeCaptureTime - 200;
             lastBeforeCaptureTime = -1;
-          break; case TYPE_PERIODIC:
+          break; case PERIODIC:
         }
         metaStamps.add(ms);
       } else {
@@ -91,29 +92,32 @@ public class CodecDecoder extends Codec {
 
   public BufferedImage nextFrame() throws IOException {
     MetaStamp ms;
-    while (true) {
+    BufferedImage ret = null;
+    while (ret == null) {
       ms = metaStamps.peek();
-      if (ms != null && ms.getTimeMillis() < nextCaptureTime) {
-        metaStamps.remove();
-        if (ms.getType() == MetaStamp.Type.TYPE_PERIODIC) {
-          currentMetaTime = ms.getTimeMillis();
-          ScreenCastImage ret = new ScreenCastImage(getDimension());
-          copyImage(getCurrentFrame(), ret);
-          if (ms.getMouseLocation() != null)
-            drawMousePointer(ret, ms.getMouseLocation());
-          return ret;
+      if (ms == null || ms.getTimeMillis() >= nextCaptureTime) {
+        if (reachedEOF) {
+          return null;
+        } else if (atFrame) {
+          readFrame();
+          atFrame = false;
+          continue;
+        } else {
+          reachedEOF = !readUntilFrame();
+          atFrame = true;
+          continue;
         }
       }
-      if (reachedEOF)
-        return null;
-      if (atFrame) {
-        readFrame();
-        atFrame = false;
-      } else {
-        reachedEOF = !readUntilFrame();
-        atFrame = true;
+      metaStamps.remove();
+      if (ms.getType() == FrameType.PERIODIC) {
+        currentMetaTime = ms.getTimeMillis();
+        ret = new ScreenCastImage(getDimension());
+        copyImage(getCurrentFrame(), ret);
+        if (ms.getMouseLocation() != null)
+          drawMousePointer(ret, ms.getMouseLocation());
       }
     }
+    return ret;
   }
 
   private void readFrame() throws IOException {

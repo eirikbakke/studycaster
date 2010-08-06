@@ -1,4 +1,4 @@
-package no.ebakke.studycaster2.screencasting;
+package no.ebakke.studycaster2.experiments;
 
 import java.awt.Rectangle;
 import java.awt.Robot;
@@ -6,6 +6,7 @@ import java.awt.Toolkit;
 import java.net.URI;
 import no.ebakke.studycaster2.NonBlockingOutputStream;
 import no.ebakke.studycaster2.ServerContext;
+import no.ebakke.studycaster2.screencasting.CodecEncoder;
 
 public class ScreenCastExperiments {
   public static void main(String args[]) throws Exception {
