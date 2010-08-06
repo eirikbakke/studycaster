@@ -5,9 +5,8 @@ import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
-import java.net.URI;
-import no.ebakke.studycaster2.NonBlockingOutputStream;
-import no.ebakke.studycaster2.ServerContext;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 //import org.apache.http.client.methods.HttpPost
 //import org.apache.commons.;
 //org.apache.commons.httpclient.methods.multipart.Part
@@ -16,18 +15,19 @@ public class ScreenCastExperiments {
   public static void main(String args[]) throws Exception {
     Rectangle screenRect = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
     Robot r = new Robot();
-    //OutputStream os = new FileOutputStream("z:\\rectest\\testfile_newcodec.nc");
-    final NonBlockingOutputStream os = new NonBlockingOutputStream(4 * 1024 * 1024);
-    ServerContext sc = new ServerContext(new URI("http://www.sieuferd.com/studycaster/server.php"));
-    //ServerContext sc = new ServerContext(new URI("http://127.0.0.1:7570/studycaster/server.php"));
-    os.connect(sc.uploadFile("screencast.ebc"));
+    OutputStream os = new FileOutputStream("z:\\rectest\\outrageous.nc");
+    //final NonBlockingOutputStream os = new NonBlockingOutputStream(4 * 1024 * 1024);
+    //ServerContext sc = new ServerContext(new URI("http://www.sieuferd.com/studycaster/server.php"));
+    //ServerContext sc = new ServerContext(new URI("http://127.0.0.1:7571/studycaster/server.php"));
+    //os.connect(sc.uploadFile("screencast.ebc"));
+    //os.connect(new FileOutputStream("z:\\rectest\\outrageous.nc"));
     CodecEncoder comp = new CodecEncoder(os, new Dimension(screenRect.width, screenRect.height));
 
     Thread printThread = new Thread(new Runnable() {
       public void run() {
         try {
           while(true) {
-            System.out.println("Buffer: " + os.getBufferBytes());
+            //System.out.println("Buffer: " + os.getBufferBytes());
             Thread.sleep(200);
           }
         } catch (Exception e) {}
@@ -43,7 +43,7 @@ public class ScreenCastExperiments {
       bi = r.createScreenCapture(screenRect);
       //}
       diff = System.currentTimeMillis() - bef;
-      //System.out.println("capture took " + diff);
+      System.out.println("capture took " + diff);
       /*
       bef = System.currentTimeMillis();
       convertToType(bi, BufferedImage.TYPE_BYTE_GRAY);
@@ -64,9 +64,10 @@ public class ScreenCastExperiments {
         comp.compressFrame(bi, System.currentTimeMillis());
       //}
       diff = System.currentTimeMillis() - bef;
-      //System.out.println("compress took " + diff);
-      System.out.println("added another frame");
+      System.out.println("compress took " + diff);
+      //System.out.println("added another frame");
     }
+    comp.finish();
     os.close();
     System.out.println("Now done");
     printThread.interrupt();

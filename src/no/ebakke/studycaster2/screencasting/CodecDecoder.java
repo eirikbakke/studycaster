@@ -15,7 +15,9 @@ public class CodecDecoder extends Codec {
   private long currentTimeMillis;
 
   public CodecDecoder(InputStream is) throws IOException {
-    this.dis = new DataInputStream(new BufferedInputStream(new GZIPInputStream(is)));
+    dis = new DataInputStream(new BufferedInputStream(new GZIPInputStream(is)));
+    if (!dis.readUTF().equals(MAGIC_STRING))
+      throw new IOException("Screencast not in StudyCaster format");
     int width  = dis.readInt();
     int height = dis.readInt();
     init(new Dimension(width, height));
@@ -34,35 +36,31 @@ public class CodecDecoder extends Codec {
 
     if (reachedEOF)
       return null;
-    try {
-      for (int i = 0; i < newBuf.length; i++) {
-        if (currentRunLength == 0) {
-          try {
-            code = dis.readByte();
-          } catch (EOFException e) {
-            reachedEOF = true;
-            if (i > 0)
-              throw e;
-            return null;
-          }
-          if (code == INDEX_REPEAT) {
-            currentRunLength = dis.readInt();
-            if (currentRunLength == 0)
-              throw new IOException("Invalid run length");
-          } else {
-            currentRunLength = 1;
-            currentRunCode   = code;
-          }
+    for (int i = 0; i < newBuf.length; i++) {
+      if (currentRunLength == 0) {
+        try {
+          code = dis.readByte();
+        } catch (EOFException e) {
+          reachedEOF = true;
+          if (i > 0)
+            throw e;
+          return null;
         }
-        newBuf[i] = (currentRunCode == INDEX_NO_DIFF) ? oldBuf[i] : currentRunCode;
-        currentRunLength--;
+        if (code == INDEX_REPEAT) {
+          currentRunLength = dis.readInt();
+          if (currentRunLength == 0)
+            throw new IOException("Invalid run length");
+        } else {
+          currentRunLength = 1;
+          currentRunCode   = code;
+        }
       }
-      if (currentRunLength > 0)
-        throw new IOException("Pixel overflow at end of image (remaining run length > 0)");
-      currentTimeMillis = dis.readLong();
-    } catch (EOFException e) {
+      newBuf[i] = (currentRunCode == INDEX_NO_DIFF) ? oldBuf[i] : currentRunCode;
+      currentRunLength--;
     }
-
+    if (currentRunLength > 0)
+      throw new IOException("Pixel overflow at end of image (remaining run length > 0)");
+    currentTimeMillis = dis.readLong();
     return swapOutFrame();
   }
 }

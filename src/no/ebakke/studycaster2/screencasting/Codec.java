@@ -1,9 +1,11 @@
 package no.ebakke.studycaster2.screencasting;
 
 import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 
 public abstract class Codec {
+  protected static final String MAGIC_STRING = "StudyCaster Screencast";
   protected static final byte INDEX_NO_DIFF = (byte) -1;
   protected static final byte INDEX_REPEAT  = (byte) -2;
   private ScreenCastImage newFrame, oldFrame;
@@ -24,8 +26,12 @@ public abstract class Codec {
   }
 
   private void copyImage(BufferedImage from, BufferedImage to) {
-    if (!to.getGraphics().drawImage(from, 0, 0, to.getWidth(), to.getHeight(), null))
+    Graphics2D g = to.createGraphics();
+    // Sadly, this doesn't actually work.
+    // g.setRenderingHint(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_DISABLE);
+    if (!g.drawImage(from, 0, 0, to.getWidth(), to.getHeight(), null))
       throw new AssertionError("Expected immediate image conversion");
+    g.dispose();
   }
 
   protected void swapInFrame(BufferedImage frame) {

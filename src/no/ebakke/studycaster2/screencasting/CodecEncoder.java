@@ -12,7 +12,8 @@ public class CodecEncoder extends Codec {
 
   public CodecEncoder(OutputStream out, Dimension dim) throws IOException {
     init(dim);
-    this.dout = new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(out)));
+    dout = new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(out)));
+    dout.writeUTF(MAGIC_STRING);
     dout.writeInt(dim.width);
     dout.writeInt(dim.height);
   }
@@ -55,10 +56,13 @@ public class CodecEncoder extends Codec {
         }
       }
     }
-    if (!(currentRunLength == newBuf.length && currentRunCode == INDEX_NO_DIFF)) {
+    if (!(currentRunCode == INDEX_NO_DIFF && currentRunLength == newBuf.length)) {
       encodeRun(currentRunCode, currentRunLength);
       dout.writeLong(timeMillis);
-      dout.flush();
     }
+  }
+
+  public void finish() throws IOException {
+    dout.close();
   }
 }

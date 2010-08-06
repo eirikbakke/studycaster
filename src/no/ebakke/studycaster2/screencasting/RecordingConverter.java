@@ -21,14 +21,22 @@ import java.util.concurrent.TimeUnit;
 public final class RecordingConverter {
   private RecordingConverter() { }
   
-  public static void main(String args[]) throws Exception {
-    newConvert("z:\\rectest\\testfile_newcodec.nc", "z:\\rectest\\testfile_newcodec.ogv");
+  public static void main(String args[]) {
+    //ServerContext sc = new ServerContext(new URI("http://www.sieuferd.com/studycaster/server.php"));
+    //newConvert(sc.downloadFile("uploads/dc3a34520f9d/screencast.ebc"), "z:\\rectest\\curtest.ogv");
+    try {
+      newConvert(new FileInputStream("z:\\rectest\\outrageous.nc"), "z:\\rectest\\outrageous.ogv");
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
-  public static void newConvert(String fileFrom, String fileTo) throws Exception {
+  //public static void newConvert(String fileFrom, String fileTo) throws Exception {
+  //}
+
+  public static void newConvert(InputStream inStream, String fileTo) throws Exception {
     //ServerContext sc = new ServerContext(new URL("http://www.sieuferd.com/studycaster/server.php"));
     //InputStream inStream = new PostInputStream(new StringSequenceGenerator("uploads/ea712a69cda9/screencast_", ".ebc"), sc);
-    InputStream inStream = new FileInputStream(fileFrom);
 
     CodecDecoder dec = new CodecDecoder(inStream);
 
