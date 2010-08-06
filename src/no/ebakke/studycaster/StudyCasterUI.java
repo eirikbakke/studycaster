@@ -55,7 +55,7 @@ public class StudyCasterUI {
                 "OK to start recording?</html>",
                 "Screencasting",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
-        if (decision == JOptionPane.CANCEL_OPTION) {
+        if (decision == JOptionPane.CANCEL_OPTION || decision == JOptionPane.CLOSED_OPTION) {
           sf.dispose();
           waitForUserAction();
         }

@@ -25,7 +25,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 
 /** Handles protocol details specific to our server-side PHP script. */
 public class ServerContext {
-  private static final int DEF_UPLOAD_CHUNK_SZ = 32 * 1024;
+  private static final int DEF_UPLOAD_CHUNK_SZ = 64 * 1024;
   private static final String TICKET_STORE_FILENAME = "sc_7403204709139484951.tmp";
   private static final int CLIENT_TICKET_BYTES = 6;
   private static final int SERVER_TICKET_BYTES = 3;

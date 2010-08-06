@@ -2,30 +2,82 @@ package no.ebakke.studycaster2.screencasting;
 
 import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.image.BufferedImage;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public abstract class Codec {
   protected static final String MAGIC_STRING = "StudyCaster Screencast";
+  protected static final byte MARKER_FRAME = 1;
+  protected static final byte MARKER_META  = 2;
   protected static final byte INDEX_NO_DIFF = (byte) -1;
   protected static final byte INDEX_REPEAT  = (byte) -2;
-  private ScreenCastImage newFrame, oldFrame;
+  private ScreenCastImage currentFrame, previousFrame;
+  protected final Queue<MetaStamp> metaStamps = new ConcurrentLinkedQueue<MetaStamp>();
 
-  protected void init(Dimension dim) {
-    this.newFrame = new ScreenCastImage(dim);
-    this.oldFrame = new ScreenCastImage(dim);
+  protected static class MetaStamp {
+    public enum Type {TYPE_PERIODIC, TYPE_BEFORE_CAPTURE, TYPE_AFTER_CAPTURE};
+
+    private long timeMillis;
+    private Point mouseLocation;
+    private Type type;
+
+    public MetaStamp(long timeMillis, Point mouseLocation, Type type) {
+      this.timeMillis = timeMillis;
+      this.mouseLocation = mouseLocation;
+      this.type = type;
+    }
+
+    public void writeToStream(DataOutputStream dout) throws IOException {
+      dout.writeByte(type.ordinal());
+      dout.writeLong(timeMillis);
+      dout.writeInt((mouseLocation == null) ? Integer.MIN_VALUE : mouseLocation.x);
+      dout.writeInt((mouseLocation == null) ? Integer.MIN_VALUE : mouseLocation.y);
+    }
+
+    public static MetaStamp readFromStream(DataInputStream din) throws IOException {
+      byte type = din.readByte();
+      if (type < 0 || type >= Type.values().length)
+        throw new IOException("Invalid metadata stamp type");
+      long time = din.readLong();
+      int x = din.readInt();
+      int y = din.readInt();
+      return new MetaStamp(time, (x == Integer.MIN_VALUE) ? null : new Point(x, y), Type.values()[type]);
+    }
+
+    public Point getMouseLocation() {
+      return mouseLocation;
+    }
+
+    public long getTimeMillis() {
+      return timeMillis;
+    }
+
+    public Type getType() {
+      return type;
+    }
   }
 
-  private void swapOldNew() {
-    ScreenCastImage tmp = oldFrame;
-    oldFrame = newFrame;
-    newFrame = tmp;
+  protected void init(Dimension dim) {
+    this.currentFrame = new ScreenCastImage(dim);
+    this.previousFrame = new ScreenCastImage(dim);
+  }
+
+  protected void swapOldNew() {
+    ScreenCastImage tmp = previousFrame;
+    previousFrame = currentFrame;
+    currentFrame = tmp;
   }
 
   public Dimension getDimension() {
-    return new Dimension(newFrame.getWidth(), newFrame.getHeight());
+    return new Dimension(currentFrame.getWidth(), currentFrame.getHeight());
   }
 
-  private void copyImage(BufferedImage from, BufferedImage to) {
+  protected void copyImage(BufferedImage from, BufferedImage to) {
     Graphics2D g = to.createGraphics();
     // Sadly, this doesn't actually work.
     // g.setRenderingHint(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_DISABLE);
@@ -34,23 +86,11 @@ public abstract class Codec {
     g.dispose();
   }
 
-  protected void swapInFrame(BufferedImage frame) {
-    swapOldNew();
-    copyImage(frame, newFrame);
+  public ScreenCastImage getPreviousFrame() {
+    return previousFrame;
   }
 
-  protected BufferedImage swapOutFrame() {
-    ScreenCastImage ret = new ScreenCastImage(getDimension());
-    copyImage(newFrame, ret);
-    swapOldNew();
-    return ret;
-  }
-
-  public ScreenCastImage getOldFrame() {
-    return oldFrame;
-  }
-
-  public ScreenCastImage getNewFrame() {
-    return newFrame;
+  public ScreenCastImage getCurrentFrame() {
+    return currentFrame;
   }
 }
