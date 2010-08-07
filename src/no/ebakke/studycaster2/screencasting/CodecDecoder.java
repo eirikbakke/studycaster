@@ -24,6 +24,7 @@ public class CodecDecoder extends Codec {
   private Image pointerImage;
   private Point pointerImageHotSpot;
   private long currentMetaTime = -1, nextCaptureTime = -1, lastBeforeCaptureTime = -1;
+  private boolean firstFrameRead = false;
 
   public CodecDecoder(InputStream is) throws IOException {
     dis = new DataInputStream(new BufferedInputStream(new GZIPInputStream(is)));
@@ -78,8 +79,8 @@ public class CodecDecoder extends Codec {
             if (lastBeforeCaptureTime < 0)
               throw new IOException("Missing before-capture timestamp");
             //nextCaptureTime = lastBeforeCaptureTime / 2 + ms.getTimeMillis() / 2;
-            // Mouse pointer information seems delayed by 200ms on my machine; may compensate for it here.
-            nextCaptureTime = lastBeforeCaptureTime - 200;
+            // Mouse pointer information seems 100ms-200ms (varies from machine to machine); may compensate for it here.
+            nextCaptureTime = lastBeforeCaptureTime - 100;
             lastBeforeCaptureTime = -1;
           break; case PERIODIC:
         }
@@ -92,8 +93,7 @@ public class CodecDecoder extends Codec {
 
   public BufferedImage nextFrame() throws IOException {
     MetaStamp ms;
-    BufferedImage ret = null;
-    while (ret == null) {
+    while (true) {
       ms = metaStamps.peek();
       if (ms == null || ms.getTimeMillis() >= nextCaptureTime) {
         if (reachedEOF) {
@@ -101,6 +101,7 @@ public class CodecDecoder extends Codec {
         } else if (atFrame) {
           readFrame();
           atFrame = false;
+          firstFrameRead = true;
           continue;
         } else {
           reachedEOF = !readUntilFrame();
@@ -109,15 +110,15 @@ public class CodecDecoder extends Codec {
         }
       }
       metaStamps.remove();
-      if (ms.getType() == FrameType.PERIODIC) {
+      if (firstFrameRead && ms.getType() == FrameType.PERIODIC) {
         currentMetaTime = ms.getTimeMillis();
-        ret = new ScreenCastImage(getDimension());
+        BufferedImage ret = new ScreenCastImage(getDimension());
         copyImage(getCurrentFrame(), ret);
         if (ms.getMouseLocation() != null)
           drawMousePointer(ret, ms.getMouseLocation());
+        return ret;
       }
     }
-    return ret;
   }
 
   private void readFrame() throws IOException {

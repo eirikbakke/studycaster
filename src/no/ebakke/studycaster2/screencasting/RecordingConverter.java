@@ -21,7 +21,7 @@ public final class RecordingConverter {
   public static void main(String args[]) throws Exception {
     //ServerContext sc = new ServerContext(new URI("http://www.sieuferd.com/studycaster/server.php"));
     //newConvert(sc.downloadFile("uploads/1875c96d2d6c/screencast.ebc"), "z:\\rectest\\downconv.ogv");
-    convert(new FileInputStream("z:\\rectest\\screencast.ebc"), "z:\\rectest\\fileconv.ogv");
+    convert(new FileInputStream("z:\\rectest\\outrageous.ebc"), "z:\\rectest\\outrageous.ogv");
   }
 
   public static void convert(InputStream input, String fileTo) throws Exception {
@@ -56,7 +56,7 @@ public final class RecordingConverter {
     int index = 0;
     while ((image = dec.nextFrame()) != null) {
       index++;
-      if (index % 3 != 0)
+      if (index % 5 != 0)
         continue;
 
       BufferedImage converted = convertToType(image, BufferedImage.TYPE_3BYTE_BGR);

@@ -17,8 +17,10 @@ public class CodecEncoder extends Codec {
   private DataOutputStream dout;
   private Robot robot;
   private Rectangle screenRect;
+  private ScreenCensor censor;
 
-  public CodecEncoder(OutputStream out, Rectangle screenRect) throws IOException, AWTException {
+  public CodecEncoder(OutputStream out, Rectangle screenRect, ScreenCensor censor) throws IOException, AWTException {
+    this.censor = censor;
     this.screenRect = screenRect;
     Dimension dim = screenRect.getSize();
     init(dim);
@@ -72,12 +74,13 @@ public class CodecEncoder extends Codec {
   public synchronized void captureFrame() throws IOException {
     addMeta(FrameType.BEFORE_CAPTURE);
     BufferedImage image = robot.createScreenCapture(screenRect);
+    Rectangle permittedArea = (censor == null) ? screenRect : censor.getPermittedRecordingArea();
     addMeta(FrameType.AFTER_CAPTURE);
     flushMeta();
-    compressAndOutputFrame(image);
+    compressAndOutputFrame(image, permittedArea);
   }
 
-  private void compressAndOutputFrame(BufferedImage frame) throws IOException {
+  private void compressAndOutputFrame(BufferedImage frame, Rectangle permittedArea) throws IOException {
     swapOldNew();
     copyImage(frame, getCurrentFrame());
     final byte oldBuf[] = getPreviousFrame().getBuffer();
@@ -91,9 +94,15 @@ public class CodecEncoder extends Codec {
 
     for (int y = 0, i = 0; y < height; y++) {
       for (int x = 0; x < width; x++, i++) {
-        if (newBuf[i] == INDEX_NO_DIFF || newBuf[i] == INDEX_REPEAT)
+        if (!permittedArea.contains(x, y))
+          newBuf[i] = newBuf[y * width + (x / ScreenCensor.MOSAIC_WIDTH) * ScreenCensor.MOSAIC_WIDTH];
+
+        byte oldCol = oldBuf[i];
+        byte newCol = newBuf[i];
+
+        if (newCol == INDEX_NO_DIFF || newCol == INDEX_REPEAT)
           throw new AssertionError("Unexpected color index.");
-        code = (newBuf[i] == oldBuf[i]) ? INDEX_NO_DIFF : newBuf[i];
+        code = (newCol == oldCol) ? INDEX_NO_DIFF : newCol;
         if (code == currentRunCode) {
           currentRunLength++;
         } else {

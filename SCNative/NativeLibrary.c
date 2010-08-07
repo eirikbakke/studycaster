@@ -33,8 +33,10 @@ static HWND ancestorMatching(HWND win, const wchar_t **whiteList, const wchar_t 
 static RECT getPermittedArea(const wchar_t **whiteList, const wchar_t **blackList) {
   RECT nullRect;
   memset(&nullRect, 0, sizeof(RECT));
-  HWND win = ancestorMatching(GetForegroundWindow(), whiteList, blackList);
+  HWND fgnd = GetForegroundWindow();
+  HWND win = ancestorMatching(fgnd, whiteList, blackList);
   if (win != NULL) {
+    win = fgnd; // Use the foreground child window instead of the actually matched window.
     int len = GetWindowTextLengthW(win);
     if (len > 0) {
       free(lastInterestingWindowTitle);
