@@ -24,12 +24,12 @@ public final class RecordingConverter {
   private RecordingConverter() { }
   
   public static void main(String args[]) throws Exception {
-    ServerContext sc = new ServerContext(new URI("http://www.sieuferd.com/studycaster/server.php"));
-    OutputStream fos = new FileOutputStream("z:/rectest/downloaded.ebc");
-    Util.hookupStreams(sc.downloadFile("uploads/8bac89c35483/screencast.ebc"), fos);
-    fos.close();
-    convert(new FileInputStream("z:/rectest/downloaded.ebc"), "z:/rectest/downconv.ogv");
-    //convert(new FileInputStream("z:/rectest/outrageous.ebc"), "z:/rectest/outrageous.ogv");
+    //ServerContext sc = new ServerContext(new URI("http://www.sieuferd.com/studycaster/server.php"));
+    //OutputStream fos = new FileOutputStream("z:/rectest/downloaded.ebc");
+    //Util.hookupStreams(sc.downloadFile("uploads/8bac89c35483/screencast.ebc"), fos);
+    //fos.close();
+    //convert(new FileInputStream("z:/rectest/downloaded.ebc"), "z:/rectest/downconv.mkv");
+    convert(new FileInputStream("z:/rectest/localout.ebc"), "z:/rectest/localconv.mkv");
   }
 
   public static void convert(InputStream input, String fileTo) throws Exception {
@@ -44,16 +44,16 @@ public final class RecordingConverter {
     // com.xuggle.xuggler.ICodec@53617504[type=CODEC_TYPE_VIDEO;id=CODEC_ID_THEORA;name=libtheora
     //ICodec codec = ICodec.findDecodingCodec(ICodec.ID.CODEC_ID_THEORA);
     ICodec codec = ICodec.guessEncodingCodec(null, null, fileTo, null, ICodec.Type.CODEC_TYPE_VIDEO);
-    IRational frameRate = IRational.make(15, 1);
+    IRational frameRate = IRational.make(24, 1);
     IPixelFormat.Type pixelFormat = IPixelFormat.Type.YUV420P; /* YUV420P, YUV422P, YUV444P */
     outStreamCoder.setCodec(codec);
-    outStreamCoder.setNumPicturesInGroupOfPictures(100);
-    outStreamCoder.setBitRate(20000000);
+    outStreamCoder.setNumPicturesInGroupOfPictures(10);
+    outStreamCoder.setBitRate(25000);
     outStreamCoder.setBitRateTolerance(9000);
     outStreamCoder.setPixelType(pixelFormat);
     outStreamCoder.setWidth(dec.getDimension().width);
     outStreamCoder.setHeight(dec.getDimension().height);
-    outStreamCoder.setFlag(IStreamCoder.Flags.FLAG_QSCALE, false);
+    outStreamCoder.setFlag(IStreamCoder.Flags.FLAG_QSCALE, true); // false?
     outStreamCoder.setGlobalQuality(0);
     outStreamCoder.setFrameRate(frameRate);
     outStreamCoder.setTimeBase(IRational.make(frameRate.getDenominator(), frameRate.getNumerator()));
