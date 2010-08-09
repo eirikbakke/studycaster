@@ -12,13 +12,13 @@ public class ServerContextPostRequestTester {
     
     OutputStream uploadOS = sc.uploadFile(remoteName);
     RandomInputStream ris = new RandomInputStream(43, 50000, 50000);
-    Util.hookupStreams(ris, uploadOS);
+    TestUtil.hookupStreams(ris, uploadOS);
     uploadOS.close();
 
     InputStream returnedFile = sc.downloadFile("uploads/" + sc.getTicketCC().toString() + "/" + remoteName);
     OutputStream os = new ExpectRandomOutputStream(43, 50000, 50000);
 
-    Util.hookupStreams(returnedFile, os);
+    TestUtil.hookupStreams(returnedFile, os);
     os.close();
   }
 

@@ -11,7 +11,7 @@ public class ScreenRecorder {
   private CaptureEncoder enc;
   private boolean stopped = true;
   private IOException storedException;
-  public CaptureScheduler pointerRecorder, frameRecorder; // TODO: Make private
+  private CaptureScheduler pointerRecorder, frameRecorder;
   private CaptureTask pointerRecorderTask = new CaptureTask() {
     public void capture() {
       enc.capturePointer();
@@ -45,9 +45,13 @@ public class ScreenRecorder {
     }
   };
 
-  public ScreenRecorder(OutputStream out, ScreenCensor censor) throws IOException, AWTException {
+  public ScreenRecorder(OutputStream out) throws IOException, AWTException {
     Rectangle screenRect = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
-    enc = new CaptureEncoder(out, screenRect, censor);
+    enc = new CaptureEncoder(out, screenRect);
+  }
+
+  public void setCensor(ScreenCensor censor) {
+    enc.setCensor(censor);
   }
 
   public synchronized void start() {

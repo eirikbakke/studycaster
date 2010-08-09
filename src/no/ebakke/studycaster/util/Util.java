@@ -1,5 +1,7 @@
 package no.ebakke.studycaster.util;
 
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -8,8 +10,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.logging.Level;
 import no.ebakke.studycaster.StudyCaster;
+import no.ebakke.studycaster2.StudyCaster2;
 
-public class Util {
+public final class Util {
+  private Util() { }
+
   // TODO: Consider whether this should rather be in the StudyCaster class.
   public static boolean fileAvailableExclusive(File f) {
     try {
@@ -42,5 +47,40 @@ public class Util {
     } finally {
       is.close();
     }
+  }
+
+  public static void logEnvironmentInfo() {
+    String propkeys[] = new String[]
+      {"java.vendor", "java.version", "java.class.version", "os.name", "os.arch", "os.version", "user.language", "user.region", "user.timezone"};
+    StringBuffer props = new StringBuffer();
+    boolean first = true;
+    for (String key : propkeys) {
+      props.append((first ? "" : ", ") + key + "=" + System.getProperty(key));
+      first = false;
+    }
+    StudyCaster2.log.info("Environment: " + props);
+
+    for (GraphicsDevice gd : GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()) {
+      StudyCaster2.log.info("Found a screen " + gd.getDisplayMode().getWidth() + "x" + gd.getDisplayMode().getHeight()
+          + ((gd.equals(GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice())) ? " (default)" : ""));
+    }
+  }
+
+  public static void ensureInterruptible(Interruptible op) {
+    boolean interrupted = false;
+    while (true) {
+      try {
+        op.run();
+        break;
+      } catch (InterruptedException e) {
+        interrupted = true;
+      }
+    }
+    if (interrupted)
+      Thread.currentThread().interrupt();
+  }
+
+  public interface Interruptible {
+    public void run() throws InterruptedException;
   }
 }

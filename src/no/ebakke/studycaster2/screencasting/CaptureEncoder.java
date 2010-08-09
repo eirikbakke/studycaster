@@ -19,8 +19,7 @@ public class CaptureEncoder extends Codec {
   private Rectangle screenRect;
   private ScreenCensor censor;
 
-  public CaptureEncoder(OutputStream out, Rectangle screenRect, ScreenCensor censor) throws IOException, AWTException {
-    this.censor = censor;
+  public CaptureEncoder(OutputStream out, Rectangle screenRect) throws IOException, AWTException {
     this.screenRect = screenRect;
     Dimension dim = screenRect.getSize();
     init(dim);
@@ -29,6 +28,10 @@ public class CaptureEncoder extends Codec {
     dout.writeUTF(MAGIC_STRING);
     dout.writeInt(dim.width);
     dout.writeInt(dim.height);
+  }
+
+  public synchronized void setCensor(ScreenCensor censor) {
+    this.censor = censor;
   }
 
   private void addMeta(FrameType type) {

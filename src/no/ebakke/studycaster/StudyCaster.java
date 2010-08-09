@@ -1,5 +1,6 @@
 package no.ebakke.studycaster;
 
+import java.awt.AWTException;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,24 +10,19 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import no.ebakke.studycaster.util.Blocker;
-import no.ebakke.orgstonesoupscreen.DesktopScreenRecorder;
-import no.ebakke.orgstonesoupscreen.ScreenRecorder;
-import no.ebakke.orgstonesoupscreen.ScreenRecorderListener;
 import no.ebakke.studycaster.util.Util;
-import no.ebakke.studycaster2.NativeLibrary;
+import no.ebakke.studycaster2.NonBlockingOutputStream;
 import no.ebakke.studycaster2.ServerContext;
+import no.ebakke.studycaster2.screencasting.ScreenCensor;
+import no.ebakke.studycaster2.screencasting.ScreenRecorder;
 
 public class StudyCaster {
+  public static final Logger log = Logger.getLogger("no.ebakke.studycaster");
   private ServerContext serverContext;
-  public  static final Logger log = Logger.getLogger("no.ebakke.studycaster");
   private ScreenRecorder recorder;
-  private File recordFile;
   private boolean concluded = false;
-  private Blocker recorderBlocker = new Blocker();
   private Thread shutdownHook = new Thread(new Runnable() {
     public void run() {
       log.warning("Study not explicitly concluded; concluding via shutdown hook.");
@@ -52,6 +48,17 @@ public class StudyCaster {
       throw e;
     }
     Runtime.getRuntime().addShutdownHook(shutdownHook);
+
+    try {
+      NonBlockingOutputStream os = new NonBlockingOutputStream(4 * 1024 * 1024);
+      os.connect(serverContext.uploadFile("screencast.ebc"));
+      //OutputStream os = serverContext.uploadFile("screencast.ebc");
+      recorder = new ScreenRecorder(os);
+    } catch (IOException e) {
+      log.log(Level.WARNING, "Failed to initialize screen recorder", e);
+    } catch (AWTException e) {
+      log.log(Level.WARNING, "Failed to initialize screen recorder", e);
+    }
   }
 
   public void concludeStudy() {
@@ -60,17 +67,17 @@ public class StudyCaster {
         return;
       concluded = true;
     }
-    stopRecording();
-    if (recordFile != null)
-      System.out.println("Recordfile: " + recordFile);
-      //recordFile.delete();
+    try {
+      waitForScreenCastUpload();
+    } catch (StudyCasterException e) {
+      log.log(Level.WARNING, "Failed to upload screencast while concluding study", e);
+    }
     try {
       Runtime.getRuntime().removeShutdownHook(shutdownHook);
     } catch (IllegalStateException e) {
     } catch (SecurityException e) {
     }
     log.info("Concluding study...");
-    //log.removeHandler(logHandler);
   }
 
   @Override
@@ -107,7 +114,7 @@ public class StudyCaster {
 
   public void uploadFile(File f, String remoteName) throws StudyCasterException {
     try {
-      System.out.println("Uploading a file of length " + f.length());
+      //System.out.println("Uploading a file of length " + f.length());
       OutputStream os = serverContext.uploadFile(remoteName);
       try {
         Util.hookupStreams(new FileInputStream(f), os);
@@ -127,68 +134,28 @@ public class StudyCaster {
     }
   }
 
-  public void startRecording() throws StudyCasterException {
-    if (recorder != null)
-      throw new IllegalStateException();
-
-    try {
-      System.loadLibrary("libSCNative");
-      NativeLibrary.getPermittedRecordingArea(new ArrayList<String>(), true);
-    } catch (Exception e) {
-      throw new StudyCasterException("Can't initialize window position detector library.", e);
+  public void startRecording(ScreenCensor censor) throws StudyCasterException {
+    if (recorder != null) {
+      recorder.setCensor(censor);
+      recorder.start();
     }
-
-    final OutputStream os;
-    try {
-      recordFile = File.createTempFile("sc_", ".tmp");
-      os = new FileOutputStream(recordFile);
-    } catch (IOException e) {
-      StudyCaster.log.log(Level.SEVERE, "Can't open temporary file.", e);
-      throw new StudyCasterException(e);
-    }
-
-    new Thread(new Runnable() {
-      int frames = 0;
-
-      public void run() {
-        recorder = new DesktopScreenRecorder(os, new ScreenRecorderListener() {
-          int frameNum = 0;
-
-          public void frameRecorded(boolean fullFrame) throws IOException {
-            log.info("Recorded frame #" + frameNum);
-            if (frameNum++ == 0)
-              log.info("Recorded the first frame.");
-
-            //System.err.println(recordFile.length());
-            if (recordFile.length() > 5000000) {
-              log.warning("Recording size passed limit.");
-              stopRecording();
-            }
-          }
-
-          public void recordingStopped() {
-            log.info("Recording stopped.");
-            recorderBlocker.releaseBlockingThread();
-          }
-        });
-        recorder.startRecording();
-      }
-    }).start();
   }
 
   public void stopRecording() {
-    if (recorder == null)
-      return;
-    new Thread(new Runnable() {
-      public void run() {
-        recorder.stopRecording();
-      }
-    }).start();
-    recorderBlocker.blockUntilReleased(10000);
-    recorder = null;
+    if (recorder != null) {
+      recorder.stop();
+    }
   }
 
-  public File getRecordFile() {
-    return recordFile;
+  public void waitForScreenCastUpload() throws StudyCasterException {
+    if (recorder != null) {
+      try {
+        recorder.close();
+      } catch (IOException e) {
+        throw new StudyCasterException("Error uploading screencast", e);
+      } finally {
+        recorder = null;
+      }
+    }
   }
 }

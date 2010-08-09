@@ -13,6 +13,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.logging.Level;
 import no.ebakke.studycaster.StudyCasterException;
+import no.ebakke.studycaster.util.Util;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
