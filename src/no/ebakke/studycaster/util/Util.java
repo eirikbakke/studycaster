@@ -9,8 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.logging.Level;
-import no.ebakke.studycaster.StudyCaster;
-import no.ebakke.studycaster2.StudyCaster2;
+import no.ebakke.studycaster.api.StudyCaster;
 
 public final class Util {
   private Util() { }
@@ -58,10 +57,10 @@ public final class Util {
       props.append((first ? "" : ", ") + key + "=" + System.getProperty(key));
       first = false;
     }
-    StudyCaster2.log.info("Environment: " + props);
+    StudyCaster.log.info("Environment: " + props);
 
     for (GraphicsDevice gd : GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()) {
-      StudyCaster2.log.info("Found a screen " + gd.getDisplayMode().getWidth() + "x" + gd.getDisplayMode().getHeight()
+      StudyCaster.log.info("Found a screen " + gd.getDisplayMode().getWidth() + "x" + gd.getDisplayMode().getHeight()
           + ((gd.equals(GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice())) ? " (default)" : ""));
     }
   }

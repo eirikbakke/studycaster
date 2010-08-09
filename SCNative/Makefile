@@ -57,7 +57,7 @@ build: .build-post
 
 .build-pre:
 # Add your pre 'build' code here...
-	${JAVAH} -o ${CND_BASEDIR}/NativeLibrary.h -classpath ${CND_BASEDIR}/../build/classes no.ebakke.studycaster2.NativeLibrary
+	${JAVAH} -o ${CND_BASEDIR}/NativeLibrary.h -classpath ${CND_BASEDIR}/../build/classes no.ebakke.studycaster.screencasting.NativeLibrary
 
 .build-post: .build-impl
 # Add your post 'build' code here...

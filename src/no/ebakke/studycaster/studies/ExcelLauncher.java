@@ -4,13 +4,12 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.logging.Level;
 import javax.swing.JOptionPane;
-import no.ebakke.studycaster.StudyCaster;
-import no.ebakke.studycaster.StudyCasterException;
-import no.ebakke.studycaster.StudyCasterUI;
-import no.ebakke.studycaster.StudyCasterUI.UIAction;
+import no.ebakke.studycaster.api.StudyCaster;
+import no.ebakke.studycaster.api.StudyCasterException;
+import no.ebakke.studycaster.ui.StudyCasterUI;
+import no.ebakke.studycaster.ui.StudyCasterUI.UIAction;
 import no.ebakke.studycaster.util.Util;
-import no.ebakke.studycaster2.StudyCaster2;
-import no.ebakke.studycaster2.screencasting.ScreenCensor;
+import no.ebakke.studycaster.screencasting.ScreenCensor;
 
 public class ExcelLauncher {
   private static final String instructions =
@@ -30,13 +29,14 @@ public class ExcelLauncher {
     long lastModified1, lastModified2;
     File excelFile;
     try {
+      scui.getProgressBarUI().setProgress(25);
       scui.getProgressBarUI().setTaskAppearance("Initializing user study app...", false);
       sc = new StudyCaster("http://www.sieuferd.com/studycaster/server.php");
-      scui.getProgressBarUI().setProgress(33);
+      scui.getProgressBarUI().setProgress(50);
       scui.getProgressBarUI().setTaskAppearance("Downloading sample document...", false);
       excelFile = sc.downloadFile("exflat.xls");
       lastModified1 = excelFile.lastModified();
-      scui.getProgressBarUI().setProgress(67);
+      scui.getProgressBarUI().setProgress(75);
       scui.getProgressBarUI().setTaskAppearance("Opening sample document...", false);
       sc.desktopOpenFile(excelFile, "Excel or a compatible spreadsheet application");
       lastModified2 = excelFile.lastModified();
@@ -89,7 +89,7 @@ public class ExcelLauncher {
             scui.showConfirmationCodeDialog(sc.getServerContext().getTicketCC().toString(), true);
             scui.disposeUI();
           } catch (StudyCasterException e) {
-            StudyCaster2.log.log(Level.SEVERE, "Failed to upload", e);
+            StudyCaster.log.log(Level.SEVERE, "Failed to upload", e);
             scui.showMessageDialog("Failed to upload file", e.getLocalizedMessage(), JOptionPane.WARNING_MESSAGE, false);
           }
           scui.getProgressBarUI().setTaskAppearance("", false);
