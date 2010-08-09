@@ -82,7 +82,9 @@ public class ExcelLauncher {
             //StudyCaster.log.info("Uploaded file now last modified " + sc.getServerTimeFormat(nowLastModified));
             sc.uploadFile(excelFile,  "saveddoc.xls");
             scui.getProgressBarUI().setTaskAppearance("Finishing screencast upload...", true);
+            scui.setMonitorStreamProgress(sc.getRecordingStream(), true);
             sc.waitForScreenCastUpload();
+            scui.setMonitorStreamProgress(sc.getRecordingStream(), false);
             scui.getProgressBarUI().setTaskAppearance("Uploading log...", true);
             sc.concludeStudy();
             scui.getProgressBarUI().setTaskAppearance("", false);

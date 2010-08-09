@@ -22,6 +22,7 @@ public class StudyCaster {
   private ServerContext serverContext;
   private ScreenRecorder recorder;
   private boolean concluded = false;
+  private NonBlockingOutputStream recordingStream;
   private Thread shutdownHook = new Thread(new Runnable() {
     public void run() {
       log.warning("Study not explicitly concluded; concluding via shutdown hook.");
@@ -48,15 +49,21 @@ public class StudyCaster {
     }
     Runtime.getRuntime().addShutdownHook(shutdownHook);
 
+    recordingStream = new NonBlockingOutputStream(4 * 1024 * 1024);
     try {
-      NonBlockingOutputStream os = new NonBlockingOutputStream(4 * 1024 * 1024);
-      os.connect(serverContext.uploadFile("screencast.ebc"));
+      recordingStream.connect(serverContext.uploadFile("screencast.ebc"));
       //OutputStream os = serverContext.uploadFile("screencast.ebc");
-      recorder = new ScreenRecorder(os);
+      recorder = new ScreenRecorder(recordingStream);
     } catch (IOException e) {
       log.log(Level.WARNING, "Failed to initialize screen recorder", e);
     } catch (AWTException e) {
       log.log(Level.WARNING, "Failed to initialize screen recorder", e);
+    }
+    if (recorder == null) {
+      try {
+        recordingStream.close();
+      } catch (IOException e) { }
+      recordingStream = null;
     }
   }
 
@@ -156,5 +163,10 @@ public class StudyCaster {
         recorder = null;
       }
     }
+  }
+
+  // TODO: Don't expose this.
+  public NonBlockingOutputStream getRecordingStream() {
+    return recordingStream;
   }
 }

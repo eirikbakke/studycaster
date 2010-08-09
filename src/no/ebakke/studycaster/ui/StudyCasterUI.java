@@ -1,12 +1,14 @@
 package no.ebakke.studycaster.ui;
 
-import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import no.ebakke.studycaster.api.ServerContext;
 import no.ebakke.studycaster.api.StudyCaster;
 import no.ebakke.studycaster.util.Blocker;
+import no.ebakke.studycaster.util.stream.NonBlockingOutputStream;
+import no.ebakke.studycaster.util.stream.NonBlockingOutputStream.StreamProgressObserver;
 
 public class StudyCasterUI {
   public enum UIAction {
@@ -17,10 +19,23 @@ public class StudyCasterUI {
   private StatusFrame sf;
   private UIAction actionTaken = UIAction.NO_ACTION;
   private Blocker actionBlocker = new Blocker();
+  private int streamProgressStart;
+  private StreamProgressObserver spo = new StreamProgressObserver() {
+      public void updateProgress(final int bytesWritten, final int bytesRemaining) {
+        SwingUtilities.invokeLater(new Runnable() {
+          public void run() {
+            getProgressBarUI().setBounds(streamProgressStart, bytesWritten + bytesRemaining + ServerContext.DEF_UPLOAD_CHUNK_SZ);
+            getProgressBarUI().setProgress(bytesWritten);
+          }
+        });
+      }
+    };
+
 
   public StudyCasterUI(final String instructions) {
     final Blocker initedBlocker = new Blocker();
     StatusFrame.setSystemLookAndFeel();
+    // TODO: Use SwingUtilities.invokeAndWait() instead.
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
         sf = new StatusFrame(instructions);
@@ -74,12 +89,8 @@ public class StudyCasterUI {
     });
   }
 
-  public void showPaneInDialog(Component comp) {
-    
-  }
-
-  // TODO: Reduce code duplication between the next two methods.
   public void showConfirmationCodeDialog(final String confirmationCode, boolean block) {
+    // TODO: Use SwingUtilities.invokeAndWait() instead.
     final Blocker blocker = new Blocker();
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
@@ -92,8 +103,8 @@ public class StudyCasterUI {
   }
 
   public void showMessageDialog(final String title, final String message, final int messageType, boolean block) {
+    // TODO: Use SwingUtilities.invokeAndWait() instead.
     final Blocker blocker = new Blocker();
-
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
         JOptionPane.showMessageDialog(sf.getPositionDialog(), message, title, messageType);
@@ -124,5 +135,16 @@ public class StudyCasterUI {
 
   public boolean wasClosed() {
     return actionTaken == UIAction.CLOSE;
+  }
+
+  public void setMonitorStreamProgress(NonBlockingOutputStream os, boolean doMonitor) {
+    if (os == null)
+      return;
+    if (doMonitor) {
+      streamProgressStart = os.getWrittenBytes();
+      os.addObserver(spo);
+    } else {
+      os.removeObserver(spo);
+    }
   }
 }

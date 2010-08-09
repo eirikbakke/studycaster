@@ -4,7 +4,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
+import javax.swing.SwingUtilities;
 import no.ebakke.studycaster.api.StudyCaster;
 import no.ebakke.studycaster.util.Util;
 import no.ebakke.studycaster.util.Util.Interruptible;
@@ -15,6 +18,8 @@ public class NonBlockingOutputStream extends OutputStream {
   private PipedInputStream inPipe;
   private Thread writerThread;
   private volatile boolean flushDue;
+  private int bytesWritten;
+  private List<StreamProgressObserver> observers = new ArrayList<StreamProgressObserver>();
 
   /* All of this wackyness exists as a workaround for the fact that a PipedOutputStream will only work reliably with a single owner thread. */
   private byte[] writeOpB;
@@ -40,6 +45,40 @@ public class NonBlockingOutputStream extends OutputStream {
     }
   });
 
+  public synchronized void addObserver(StreamProgressObserver observer) {
+    observers.add(observer);
+  }
+
+  public synchronized void removeObserver(StreamProgressObserver observer) {
+    observers.remove(observer);
+  }
+
+  private void notifyObservers() {
+    final List<StreamProgressObserver> toNotify;
+    synchronized (this) {
+      toNotify = new ArrayList<StreamProgressObserver>(observers);
+    }
+    final int remaining;
+    try {
+      remaining = getRemainingBytes();
+    } catch (IOException e) {
+      setStoredException(e);
+      return;
+    }
+    // TODO: Don't use SwingUtilities here. Clean up this mess.
+    SwingUtilities.invokeLater(new Runnable() {
+      public void run() {
+        for (StreamProgressObserver observer : toNotify) {
+          boolean stillObserving;
+          synchronized (NonBlockingOutputStream.this) {
+            stillObserving = observers.contains(observer);
+          }
+          if (stillObserving)
+            observer.updateProgress(getWrittenBytes(), remaining);
+        }
+      }
+    });
+  }
 
   @Override
   public void write(int b) throws IOException {
@@ -62,6 +101,8 @@ public class NonBlockingOutputStream extends OutputStream {
         });
       }
     }
+    checkStoredException();
+    notifyObservers();
     checkStoredException();
   }
 
@@ -91,6 +132,10 @@ public class NonBlockingOutputStream extends OutputStream {
               int got;
               while ((got = inPipe.read(buffer)) >= 0) {
                 out.write(buffer, 0, got);
+                synchronized (NonBlockingOutputStream.this) {
+                  bytesWritten += got;
+                }
+                notifyObservers();
                 if (flushDue && inPipe.available() == 0) {
                   out.flush();
                   flushDue = false;
@@ -111,8 +156,12 @@ public class NonBlockingOutputStream extends OutputStream {
     writerThread.start();
   }
 
-  public int getBufferBytes() throws IOException {
+  public int getRemainingBytes() throws IOException {
     return inPipe.available();
+  }
+
+  public synchronized int getWrittenBytes() {
+    return bytesWritten;
   }
 
   public NonBlockingOutputStream(final OutputStream out, int bufferLimit) {
@@ -155,5 +204,9 @@ public class NonBlockingOutputStream extends OutputStream {
     outPipe.flush();
     /* Relaxed interpretation of flush; just flush the underlying output stream as soon as we've gotten around to write to it. */
     flushDue = true;
+  }
+
+  public interface StreamProgressObserver {
+    public void updateProgress(int bytesWritten, int bytesRemaining);
   }
 }

@@ -13,16 +13,16 @@ public class ProgressBarUI {
   public void setTaskAppearance(final String text, final boolean indeterminate) {
     ui.setString(text);
     ui.setIndeterminate(indeterminate);
+    if (indeterminate)
+      setProgress(0);
   }
 
-  public void setTaskAppearance(final String text, final boolean indeterminate, final int progress, final int minimum, final int maximum) {
+  public void setBounds(final int minimum, final int maximum) {
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
-        ui.setString(text);
-        ui.setIndeterminate(indeterminate);
-        ui.setValue(progress);
         ui.setMinimum(minimum);
         ui.setMaximum(maximum);
+        ui.setIndeterminate(false);
       }
     });
   }

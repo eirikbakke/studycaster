@@ -26,7 +26,7 @@ public final class RecordingConverter {
   public static void main(String args[]) throws Exception {
     ServerContext sc = new ServerContext(new URI("http://www.sieuferd.com/studycaster/server.php"));
     OutputStream fos = new FileOutputStream("z:/rectest/downloaded.ebc");
-    Util.hookupStreams(sc.downloadFile("uploads/6bb56407d743/screencast.ebc"), fos);
+    Util.hookupStreams(sc.downloadFile("uploads/efe5d1ff63fc/screencast.ebc"), fos);
     fos.close();
     convert(new FileInputStream("z:/rectest/downloaded.ebc"), "z:/rectest/downconv.mkv");
     //convert(new FileInputStream("z:/rectest/localout.ebc"), "z:/rectest/localconv.mkv");
