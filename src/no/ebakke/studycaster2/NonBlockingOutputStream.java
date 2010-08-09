@@ -12,6 +12,7 @@ public class NonBlockingOutputStream extends PipedOutputStream {
   private Thread writerThread;
   private volatile boolean flushDue;
 
+  /** Upon close, out will be closed as well (analogous to a BufferedOutputStream with out as the underlying stream). */
   public void connect(final OutputStream out) {
     if (writerThread != null)
       throw new IllegalStateException("Already connected");
@@ -56,7 +57,7 @@ public class NonBlockingOutputStream extends PipedOutputStream {
     try {
       inPipe = new PipedInputStream(this, bufferLimit);
     } catch (IOException e) {
-      throw new AssertionError("Unexpected IOException: " + e.getMessage());
+      throw new RuntimeException("Unexpected exception", e);
     }
   }
 

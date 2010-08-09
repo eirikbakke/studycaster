@@ -22,20 +22,20 @@ public abstract class Codec {
 
   protected static class MetaStamp {
     private long timeMillis;
-    private Point mouseLocation;
+    private Point pointerLocation;
     private FrameType type;
 
-    public MetaStamp(long timeMillis, Point mouseLocation, FrameType type) {
+    public MetaStamp(long timeMillis, Point pointerLocation, FrameType type) {
       this.timeMillis = timeMillis;
-      this.mouseLocation = mouseLocation;
+      this.pointerLocation = pointerLocation;
       this.type = type;
     }
 
     public void writeToStream(DataOutputStream dout) throws IOException {
       dout.writeByte(type.ordinal());
       dout.writeLong(timeMillis);
-      dout.writeInt((mouseLocation == null) ? Integer.MIN_VALUE : mouseLocation.x);
-      dout.writeInt((mouseLocation == null) ? Integer.MIN_VALUE : mouseLocation.y);
+      dout.writeInt((pointerLocation == null) ? Integer.MIN_VALUE : pointerLocation.x);
+      dout.writeInt((pointerLocation == null) ? Integer.MIN_VALUE : pointerLocation.y);
     }
 
     public static MetaStamp readFromStream(DataInputStream din) throws IOException {
@@ -49,7 +49,7 @@ public abstract class Codec {
     }
 
     public Point getMouseLocation() {
-      return mouseLocation;
+      return pointerLocation;
     }
 
     public long getTimeMillis() {

@@ -18,15 +18,16 @@ import java.net.URL;
 import java.util.zip.GZIPInputStream;
 import no.ebakke.studycaster.StatusFrame;
 
-public class CodecDecoder extends Codec {
+public class CaptureDecoder extends Codec {
   private DataInputStream dis;
   private boolean reachedEOF = false, atFrame = false;
   private Image pointerImage;
   private Point pointerImageHotSpot;
-  private long currentMetaTime = -1, nextCaptureTime = -1, lastBeforeCaptureTime = -1;
+  private long currentMetaTime = -1, currentFrameTime = 0;
+  private long nextCaptureTime = -1, lastBeforeCaptureTime = -1;
   private boolean firstFrameRead = false;
 
-  public CodecDecoder(InputStream is) throws IOException {
+  public CaptureDecoder(InputStream is) throws IOException {
     dis = new DataInputStream(new BufferedInputStream(new GZIPInputStream(is)));
     if (!dis.readUTF().equals(MAGIC_STRING))
       throw new IOException("Screencast not in StudyCaster format");
@@ -47,9 +48,9 @@ public class CodecDecoder extends Codec {
   }
 
   public long getCurrentTimeMillis() {
-    if (currentMetaTime == -1)
+    if (currentMetaTime < -1)
       throw new IllegalStateException("No frame retrieved yet.");
-    return currentMetaTime;
+    return currentFrameTime;
   }
 
   private void drawMousePointer(BufferedImage image, Point p) {
@@ -79,8 +80,7 @@ public class CodecDecoder extends Codec {
             if (lastBeforeCaptureTime < 0)
               throw new IOException("Missing before-capture timestamp");
             //nextCaptureTime = lastBeforeCaptureTime / 2 + ms.getTimeMillis() / 2;
-            // Mouse pointer information seems 100ms-200ms (varies from machine to machine); may compensate for it here.
-            nextCaptureTime = lastBeforeCaptureTime - 100;
+            nextCaptureTime = lastBeforeCaptureTime;
             lastBeforeCaptureTime = -1;
           break; case PERIODIC:
         }
@@ -111,6 +111,7 @@ public class CodecDecoder extends Codec {
       }
       metaStamps.remove();
       if (firstFrameRead && ms.getType() == FrameType.PERIODIC) {
+        currentFrameTime += (currentMetaTime < 0) ? 0 : Math.max(1L, ms.getTimeMillis() - currentMetaTime);
         currentMetaTime = ms.getTimeMillis();
         BufferedImage ret = new ScreenCastImage(getDimension());
         copyImage(getCurrentFrame(), ret);
@@ -122,6 +123,7 @@ public class CodecDecoder extends Codec {
   }
 
   private void readFrame() throws IOException {
+    swapOldNew();
     final byte oldBuf[] = getPreviousFrame().getBuffer();
     final byte newBuf[] = getCurrentFrame().getBuffer();
     int  currentRunLength = 0;
@@ -145,6 +147,5 @@ public class CodecDecoder extends Codec {
     }
     if (currentRunLength > 0)
       throw new IOException("Pixel overflow at end of image (remaining run length > 0)");
-    swapOldNew();
   }
 }

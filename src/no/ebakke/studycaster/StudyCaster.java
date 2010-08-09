@@ -16,9 +16,9 @@ import no.ebakke.studycaster.util.Blocker;
 import no.ebakke.orgstonesoupscreen.DesktopScreenRecorder;
 import no.ebakke.orgstonesoupscreen.ScreenRecorder;
 import no.ebakke.orgstonesoupscreen.ScreenRecorderListener;
+import no.ebakke.studycaster.util.Util;
 import no.ebakke.studycaster2.NativeLibrary;
 import no.ebakke.studycaster2.ServerContext;
-import no.ebakke.studycaster2.StreamUtil;
 
 public class StudyCaster {
   private ServerContext serverContext;
@@ -88,7 +88,7 @@ public class StudyCaster {
         try {
           InputStream is = serverContext.downloadFile(remoteName);
           try {
-            StreamUtil.hookupStreams(is, os);
+            Util.hookupStreams(is, os);
             return ret;
           } finally {
             is.close();
@@ -110,7 +110,7 @@ public class StudyCaster {
       System.out.println("Uploading a file of length " + f.length());
       OutputStream os = serverContext.uploadFile(remoteName);
       try {
-        StreamUtil.hookupStreams(new FileInputStream(f), os);
+        Util.hookupStreams(new FileInputStream(f), os);
       } finally {
         os.close();
       }

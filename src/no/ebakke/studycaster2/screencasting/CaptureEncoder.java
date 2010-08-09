@@ -13,13 +13,13 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
 
-public class CodecEncoder extends Codec {
+public class CaptureEncoder extends Codec {
   private DataOutputStream dout;
   private Robot robot;
   private Rectangle screenRect;
   private ScreenCensor censor;
 
-  public CodecEncoder(OutputStream out, Rectangle screenRect, ScreenCensor censor) throws IOException, AWTException {
+  public CaptureEncoder(OutputStream out, Rectangle screenRect, ScreenCensor censor) throws IOException, AWTException {
     this.censor = censor;
     this.screenRect = screenRect;
     Dimension dim = screenRect.getSize();
@@ -29,10 +29,6 @@ public class CodecEncoder extends Codec {
     dout.writeUTF(MAGIC_STRING);
     dout.writeInt(dim.width);
     dout.writeInt(dim.height);
-  }
-
-  public void captureMouseLocation() {
-    addMeta(FrameType.PERIODIC);
   }
 
   private void addMeta(FrameType type) {
@@ -71,7 +67,13 @@ public class CodecEncoder extends Codec {
     }
   }
 
+  public void capturePointer() {
+    //System.err.println("capturePointer");
+    addMeta(FrameType.PERIODIC);
+  }
+
   public synchronized void captureFrame() throws IOException {
+    //System.err.println("captureFrame");
     addMeta(FrameType.BEFORE_CAPTURE);
     BufferedImage image = robot.createScreenCapture(screenRect);
     Rectangle permittedArea = (censor == null) ? screenRect : censor.getPermittedRecordingArea();
@@ -116,6 +118,7 @@ public class CodecEncoder extends Codec {
       encodeRun(headerWritten, currentRunCode, currentRunLength);
   }
 
+  /** Closes the underlying OutputStream as well. */
   public void finish() throws IOException {
     flushMeta();
     dout.close();

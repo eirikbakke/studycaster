@@ -12,20 +12,28 @@ import com.xuggle.xuggler.video.ConverterFactory;
 import com.xuggle.xuggler.video.IConverter;
 import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URI;
+import no.ebakke.studycaster.util.Util;
+import no.ebakke.studycaster2.ServerContext;
 
 public final class RecordingConverter {
   private RecordingConverter() { }
   
   public static void main(String args[]) throws Exception {
-    //ServerContext sc = new ServerContext(new URI("http://www.sieuferd.com/studycaster/server.php"));
-    //newConvert(sc.downloadFile("uploads/1875c96d2d6c/screencast.ebc"), "z:\\rectest\\downconv.ogv");
-    convert(new FileInputStream("z:\\rectest\\outrageous.ebc"), "z:\\rectest\\outrageous.ogv");
+    ServerContext sc = new ServerContext(new URI("http://www.sieuferd.com/studycaster/server.php"));
+    OutputStream fos = new FileOutputStream("z:/rectest/downloaded.ebc");
+    Util.hookupStreams(sc.downloadFile("uploads/8bac89c35483/screencast.ebc"), fos);
+    fos.close();
+    convert(new FileInputStream("z:/rectest/downloaded.ebc"), "z:/rectest/downconv.ogv");
+    //convert(new FileInputStream("z:/rectest/outrageous.ebc"), "z:/rectest/outrageous.ogv");
   }
 
   public static void convert(InputStream input, String fileTo) throws Exception {
-    CodecDecoder dec = new CodecDecoder(input);
+    CaptureDecoder dec = new CaptureDecoder(input);
 
     IContainer outContainer = IContainer.make();
     if (outContainer.open(fileTo, IContainer.Type.WRITE, null) < 0)
@@ -56,8 +64,8 @@ public final class RecordingConverter {
     int index = 0;
     while ((image = dec.nextFrame()) != null) {
       index++;
-      if (index % 5 != 0)
-        continue;
+      //if (index % 5 != 0)
+      //  continue;
 
       BufferedImage converted = convertToType(image, BufferedImage.TYPE_3BYTE_BGR);
       IPacket packet = IPacket.make();

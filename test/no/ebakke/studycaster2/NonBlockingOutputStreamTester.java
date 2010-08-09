@@ -13,7 +13,7 @@ public class NonBlockingOutputStreamTester {
       InputStream is = new RandomInputStream(0, 5000);
 
       System.out.println("Now writing.");
-      StreamUtil.hookupStreams(is, os);
+      Util.hookupStreams(is, os);
       System.out.println("Now closing.");
       os.close();
       System.out.println("Now closed.");

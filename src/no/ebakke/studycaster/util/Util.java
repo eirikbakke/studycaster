@@ -10,8 +10,6 @@ import java.util.logging.Level;
 import no.ebakke.studycaster.StudyCaster;
 
 public class Util {
-  private static int BUF_SIZE = 8192;
-
   // TODO: Consider whether this should rather be in the StudyCaster class.
   public static boolean fileAvailableExclusive(File f) {
     try {
@@ -31,6 +29,18 @@ public class Util {
     } catch (IOException e) {
       StudyCaster.log.log(Level.WARNING, "Couldn't get canonical path.", e);
       return f.getAbsolutePath();
+    }
+  }
+
+  public static void hookupStreams(InputStream is, OutputStream os) throws IOException {
+    byte buffer[] = new byte[16 * 1024];
+    try {
+      int got;
+      while ((got = is.read(buffer)) >= 0) {
+        os.write(buffer, 0, got);
+      }
+    } finally {
+      is.close();
     }
   }
 }
