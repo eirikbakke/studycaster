@@ -58,7 +58,9 @@ public class ExcelLauncher {
 
     UIAction action;
     do {
+      scui.setMonitorStreamProgress(sc.getRecordingStream(), true);
       action = scui.waitForUserAction();
+      scui.setMonitorStreamProgress(sc.getRecordingStream(), false);
       if (action == UIAction.UPLOAD) {
         long nowLastModified = excelFile.lastModified();
         if (nowLastModified == lastModified1 || nowLastModified == lastModified2) {

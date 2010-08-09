@@ -24,6 +24,11 @@ public class ScreenRecorder {
     public double getMaxDutyCycle() {
       return 0.1;
     }
+
+    @Override
+    public String toString() {
+      return "pointerRecorderTask";
+    }
   };
   private CaptureTask frameRecorderTask = new CaptureTask() {
     public void capture() {
@@ -42,6 +47,11 @@ public class ScreenRecorder {
 
     public double getMaxDutyCycle() {
       return 0.7;
+    }
+
+    @Override
+    public String toString() {
+      return "frameRecorderTask";
     }
   };
 

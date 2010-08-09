@@ -29,6 +29,7 @@ public class CaptureScheduler {
 
   public CaptureScheduler(CaptureTask task) {
     this.task = task;
+    captureThread.setName("capture-" + task.toString());
     captureThread.start();
   }
 

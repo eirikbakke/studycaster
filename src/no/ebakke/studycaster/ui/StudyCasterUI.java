@@ -54,7 +54,7 @@ public class StudyCasterUI {
                 StudyCaster.log.warning("Forcing exit five seconds after window closure.");
                 System.exit(0);
               }
-            }).start();
+            }, "window-closure-force-quit").start();
           }
         });
         sf.getUploadButton().addActionListener(new ActionListener() {

@@ -28,7 +28,7 @@ public class StudyCaster {
       log.warning("Study not explicitly concluded; concluding via shutdown hook.");
       concludeStudy();
       }
-    });
+    }, "shutdown-hook");
 
   public ServerContext getServerContext() {
     return serverContext;

@@ -13,12 +13,14 @@ import no.ebakke.studycaster.util.Util;
 import no.ebakke.studycaster.util.Util.Interruptible;
 
 public class NonBlockingOutputStream extends OutputStream {
+  private final Object exceptionLock = new Object();
   private IOException storedException;
   private PipedOutputStream outPipe;
   private PipedInputStream inPipe;
   private Thread writerThread;
   private volatile boolean flushDue;
   private int bytesWritten;
+  private final Object observerLock = new Object();
   private List<StreamProgressObserver> observers = new ArrayList<StreamProgressObserver>();
 
   /* All of this wackyness exists as a workaround for the fact that a PipedOutputStream will only work reliably with a single owner thread. */
@@ -43,19 +45,23 @@ public class NonBlockingOutputStream extends OutputStream {
         } catch (InterruptedException e) {}
       }
     }
-  });
+  }, "NonBlockingOutputStream-writeOp");
 
-  public synchronized void addObserver(StreamProgressObserver observer) {
-    observers.add(observer);
+  public void addObserver(StreamProgressObserver observer) {
+    synchronized (observerLock) {
+      observers.add(observer);
+    }
   }
 
-  public synchronized void removeObserver(StreamProgressObserver observer) {
-    observers.remove(observer);
+  public void removeObserver(StreamProgressObserver observer) {
+    synchronized (observerLock) {
+      observers.remove(observer);
+    }
   }
 
   private void notifyObservers() {
     final List<StreamProgressObserver> toNotify;
-    synchronized (this) {
+    synchronized (observerLock) {
       toNotify = new ArrayList<StreamProgressObserver>(observers);
     }
     final int remaining;
@@ -70,7 +76,7 @@ public class NonBlockingOutputStream extends OutputStream {
       public void run() {
         for (StreamProgressObserver observer : toNotify) {
           boolean stillObserving;
-          synchronized (NonBlockingOutputStream.this) {
+          synchronized (observerLock) {
             stillObserving = observers.contains(observer);
           }
           if (stillObserving)
@@ -86,7 +92,7 @@ public class NonBlockingOutputStream extends OutputStream {
   }
 
   @Override
-  public synchronized void write(byte[] b, int off, int len) throws IOException {
+  public void write(byte[] b, int off, int len) throws IOException {
     checkStoredException();
     synchronized (writeOpLock) {
       writeOpB = b;
@@ -106,16 +112,20 @@ public class NonBlockingOutputStream extends OutputStream {
     checkStoredException();
   }
 
-  private synchronized void checkStoredException() throws IOException {
-    if (storedException != null) {
-      IOException e = storedException;
-      storedException = null;
-      throw e;
+  private void checkStoredException() throws IOException {
+    synchronized (exceptionLock) {
+      if (storedException != null) {
+        IOException e = storedException;
+        storedException = null;
+        throw e;
+      }
     }
   }
 
-  private synchronized void setStoredException(IOException e) {
-    storedException = (storedException != null) ? storedException : e;
+  private void setStoredException(IOException e) {
+    synchronized (exceptionLock) {
+      storedException = (storedException != null) ? storedException : e;
+    }
   }
 
 
@@ -132,7 +142,7 @@ public class NonBlockingOutputStream extends OutputStream {
               int got;
               while ((got = inPipe.read(buffer)) >= 0) {
                 out.write(buffer, 0, got);
-                synchronized (NonBlockingOutputStream.this) {
+                synchronized (observerLock) {
                   bytesWritten += got;
                 }
                 notifyObservers();
@@ -152,7 +162,7 @@ public class NonBlockingOutputStream extends OutputStream {
           setStoredException(e);
         }
       }
-    });
+    }, "NonBlockingOutputStream-writer");
     writerThread.start();
   }
 
@@ -160,8 +170,10 @@ public class NonBlockingOutputStream extends OutputStream {
     return inPipe.available();
   }
 
-  public synchronized int getWrittenBytes() {
-    return bytesWritten;
+  public int getWrittenBytes() {
+    synchronized (observerLock) {
+      return bytesWritten;
+    }
   }
 
   public NonBlockingOutputStream(final OutputStream out, int bufferLimit) {
@@ -199,7 +211,7 @@ public class NonBlockingOutputStream extends OutputStream {
   }
 
   @Override
-  public synchronized void flush() throws IOException {
+  public void flush() throws IOException {
     /* PipedOutputStream.flush() does not actually seem to block, only notify, so we can use it here. */
     outPipe.flush();
     /* Relaxed interpretation of flush; just flush the underlying output stream as soon as we've gotten around to write to it. */
