@@ -20,7 +20,7 @@ public class ConsoleTee {
     System.setErr(teeStdErr);
   }
 
-  public void disconnect() throws IOException {
+  public void close() throws IOException {
     if (disconnected)
       return;
     disconnected = true;

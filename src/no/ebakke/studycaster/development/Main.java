@@ -28,9 +28,7 @@ public class Main {
     StudyCaster.log.info("Log 3");
     Thread.sleep(500);
     StudyCaster.log.info("Log 4");
-    conTee.disconnect();
-    nbos.close();
-    out.close();
+    conTee.close();
     
     /*
     Logger.getLogger("").log(Level.WARNING, "testmessage", new Exception("Test exception", new FileNotFoundException()));

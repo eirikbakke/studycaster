@@ -16,6 +16,7 @@ import no.ebakke.studycaster.util.Util;
 import no.ebakke.studycaster.util.stream.NonBlockingOutputStream;
 import no.ebakke.studycaster.screencasting.ScreenCensor;
 import no.ebakke.studycaster.screencasting.ScreenRecorder;
+import no.ebakke.studycaster.util.stream.ConsoleTee;
 
 public class StudyCaster {
   public static final Logger log = Logger.getLogger("no.ebakke.studycaster");
@@ -24,6 +25,7 @@ public class StudyCaster {
   private ScreenRecorder recorder;
   private boolean concluded = false;
   private NonBlockingOutputStream recordingStream;
+  private ConsoleTee consoleTee;
   private Thread shutdownHook = new Thread(new Runnable() {
     public void run() {
       log.warning("Study not explicitly concluded; concluding via shutdown hook.");
@@ -35,8 +37,45 @@ public class StudyCaster {
     return serverContext;
   }
 
+  private void disconnectConsole() {
+    if (consoleTee == null)
+      return;
+    log.info("Disconnecting console");
+    try {
+      consoleTee.close();
+    } catch (IOException e2) {
+      log.log(Level.WARNING, "Error while disconnecting console tee", e2);
+    } finally {
+      consoleTee = null;
+    }
+  }
+
   /* Note: URL must point directly to PHP script, end with a slash to use index.php (otherwise POST requests fail). */
   public StudyCaster(String serverURLstring) throws StudyCasterException {
+    /*
+    {
+      try {
+        NonBlockingOutputStream nbos = new NonBlockingOutputStream(1024 * 128);
+        ConsoleTee conTee = new ConsoleTee(nbos);
+        ServerTimeLogFormatter logFormatter = new ServerTimeLogFormatter();
+        logFormatter.install();
+        ServerContext sc = new ServerContext(new URI("http://www.sieuferd.com/studycaster/server.php"));
+        logFormatter.setServerSecondsAhead(sc.getServerSecondsAhead());
+        OutputStream out = sc.uploadFile("console.txt");
+        nbos.connect(out);
+        StudyCaster.log.info("Log 1");
+        StudyCaster.log.info("Log 3");
+        StudyCaster.log.info("Log 4");
+        conTee.close();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+    */
+    ServerTimeLogFormatter logFormatter = new ServerTimeLogFormatter();
+    logFormatter.install();
+    NonBlockingOutputStream consoleStream = new NonBlockingOutputStream(1024 * 128);
+    consoleTee = new ConsoleTee(consoleStream);
     try {
       try {
         serverContext = new ServerContext(new URI(serverURLstring));
@@ -44,11 +83,20 @@ public class StudyCaster {
         throw new StudyCasterException(e);
       }
     } catch (StudyCasterException e) {
-      log.log(Level.SEVERE, "Error initializing StudyCaster.", e);
-      //log.removeHandler(logHandler);
+      log.log(Level.SEVERE, "Error initializing StudyCaster", e);
+      disconnectConsole();
       throw e;
     }
+
+
     Runtime.getRuntime().addShutdownHook(shutdownHook);
+    logFormatter.setServerSecondsAhead(serverContext.getServerSecondsAhead());
+    try {
+      consoleStream.connect(serverContext.uploadFile("console.txt"));
+    } catch (IOException e) {
+      log.log(Level.WARNING, "Error creating remote log file", e);
+      disconnectConsole();
+    }
 
     recordingStream = new NonBlockingOutputStream(RECORDING_BUFFER_SZ);
     recordingStream.addObserver(new NonBlockingOutputStream.StreamProgressObserver() {
@@ -57,10 +105,8 @@ public class StudyCaster {
           log.warning("Close to overfilled buffer (" + bytesRemaining + "/" + recordingStream.getBufferLimitBytes() + " bytes)");
       }
     });
-    //recordingStream = new NonBlockingOutputStream(4 * 1024 * 1024);
     try {
       recordingStream.connect(serverContext.uploadFile("screencast.ebc"));
-      //OutputStream os = serverContext.uploadFile("screencast.ebc");
       recorder = new ScreenRecorder(recordingStream, serverContext.getServerSecondsAhead());
     } catch (IOException e) {
       log.log(Level.WARNING, "Failed to initialize screen recorder", e);
@@ -73,25 +119,30 @@ public class StudyCaster {
       } catch (IOException e) { }
       recordingStream = null;
     }
+    log.info("Constructed StudyCaster");
   }
 
   public void concludeStudy() {
+    log.info("Concluding study");
     synchronized (this) {
       if (concluded)
         return;
       concluded = true;
     }
     try {
-      waitForScreenCastUpload();
-    } catch (StudyCasterException e) {
-      log.log(Level.WARNING, "Failed to upload screencast while concluding study", e);
-    }
-    try {
       Runtime.getRuntime().removeShutdownHook(shutdownHook);
     } catch (IllegalStateException e) {
     } catch (SecurityException e) {
     }
-    log.info("Concluding study...");
+    disconnectConsole();
+
+    log.info("Concluded study, waiting for screencast upload to complete as much as possible");
+    try {
+      waitForScreenCastUpload();
+    } catch (StudyCasterException e) {
+      log.log(Level.WARNING, "Failed to upload screencast while concluding study", e);
+    }
+    log.info("Concluded study");
   }
 
   @Override

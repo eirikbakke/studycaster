@@ -62,7 +62,7 @@ public class ConfirmationCodeDialog extends JDialog {
     codeBox.setText("1234567890");
 
     label2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-    label2.setText("(The number has been copied to the clipboard so you can paste it into the HIT.)");
+    label2.setText("(The code has been copied to the clipboard so you can paste it into the HIT.)");
 
     okButton.setMnemonic('O');
     okButton.setText("OK");
@@ -81,7 +81,7 @@ public class ConfirmationCodeDialog extends JDialog {
         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
           .addComponent(codeBox, javax.swing.GroupLayout.DEFAULT_SIZE, 382, Short.MAX_VALUE)
           .addComponent(label1, javax.swing.GroupLayout.DEFAULT_SIZE, 382, Short.MAX_VALUE)
-          .addComponent(label2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+          .addComponent(label2, javax.swing.GroupLayout.DEFAULT_SIZE, 382, Short.MAX_VALUE)
           .addComponent(okButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE))
         .addContainerGap())
     );

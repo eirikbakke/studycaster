@@ -30,7 +30,7 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Component id="codeBox" alignment="0" pref="382" max="32767" attributes="0"/>
                   <Component id="label1" alignment="0" pref="382" max="32767" attributes="0"/>
-                  <Component id="label2" alignment="0" max="32767" attributes="0"/>
+                  <Component id="label2" alignment="0" pref="382" max="32767" attributes="0"/>
                   <Component id="okButton" alignment="1" min="-2" pref="76" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
@@ -75,7 +75,7 @@
     <Component class="javax.swing.JLabel" name="label2">
       <Properties>
         <Property name="horizontalAlignment" type="int" value="0"/>
-        <Property name="text" type="java.lang.String" value="(The number has been copied to the clipboard so you can paste it into the HIT.)"/>
+        <Property name="text" type="java.lang.String" value="(The code has been copied to the clipboard so you can paste it into the HIT.)"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JButton" name="okButton">
