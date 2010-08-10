@@ -1,7 +1,9 @@
 package no.ebakke.studycaster.screencasting;
 
 import java.awt.Canvas;
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.MediaTracker;
@@ -15,6 +17,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.zip.GZIPInputStream;
 import no.ebakke.studycaster.ui.StatusFrame;
 
@@ -26,6 +31,8 @@ public class CaptureDecoder extends Codec {
   private long currentMetaTime = -1, currentFrameTime = 0;
   private long nextCaptureTime = -1, lastBeforeCaptureTime = -1;
   private boolean firstFrameRead = false;
+  private static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+  private int frameNo = 0;
 
   public CaptureDecoder(InputStream is) throws IOException {
     dis = new DataInputStream(new BufferedInputStream(new GZIPInputStream(is)));
@@ -57,6 +64,17 @@ public class CaptureDecoder extends Codec {
     Graphics2D g = image.createGraphics();
     if (!g.drawImage(pointerImage, p.x - pointerImageHotSpot.x, p.y - pointerImageHotSpot.y, null))
       throw new AssertionError("Expected immediate image conversion");
+    g.dispose();
+  }
+
+  private void drawTimeStamp(BufferedImage image) {
+    Graphics2D g = image.createGraphics();
+    g.setFont(new Font("Monospaced", Font.PLAIN, 14));
+    g.setColor(Color.WHITE);
+    String formatted = String.format("%6d / ", frameNo) + dateFormat.format(new Date(currentMetaTime));
+    g.drawString(formatted, 439, 12);
+    g.setColor(Color.BLACK);
+    g.drawString(formatted, 440, 13);
     g.dispose();
   }
 
@@ -117,6 +135,7 @@ public class CaptureDecoder extends Codec {
         copyImage(getCurrentFrame(), ret);
         if (ms.getMouseLocation() != null)
           drawMousePointer(ret, ms.getMouseLocation());
+        drawTimeStamp(ret);
         return ret;
       }
     }
@@ -147,5 +166,6 @@ public class CaptureDecoder extends Codec {
     }
     if (currentRunLength > 0)
       throw new IOException("Pixel overflow at end of image (remaining run length > 0)");
+    frameNo++;
   }
 }

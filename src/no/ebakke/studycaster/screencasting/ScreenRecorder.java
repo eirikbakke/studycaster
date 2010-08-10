@@ -55,9 +55,10 @@ public class ScreenRecorder {
     }
   };
 
-  public ScreenRecorder(OutputStream out) throws IOException, AWTException {
+  public ScreenRecorder(OutputStream out, long serverSecondsAhead) throws IOException, AWTException {
     Rectangle screenRect = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
     enc = new CaptureEncoder(out, screenRect);
+    enc.setServerSecondsAhead(serverSecondsAhead);
   }
 
   public void setCensor(ScreenCensor censor) {

@@ -17,7 +17,7 @@ public class ScreenCastExperiments {
     //ServerContext sc = new ServerContext(new URI("http://www.sieuferd.com/studycaster/server.php"));
     //os.connect(sc.uploadFile("screencast.ebc"));
 
-    ScreenRecorder sr = new ScreenRecorder(os);
+    ScreenRecorder sr = new ScreenRecorder(os, 0);
     sr.setCensor(new ScreenCensor(Arrays.asList(new String[] {"Excel"}), true));
     sr.start();
     Thread.sleep(20000);

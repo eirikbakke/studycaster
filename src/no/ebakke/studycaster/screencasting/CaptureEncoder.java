@@ -18,6 +18,7 @@ public class CaptureEncoder extends Codec {
   private Robot robot;
   private Rectangle screenRect;
   private ScreenCensor censor;
+  private long serverSecondsAhead;
 
   public CaptureEncoder(OutputStream out, Rectangle screenRect) throws IOException, AWTException {
     this.screenRect = screenRect;
@@ -34,8 +35,12 @@ public class CaptureEncoder extends Codec {
     this.censor = censor;
   }
 
+  public synchronized void setServerSecondsAhead(long serverSecondsAhead) {
+    this.serverSecondsAhead = serverSecondsAhead;
+  }
+
   private void addMeta(FrameType type) {
-    long time = System.currentTimeMillis();
+    long time = System.currentTimeMillis() + serverSecondsAhead * 1000L;
     PointerInfo pi = MouseInfo.getPointerInfo();
     Point mouseLoc = (pi == null) ? null : pi.getLocation();
     metaStamps.add(new MetaStamp(time, mouseLoc, type));

@@ -24,10 +24,13 @@ public final class RecordingConverter {
   private RecordingConverter() { }
   
   public static void main(String args[]) throws Exception {
+    
     ServerContext sc = new ServerContext(new URI("http://www.sieuferd.com/studycaster/server.php"));
     OutputStream fos = new FileOutputStream("z:/rectest/downloaded.ebc");
-    Util.hookupStreams(sc.downloadFile("uploads/af614dfac947/screencast.ebc"), fos);
+    Util.hookupStreams(sc.downloadFile("uploads/9248786242e7/screencast.ebc"), fos);
     fos.close();
+    
+    //convert(new FileInputStream("z:/rectest/overbuffer.ebc"), "z:/rectest/overbuffer.mkv");
     convert(new FileInputStream("z:/rectest/downloaded.ebc"), "z:/rectest/downconv.mkv");
     //convert(new FileInputStream("z:/rectest/localout.ebc"), "z:/rectest/localconv.mkv");
   }

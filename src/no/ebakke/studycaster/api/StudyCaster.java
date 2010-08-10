@@ -19,6 +19,7 @@ import no.ebakke.studycaster.screencasting.ScreenRecorder;
 
 public class StudyCaster {
   public static final Logger log = Logger.getLogger("no.ebakke.studycaster");
+  private static final int RECORDING_BUFFER_SZ = 4 * 1024 * 1024;
   private ServerContext serverContext;
   private ScreenRecorder recorder;
   private boolean concluded = false;
@@ -49,11 +50,18 @@ public class StudyCaster {
     }
     Runtime.getRuntime().addShutdownHook(shutdownHook);
 
-    recordingStream = new NonBlockingOutputStream(4 * 1024 * 1024);
+    recordingStream = new NonBlockingOutputStream(RECORDING_BUFFER_SZ);
+    recordingStream.addObserver(new NonBlockingOutputStream.StreamProgressObserver() {
+      public void updateProgress(int bytesWritten, int bytesRemaining) {
+        if (bytesRemaining > RECORDING_BUFFER_SZ * 0.8)
+          log.warning("Close-to-overfilled buffer (" + bytesRemaining + "/" + RECORDING_BUFFER_SZ + " bytes)");
+      }
+    });
+    //recordingStream = new NonBlockingOutputStream(4 * 1024 * 1024);
     try {
       recordingStream.connect(serverContext.uploadFile("screencast.ebc"));
       //OutputStream os = serverContext.uploadFile("screencast.ebc");
-      recorder = new ScreenRecorder(recordingStream);
+      recorder = new ScreenRecorder(recordingStream, serverContext.getServerSecondsAhead());
     } catch (IOException e) {
       log.log(Level.WARNING, "Failed to initialize screen recorder", e);
     } catch (AWTException e) {
