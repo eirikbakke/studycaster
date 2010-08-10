@@ -50,6 +50,7 @@ CP=cp
 CCADMIN=CCadmin
 RANLIB=ranlib
 JAVAH="/c/program files/java/jdk1.6.0_17/bin/javah.exe"
+JAR="/c/program files/java/jdk1.6.0_17/bin/jar.exe"
 
 
 # build
@@ -61,7 +62,8 @@ build: .build-post
 
 .build-post: .build-impl
 # Add your post 'build' code here...
-	${CP} ${CND_ARTIFACT_PATH_${CONF}} ${CND_BASEDIR}/../lib/NativeLib
+	${CP} ${CND_ARTIFACT_PATH_${CONF}} ${CND_BASEDIR}/../lib/NativeLib/libSCNative.dll
+	${JAR} -cf ${CND_BASEDIR}/../lib/NativeLib/sc-native.jar ${CND_ARTIFACT_PATH_${CONF}}
 
 # clean
 clean: .clean-post
