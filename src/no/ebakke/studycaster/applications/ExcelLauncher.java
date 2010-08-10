@@ -24,7 +24,7 @@ public class ExcelLauncher {
   public static void main(String args[]) {
     StudyCasterUI scui = new StudyCasterUI(instructions);
     if (scui.wasClosed())
-      return;
+      System.exit(0);
     StudyCaster sc = null;
     long lastModified1, lastModified2;
     File excelFile;

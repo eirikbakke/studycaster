@@ -73,7 +73,7 @@ public class StudyCasterUI {
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
         if (decision == JOptionPane.CANCEL_OPTION || decision == JOptionPane.CLOSED_OPTION) {
           sf.dispose();
-          waitForUserAction();
+          actionTaken = UIAction.CLOSE;
         }
         initedBlocker.releaseBlockingThread();
       }
