@@ -53,8 +53,8 @@ public class StudyCaster {
     recordingStream = new NonBlockingOutputStream(RECORDING_BUFFER_SZ);
     recordingStream.addObserver(new NonBlockingOutputStream.StreamProgressObserver() {
       public void updateProgress(int bytesWritten, int bytesRemaining) {
-        if (bytesRemaining > RECORDING_BUFFER_SZ * 0.8)
-          log.warning("Close-to-overfilled buffer (" + bytesRemaining + "/" + RECORDING_BUFFER_SZ + " bytes)");
+        if (bytesRemaining > recordingStream.getBufferLimitBytes() * 0.8)
+          log.warning("Close to overfilled buffer (" + bytesRemaining + "/" + recordingStream.getBufferLimitBytes() + " bytes)");
       }
     });
     //recordingStream = new NonBlockingOutputStream(4 * 1024 * 1024);

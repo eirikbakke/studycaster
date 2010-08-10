@@ -19,7 +19,7 @@ public class NonBlockingOutputStream extends OutputStream {
   private PipedInputStream inPipe;
   private Thread writerThread;
   private volatile boolean flushDue;
-  private int bytesWritten;
+  private int bytesWritten, bufferLimit;
   private final Object observerLock = new Object();
   private List<StreamProgressObserver> observers = new ArrayList<StreamProgressObserver>();
 
@@ -65,12 +65,7 @@ public class NonBlockingOutputStream extends OutputStream {
       toNotify = new ArrayList<StreamProgressObserver>(observers);
     }
     final int remaining;
-    try {
-      remaining = getRemainingBytes();
-    } catch (IOException e) {
-      setStoredException(e);
-      return;
-    }
+    remaining = getRemainingBytes();
     // TODO: Don't use SwingUtilities here. Clean up this mess.
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
@@ -166,8 +161,17 @@ public class NonBlockingOutputStream extends OutputStream {
     writerThread.start();
   }
 
-  public int getRemainingBytes() throws IOException {
-    return inPipe.available();
+  public int getBufferLimitBytes() {
+    return bufferLimit;
+  }
+
+  public int getRemainingBytes() {
+    try {
+      return inPipe.available();
+    } catch (IOException e) {
+      setStoredException(e);
+      return 0;
+    }
   }
 
   public int getWrittenBytes() {
@@ -183,6 +187,7 @@ public class NonBlockingOutputStream extends OutputStream {
 
   public NonBlockingOutputStream(int bufferLimit) {
     outPipe = new PipedOutputStream();
+    this.bufferLimit = bufferLimit;
     try {
       inPipe = new PipedInputStream(outPipe, bufferLimit);
     } catch (IOException e) {

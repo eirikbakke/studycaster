@@ -6,8 +6,10 @@ import java.awt.Toolkit;
 import java.io.IOException;
 import java.io.OutputStream;
 import no.ebakke.studycaster.screencasting.CaptureScheduler.CaptureTask;
+import no.ebakke.studycaster.util.stream.NonBlockingOutputStream;
 
 public class ScreenRecorder {
+  private NonBlockingOutputStream nbos;
   private CaptureEncoder enc;
   private boolean stopped = true;
   private IOException storedException;
@@ -42,7 +44,21 @@ public class ScreenRecorder {
     }
 
     public double getMaxFrequency() {
-      return 5.0;
+      if (nbos == null) {
+        return 5.0;
+      } else {
+        // TODO: Find a less ad-hoc way of doing this.
+        double fillLevel = ((double) nbos.getRemainingBytes()) / ((double) nbos.getBufferLimitBytes());
+        if (fillLevel > 0.9) {
+          return 0.0;
+        } else if (fillLevel > 0.75) {
+          return 0.5;
+        } else if (fillLevel > 0.50) {
+          return 1.0;
+        } else {
+          return 5.0;
+        }
+      }
     }
 
     public double getMaxDutyCycle() {
@@ -56,6 +72,9 @@ public class ScreenRecorder {
   };
 
   public ScreenRecorder(OutputStream out, long serverSecondsAhead) throws IOException, AWTException {
+    // TODO: Get rid of this hack.
+    if (out instanceof NonBlockingOutputStream)
+      nbos = (NonBlockingOutputStream) out;
     Rectangle screenRect = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
     enc = new CaptureEncoder(out, screenRect);
     enc.setServerSecondsAhead(serverSecondsAhead);

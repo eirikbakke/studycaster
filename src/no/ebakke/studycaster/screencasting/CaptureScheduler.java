@@ -8,22 +8,25 @@ public class CaptureScheduler {
   private MovingAverage avgDuration = new MovingAverage(5000.0);
   private Thread captureThread = new Thread(new Runnable() {
     public void run() {
-      while (!Thread.interrupted()) {
-        double beforeTime = System.currentTimeMillis();
-        task.capture();
-        double afterTime = System.currentTimeMillis();
-        avgDuration.enterReading(afterTime - beforeTime);
-        double minDelayDuty = avgDuration.get() * (1.0 / task.getMaxDutyCycle() - 1.0);
-        double minDelayFreq = 1000.0 / task.getMaxFrequency() - (afterTime - beforeTime);
-        long delay = Math.round(Math.max(minDelayDuty, minDelayFreq));
-        if (delay > 0) {
-          try {
-          Thread.sleep(delay);
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+      try {
+        while (true) {
+          double beforeTime = System.currentTimeMillis();
+          task.capture();
+          double afterTime = System.currentTimeMillis();
+          avgDuration.enterReading(afterTime - beforeTime);
+          while (true) {
+            double minDelayDuty = avgDuration.get() * (1.0 / task.getMaxDutyCycle() - 1.0);
+            double minDelayFreq = 1000.0 / task.getMaxFrequency() - (afterTime - beforeTime);
+            double remainingDelay = Math.max(minDelayDuty, minDelayFreq) - (System.currentTimeMillis() - afterTime);
+            long delay = Math.round(remainingDelay);
+            if (delay > 0) {
+              Thread.sleep(Math.min(delay, 500));
+            } else {
+              break;
+            }
           }
         }
-      }
+      } catch (InterruptedException e) { }
     }
   });
 

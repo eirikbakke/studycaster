@@ -27,7 +27,7 @@ public final class RecordingConverter {
     
     ServerContext sc = new ServerContext(new URI("http://www.sieuferd.com/studycaster/server.php"));
     OutputStream fos = new FileOutputStream("z:/rectest/downloaded.ebc");
-    Util.hookupStreams(sc.downloadFile("uploads/9248786242e7/screencast.ebc"), fos);
+    Util.hookupStreams(sc.downloadFile("uploads/b840a005740d/screencast.ebc"), fos);
     fos.close();
     
     //convert(new FileInputStream("z:/rectest/overbuffer.ebc"), "z:/rectest/overbuffer.mkv");
