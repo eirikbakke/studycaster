@@ -52,30 +52,9 @@ public class StudyCaster {
 
   /* Note: URL must point directly to PHP script, end with a slash to use index.php (otherwise POST requests fail). */
   public StudyCaster(String serverURLstring) throws StudyCasterException {
-    /*
-    {
-      try {
-        NonBlockingOutputStream nbos = new NonBlockingOutputStream(1024 * 128);
-        ConsoleTee conTee = new ConsoleTee(nbos);
-        ServerTimeLogFormatter logFormatter = new ServerTimeLogFormatter();
-        logFormatter.install();
-        ServerContext sc = new ServerContext(new URI("http://www.sieuferd.com/studycaster/server.php"));
-        logFormatter.setServerSecondsAhead(sc.getServerSecondsAhead());
-        OutputStream out = sc.uploadFile("console.txt");
-        nbos.connect(out);
-        StudyCaster.log.info("Log 1");
-        StudyCaster.log.info("Log 3");
-        StudyCaster.log.info("Log 4");
-        conTee.close();
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-    }
-    */
-    ServerTimeLogFormatter logFormatter = new ServerTimeLogFormatter();
-    logFormatter.install();
     NonBlockingOutputStream consoleStream = new NonBlockingOutputStream(1024 * 128);
-    consoleTee = new ConsoleTee(consoleStream);
+    ServerTimeLogFormatter logFormatter = new ServerTimeLogFormatter();
+    consoleTee = new ConsoleTee(consoleStream, logFormatter);
     try {
       try {
         serverContext = new ServerContext(new URI(serverURLstring));
@@ -88,7 +67,6 @@ public class StudyCaster {
       throw e;
     }
 
-
     Runtime.getRuntime().addShutdownHook(shutdownHook);
     logFormatter.setServerSecondsAhead(serverContext.getServerSecondsAhead());
     try {
@@ -97,7 +75,6 @@ public class StudyCaster {
       log.log(Level.WARNING, "Error creating remote log file", e);
       disconnectConsole();
     }
-
     recordingStream = new NonBlockingOutputStream(RECORDING_BUFFER_SZ);
     recordingStream.addObserver(new NonBlockingOutputStream.StreamProgressObserver() {
       public void updateProgress(int bytesWritten, int bytesRemaining) {
@@ -123,19 +100,17 @@ public class StudyCaster {
   }
 
   public void concludeStudy() {
-    log.info("Concluding study");
     synchronized (this) {
       if (concluded)
         return;
       concluded = true;
     }
+    log.info("Concluding study");
     try {
       Runtime.getRuntime().removeShutdownHook(shutdownHook);
     } catch (IllegalStateException e) {
     } catch (SecurityException e) {
     }
-    disconnectConsole();
-
     log.info("Concluded study, waiting for screencast upload to complete as much as possible");
     try {
       waitForScreenCastUpload();
@@ -143,6 +118,7 @@ public class StudyCaster {
       log.log(Level.WARNING, "Failed to upload screencast while concluding study", e);
     }
     log.info("Concluded study");
+    disconnectConsole();
   }
 
   @Override

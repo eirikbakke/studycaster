@@ -3,11 +3,8 @@ package no.ebakke.studycaster.api;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.logging.ConsoleHandler;
 import java.util.logging.Formatter;
-import java.util.logging.Handler;
 import java.util.logging.LogRecord;
-import java.util.logging.Logger;
 
 public class ServerTimeLogFormatter extends Formatter {
   private static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -44,12 +41,5 @@ public class ServerTimeLogFormatter extends Formatter {
       formatThrowable(ret, r.getThrown());
     }
     return ret.toString();
-  }
-
-  public void install() {
-    for (Handler h : Logger.getLogger("").getHandlers()) {
-      if (h instanceof ConsoleHandler)
-        h.setFormatter(this);
-    }
   }
 }
