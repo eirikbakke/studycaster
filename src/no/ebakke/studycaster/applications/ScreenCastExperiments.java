@@ -1,4 +1,4 @@
-package no.ebakke.studycaster.development;
+package no.ebakke.studycaster.applications;
 
 import java.io.FileOutputStream;
 import java.io.OutputStream;
@@ -8,6 +8,8 @@ import no.ebakke.studycaster.screencasting.ScreenRecorder;
 
 public class ScreenCastExperiments {
   public static void main(String args[]) throws Exception {
+    System.out.println(System.getProperty("java.io.tmpdir"));
+    
     //Rectangle screenRect = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
 
     // Note: slowest broadband connection sold in Norway has 100kbps upload speed.

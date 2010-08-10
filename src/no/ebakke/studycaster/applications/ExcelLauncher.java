@@ -1,4 +1,4 @@
-package no.ebakke.studycaster.studies;
+package no.ebakke.studycaster.applications;
 
 import java.io.File;
 import java.util.Arrays;

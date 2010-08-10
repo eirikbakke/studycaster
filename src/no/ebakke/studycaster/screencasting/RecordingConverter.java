@@ -11,30 +11,14 @@ import com.xuggle.xuggler.IVideoPicture;
 import com.xuggle.xuggler.video.ConverterFactory;
 import com.xuggle.xuggler.video.IConverter;
 import java.awt.image.BufferedImage;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URI;
-import no.ebakke.studycaster.util.Util;
-import no.ebakke.studycaster.api.ServerContext;
+import no.ebakke.studycaster.api.StudyCaster;
 
 public final class RecordingConverter {
   private RecordingConverter() { }
   
-  public static void main(String args[]) throws Exception {
-    
-    ServerContext sc = new ServerContext(new URI("http://www.sieuferd.com/studycaster/server.php"));
-    OutputStream fos = new FileOutputStream("z:/rectest/downloaded.ebc");
-    Util.hookupStreams(sc.downloadFile("uploads/2627f5caae32/screencast.ebc"), fos);
-    fos.close();
-    
-    //convert(new FileInputStream("z:/rectest/overbuffer.ebc"), "z:/rectest/overbuffer.mkv");
-    convert(new FileInputStream("z:/rectest/downloaded.ebc"), "z:/rectest/downconv.mkv");
-    //convert(new FileInputStream("z:/rectest/localout.ebc"), "z:/rectest/localconv.mkv");
-  }
-
   public static void convert(InputStream input, String fileTo) throws Exception {
     CaptureDecoder dec = new CaptureDecoder(input);
 
@@ -65,21 +49,25 @@ public final class RecordingConverter {
 
     BufferedImage image;
     int index = 0;
-    while ((image = dec.nextFrame()) != null) {
-      index++;
-      //if (index % 5 != 0)
-      //  continue;
+    try {
+      while ((image = dec.nextFrame()) != null) {
+        index++;
+        //if (index % 5 != 0)
+        //  continue;
 
-      BufferedImage converted = convertToType(image, BufferedImage.TYPE_3BYTE_BGR);
-      IPacket packet = IPacket.make();
-      IConverter converter = ConverterFactory.createConverter(converted, pixelFormat);
-      IVideoPicture outFrame = converter.toPicture(converted, dec.getCurrentTimeMillis() * 1000L);
-      outFrame.setQuality(0);
-      outStreamCoder.encodeVideo(packet, outFrame, 0);
-      if (packet.isComplete())
-        outContainer.writePacket(packet);
+        BufferedImage converted = convertToType(image, BufferedImage.TYPE_3BYTE_BGR);
+        IPacket packet = IPacket.make();
+        IConverter converter = ConverterFactory.createConverter(converted, pixelFormat);
+        IVideoPicture outFrame = converter.toPicture(converted, dec.getCurrentTimeMillis() * 1000L);
+        outFrame.setQuality(0);
+        outStreamCoder.encodeVideo(packet, outFrame, 0);
+        if (packet.isComplete())
+          outContainer.writePacket(packet);
 
-      System.out.println("encoded frame: " + index);
+        System.out.println("encoded frame: " + index);
+      }
+    } catch (EOFException e) {
+      StudyCaster.log.warning("Incomplete screencast file");
     }
     outContainer.writeTrailer();
     outStreamCoder.close();
