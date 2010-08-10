@@ -1,9 +1,9 @@
-00:13 2010-07-16
+00:13 2010-07-16 (updated 15:23 2010-08-10)
 
 Icon was from the Tango Icon Library:
 http://tango.freedesktop.org/Tango_Icon_Library
 
-ScreenCasting library was from java-remote-control:
+Original screencasting library (no longer used) was from java-remote-control:
 http://code.google.com/p/java-remote-control/wiki/UsingTheScreenRecorder
 
 

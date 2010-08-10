@@ -64,7 +64,12 @@ public class StatusFrame extends javax.swing.JFrame {
       List<Image> icons = new ArrayList<Image>();
       icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon16.png")));
       icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon22.png")));
+      icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon24.png")));
       icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon32.png")));
+      icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon48.png")));
+      icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon64.png")));
+      icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon128.png")));
+      icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon256.png")));
       setIconImages(icons);
     } catch (Exception e) {
       StudyCaster.log.log(Level.WARNING, "Can't set icon images.", e);
