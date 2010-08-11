@@ -43,22 +43,28 @@
 #
 # NOCDDL
 
+# TODO: Don't hard-code this here.
+JDKBIN="/c/program files/java/jdk1.6.0_17/bin"
 
 # Environment 
 MKDIR=mkdir
 CP=cp
 CCADMIN=CCadmin
 RANLIB=ranlib
-JAVAH="/c/program files/java/jdk1.6.0_17/bin/javah.exe"
-JAR="/c/program files/java/jdk1.6.0_17/bin/jar.exe"
+JAVAH=${JDKBIN}/javah
+JAR=${JDKBIN}/jar
+JAVAC=${JDKBIN}/javac
 
+CLASSTMP=${CND_BASEDIR}/${CND_BUILDDIR}/classtmp
 
 # build
 build: .build-post
 
 .build-pre:
 # Add your pre 'build' code here...
-	${JAVAH} -o ${CND_BASEDIR}/NativeLibrary.h -classpath ${CND_BASEDIR}/../build/classes no.ebakke.studycaster.screencasting.NativeLibrary
+	${MKDIR} -p ${CLASSTMP}
+	${JAVAC} -sourcepath ${CND_BASEDIR}/../src ${CND_BASEDIR}/../src/no/ebakke/studycaster/screencasting/NativeLibrary.java -d ${CLASSTMP}
+	${JAVAH} -o ${CND_BASEDIR}/NativeLibrary.h -classpath ${CLASSTMP} no.ebakke.studycaster.screencasting.NativeLibrary
 
 .build-post: .build-impl
 # Add your post 'build' code here...
@@ -73,7 +79,10 @@ clean: .clean-post
 
 .clean-post: .clean-impl
 # Add your post 'clean' code here...
-
+	${RM} -f ${CND_BASEDIR}/../lib/NativeLib/libSCNative.dll
+	${RM} -f ${CND_BASEDIR}/../lib/NativeLib/sc-native.jar
+	${RM} -f ${CND_BASEDIR}/NativeLibrary.h
+	${RM} -r ${CLASSTMP}
 
 # clobber
 clobber: .clobber-post

@@ -7,10 +7,26 @@
 <!-- the Compile on Save feature is turned off for the project. -->
 <!-- You can turn off the Compile on Save (or Deploy on Save) setting -->
 <!-- in the project's Project Properties dialog box.-->
-<project name="100713_StudyCaster" default="default" basedir=".">
-    <description>Builds, tests, and runs the project 100713_StudyCaster.</description>
+<project name="StudyCaster" default="default" basedir=".">
+    <description>Builds, tests, and runs the project StudyCaster.</description>
     <import file="nbproject/build-impl.xml"/>
     <import file="nbproject/profiler-build-impl.xml"/>
+
+    <target name="-post-jar" depends="sign-jars">
+        <copy todir="ServerSide/src/app/icons">
+            <fileset dir="${src.dir}/no/ebakke/studycaster/resources" includes="icon*.png"/>
+        </copy>
+        <copy todir="ServerSide/src/app/">
+            <fileset file="${dist.jar}"/>
+        </copy>
+        <copy todir="ServerSide/src/app/lib">
+          <fileset dir="${dist.dir}/lib"/>
+        </copy>
+    </target>
+    <target name="-post-clean">
+        <delete dir="ServerSide/src/app"/>
+    </target>
+
     <!--
 
     There exist several targets which are by default empty and which can be 
@@ -60,7 +76,7 @@
 
     An example of overriding the target for project execution could look like this:
 
-        <target name="run" depends="100713_StudyCaster-impl.jar">
+        <target name="run" depends="StudyCaster-impl.jar">
             <exec dir="bin" executable="launcher.exe">
                 <arg file="${dist.jar}"/>
             </exec>

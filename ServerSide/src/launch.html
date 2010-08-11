@@ -1,0 +1,15 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>Test page for launching the application via JNLP</title>
+  </head>
+  <body>
+    <h3>Link version:</h3>
+    <a href="server.php?cmd=lnc">Launch the application</a>
+    <h3>Button version:</h3>
+    <script type="text/javascript" src="http://java.com/js/deployJava.js"></script>
+    <script type="text/javascript">
+      deployJava.createWebStartLaunchButton("server.php?cmd=lnc", "1.6");
+    </script>
+  </body>
+</html>
