@@ -5,6 +5,7 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.io.IOException;
 import java.io.OutputStream;
+import no.ebakke.studycaster.api.StudyCaster;
 import no.ebakke.studycaster.screencasting.CaptureScheduler.CaptureTask;
 import no.ebakke.studycaster.util.stream.NonBlockingOutputStream;
 
@@ -85,8 +86,10 @@ public class ScreenRecorder {
   }
 
   public synchronized void start() {
-    if (!stopped)
-      throw new IllegalStateException("Already started");
+    if (!stopped) {
+      StudyCaster.log.warning("Already started");
+      return;
+    }
     stopped = false;
     pointerRecorder = new CaptureScheduler(pointerRecorderTask);
     frameRecorder   = new CaptureScheduler(frameRecorderTask);
@@ -94,8 +97,10 @@ public class ScreenRecorder {
 
 
   public synchronized void stop() {
-    if (stopped)
-      throw new IllegalStateException("Not started");
+    if (stopped) {
+      StudyCaster.log.warning("Already stopped");
+      return;
+    }
     stopped = true;
     pointerRecorder.finish();
     frameRecorder.finish();

@@ -1,5 +1,6 @@
 package no.ebakke.studycaster.screencasting;
 
+import no.ebakke.studycaster.api.StudyCaster;
 import no.ebakke.studycaster.util.MovingAverage;
 
 public class CaptureScheduler {
@@ -41,8 +42,10 @@ public class CaptureScheduler {
   }
 
   public void finish() {
-    if (finished)
-      throw new IllegalStateException("Already finished");
+    if (finished) {
+      StudyCaster.log.warning("Already finished");
+      return;
+    }
     finished = true;
     interrupt();
     boolean interrupted = false;

@@ -125,9 +125,9 @@ public class NonBlockingOutputStream extends OutputStream {
 
 
   /** Upon close, out will be closed as well (analogous to a BufferedOutputStream with out as the underlying stream). */
-  public void connect(final OutputStream out) {
+  public void connect(final OutputStream out) throws IOException {
     if (writerThread != null)
-      throw new IllegalStateException("Already connected");
+      throw new IOException("Already connected");
     writerThread = new Thread(new Runnable() {
       public void run() {
         try {
@@ -182,7 +182,11 @@ public class NonBlockingOutputStream extends OutputStream {
 
   public NonBlockingOutputStream(final OutputStream out, int bufferLimit) {
     this(bufferLimit);
-    connect(out);
+    try {
+      connect(out);
+    } catch (IOException e) {
+      throw new AssertionError("Unexpected exception: " + e.getMessage());
+    }
   }
 
   public NonBlockingOutputStream(int bufferLimit) {

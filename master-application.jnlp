@@ -14,6 +14,7 @@
 <!--${JNLP.RESOURCES.MAIN.JAR}-->
 <!--${JNLP.RESOURCES.JARS}-->
 <!--${JNLP.RESOURCES.EXTENSIONS}-->
+      <nativelib eager="true" href="lib/sc-native.jar"/>
     </resources>
     <application-desc main-class="${jnlp.main.class}">
 <!--${JNLP.APPLICATION.ARGS}-->

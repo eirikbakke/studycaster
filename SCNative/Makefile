@@ -63,7 +63,7 @@ build: .build-post
 .build-post: .build-impl
 # Add your post 'build' code here...
 	${CP} ${CND_ARTIFACT_PATH_${CONF}} ${CND_BASEDIR}/../lib/NativeLib/libSCNative.dll
-	${JAR} -cf ${CND_BASEDIR}/../lib/NativeLib/sc-native.jar ${CND_ARTIFACT_PATH_${CONF}}
+	${JAR} -cf ${CND_BASEDIR}/../lib/NativeLib/sc-native.jar -C ${CND_ARTIFACT_DIR_${CONF}} ${CND_ARTIFACT_NAME_${CONF}}
 
 # clean
 clean: .clean-post

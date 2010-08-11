@@ -97,6 +97,7 @@ public class ExcelLauncher {
             scui.showMessageDialog("Failed to upload file", e.getLocalizedMessage(), JOptionPane.WARNING_MESSAGE, false);
           }
           scui.getProgressBarUI().setTaskAppearance("", false);
+          scui.getProgressBarUI().setProgress(0);
         }
       }
       scui.setUploadEnabled(true);

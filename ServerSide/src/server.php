@@ -72,8 +72,17 @@
       $fullpath = $updir . DIRECTORY_SEPARATOR . $_POST["file"];
       if (!file_exists($updir) && !mkdir($updir))
         return "failed to create client upload directory";
+      if (file_exists($fullpath)) {
+        $suffix = 1;
+        do {
+          $moveto = $fullpath . "." . $suffix;
+          $suffix++;
+        } while (file_exists($moveto));
+        if (!rename($fullpath, $moveto))
+          return "failed to rename existing file with same name";
+      }
       if (($cfile = fopen($fullpath, "xb")) == false)
-        return "file already exists or failed to create file";
+        return "failed to create file";
       if (!fclose($cfile))
         return "failed to close newly created file";
       header("X-StudyCaster-OK: upc");
@@ -109,7 +118,6 @@
         return "unexpected short write";
       if (!fclose($atarget))
         return "failed to close append target";
-
       header("X-StudyCaster-OK: upa");
       studylog($tickets, $_POST["cmd"], $_FILES["file"]["size"], basename($fullpath));
       $success = true;
