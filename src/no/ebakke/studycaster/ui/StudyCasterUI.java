@@ -72,6 +72,7 @@ public class StudyCasterUI {
                 "Screencasting",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
         if (decision == JOptionPane.CANCEL_OPTION || decision == JOptionPane.CLOSED_OPTION) {
+          StudyCaster.log.info("User rejected consent dialog (" + ((decision == JOptionPane.CANCEL_OPTION) ? "pressed cancel" : "closed dialog") + ")");
           sf.dispose();
           actionTaken = UIAction.CLOSE;
         }

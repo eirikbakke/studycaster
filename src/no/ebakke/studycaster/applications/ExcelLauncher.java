@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.logging.Level;
 import javax.swing.JOptionPane;
+import no.ebakke.studycaster.api.ServerTimeLogFormatter;
 import no.ebakke.studycaster.api.StudyCaster;
 import no.ebakke.studycaster.api.StudyCasterException;
 import no.ebakke.studycaster.ui.StudyCasterUI;
