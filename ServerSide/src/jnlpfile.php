@@ -4,6 +4,7 @@ function output_jnlpfile($app_args) {
   foreach ($app_args as $arg)
     $xml_args .= '  <argument>' . $arg . "</argument>\n";
   header("Content-Type: application/x-java-jnlp-file");
+  header('Content-Disposition: attachment; filename="studycaster.jnlp"');
 
   echo <<<EOD
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
