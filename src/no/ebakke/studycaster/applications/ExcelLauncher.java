@@ -31,7 +31,7 @@ public class ExcelLauncher {
     try {
       scui.getProgressBarUI().setProgress(25);
       scui.getProgressBarUI().setTaskAppearance("Initializing user study app...", false);
-      sc = new StudyCaster("http://www.sieuferd.com/studycaster/server.php");
+      sc = new StudyCaster();
       sc.startRecording(new ScreenCensor(Arrays.asList(
           new String[] {"User Study Console", "Excel", "Calc", "Numbers", "Gnumeric", "KSpread", "Quattro", "Mesa"}), true));
       scui.getProgressBarUI().setProgress(50);

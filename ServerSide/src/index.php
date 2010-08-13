@@ -63,7 +63,7 @@
     }
 
     if ($cmd == 'lnc') {
-      require_once('jnlpfile.php');
+      require_once('templates.php');
       output_jnlpfile(array());
       studylog($tickets, $cmd, '(N/A)', '(N/A)');
       $success = true;
@@ -162,14 +162,21 @@
 
   function main() {
     session_cache_limiter('nocache');
+
+    if (empty($_POST) && empty($_GET) && empty($_FILES)) {
+      require_once('templates.php');
+      output_launch();
+      return;
+    }
+
     $success = false;
     $message = process($success);
     // debuglog('Result was: ' . $message);
-    if (!$success && !(empty($_POST) && empty($_GET) && empty($_FILES))) {
+    if (!$success) {
       header('HTTP/1.0 400 Bad Request');
 
       $flog = fopen(constant('FAIL_LOG_FILE'), 'a');
-      fwrite($flog, '================== Unsuccessful request ==================\n');
+      fwrite($flog, "================== Unsuccessful request ==================\n");
       fwrite($flog, 'TIME = ' . date('Y-m-d H:i:s') . "\n");
       fwrite($flog, 'CAUSE = ' . $message . "\n");
       foreach ($_SERVER as $i => $value)
@@ -181,7 +188,7 @@
       foreach ($_FILES as $i => $value)
         foreach ($_FILES[$i] as $j => $value)
           fwrite($flog, 'FILES,' . $i . ',' . $j . ' = ' . $_FILES[$i][$j] . "\n");
-      fwrite($flog, '==========================================================\n');
+      fwrite($flog, "==========================================================\n");
       fclose($flog);
     }
   }

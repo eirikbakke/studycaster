@@ -16,7 +16,7 @@ public class ScreenCastExperiments {
     OutputStream os = new FileOutputStream("z:/rectest/localout.ebc");
 
     //final NonBlockingOutputStream os = new NonBlockingOutputStream(4 * 1024 * 1024);
-    //ServerContext sc = new ServerContext(new URI("http://www.sieuferd.com/studycaster/server.php"));
+    //ServerContext sc = new ServerContext();
     //os.connect(sc.uploadFile("screencast.ebc"));
 
     ScreenRecorder sr = new ScreenRecorder(os, 0);

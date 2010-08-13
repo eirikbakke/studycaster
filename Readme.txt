@@ -1,13 +1,13 @@
 How to set server location
-(e.g. http://www.sieuferd.com/studycaster_devel)
+(e.g. http://www.example.com/studycaster_devel)
 * ServerSide project->Properties->Run Configuration->Project URL
-  (e.g. http://www.sieuferd.com/studycaster_devel/)
+  (e.g. http://www.example.com/studycaster_devel/)
 * ServerSide project->Properties->Run Configuration->Remote Connection
-  (e.g. FTP, host name = www.sieuferd.com, initial directory = "/")
+  (e.g. FTP, host name = www.example.com, initial directory = "/")
 * ServerSide project->Properties->Run Configuration->Upload Directory
   (e.g. /studycaster_devel)
-* Set the "studycaster.server-script-url" property in nbproject/project.properties
-  (e.g. to "http://www.sieuferd.com/studycaster/server.php")
+* Set the "studycaster.serveruri" property in nbproject/project.properties
+  (e.g. to "http://www.example.com/studycaster_devel")
 
 
 Build Notes (for NetBeans)

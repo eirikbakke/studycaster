@@ -2,7 +2,6 @@ package no.ebakke.studycaster.applications;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import no.ebakke.studycaster.api.StudyConfiguration;
@@ -14,8 +13,8 @@ public class ConfigurableStudyCaster {
   private StudyConfiguration configuration;
   private ServerContext serverContext;
 
-  public ConfigurableStudyCaster(URI serverURI, String configurationFileName) throws StudyCasterException {
-    serverContext = new ServerContext(serverURI);
+  public ConfigurableStudyCaster(String configurationFileName) throws StudyCasterException {
+    serverContext = new ServerContext();
     try {
       configuration = new StudyConfiguration(serverContext.downloadFile(configurationFileName));
     } catch (IOException e) {
@@ -27,18 +26,12 @@ public class ConfigurableStudyCaster {
     ConfigurableStudyCaster csc;
     URI uri;
 
-    if (args.length != 2) {
-      System.err.println("Usage: ConfigurateStudyCaster <server script URI> <remote configuration file name>");
+    if (args.length != 1) {
+      System.err.println("Usage: ConfigurateStudyCaster <remote configuration file name>");
       return;
     }
     try {
-      uri = new URI(args[0]);
-    } catch (URISyntaxException e) {
-      System.err.println("Malformed URI");
-      return;
-    }
-    try {
-      csc = new ConfigurableStudyCaster(uri, args[1]);
+      csc = new ConfigurableStudyCaster(args[0]);
     } catch (StudyCasterException e) {
       log.log(Level.SEVERE, "Failed to initialize StudyCaster", e);
       return;

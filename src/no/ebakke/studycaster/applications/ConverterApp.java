@@ -3,14 +3,13 @@ package no.ebakke.studycaster.applications;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
-import java.net.URI;
 import no.ebakke.studycaster.screencasting.RecordingConverter;
 import no.ebakke.studycaster.api.ServerContext;
 import no.ebakke.studycaster.util.Util;
 
 public class ConverterApp {
   public static void main(String args[]) throws Exception {
-    ServerContext sc = new ServerContext(new URI("http://www.sieuferd.com/studycaster/server.php"));
+    ServerContext sc = new ServerContext();
     OutputStream fos = new FileOutputStream("z:/rectest/downloaded.ebc");
     Util.hookupStreams(sc.downloadFile("uploads/1e2019787323/screencast.ebc"), fos);
     fos.close();

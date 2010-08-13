@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.logging.Level;
 import no.ebakke.studycaster.util.Util;
 import org.apache.http.Header;
@@ -36,8 +37,19 @@ public class ServerContext {
   private Ticket ticketCS; // Current server ticket
   private long   serverSecondsAhead;
 
-  public ServerContext(URI serverScriptURI) throws StudyCasterException {
-    this.serverScriptURI = serverScriptURI;
+  public ServerContext() throws StudyCasterException {
+    String serverScriptURIs = System.getProperty("jnlp.studycaster.serveruri");
+    if (serverScriptURIs == null)
+      throw new StudyCasterException("Property jnlp.studycaster.serveruri not set");
+    // Needed for POST requests to succeed in the case where index.php is not specified explicitly.
+    if (!serverScriptURIs.endsWith("index.php") && !serverScriptURIs.endsWith("/"))
+      serverScriptURIs += "/";
+    try {
+      serverScriptURI = new URI(serverScriptURIs);
+    } catch (URISyntaxException e) {
+      throw new StudyCasterException("Malformed server URI", e);
+    }
+
     ticketCC = new Ticket(CLIENT_TICKET_BYTES);
 
     // Read ticket store.

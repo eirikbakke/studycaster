@@ -7,7 +7,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
@@ -50,23 +49,18 @@ public class StudyCaster {
     }
   }
 
-  /* Note: URL must point directly to PHP script, end with a slash to use index.php (otherwise POST requests fail). */
-  public StudyCaster(String serverURLstring) throws StudyCasterException {
+  public StudyCaster() throws StudyCasterException {
     NonBlockingOutputStream consoleStream = new NonBlockingOutputStream(1024 * 128);
     ServerTimeLogFormatter logFormatter = new ServerTimeLogFormatter();
     consoleTee = new ConsoleTee(consoleStream, logFormatter);
+
     try {
-      try {
-        serverContext = new ServerContext(new URI(serverURLstring));
-      } catch (URISyntaxException e) {
-        throw new StudyCasterException(e);
-      }
+      serverContext = new ServerContext();
     } catch (StudyCasterException e) {
       log.log(Level.SEVERE, "Error initializing StudyCaster", e);
       disconnectConsole();
       throw e;
     }
-
     Runtime.getRuntime().addShutdownHook(shutdownHook);
     logFormatter.setServerSecondsAhead(serverContext.getServerSecondsAhead());
     try {
