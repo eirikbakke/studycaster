@@ -80,7 +80,7 @@ static RECT getPermittedArea(const wchar_t **whiteList, const wchar_t **blackLis
   return nullRect;
 }
 
-JNIEXPORT void JNICALL Java_no_ebakke_studycaster_screencasting_NativeLibrary_getPermittedRecordingArea_1internal(
+JNIEXPORT void JNICALL Java_no_ebakke_studycaster_api_NativeLibrary_getPermittedRecordingArea_1internal(
   JNIEnv *env, jclass clazz, jobjectArray whiteList, jobjectArray blackList, jintArray result
 ) {
   int i;
@@ -110,5 +110,4 @@ JNIEXPORT void JNICALL Java_no_ebakke_studycaster_screencasting_NativeLibrary_ge
     (*env)->ReleaseStringChars(env, (*env)->GetObjectArrayElement(env, blackList, i), blackListConv[i]);
   for (i = 0; i < numWhiteList; i++)
     (*env)->ReleaseStringChars(env, (*env)->GetObjectArrayElement(env, whiteList, i), whiteListConv[i]);
-
 }

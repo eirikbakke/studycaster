@@ -11,7 +11,9 @@ import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.logging.Level;
 import java.util.zip.GZIPOutputStream;
+import no.ebakke.studycaster.api.StudyCaster;
 
 public class CaptureEncoder extends Codec {
   private DataOutputStream dout;
@@ -107,11 +109,12 @@ public class CaptureEncoder extends Codec {
         if (!permittedArea.contains(x, y))
           newBuf[i] = newBuf[y * width + (x / ScreenCensor.MOSAIC_WIDTH) * ScreenCensor.MOSAIC_WIDTH];
 
+        if (newBuf[i] == INDEX_NO_DIFF || newBuf[i] == INDEX_REPEAT)
+          newBuf[i] = 0;
+
         byte oldCol = oldBuf[i];
         byte newCol = newBuf[i];
 
-        if (newCol == INDEX_NO_DIFF || newCol == INDEX_REPEAT)
-          throw new AssertionError("Unexpected color index.");
         code = (newCol == oldCol) ? INDEX_NO_DIFF : newCol;
         if (code == currentRunCode) {
           currentRunLength++;

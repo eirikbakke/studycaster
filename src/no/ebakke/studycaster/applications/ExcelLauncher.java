@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.logging.Level;
 import javax.swing.JOptionPane;
-import no.ebakke.studycaster.api.ServerTimeLogFormatter;
 import no.ebakke.studycaster.api.StudyCaster;
 import no.ebakke.studycaster.api.StudyCasterException;
 import no.ebakke.studycaster.ui.StudyCasterUI;
@@ -33,23 +32,22 @@ public class ExcelLauncher {
       scui.getProgressBarUI().setProgress(25);
       scui.getProgressBarUI().setTaskAppearance("Initializing user study app...", false);
       sc = new StudyCaster("http://www.sieuferd.com/studycaster/server.php");
+      sc.startRecording(new ScreenCensor(Arrays.asList(
+          new String[] {"User Study Console", "Excel", "Calc", "Numbers", "Gnumeric", "KSpread", "Quattro", "Mesa"}), true));
       scui.getProgressBarUI().setProgress(50);
       scui.getProgressBarUI().setTaskAppearance("Downloading sample document...", false);
       excelFile = sc.downloadFile("exflat.xls");
       lastModified1 = excelFile.lastModified();
       scui.getProgressBarUI().setProgress(75);
       scui.getProgressBarUI().setTaskAppearance("Opening sample document...", false);
-      sc.desktopOpenFile(excelFile, "Excel or a compatible spreadsheet application");
+      Util.desktopOpenFile(excelFile, "Excel or a compatible spreadsheet application");
       lastModified2 = excelFile.lastModified();
       scui.getProgressBarUI().setProgress(100);
       scui.setUploadEnabled(true);
       scui.getProgressBarUI().setTaskAppearance("", false);
       scui.getProgressBarUI().setProgress(0);
-
-      sc.startRecording(new ScreenCensor(Arrays.asList(
-          new String[] {"User Study Console", "Excel", "Calc", "Numbers", "Gnumeric", "KSpread", "Quattro", "Mesa"}), true));
     } catch (StudyCasterException e) {
-      StudyCaster.log.log(Level.SEVERE, "Can't Load User Study.", e);
+      StudyCaster.log.log(Level.SEVERE, "Can't Load User Study", e);
       if (sc != null)
         sc.concludeStudy();
       scui.showMessageDialog("Can't Load User Study", e.getLocalizedMessage(), JOptionPane.WARNING_MESSAGE, true);
@@ -73,18 +71,18 @@ public class ExcelLauncher {
                   "</html>"
                   , JOptionPane.WARNING_MESSAGE, false);
         } else if (!Util.fileAvailableExclusive(excelFile)) {
-          StudyCaster.log.info("Got upload on changed but still open document.");
+          StudyCaster.log.info("Got upload on changed but still open document");
           scui.showMessageDialog("Upload",
                 "<html>Please close the Excel document, then try again.</html>"
                 , JOptionPane.WARNING_MESSAGE, false);
         } else {
-          scui.getProgressBarUI().setTaskAppearance("Preparing to upload...", true);
-          sc.stopRecording();
+          StudyCaster.log.info("Now starting upload");
           try {
             scui.getProgressBarUI().setTaskAppearance("Uploading document...", true);
             //StudyCaster.log.info("Uploaded file now last modified " + sc.getServerTimeFormat(nowLastModified));
             sc.uploadFile(excelFile,  "saveddoc.xls");
             scui.getProgressBarUI().setTaskAppearance("Finishing screencast upload...", true);
+            sc.stopRecording();
             scui.setMonitorStreamProgress(sc.getRecordingStream(), true);
             sc.waitForScreenCastUpload();
             scui.setMonitorStreamProgress(sc.getRecordingStream(), false);

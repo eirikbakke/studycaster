@@ -1,13 +1,12 @@
-package no.ebakke.studycaster.screencasting;
+package no.ebakke.studycaster.api;
 
 import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.UIManager;
-import no.ebakke.studycaster.api.StudyCasterException;
 
-final class NativeLibrary {
-  public NativeLibrary() { }
+public final class NativeLibrary {
+  private NativeLibrary() { }
   private static boolean initialized = false;
 
   // TODO: Change this interface to move more functionarily out of the native library (retrieve a window list with titles and coordinates instead).

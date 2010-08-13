@@ -2,6 +2,7 @@ package no.ebakke.studycaster.ui;
 
 import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
+import no.ebakke.studycaster.api.StudyCaster;
 
 public class ProgressBarUI {
   private JProgressBar ui;
@@ -11,6 +12,7 @@ public class ProgressBarUI {
   }
 
   public void setTaskAppearance(final String text, final boolean indeterminate) {
+    StudyCaster.log.info("Changing status bar text to \"" + text + "\"");
     ui.setString(text);
     ui.setIndeterminate(indeterminate);
     if (indeterminate)

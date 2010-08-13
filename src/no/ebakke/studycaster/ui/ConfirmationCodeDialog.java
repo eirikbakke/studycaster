@@ -1,8 +1,8 @@
 package no.ebakke.studycaster.ui;
 
 import java.awt.Dimension;
+import java.awt.Frame;
 import java.awt.Toolkit;
-import java.awt.Window;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.StringSelection;
@@ -12,11 +12,11 @@ import javax.swing.JDialog;
 public class ConfirmationCodeDialog extends JDialog {
     private static final long serialVersionUID = -6641082431235013732L;
 
-    public static void show(Window parent, String confcode) {
+    public static void show(Frame parent, String confcode) {
       new ConfirmationCodeDialog(parent, confcode).setVisible(true);
     }
 
-    private ConfirmationCodeDialog(Window parent, String confcode) {
+    private ConfirmationCodeDialog(Frame parent, String confcode) {
         super(parent);
         initComponents();
         codeBox.setText(confcode);
@@ -42,6 +42,7 @@ public class ConfirmationCodeDialog extends JDialog {
     @SuppressWarnings("unchecked")
   // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
   private void initComponents() {
+    java.awt.GridBagConstraints gridBagConstraints;
 
     label1 = new javax.swing.JLabel();
     codeBox = new javax.swing.JTextField();
@@ -52,17 +53,46 @@ public class ConfirmationCodeDialog extends JDialog {
     setTitle("Upload Successful");
     setModal(true);
     setResizable(false);
+    getContentPane().setLayout(new java.awt.GridBagLayout());
 
     label1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
     label1.setText("Upload successful! Your confirmation code is...");
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 0;
+    gridBagConstraints.gridy = 0;
+    gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+    gridBagConstraints.weightx = 1.0;
+    gridBagConstraints.insets = new java.awt.Insets(10, 10, 0, 10);
+    getContentPane().add(label1, gridBagConstraints);
 
     codeBox.setEditable(false);
     codeBox.setFont(codeBox.getFont().deriveFont(codeBox.getFont().getStyle() | java.awt.Font.BOLD, codeBox.getFont().getSize()+7));
     codeBox.setHorizontalAlignment(javax.swing.JTextField.CENTER);
     codeBox.setText("1234567890");
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 0;
+    gridBagConstraints.gridy = 1;
+    gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+    gridBagConstraints.weightx = 1.0;
+    gridBagConstraints.weighty = 1.0;
+    gridBagConstraints.insets = new java.awt.Insets(10, 10, 10, 10);
+    getContentPane().add(codeBox, gridBagConstraints);
 
     label2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
     label2.setText("(The code has been copied to the clipboard so you can paste it into the HIT.)");
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 0;
+    gridBagConstraints.gridy = 2;
+    gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+    gridBagConstraints.weightx = 1.0;
+    gridBagConstraints.insets = new java.awt.Insets(0, 10, 10, 10);
+    getContentPane().add(label2, gridBagConstraints);
 
     okButton.setMnemonic('O');
     okButton.setText("OK");
@@ -71,33 +101,16 @@ public class ConfirmationCodeDialog extends JDialog {
         okButtonActionPerformed(evt);
       }
     });
-
-    javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-    getContentPane().setLayout(layout);
-    layout.setHorizontalGroup(
-      layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-      .addGroup(layout.createSequentialGroup()
-        .addContainerGap()
-        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-          .addComponent(codeBox, javax.swing.GroupLayout.DEFAULT_SIZE, 382, Short.MAX_VALUE)
-          .addComponent(label1, javax.swing.GroupLayout.DEFAULT_SIZE, 382, Short.MAX_VALUE)
-          .addComponent(label2, javax.swing.GroupLayout.DEFAULT_SIZE, 382, Short.MAX_VALUE)
-          .addComponent(okButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE))
-        .addContainerGap())
-    );
-    layout.setVerticalGroup(
-      layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-      .addGroup(layout.createSequentialGroup()
-        .addContainerGap()
-        .addComponent(label1, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
-        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(codeBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(label2, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
-        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(okButton)
-        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-    );
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 0;
+    gridBagConstraints.gridy = 3;
+    gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+    gridBagConstraints.gridheight = java.awt.GridBagConstraints.REMAINDER;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.VERTICAL;
+    gridBagConstraints.ipadx = 30;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+    gridBagConstraints.insets = new java.awt.Insets(0, 10, 10, 10);
+    getContentPane().add(okButton, gridBagConstraints);
 
     pack();
   }// </editor-fold>//GEN-END:initComponents

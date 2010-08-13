@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.logging.Level;
 import javax.swing.SwingUtilities;
 import no.ebakke.studycaster.api.StudyCaster;
+import no.ebakke.studycaster.util.PipedInputStreamExt;
 import no.ebakke.studycaster.util.Util;
 import no.ebakke.studycaster.util.Util.Interruptible;
 
@@ -193,7 +194,7 @@ public class NonBlockingOutputStream extends OutputStream {
     outPipe = new PipedOutputStream();
     this.bufferLimit = bufferLimit;
     try {
-      inPipe = new PipedInputStream(outPipe, bufferLimit);
+      inPipe = new PipedInputStreamExt(outPipe, bufferLimit);
     } catch (IOException e) {
       throw new RuntimeException("Unexpected exception", e);
     }

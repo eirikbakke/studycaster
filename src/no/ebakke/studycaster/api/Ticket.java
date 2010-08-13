@@ -1,6 +1,5 @@
 package no.ebakke.studycaster.api;
 import java.util.Random;
-import no.ebakke.studycaster.api.StudyCasterException;
 
 public class Ticket {
   private byte[] value;

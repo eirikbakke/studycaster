@@ -63,8 +63,8 @@ build: .build-post
 .build-pre:
 # Add your pre 'build' code here...
 	${MKDIR} -p ${CLASSTMP}
-	${JAVAC} -sourcepath ${CND_BASEDIR}/../src ${CND_BASEDIR}/../src/no/ebakke/studycaster/screencasting/NativeLibrary.java -d ${CLASSTMP}
-	${JAVAH} -o ${CND_BASEDIR}/NativeLibrary.h -classpath ${CLASSTMP} no.ebakke.studycaster.screencasting.NativeLibrary
+	${JAVAC} -sourcepath ${CND_BASEDIR}/../src ${CND_BASEDIR}/../src/no/ebakke/studycaster/api/NativeLibrary.java -d ${CLASSTMP}
+	${JAVAH} -o ${CND_BASEDIR}/NativeLibrary.h -classpath ${CLASSTMP} no.ebakke.studycaster.api.NativeLibrary
 
 .build-post: .build-impl
 # Add your post 'build' code here...

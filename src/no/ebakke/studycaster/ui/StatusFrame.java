@@ -1,10 +1,14 @@
 package no.ebakke.studycaster.ui;
 
 import java.awt.Dimension;
+import java.awt.Frame;
 import java.awt.Image;
 import java.awt.Toolkit;
+import java.awt.Window;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -43,6 +47,40 @@ public class StatusFrame extends javax.swing.JFrame {
     }
   }
 
+  private static void initIcon(Frame frame) {
+    try {
+      Method setIconImagesMethod = null;
+      try {
+        setIconImagesMethod = Window.class.getMethod("setIconImages", List.class);
+      } catch (NoSuchMethodException e) { }
+      if (setIconImagesMethod == null) {
+        // Running JRE < 1.6
+        StudyCaster.log.info("Can't find Window.setIconImages(), using Frame.setIconImage() instead (probably on JRE 1.5 or earlier)");
+        frame.setIconImage(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon256.png")));
+      } else {
+        // Running JRE >= 1.6
+        List<Image> icons = new ArrayList<Image>();
+        icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon16.png")));
+        icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon22.png")));
+        icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon24.png")));
+        icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon32.png")));
+        icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon48.png")));
+        icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon64.png")));
+        icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon128.png")));
+        icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon256.png")));
+        try {
+          setIconImagesMethod.invoke(frame, icons);
+        } catch (IllegalAccessException e) {
+          StudyCaster.log.log(Level.WARNING, "Unexpected error while invoking Window.setIconImages()", e);
+        } catch (InvocationTargetException e) {
+          StudyCaster.log.log(Level.WARNING, "Got unexpected exception from Window.setIconImages()", e);
+        }
+      }
+    } catch (Exception e) {
+      StudyCaster.log.log(Level.WARNING, "Failed to configure window icon", e);
+    }
+  }
+
   public StatusFrame(String instructions) {
     positionDialog = new JDialog(this);
     initComponents();
@@ -60,24 +98,8 @@ public class StatusFrame extends javax.swing.JFrame {
     ymargin = Math.max(YMARGIN_MIN, ymargin);
     setLocation(sdim.width - wdim.width - xmargin, sdim.height - wdim.height - ymargin);
 
-    try {
-      List<Image> icons = new ArrayList<Image>();
-      icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon16.png")));
-      icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon22.png")));
-      icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon24.png")));
-      icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon32.png")));
-      icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon48.png")));
-      icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon64.png")));
-      icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon128.png")));
-      icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon256.png")));
-      setIconImages(icons);
-    } catch (Exception e) {
-      StudyCaster.log.log(Level.WARNING, "Can't set icon images.", e);
-    }
-    /*
-    int decision = JOptionPane.showConfirmDialog(getPositionDialog(),
-                "If you exit the User Study Console without uploading first, your changes will be lost.", "Exit Without Uploading?",
-    */
+    initIcon(this);
+
     addWindowListener(new WindowAdapter() {
       @Override
       public void windowClosing(WindowEvent e) {

@@ -1,13 +1,13 @@
 package no.ebakke.studycaster.api;
 
 import java.awt.AWTException;
-import java.awt.Desktop;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
@@ -164,14 +164,6 @@ public class StudyCaster {
       }
     } catch (IOException e) {
       throw new StudyCasterException(e);
-    }
-  }
-
-  public void desktopOpenFile(File f, String requiredApp) throws StudyCasterException {
-    try {
-      Desktop.getDesktop().open(f);
-    } catch (IOException e) {
-      throw new StudyCasterException("Failed to open the file " + f.getName() + "; do you have " + requiredApp + " installed?", e);
     }
   }
 

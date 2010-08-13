@@ -1,4 +1,5 @@
 package no.ebakke.studycaster.screencasting;
+import no.ebakke.studycaster.api.NativeLibrary;
 import java.awt.Rectangle;
 import java.util.List;
 import java.util.logging.Level;
