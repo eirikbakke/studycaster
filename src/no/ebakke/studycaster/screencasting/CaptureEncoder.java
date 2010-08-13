@@ -11,9 +11,7 @@ import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.logging.Level;
 import java.util.zip.GZIPOutputStream;
-import no.ebakke.studycaster.api.StudyCaster;
 
 public class CaptureEncoder extends Codec {
   private DataOutputStream dout;
@@ -78,12 +76,10 @@ public class CaptureEncoder extends Codec {
   }
 
   public void capturePointer() {
-    //System.err.println("capturePointer");
     addMeta(FrameType.PERIODIC);
   }
 
   public synchronized void captureFrame() throws IOException {
-    //System.err.println("captureFrame");
     addMeta(FrameType.BEFORE_CAPTURE);
     BufferedImage image = robot.createScreenCapture(screenRect);
     Rectangle permittedArea = (censor == null) ? screenRect : censor.getPermittedRecordingArea();
@@ -92,6 +88,11 @@ public class CaptureEncoder extends Codec {
     compressAndOutputFrame(image, permittedArea);
   }
 
+  private final byte blurredPixel(byte buf[], int width, int x, int y) {
+    return buf[y * width + (x / ScreenCensor.MOSAIC_WIDTH) * ScreenCensor.MOSAIC_WIDTH];
+  }
+
+  // TODO: If pixel has no difference and was previously blurred, continue blurring.
   private void compressAndOutputFrame(BufferedImage frame, Rectangle permittedArea) throws IOException {
     swapOldNew();
     copyImage(frame, getCurrentFrame());
@@ -106,11 +107,11 @@ public class CaptureEncoder extends Codec {
 
     for (int y = 0, i = 0; y < height; y++) {
       for (int x = 0; x < width; x++, i++) {
-        if (!permittedArea.contains(x, y))
-          newBuf[i] = newBuf[y * width + (x / ScreenCensor.MOSAIC_WIDTH) * ScreenCensor.MOSAIC_WIDTH];
-
         if (newBuf[i] == INDEX_NO_DIFF || newBuf[i] == INDEX_REPEAT)
           newBuf[i] = 0;
+
+        if (!permittedArea.contains(x, y))
+          newBuf[i] = blurredPixel(newBuf, width, x, y);
 
         byte oldCol = oldBuf[i];
         byte newCol = newBuf[i];
