@@ -20,7 +20,7 @@ public class ScreenCastExperiments {
     //os.connect(sc.uploadFile("screencast.ebc"));
 
     ScreenRecorder sr = new ScreenRecorder(os, 0);
-    sr.setCensor(new ScreenCensor(Arrays.asList(new String[] {"Excel"}), true));
+    sr.setCensor(new ScreenCensor(Arrays.asList(new String[] {"Excel"}), Arrays.asList(new String[] {}), true));
     sr.start();
     Thread.sleep(20000);
     /*

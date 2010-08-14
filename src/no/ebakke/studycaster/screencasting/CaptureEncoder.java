@@ -54,15 +54,10 @@ public class CaptureEncoder extends Codec {
     }
   }
 
-  private final boolean encodeRun(boolean headerWritten, byte code, int runLength) throws IOException {
+  private final void encodeRun(byte code, int runLength) throws IOException {
     if (code == INDEX_REPEAT || runLength < 0)
       throw new AssertionError();
-    if (runLength == 0) {
-      return headerWritten;
-    } else {
-      if (!headerWritten) {
-        dout.write(MARKER_FRAME);
-      }
+    if (runLength != 0) {
       if (runLength <= 6) {
         for (int i = 0; i < runLength; i++)
           dout.write(code);
@@ -71,7 +66,6 @@ public class CaptureEncoder extends Codec {
         dout.write(INDEX_REPEAT);
         dout.writeInt(runLength - 1);
       }
-      return true;
     }
   }
 
@@ -103,8 +97,8 @@ public class CaptureEncoder extends Codec {
     int  currentRunLength = 0;
     byte currentRunCode   = INDEX_NO_DIFF;
     byte code;
-    boolean headerWritten = false;
 
+    dout.write(MARKER_FRAME);
     for (int y = 0, i = 0; y < height; y++) {
       for (int x = 0; x < width; x++, i++) {
         if (newBuf[i] == INDEX_NO_DIFF || newBuf[i] == INDEX_REPEAT)
@@ -120,14 +114,13 @@ public class CaptureEncoder extends Codec {
         if (code == currentRunCode) {
           currentRunLength++;
         } else {
-          headerWritten = encodeRun(headerWritten, currentRunCode, currentRunLength);
+          encodeRun(currentRunCode, currentRunLength);
           currentRunLength = 1;
           currentRunCode   = code;
         }
       }
     }
-    if (!(currentRunCode == INDEX_NO_DIFF && currentRunLength == newBuf.length))
-      encodeRun(headerWritten, currentRunCode, currentRunLength);
+    encodeRun(currentRunCode, currentRunLength);
   }
 
   /** Closes the underlying OutputStream as well. */

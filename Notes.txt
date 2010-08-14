@@ -1,11 +1,9 @@
 00:13 2010-07-16 (updated 15:23 2010-08-10)
-
 Icon was from the Tango Icon Library:
 http://tango.freedesktop.org/Tango_Icon_Library
 
 Original screencasting library (no longer used) was from java-remote-control:
 http://code.google.com/p/java-remote-control/wiki/UsingTheScreenRecorder
-
 
 19:02 2010-07-18 (updated 22:49 2010-07-19, 17:40 2010-07-20)
 TODO
@@ -62,8 +60,6 @@ http://download.oracle.com/docs/cd/E17476_01/javase/1.4.2/docs/guide/jni/spec/fu
 13:57 2010-08-14 New TODO (supercedes previous)
 * Start uploading log immediately, though don't wait for this operation to complete before starting
   UI.
-* Send metadata signifying unchanged frames.
-* Have a way to let users upload a different file
 * Generalize download, report, and log security
 * Store experiment info in XML file
 * Include a configured experiment ID in logged info
@@ -72,18 +68,23 @@ http://download.oracle.com/docs/cd/E17476_01/javase/1.4.2/docs/guide/jni/spec/fu
   * Send a cookie
   * Generate client ticket on server (and rename it)
   * Consider using a separate ticket for identification
+  * Figure out how to identify users during the second part of the study
 * Send conclusion message to server for logging
 * Retry POST uploads, supply file size to append command to make operations idempotent
 * Generate human-readable report
-* Make it possible to launch a Java app
-* Automatic GeoIP lookup
 * Future
   * Sign the JAR
   * Add SSL support
   * Strip user names from saved files (on client side)
   * Don't use a temporary directory that contains the user name in its path
-  * Move as much functionality from native library to Java as possible, make improvments
+  * Move as much functionality from native library to Java as possible, make improvements
   * Port window detection library to Mac
   * Investigate Chrome issue with window detection library
   * Improve progress bar
-
+* Absolutely needed for phase two
+  * Figure out how to identify users during the second part of the study
+  * Make it possible to launch a Java app
+  * Make sure users have a way to submit even when something goes wrong.
+* Strongly preferred for phase two
+  * Have a way to let users upload a different file
+  * Avoid multiple instances of the screencaster

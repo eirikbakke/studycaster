@@ -32,8 +32,10 @@ public class ExcelLauncher {
       scui.getProgressBarUI().setProgress(25);
       scui.getProgressBarUI().setTaskAppearance("Initializing user study app...", false);
       sc = new StudyCaster();
-      sc.startRecording(new ScreenCensor(Arrays.asList(
-          new String[] {"User Study Console", "Excel", "Calc", "Numbers", "Gnumeric", "KSpread", "Quattro", "Mesa"}), true));
+      sc.startRecording(new ScreenCensor(
+          Arrays.asList(new String[] {"User Study Console", "Excel", "Calc", "Numbers", "Gnumeric", "KSpread", "Quattro", "Mesa"}),
+          Arrays.asList(new String[] {"Firefox", "Internet Explorer", "Outlook", "Chrome", "Safari"}),
+          true));
       scui.getProgressBarUI().setProgress(50);
       scui.getProgressBarUI().setTaskAppearance("Downloading sample document...", false);
       excelFile = sc.downloadFile("currencies.xls");
