@@ -4,12 +4,19 @@ function serverURL() {
   # See http://www.php.net/manual/en/reserved.variables.server.php
   $port = ($_SERVER['SERVER_PORT'] == '80') ? '' : (':' . $_SERVER['SERVER_PORT']);
   $sn = $_SERVER['SCRIPT_NAME'];
-  return 'http://' . $_SERVER['SERVER_NAME'] . $port . substr($sn, 0, strpos($sn, "/index.php"));
+  $ipos = strpos($sn, "/index.php");
+  if ($ipos != false)
+    $sn = substr($sn, 0, $ipos) . '/';
+  if ($sn[0] != '/')
+    $sn = '/' . $sn;
+  return 'http://' . $_SERVER['SERVER_NAME'] . $port . $sn;
 }
 
 function output_launch() {
   $url  = serverURL();
   $urls = addslashes($url);
+  $link_static = $urls . "?cmd=lnc&amp;ver=staticlink";
+  $link_button = $urls . "?cmd=lnc&amp;ver=";
   header('Content-Type: text/html; charset=utf-8');
   echo <<<EOD
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
@@ -19,15 +26,27 @@ function output_launch() {
     <title>Test page for launching the application via JNLP</title>
   </head>
   <body>
-    <p>This page: <a href="$url">$url</a></p>
     <h3>Link version:</h3>
-    <p><a href="index.php?cmd=lnc">Launch the application</a></p>
+    <p><a href="$link_static">Launch the application</a></p>
     <h3>Button version:</h3>
     <p>
-    <script type="text/javascript" src="http://java.com/js/deployJava.js"></script>
-    <script type="text/javascript">
-      deployJava.createWebStartLaunchButton("index.php?cmd=lnc", "1.5");
-    </script>
+      <script type="text/javascript" src="http://java.com/js/deployJava.js"></script>
+      <script type="text/javascript">
+        var version_arg = encodeURIComponent(String(deployJava.getBrowser()) + ";" + String(deployJava.getJREs()));
+        deployJava.createWebStartLaunchButton("$link_button" + version_arg, "1.5");
+      </script>
+    </p>
+    <h3>Information:</h3>
+    <p>This page: <a href="$urls">$url</a></p>
+    <p>Browser:
+      <script type="text/javascript">
+        document.write(deployJava.getBrowser());
+      </script>
+    </p>
+    <p>JRE versions:
+      <script type="text/javascript">
+        document.write(deployJava.getJREs());
+      </script>
     </p>
   </body>
 </html>
@@ -36,7 +55,7 @@ EOD;
 
 function output_jnlpfile($app_args) {
   # TODO: Check with http://pscode.org/janela/
-  $url  = serverURL() . "/";
+  $url  = serverURL();
   $urls = addslashes($url);
   $xml_args = '';
   foreach ($app_args as $arg)
@@ -45,7 +64,7 @@ function output_jnlpfile($app_args) {
   header('Content-Disposition: attachment; filename="studycaster.jnlp"');
   echo <<<EOD
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
-<jnlp codebase="$url" href="index.php?cmd=lnc" spec="1.0+">
+<jnlp codebase="$url" href="index.php?cmd=lnc&amp;ver=jnlpscript" spec="1.0+">
 <information>
   <title>MTurk User Study Screencaster</title>
   <vendor>Eirik Bakke (ebakke@mit.edu)</vendor>

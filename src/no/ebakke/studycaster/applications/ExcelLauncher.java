@@ -36,7 +36,7 @@ public class ExcelLauncher {
           new String[] {"User Study Console", "Excel", "Calc", "Numbers", "Gnumeric", "KSpread", "Quattro", "Mesa"}), true));
       scui.getProgressBarUI().setProgress(50);
       scui.getProgressBarUI().setTaskAppearance("Downloading sample document...", false);
-      excelFile = sc.downloadFile("exflat.xls");
+      excelFile = sc.downloadFile("currencies.xls");
       lastModified1 = excelFile.lastModified();
       scui.getProgressBarUI().setProgress(75);
       scui.getProgressBarUI().setTaskAppearance("Opening sample document...", false);

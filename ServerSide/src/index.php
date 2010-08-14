@@ -65,7 +65,8 @@
     if ($cmd == 'lnc') {
       require_once('templates.php');
       output_jnlpfile(array());
-      studylog($tickets, $cmd, '(N/A)', '(N/A)');
+      $sent_ver = array_key_exists('ver', $_GET) ? $_GET['ver'] : '(no ver)';
+      studylog($tickets, $cmd, '(N/A)', $sent_ver . ';' . $_SERVER['HTTP_USER_AGENT']);
       $success = true;
       return 'launch ok';
     }
