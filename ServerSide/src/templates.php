@@ -55,6 +55,7 @@ function output_launch() {
     </p>
   </body>
 </html>
+
 EOD;
 }
 
@@ -103,6 +104,7 @@ function output_jnlpfile($app_args) {
 <application-desc main-class="no.ebakke.studycaster.applications.ExcelLauncher">
 $xml_args</application-desc>
 </jnlp>
+
 EOD;
 }
 ?>

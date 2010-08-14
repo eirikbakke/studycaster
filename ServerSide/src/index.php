@@ -9,7 +9,7 @@
   define('STUDYP_LOG_FILE'    , 'studyp.log');
   define('FAIL_LOG_FILE'      , 'fail.log');
   define('DEBUG_LOG_FILE'     , 'debug.log');
-  # TODO: Get rid of this configuration detail.
+  // TODO: Get rid of this configuration detail.
   define('GEOIP_DATABASE_FILE', '../GeoLiteCity.dat');
 
   function get_geoip_info() {
