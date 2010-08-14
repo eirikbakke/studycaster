@@ -9,6 +9,22 @@
   define('STUDYP_LOG_FILE'    , 'studyp.log');
   define('FAIL_LOG_FILE'      , 'fail.log');
   define('DEBUG_LOG_FILE'     , 'debug.log');
+  # TODO: Get rid of this configuration detail.
+  define('GEOIP_DATABASE_FILE', '../GeoLiteCity.dat');
+
+  function get_geoip_info() {
+    if (file_exists(constant('GEOIP_DATABASE_FILE'))) {
+      require_once('geoip/geoipcity.inc');
+      require_once("geoip/geoipregionvars.php");
+      $gi = geoip_open(constant('GEOIP_DATABASE_FILE'), GEOIP_STANDARD);
+      $record = geoip_record_by_addr($gi, $_SERVER['REMOTE_ADDR']);
+      $ret = $record->country_name . ', ' . $record->region;
+      geoip_close($gi);
+      return $ret;
+    } else {
+      return "(GeoIP database file missing)";
+    }
+  }
 
   function debuglog($msg) {
     $f = fopen(constant('DEBUG_LOG_FILE'), 'a');
@@ -40,7 +56,7 @@
   function process(&$success) {
     $success = false;
 
-    if (array_key_exists('cmd', $_GET) && $_GET['cmd'] = 'lnc') {
+    if (array_key_exists('cmd', $_GET) && $_GET['cmd'] == 'lnc') {
       $tickets = array('       (N/A)','       (N/A)',' (N/A)','');
       $cmd = 'lnc';
     } else {
@@ -73,10 +89,13 @@
 
     $updir = constant('UPLOAD_DIR') . DIRECTORY_SEPARATOR . $tickets[1];
     if        ($cmd == 'gsi') {
+      # TODO: Move the GeoIP info elsewhere.
+
       header('X-StudyCaster-ServerTicket: ' . $server_ticket);
       header('X-StudyCaster-ServerTime: ' . time());
       header('X-StudyCaster-OK: gsi');
-      studylog($tickets, $cmd, '(N/A)', '(N/A)');
+
+      studylog($tickets, $cmd, '(N/A)', get_geoip_info());
       $success = true;
       return 'get server info ok';
     } else if ($cmd == 'upc') {
@@ -167,6 +186,10 @@
     if (empty($_POST) && empty($_GET) && empty($_FILES)) {
       require_once('templates.php');
       output_launch();
+      return;
+    }
+    if (array_key_exists('cmd', $_GET) && $_GET['cmd'] == 'inf') {
+      phpinfo();
       return;
     }
 

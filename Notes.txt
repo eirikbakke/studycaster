@@ -58,3 +58,32 @@ http://download.oracle.com/docs/cd/E17476_01/javase/1.4.2/docs/guide/jni/spec/fu
 20:45 2010-07-28
 * Don't use the StreamMuxer after all. It has inconvenient semantics. Instead, have one PostOutputStream for the (untimestamped) console output and
   one for the video/mouse pointer stream.
+
+13:57 2010-08-14 New TODO (supercedes previous)
+* Start uploading log immediately, though don't wait for this operation to complete before starting
+  UI.
+* Send metadata signifying unchanged frames.
+* Have a way to let users upload a different file
+* Generalize download, report, and log security
+* Store experiment info in XML file
+* Include a configured experiment ID in logged info
+* Log free disk space if below a certain threshold (due to an error seen once)
+* Rearchitect identification mechanism
+  * Send a cookie
+  * Generate client ticket on server (and rename it)
+  * Consider using a separate ticket for identification
+* Send conclusion message to server for logging
+* Retry POST uploads, supply file size to append command to make operations idempotent
+* Generate human-readable report
+* Make it possible to launch a Java app
+* Automatic GeoIP lookup
+* Future
+  * Sign the JAR
+  * Add SSL support
+  * Strip user names from saved files (on client side)
+  * Don't use a temporary directory that contains the user name in its path
+  * Move as much functionality from native library to Java as possible, make improvments
+  * Port window detection library to Mac
+  * Investigate Chrome issue with window detection library
+  * Improve progress bar
+

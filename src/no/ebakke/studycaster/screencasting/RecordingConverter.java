@@ -19,7 +19,7 @@ import no.ebakke.studycaster.api.StudyCaster;
 public final class RecordingConverter {
   private RecordingConverter() { }
   
-  public static void convert(InputStream input, String fileTo) throws Exception {
+  public static void convert(InputStream input, String fileTo, int speedupRate) throws Exception {
     CaptureDecoder dec = new CaptureDecoder(input);
 
     IContainer outContainer = IContainer.make();
@@ -52,13 +52,13 @@ public final class RecordingConverter {
     try {
       while ((image = dec.nextFrame()) != null) {
         index++;
-        //if (index % 5 != 0)
-        //  continue;
+        if (index % speedupRate != 0)
+          continue;
 
         BufferedImage converted = convertToType(image, BufferedImage.TYPE_3BYTE_BGR);
         IPacket packet = IPacket.make();
         IConverter converter = ConverterFactory.createConverter(converted, pixelFormat);
-        IVideoPicture outFrame = converter.toPicture(converted, dec.getCurrentTimeMillis() * 1000L);
+        IVideoPicture outFrame = converter.toPicture(converted, (dec.getCurrentTimeMillis() * 1000L) / speedupRate);
         outFrame.setQuality(0);
         outStreamCoder.encodeVideo(packet, outFrame, 0);
         if (packet.isComplete())

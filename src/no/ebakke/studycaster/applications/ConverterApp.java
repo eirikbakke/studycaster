@@ -15,12 +15,12 @@ public class ConverterApp {
     Util.hookupStreams(sc.downloadFile("uploads/1e2019787323/screencast.ebc"), fos);
     fos.close();
     */
-    String confCode = "fa924a00fc82";
+    String confCode = "d8c7e7df6dd3";
 
     //convert(new FileInputStream("z:/rectest/overbuffer.ebc"), "z:/rectest/overbuffer.mkv");
     //RecordingConverter.convert(new FileInputStream("z:/rectest/downloaded.ebc"), "z:/rectest/downconv.mkv");
     RecordingConverter.convert(new FileInputStream("z:/recruiting/uploads/" + confCode + "/screencast.ebc"),
-            "z:/recruiting/uploads/" + confCode + "/screencast.mkv");
+            "z:/recruiting/uploads/" + confCode + "/screencast.mkv", 8);
 
     //convert(new FileInputStream("z:/rectest/localout.ebc"), "z:/rectest/localconv.mkv");
   }

@@ -17,6 +17,10 @@ function output_launch() {
   $urls = addslashes($url);
   $link_static = $urls . "?cmd=lnc&amp;ver=staticlink";
   $link_button = $urls . "?cmd=lnc&amp;ver=";
+
+  require_once("index.php");
+  $geoip_info = get_geoip_info();
+
   header('Content-Type: text/html; charset=utf-8');
   echo <<<EOD
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
@@ -43,6 +47,7 @@ function output_launch() {
         document.write(deployJava.getBrowser());
       </script>
     </p>
+    <p>GeoIP Information: ${geoip_info}</p>
     <p>JRE versions:
       <script type="text/javascript">
         document.write(deployJava.getJREs());
