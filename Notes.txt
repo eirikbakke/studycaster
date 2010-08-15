@@ -84,7 +84,7 @@ http://download.oracle.com/docs/cd/E17476_01/javase/1.4.2/docs/guide/jni/spec/fu
 * Absolutely needed for phase two
   * Figure out how to identify users during the second part of the study
   * Make it possible to launch a Java app
-  * Make sure users have a way to submit even when something goes wrong.
+  * Make sure users have a way to submit even when something goes wrong
 * Strongly preferred for phase two
   * Have a way to let users upload a different file
   * Avoid multiple instances of the screencaster
