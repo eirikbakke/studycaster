@@ -26,6 +26,10 @@
     }
   }
 
+  function iphash() {
+    return strtolower(substr(sha1('stick ' . trim($_SERVER['REMOTE_ADDR'])), 0, constant('SERVER_TICKET_BYTES') * 2));
+  }
+
   function debuglog($msg) {
     $f = fopen(constant('DEBUG_LOG_FILE'), 'a');
     fwrite($f, $msg . "\n");
@@ -69,7 +73,7 @@
       $cmd = $_POST['cmd'];
     }
 
-    $server_ticket = strtolower(substr(sha1('stick ' . trim($_SERVER['REMOTE_ADDR'])), 0, constant('SERVER_TICKET_BYTES') * 2));
+    $server_ticket = iphash();
     if ($tickets[2] == '')
       $tickets[2] = $server_ticket;
     if ($tickets[3] == '')
@@ -201,10 +205,15 @@
 
       $flog = fopen(constant('FAIL_LOG_FILE'), 'a');
       fwrite($flog, "================== Unsuccessful request ==================\n");
-      fwrite($flog, 'TIME = ' . date('Y-m-d H:i:s') . "\n");
+      fwrite($flog, 'TIME = ' . gmdate('Y-m-d H:i:s') . "\n");
       fwrite($flog, 'CAUSE = ' . $message . "\n");
-      foreach ($_SERVER as $i => $value)
-        fwrite($flog, 'SERVER,' . $i . ' = ' . $_SERVER[$i] . "\n");
+      foreach ($_SERVER as $i => $value) {
+        if ($i == 'REMOTE_ADDR') {
+          fwrite($flog, 'SERVER,hash(REMOTE_ADDR) = ' . iphash() . "\n");
+        } else {
+          fwrite($flog, 'SERVER,' . $i . ' = ' . $_SERVER[$i] . "\n");
+        }
+      }
       foreach ($_POST as $i => $value)
         fwrite($flog, 'POST,' . $i . ' = ' . $_POST[$i] . "\n");
       foreach ($_GET as $i => $value)

@@ -12,11 +12,15 @@ public class ProgressBarUI {
   }
 
   public void setTaskAppearance(final String text, final boolean indeterminate) {
-    StudyCaster.log.info("Changing status bar text to \"" + text + "\"");
-    ui.setString(text);
-    ui.setIndeterminate(indeterminate);
-    if (indeterminate)
-      setProgress(0);
+    SwingUtilities.invokeLater(new Runnable() {
+      public void run() {
+        StudyCaster.log.info("Changing status bar text to \"" + text + "\"");
+        ui.setString(text);
+        ui.setIndeterminate(indeterminate);
+        if (indeterminate)
+          setProgress(0);
+      }
+    });
   }
 
   public void setBounds(final int minimum, final int maximum) {

@@ -1,28 +1,45 @@
 package no.ebakke.studycaster.applications;
 
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import no.ebakke.studycaster.screencasting.RecordingConverter;
-import no.ebakke.studycaster.api.ServerContext;
-import no.ebakke.studycaster.util.Util;
 
 public class Converter {
-  public static void main(String args[]) throws Exception {
-    int speedupFactor = 1;
-    String confCode = "61bf51d47e93";
-    boolean download = true;
+  // SCTOP=z:/Unfinished/ResearchRepo/archive/100713_StudyCaster/
+  // find -name *.ebc -exec java -cp "$SCTOP/build/classes;$SCTOP/lib/xuggler/xuggle-xuggler.jar" no.ebakke.studycaster.applications.Converter {} 8 \;
 
-    if (download) {
-      String fileName = "z:/rectest/downloaded.ebc";
-      ServerContext sc = new ServerContext();
-      OutputStream fos = new FileOutputStream(fileName);
-      Util.hookupStreams(sc.downloadFile("uploads/" + confCode + "/screencast.ebc"), fos);
-      fos.close();
-      RecordingConverter.convert(new FileInputStream(fileName), "z:/rectest/downconv.mkv", speedupFactor);
-    } else {
-      RecordingConverter.convert(new FileInputStream("z:/recruiting/uploads/" + confCode + "/screencast.ebc"),
-            "z:/recruiting/uploads/" + confCode + "/screencast.mkv", speedupFactor);
+  public static void main(String args[]) {
+    if (args.length != 2) {
+      System.err.println("usage: no.ebakke.studycaster.applications.Converter <input ebc file> <speedup>");
+      return;
+    }
+    String inputFileName = args[0];
+    int speedUpFactor;
+    try {
+      speedUpFactor = Integer.parseInt(args[1]);
+    } catch (NumberFormatException e) {
+      System.err.println("Bad number format for speedup argument");
+      return;
+    }
+    if (!inputFileName.endsWith(".ebc")) {
+      System.err.println("Input file extension should be '.ebc'");
+      return;
+    }
+    String outputFileName = inputFileName.substring(0, inputFileName.length() - 4) + ".mkv";
+    FileInputStream fis;
+    try {
+      fis = new FileInputStream(inputFileName);
+    } catch (FileNotFoundException e) {
+      System.err.println("File not found: " + inputFileName);
+      return;
+    }
+    try {
+      RecordingConverter.convert(new FileInputStream(inputFileName), outputFileName, speedUpFactor);
+    } catch (IOException e) {
+      System.err.println("Got an error: " + e.getMessage());
+      e.printStackTrace();
+      return;
     }
   }
 }

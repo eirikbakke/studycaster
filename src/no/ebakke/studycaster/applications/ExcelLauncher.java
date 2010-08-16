@@ -16,7 +16,7 @@ public class ExcelLauncher {
     "<html><b>Instructions:</b><ol>" +
     "<li>Edit the spreadsheet that opened in another window<br>" +
     "(according to the instructions in the HIT)." +
-    "<li>Save and close the spreadsheet<br>" +
+    "<li>Save and close the spreadsheet.<br>" +
     "<li>Click the button below." +
     "<li>Paste the confirmation code into the HIT." +
     "</ol><p align=\"right\">Thanks!<br><a href=\"mailto:ebakke@mit.edu\">ebakke@mit.edu</a></p></html>";

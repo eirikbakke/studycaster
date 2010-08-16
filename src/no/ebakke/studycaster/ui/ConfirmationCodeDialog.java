@@ -8,12 +8,14 @@ import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import javax.swing.JDialog;
+import no.ebakke.studycaster.api.StudyCaster;
 
 public class ConfirmationCodeDialog extends JDialog {
     private static final long serialVersionUID = -6641082431235013732L;
 
     public static void show(Frame parent, String confcode) {
       new ConfirmationCodeDialog(parent, confcode).setVisible(true);
+      StudyCaster.log.info("Now displaying confirmation code dialog with confirmation code " + confcode);
     }
 
     private ConfirmationCodeDialog(Frame parent, String confcode) {

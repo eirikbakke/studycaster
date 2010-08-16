@@ -72,7 +72,18 @@ http://download.oracle.com/docs/cd/E17476_01/javase/1.4.2/docs/guide/jni/spec/fu
 * Send conclusion message to server for logging
 * Retry POST uploads, supply file size to append command to make operations idempotent
 * Generate human-readable report
+* Make sure the Open/Save locale thing works (see c4ca600... for a bug)
+* Give the user the option to open the file him/herself if the association operation fails
+* Make it clear that you can close the window at any time
+* Make sure Excel is closed before the study starts
+* If file was already downloaded before, prompt to open the old one or download a new one?
+* Consider using a special preview mode with disabled button or marked upload
+  (http://docs.amazonwebservices.com/AWSMechanicalTurkRequester/2008-04-01/ApiReference_ExternalQuestionArticle.html)
+* Consider fetching worker ID
+  (http://docs.amazonwebservices.com/AWSMechanicalTurkRequester/2008-04-01/ApiReference_ExternalQuestionArticle.html)
+* Make tickets numbers (without prepending zeroes) to make them easier to punch and handle with Excel
 * Future
+  * Post-processing of video stream for additional obscurification
   * Sign the JAR
   * Add SSL support
   * Strip user names from saved files (on client side)
@@ -81,10 +92,78 @@ http://download.oracle.com/docs/cd/E17476_01/javase/1.4.2/docs/guide/jni/spec/fu
   * Port window detection library to Mac
   * Investigate Chrome issue with window detection library
   * Improve progress bar
+  * Avoid users clicking the web start link before accepting the HIT.
+  * Opaquify GET link data
+  * Avoid sending desktop background
 * Absolutely needed for phase two
-  * Figure out how to identify users during the second part of the study
   * Make it possible to launch a Java app
   * Make sure users have a way to submit even when something goes wrong
 * Strongly preferred for phase two
   * Have a way to let users upload a different file
   * Avoid multiple instances of the screencaster
+
+02:37 2010-08-15
+* Identification methods
+  * IP address hash
+  * Run number
+  * JNLP link retrieval number
+  * MTurk Worker ID
+* Persistence methods
+  * Web cookie
+  * Temp file
+  * JNLP muffin
+  * IP address
+* Ticket generation opportunities
+  * Upon receiving a request for the JNLP file.
+  * In JavaScript
+* Report structure (for a dashboard page):
+  * For each unique IP address
+
+00:08 2010-08-16 New cookie system
+* Cookie locations
+  * Browser
+  * Temp dir
+* Cookie types
+  * User cookie
+* Notes
+  * Multiple user cookies may be declared to be synonymous
+  * Logs are always appended, never changed
+  * Store IP hashes in separate file mapping IP hashes to user cookies
+* Actions
+  * In PHP script, when generating example launch button:
+    * Embed submission of browser/JRE version in JNLP GET URL
+  * In PHP script, when request is made for JNLP file:
+    if (browser had user cookie)
+      current user cookie = browser's user cookie
+      if (GET URL had user cookie && GET URL's user cookie != browser's user cookie)
+        declare GET URL's user cookie and browser's user cookie synonymous
+    else
+      if (GET URL had user cookie)
+        current user cookie = GET URL's user cookie
+      else
+        current user cookie = randomly generated cookie
+      send current user cookie to browser
+    log event including:
+      timestamp
+      current user cookie
+      partial hash of user's IP address (in separate file)
+      country and region from GeoIP database
+      GET URL's browser/JRE version, if any
+      HTTP request's browser type
+    embed in JNLP script's GET URL and in a property:
+      current user cookie
+      server URL
+  * In Java application, when executed
+    if (user cookie specified in property)
+      current user cookie = user cookie from property
+
+    if (temp dir cookie exists) {
+      current user cookie = temp dir cookie
+      if (user cookie specified in property && temp dir cookie != user cookie specified in property)
+        declare cookie specified in property and temp dir cookie synonymous
+    } else {
+      if (user cookie specified in property)
+        current user cookie = user cookie specified in property
+      else
+        current user cookie = // TODO: Continue from here
+    }

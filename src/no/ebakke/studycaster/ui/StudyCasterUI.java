@@ -47,11 +47,17 @@ public class StudyCasterUI {
             new Thread(new Runnable() {
               public void run() {
                 try {
-                  Thread.sleep(10000);
+                  Thread.sleep(7000);
                 } catch (InterruptedException e) {
                   Thread.currentThread().interrupt();
                 }
-                StudyCaster.log.warning("Forcing exit ten seconds after window closure.");
+                StudyCaster.log.warning("Forcing exit in three seconds (this may be last log message)");
+                try {
+                  Thread.sleep(3000);
+                } catch (InterruptedException e) {
+                  Thread.currentThread().interrupt();
+                }
+                StudyCaster.log.warning("Forcing exit ten seconds after window closure");
                 System.exit(0);
               }
             }, "window-closure-force-quit").start();

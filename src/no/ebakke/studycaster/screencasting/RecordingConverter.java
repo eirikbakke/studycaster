@@ -19,9 +19,11 @@ import no.ebakke.studycaster.api.StudyCaster;
 public final class RecordingConverter {
   private RecordingConverter() { }
   
-  public static void convert(InputStream input, String fileTo, int speedupRate) throws Exception {
+  public static void convert(InputStream input, String fileTo, int speedUpFactor) throws IOException {
     CaptureDecoder dec = new CaptureDecoder(input);
 
+    System.err.format("Converting to %s at %dx speedup: \n", fileTo, speedUpFactor);
+    boolean hadError = false;
     IContainer outContainer = IContainer.make();
     if (outContainer.open(fileTo, IContainer.Type.WRITE, null) < 0)
       throw new IOException("Could not open output file");
@@ -52,27 +54,31 @@ public final class RecordingConverter {
     try {
       while ((image = dec.nextFrame()) != null) {
         index++;
-        if (index % speedupRate != 0)
+        if (index % speedUpFactor != 0)
           continue;
 
         BufferedImage converted = convertToType(image, BufferedImage.TYPE_3BYTE_BGR);
         IPacket packet = IPacket.make();
         IConverter converter = ConverterFactory.createConverter(converted, pixelFormat);
-        IVideoPicture outFrame = converter.toPicture(converted, (dec.getCurrentTimeMillis() * 1000L) / speedupRate);
+        IVideoPicture outFrame = converter.toPicture(converted, (dec.getCurrentTimeMillis() * 1000L) / speedUpFactor);
         outFrame.setQuality(0);
         outStreamCoder.encodeVideo(packet, outFrame, 0);
         if (packet.isComplete())
           outContainer.writePacket(packet);
 
-        System.out.println("encoded frame: " + index);
+        System.err.print(".");
       }
     } catch (EOFException e) {
+      System.err.println("ops");
+      hadError = true;
       StudyCaster.log.warning("Incomplete screencast file");
     }
     outContainer.writeTrailer();
     outStreamCoder.close();
     outContainer.close();
     input.close();
+    if (!hadError)
+      System.err.println("ok");
   }
 
   private static BufferedImage convertToType(BufferedImage sourceImage, int targetType) {
