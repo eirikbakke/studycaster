@@ -23,8 +23,14 @@ public class ExcelLauncher {
 
   public static void main(String args[]) {
     StudyCasterUI scui = new StudyCasterUI(instructions);
-    if (scui.wasClosed())
+    if (scui.wasClosed()) {
+      try {
+        new StudyCaster().enterRemoteLogRecord("User declined at consent dialog");
+      } catch (StudyCasterException e) {
+        StudyCaster.log.warning("Failed to send consent-declined log message");
+      }
       System.exit(0);
+    }
     StudyCaster sc = null;
     long lastModified1, lastModified2;
     File excelFile;
@@ -52,10 +58,12 @@ public class ExcelLauncher {
       StudyCaster.log.log(Level.SEVERE, "Can't Load User Study", e);
       if (sc != null)
         sc.concludeStudy();
+      sc.enterRemoteLogRecord("Failed to load user study");
       scui.showMessageDialog("Can't Load User Study", e.getLocalizedMessage(), JOptionPane.WARNING_MESSAGE, true);
       scui.disposeUI();
       return;
     }
+    sc.enterRemoteLogRecord("User study loaded OK");
 
     UIAction action;
     do {
@@ -78,6 +86,7 @@ public class ExcelLauncher {
                 "<html>Please close the Excel document, then try again.</html>"
                 , JOptionPane.WARNING_MESSAGE, false);
         } else {
+          sc.enterRemoteLogRecord("Now starting upload");
           StudyCaster.log.info("Now starting upload");
           try {
             scui.getProgressBarUI().setTaskAppearance("Uploading document...", true);
@@ -89,6 +98,7 @@ public class ExcelLauncher {
             sc.waitForScreenCastUpload();
             scui.setMonitorStreamProgress(sc.getRecordingStream(), false);
             scui.getProgressBarUI().setTaskAppearance("Uploading log...", true);
+            sc.enterRemoteLogRecord("Concluding after successful upload");
             sc.concludeStudy();
             scui.getProgressBarUI().setTaskAppearance("", false);
             scui.showConfirmationCodeDialog(sc.getServerContext().getTicketCC().toString(), true);
@@ -100,6 +110,8 @@ public class ExcelLauncher {
           scui.getProgressBarUI().setTaskAppearance("", false);
           scui.getProgressBarUI().setProgress(0);
         }
+      } else if (action == UIAction.CLOSE) {
+        sc.enterRemoteLogRecord("Got a close action");
       }
       scui.setUploadEnabled(true);
     } while (action != UIAction.CLOSE);

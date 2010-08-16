@@ -18,7 +18,7 @@
       require_once("geoip/geoipregionvars.php");
       $gi = geoip_open(constant('GEOIP_DATABASE_FILE'), GEOIP_STANDARD);
       $record = geoip_record_by_addr($gi, $_SERVER['REMOTE_ADDR']);
-      $ret = $record->country_name . ', ' . $record->region;
+      $ret = $record->country_name . ', ' . $GEOIP_REGION_NAME[$record->country_code][$record->region];
       geoip_close($gi);
       return $ret;
     } else {
@@ -86,7 +86,7 @@
       require_once('templates.php');
       output_jnlpfile(array());
       $sent_ver = array_key_exists('ver', $_GET) ? $_GET['ver'] : '(no ver)';
-      studylog($tickets, $cmd, '(N/A)', $sent_ver . ';' . $_SERVER['HTTP_USER_AGENT']);
+      studylog($tickets, $cmd, '(N/A)', $sent_ver . ';' . $_SERVER['HTTP_USER_AGENT'] . ';' . get_geoip_info());
       $success = true;
       return 'launch ok';
     }
@@ -102,12 +102,19 @@
       studylog($tickets, $cmd, '(N/A)', get_geoip_info());
       $success = true;
       return 'get server info ok';
+    } else if ($cmd == 'log') {
+      if (!array_key_exists('content', $_POST))
+        return 'no log record value specified';
+      studylog($tickets, $cmd, '(N/A)', $_POST['content']);
+      header('X-StudyCaster-OK: log');
+      $success = true;
+      return 'enter log record ok';
     } else if ($cmd == 'upc') {
-      if (!array_key_exists('file', $_POST))
+      if (!array_key_exists('content', $_POST))
         return 'no filename specified';
-      if (!sane_string($_POST['file'], '/^[0-9a-zA-Z_.]+$/'))
+      if (!sane_string($_POST['content'], '/^[0-9a-zA-Z_.]+$/'))
         return 'insane filename specified';
-      $fullpath = $updir . DIRECTORY_SEPARATOR . $_POST['file'];
+      $fullpath = $updir . DIRECTORY_SEPARATOR . $_POST['content'];
       if (!file_exists($updir) && !mkdir($updir))
         return 'failed to create client upload directory';
       if (file_exists($fullpath)) {
@@ -128,45 +135,45 @@
       $success = true;
       return 'create ok';
     } else if ($cmd == 'upa') {
-      if (!array_key_exists('file', $_FILES))
+      if (!array_key_exists('content', $_FILES))
         return 'no uploaded file found';
-      if (!sane_string($_FILES['file']['name'], '/^[0-9a-zA-Z_.]+$/'))
+      if (!sane_string($_FILES['content']['name'], '/^[0-9a-zA-Z_.]+$/'))
         return 'insane filename specified';
-      if ($_FILES['file']['error'] != 0)
-        return 'nonzero internal error code (' . $_FILES['file']['error'] . ')';
-      if ($_FILES['file']['size'] > constant('MAX_APPEND_CHUNK'))
+      if ($_FILES['content']['error'] != 0)
+        return 'nonzero internal error code (' . $_FILES['content']['error'] . ')';
+      if ($_FILES['content']['size'] > constant('MAX_APPEND_CHUNK'))
         return 'append source too large';
-      $fullpath = $updir . DIRECTORY_SEPARATOR . $_FILES['file']['name'];
+      $fullpath = $updir . DIRECTORY_SEPARATOR . $_FILES['content']['name'];
       if (!file_exists($fullpath))
         return 'append target does not exist';
       if (($oldSize = filesize($fullpath)) < 0)
         return 'failed to get size of append target';
-      if ($oldSize + $_FILES['file']['size'] > constant('MAX_FILE_SIZE'))
+      if ($oldSize + $_FILES['content']['size'] > constant('MAX_FILE_SIZE'))
         return 'concatenated file too large';
-      if (($data = file_get_contents($_FILES['file']['tmp_name'])) == false)
+      if (($data = file_get_contents($_FILES['content']['tmp_name'])) == false)
         return 'failed to read append source';
       if (($atarget = fopen($fullpath, 'ab')) == false)
         return 'failed to open append target ' . $fullpath;
-      if ($_FILES['file']['size'] != strlen($data))
+      if ($_FILES['content']['size'] != strlen($data))
         return 'inconsistent length after reading file';
-      $fwr = fwrite($atarget, $data, $_FILES['file']['size']);
+      $fwr = fwrite($atarget, $data, $_FILES['content']['size']);
       if ($fwr == false)
         return 'write failed';
-      if ($fwr != $_FILES['file']['size'])
+      if ($fwr != $_FILES['content']['size'])
         return 'unexpected short write';
       if (!fclose($atarget))
         return 'failed to close append target';
       header('X-StudyCaster-OK: upa');
-      studylog($tickets, $cmd, $_FILES['file']['size'], basename($fullpath));
+      studylog($tickets, $cmd, $_FILES['content']['size'], basename($fullpath));
       $success = true;
       return 'append ok';
     } else if ($cmd == 'dnl') {
-      if (!array_key_exists('file', $_POST))
+      if (!array_key_exists('content', $_POST))
         return 'no filename specified';
-      $fullpath = constant('DOWNLOAD_DIR') . DIRECTORY_SEPARATOR . $_POST['file'];
+      $fullpath = constant('DOWNLOAD_DIR') . DIRECTORY_SEPARATOR . $_POST['content'];
       if (!sane_path($fullpath, constant('DOWNLOAD_DIR'))) {
         header('HTTP/1.0 404 Not Found');
-        studylog($tickets, $cmd, 'not found', $_POST['file']);
+        studylog($tickets, $cmd, 'not found', $_POST['content']);
         $success = true;
         return 'invalid path or file does not exist';
       }
@@ -176,7 +183,7 @@
       header('Content-Length: ' . $fsize);
       header('X-StudyCaster-OK: dnl');
       readfile($fullpath);
-      studylog($tickets, $cmd, $fsize, $_POST['file']);
+      studylog($tickets, $cmd, $fsize, $_POST['content']);
       $success = true;
       return 'download ok';
     } else {

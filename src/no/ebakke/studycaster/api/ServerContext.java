@@ -125,8 +125,7 @@ public class ServerContext {
     }
   }
 
-  private HttpResponse requestHelper(HttpClient httpClient, String cmd, ContentBody fileBody) throws IOException {
-    // System.out.println("Called with cmd " + cmd + " fileBody " + fileBody);
+  private HttpResponse requestHelper(HttpClient httpClient, String cmd, ContentBody content) throws IOException {
     HttpPost httpPost = new HttpPost(serverScriptURI);
     MultipartEntity params = new MultipartEntity();
     String allTickets =
@@ -136,8 +135,8 @@ public class ServerContext {
            ((ticketCS != null) ? ticketCS : "");
     params.addPart("tickets", new StringBody(allTickets));
     params.addPart("cmd", new StringBody(cmd));
-    if (fileBody != null)
-      params.addPart("file", fileBody);
+    if (content != null)
+      params.addPart("content", content);
     httpPost.setEntity(params);
     HttpResponse response = httpClient.execute(httpPost);
     if (response.getEntity() == null)
@@ -161,6 +160,20 @@ public class ServerContext {
       response.getEntity().consumeContent();
       throw e;
     }
+  }
+
+  public void enterRemoteLogRecord(final String msg) {
+    StudyCaster.log.info("Queueing remote log entry \"" + msg + "\"");
+    final HttpClient httpClient = new DefaultHttpClient();
+    new Thread(new Runnable() {
+      public void run() {
+        try {
+          requestHelper(httpClient, "log", new StringBody(msg)).getEntity().consumeContent();
+        } catch (IOException e) {
+          StudyCaster.log.log(Level.WARNING, "Failed to enter remote log entry \"" + msg + "\"", e);
+        }
+      }
+    }).start();
   }
 
   public OutputStream uploadFile(final String remoteName) throws IOException {
