@@ -11,6 +11,12 @@ import no.ebakke.studycaster.ui.StudyCasterUI.UIAction;
 import no.ebakke.studycaster.util.Util;
 import no.ebakke.studycaster.screencasting.ScreenCensor;
 
+import javax.jnlp.SingleInstanceService;
+import javax.jnlp.ServiceManager;
+import javax.jnlp.SingleInstanceListener;
+import javax.jnlp.UnavailableServiceException;
+
+
 public class ExcelLauncher {
   private static final String instructions =
     "<html><b>Instructions:</b><ol>" +
@@ -105,7 +111,7 @@ public class ExcelLauncher {
             scui.disposeUI();
           } catch (StudyCasterException e) {
             StudyCaster.log.log(Level.SEVERE, "Failed to upload", e);
-            scui.showMessageDialog("Failed to upload file", e.getLocalizedMessage(), JOptionPane.WARNING_MESSAGE, false);
+            scui.showMessageDialog("Failed to Upload File", e.getLocalizedMessage(), JOptionPane.WARNING_MESSAGE, false);
           }
           scui.getProgressBarUI().setTaskAppearance("", false);
           scui.getProgressBarUI().setProgress(0);

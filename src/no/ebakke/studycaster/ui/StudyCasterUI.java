@@ -2,6 +2,10 @@ package no.ebakke.studycaster.ui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import javax.jnlp.ServiceManager;
+import javax.jnlp.SingleInstanceListener;
+import javax.jnlp.SingleInstanceService;
+import javax.jnlp.UnavailableServiceException;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import no.ebakke.studycaster.api.ServerContext;
@@ -20,6 +24,8 @@ public class StudyCasterUI {
   private UIAction actionTaken = UIAction.NO_ACTION;
   private Blocker actionBlocker = new Blocker();
   private int streamProgressStart;
+  private SingleInstanceService singleInstanceService;
+  private SingleInstanceListener singleInstanceListener;
   private StreamProgressObserver spo = new StreamProgressObserver() {
       public void updateProgress(final int bytesWritten, final int bytesRemaining) {
         SwingUtilities.invokeLater(new Runnable() {
@@ -35,6 +41,30 @@ public class StudyCasterUI {
   public StudyCasterUI(final String instructions) {
     final Blocker initedBlocker = new Blocker();
     StatusFrame.setSystemLookAndFeel();
+
+    // TODO: Move this to a more appropriate place and make it more robust.
+    try {
+      singleInstanceService = (SingleInstanceService) ServiceManager.lookup("javax.jnlp.SingleInstanceService");
+      singleInstanceListener = new SingleInstanceListener() {
+        public void newActivation(String[] strings) {
+          SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+              JOptionPane.showMessageDialog(
+                  (sf == null) ? null : sf.getPositionDialog(),
+                  "<html>The User Study Console is already running in a different window;<br>" +
+                  "please close it first if you wish to start over.</html>",
+                  "Already Running",
+                  JOptionPane.INFORMATION_MESSAGE);
+            }
+          });
+          StudyCaster.log.info("User tried to open a new instance");
+        }
+      };
+      singleInstanceService.addSingleInstanceListener(singleInstanceListener);
+    } catch (UnavailableServiceException e) {
+      StudyCaster.log.warning("Failed to create a SingleInstanceService");
+    }
+
     // TODO: Use SwingUtilities.invokeAndWait() instead.
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
@@ -44,6 +74,11 @@ public class StudyCasterUI {
           public void windowClosed(java.awt.event.WindowEvent evt) {
             actionTaken = UIAction.CLOSE;
             actionBlocker.releaseBlockingThread();
+            if (singleInstanceService != null) {
+              singleInstanceService.removeSingleInstanceListener(singleInstanceListener);
+              singleInstanceListener = null;
+              singleInstanceService = null;
+            }
             new Thread(new Runnable() {
               public void run() {
                 try {

@@ -173,7 +173,7 @@ public class ServerContext {
           StudyCaster.log.log(Level.WARNING, "Failed to enter remote log entry \"" + msg + "\"", e);
         }
       }
-    }).start();
+    }, "log-cmd").start();
   }
 
   public OutputStream uploadFile(final String remoteName) throws IOException {
