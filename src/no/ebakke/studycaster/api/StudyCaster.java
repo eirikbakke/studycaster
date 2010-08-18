@@ -103,7 +103,6 @@ public class StudyCaster {
     } catch (IllegalStateException e) {
     } catch (SecurityException e) {
     }
-    log.info("Concluded study, waiting for screencast upload to complete as much as possible");
     try {
       waitForScreenCastUpload();
     } catch (StudyCasterException e) {
@@ -118,27 +117,19 @@ public class StudyCaster {
     concludeStudy();
   }
 
-  public File downloadFile(String remoteName) throws StudyCasterException {
-    int dot = remoteName.lastIndexOf(".");
-    String extension = (dot == -1) ? "" : remoteName.substring(dot, remoteName.length());
+  public void downloadFile(String remoteName, File toFile) throws StudyCasterException {
     try {
-      File ret = File.createTempFile("sc_", extension);
+      OutputStream os = new FileOutputStream(toFile);
       try {
-        OutputStream os = new FileOutputStream(ret);
+        InputStream is = serverContext.downloadFile(remoteName);
         try {
-          InputStream is = serverContext.downloadFile(remoteName);
-          try {
-            Util.hookupStreams(is, os);
-            return ret;
-          } finally {
-            is.close();
-          }
+          Util.hookupStreams(is, os);
+          return;
         } finally {
-          os.close();
+          is.close();
         }
-      } catch (IOException e) {
-        ret.delete();
-        throw e;
+      } finally {
+        os.close();
       }
     } catch (IOException e) {
       throw new StudyCasterException(e);
@@ -174,6 +165,7 @@ public class StudyCaster {
 
   public void waitForScreenCastUpload() throws StudyCasterException {
     if (recorder != null) {
+      log.info("Waiting for screencast upload to complete as much as possible");
       try {
         recorder.close();
       } catch (IOException e) {

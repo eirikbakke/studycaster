@@ -7,7 +7,12 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import javax.swing.AbstractAction;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
+import javax.swing.KeyStroke;
 import no.ebakke.studycaster.api.StudyCaster;
 
 public class ConfirmationCodeDialog extends JDialog {
@@ -27,6 +32,13 @@ public class ConfirmationCodeDialog extends JDialog {
           public void lostOwnership(Clipboard clipboard, Transferable contents) {
           }
         });
+        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "close");
+        getRootPane().getActionMap().put("close", new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+              dispose();
+            }
+          });
+        getRootPane().setDefaultButton(okButton);
         okButton.requestFocusInWindow();
 
         Dimension sdim = Toolkit.getDefaultToolkit().getScreenSize();

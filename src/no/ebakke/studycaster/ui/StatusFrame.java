@@ -130,6 +130,7 @@ public class StatusFrame extends javax.swing.JFrame {
     progressBar = new javax.swing.JProgressBar();
     instructionLabel = new javax.swing.JLabel();
     uploadButton = new javax.swing.JButton();
+    underButtonLabel = new javax.swing.JLabel();
 
     setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
     setTitle("User Study Console");
@@ -142,7 +143,7 @@ public class StatusFrame extends javax.swing.JFrame {
     progressBar.setStringPainted(true);
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 2;
+    gridBagConstraints.gridy = 3;
     gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
     gridBagConstraints.gridheight = java.awt.GridBagConstraints.REMAINDER;
     gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
@@ -170,8 +171,18 @@ public class StatusFrame extends javax.swing.JFrame {
     gridBagConstraints.gridy = 1;
     gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
     gridBagConstraints.anchor = java.awt.GridBagConstraints.SOUTH;
-    gridBagConstraints.insets = new java.awt.Insets(15, 15, 15, 15);
+    gridBagConstraints.insets = new java.awt.Insets(15, 15, 5, 15);
     getContentPane().add(uploadButton, gridBagConstraints);
+
+    underButtonLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+    underButtonLabel.setText("(You'll have a chance to select a different file if you need to.)");
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 0;
+    gridBagConstraints.gridy = 2;
+    gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+    gridBagConstraints.insets = new java.awt.Insets(0, 15, 15, 15);
+    getContentPane().add(underButtonLabel, gridBagConstraints);
 
     pack();
   }// </editor-fold>//GEN-END:initComponents
@@ -179,6 +190,7 @@ public class StatusFrame extends javax.swing.JFrame {
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JLabel instructionLabel;
   private javax.swing.JProgressBar progressBar;
+  private javax.swing.JLabel underButtonLabel;
   private javax.swing.JButton uploadButton;
   // End of variables declaration//GEN-END:variables
 }

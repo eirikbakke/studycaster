@@ -11,7 +11,9 @@ import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
+import java.util.concurrent.Callable;
 import java.util.logging.Level;
+import javax.swing.SwingUtilities;
 import no.ebakke.studycaster.api.StudyCaster;
 import no.ebakke.studycaster.api.StudyCasterException;
 
@@ -30,7 +32,7 @@ public final class Util {
     return true;
   }
 
-  public static String getPathTo(File f) {
+  public static String getPathString(File f) {
     try {
       return f.getCanonicalPath();
     } catch (IOException e) {
@@ -158,5 +160,49 @@ public final class Util {
         throw new StudyCasterException("Can't open document; problem while executing shell command", e);
       }
     }
+  }
+
+  public static String sanitizeFileNameComponent(String s) {
+    StringBuffer ret = new StringBuffer();
+    for (char c : s.toCharArray()) {
+      ret.append((Character.isDigit(c) || Character.isLetter(c) || c == '.') ? c : '_');
+      if (ret.length() > 150)
+        break;
+    }
+    return ret.toString();
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <V,E extends Exception> V checkedSwingInvokeAndWait(final CallableExt<V,E> r) throws StudyCasterException, E {
+    final Wrapper<V> ret = new Wrapper<V>();
+    final Wrapper<Exception> retE = new Wrapper<Exception>();
+    try {
+      SwingUtilities.invokeAndWait(new Runnable() {
+        public void run() {
+          try {
+            ret.value = r.call();
+          } catch (Exception e) {
+            retE.value = e;
+          }
+        }
+      });
+    } catch (InterruptedException e) {
+      throw new StudyCasterException("Interrupted method on EHT", e);
+    } catch (InvocationTargetException e) {
+      StudyCaster.log.severe("Unexpected InvocationTargetException");
+      throw new StudyCasterException("Unexcpected exception from method on EHT", e);
+    }
+    if (retE.value != null) {
+      if (retE.value instanceof RuntimeException) {
+        throw (RuntimeException) retE.value;
+      } else {
+        throw (E) retE.value;
+      }
+    }
+    return ret.value;
+  }
+
+  public interface CallableExt<V,E extends Exception> {
+    V call() throws E;
   }
 }
