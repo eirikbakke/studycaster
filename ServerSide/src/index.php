@@ -83,10 +83,14 @@
     }
 
     if ($cmd == 'lnc') {
+      if (!array_key_exists('exp', $_GET))
+        return 'missing experiment code';
+      if (!sane_string($_GET['exp'], '/^[0-9a-f]*$/'))
+        return 'insane experiment code';
       require_once('templates.php');
-      output_jnlpfile(array());
+      output_jnlpfile(array($_GET['exp']));
       $sent_ver = array_key_exists('ver', $_GET) ? $_GET['ver'] : '(no ver)';
-      studylog($tickets, $cmd, '(N/A)', $sent_ver . ';' . $_SERVER['HTTP_USER_AGENT'] . ';' . get_geoip_info());
+      studylog($tickets, $cmd, '(N/A)', $_GET['exp'] . ';' . $sent_ver . ';' . $_SERVER['HTTP_USER_AGENT'] . ';' . get_geoip_info());
       $success = true;
       return 'launch ok';
     }

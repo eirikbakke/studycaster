@@ -13,10 +13,11 @@ function serverURL() {
 }
 
 function output_launch() {
+  $default_experiment = '5782';
   $url  = serverURL();
   $urls = addslashes($url);
-  $link_static = $urls . "?cmd=lnc&amp;ver=staticlink";
-  $link_button = $urls . "?cmd=lnc&amp;ver=";
+  $link_static = $urls . "?cmd=lnc&amp;exp=${default_experiment}&amp;ver=staticlink";
+  $link_button = $urls . "?cmd=lnc&amp;exp=${default_experiment}&amp;ver=";
 
   require_once("index.php");
   $geoip_info = get_geoip_info();
@@ -37,7 +38,7 @@ function output_launch() {
       <script type="text/javascript" src="http://java.com/js/deployJava.js"></script>
       <script type="text/javascript">
         var version_arg = encodeURIComponent(String(deployJava.getBrowser()) + ";" + String(deployJava.getJREs()));
-        deployJava.createWebStartLaunchButton("$link_button" + version_arg, "1.5");
+        deployJava.createWebStartLaunchButton("$link_button" + version_arg, "1.6");
       </script>
     </p>
     <h3>Information:</h3>
@@ -90,7 +91,8 @@ function output_jnlpfile($app_args) {
   <all-permissions/>
 </security>
 <resources>
-  <j2se version="1.5+"/>
+  <!-- TODO: Get this back to Java 1.5 (see above as well). -->
+  <j2se version="1.6+"/>
   <property name="jnlp.studycaster.serveruri" value="$urls"/>
   <jar download="eager" href="app/StudyCaster.jar" main="true"/>
   <jar download="eager" href="app/lib/apache-mime4j-0.6.jar"/>
@@ -100,8 +102,13 @@ function output_jnlpfile($app_args) {
   <jar download="eager" href="app/lib/httpcore-4.0.1.jar"/>
   <jar download="eager" href="app/lib/httpmime-4.0.1.jar"/>
   <nativelib download="eager" href="app/lib/sc-native.jar"/>
+
+  <!-- TODO: Avoid hard-coding this -->
+  <jar download="eager" href="app/lib/hier.jar"/>
+  <jar download="eager" href="app/lib/xpp3_min-1.1.4c.jar"/>
+  <jar download="eager" href="app/lib/xstream-1.3.1.jar"/>
 </resources>
-<application-desc main-class="no.ebakke.studycaster.applications.ExcelLauncher">
+<application-desc main-class="no.ebakke.studycaster.applications.StudyLauncher">
 $xml_args</application-desc>
 </jnlp>
 
