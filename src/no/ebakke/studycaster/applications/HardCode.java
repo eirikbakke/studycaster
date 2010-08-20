@@ -13,7 +13,7 @@ import no.ebakke.studycaster.util.Util;
 public class HardCode {
   public static void main(String args[]) throws Exception {
     int speedupFactor = 1;
-    String confCode = "b194c8fcd1e9";
+    String confCode = "0391c6e4df35";
     boolean download = false;
 
     if (download) {
@@ -24,8 +24,8 @@ public class HardCode {
       fos.close();
       RecordingConverter.convert(new FileInputStream(fileName), "z:/rectest/downconv.mkv", speedupFactor);
     } else {
-      RecordingConverter.convert(new FileInputStream("z:/recruiting/uploads/" + confCode + "/screencast.ebc"),
-            "z:/recruiting/uploads/" + confCode + "/screencast_hardcode.mkv", speedupFactor);
+      RecordingConverter.convert(new FileInputStream("z:/testdown/" + confCode + "/screencast.ebc"),
+            "z:/testdown/screencast_hardcode.mkv", speedupFactor);
     }
   }
 

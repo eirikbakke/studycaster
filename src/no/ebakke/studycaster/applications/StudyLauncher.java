@@ -174,6 +174,7 @@ public class StudyLauncher {
     sc.enterRemoteLogRecord("User study loaded OK; experiment " + studyType);
 
     UIAction action;
+    boolean warnedAboutUnchanged = false;
     do {
       //scui.setMonitorStreamProgress(sc.getRecordingStream(), true);
       action = scui.waitForUserAction();
@@ -187,7 +188,8 @@ public class StudyLauncher {
         } catch (IOException e) {
           StudyCaster.log.log(Level.WARNING, "Failed to check for filename equality", e);
         }
-        if (download && isSameFile && (nowLastModified == lastModified1 || nowLastModified == lastModified2)) {
+        if (download && isSameFile && (nowLastModified == lastModified1 || nowLastModified == lastModified2) && !warnedAboutUnchanged) {
+          warnedAboutUnchanged = true;
           StudyCaster.log.info("Got upload on unchanged document; exclusive=" + Util.fileAvailableExclusive(selectedFile));
 
           scui.showMessageDialog("Upload",

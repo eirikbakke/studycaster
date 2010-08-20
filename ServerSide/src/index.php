@@ -83,8 +83,11 @@
     }
 
     if ($cmd == 'lnc') {
-      if (!array_key_exists('exp', $_GET))
-        return 'missing experiment code';
+      if (!array_key_exists('exp', $_GET)) {
+        // TODO: Remove this
+        $_GET['exp'] = '5782';
+        //return 'missing experiment code';
+      }
       if (!sane_string($_GET['exp'], '/^[0-9a-f]*$/'))
         return 'insane experiment code';
       require_once('templates.php');
