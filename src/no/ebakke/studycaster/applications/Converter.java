@@ -26,7 +26,7 @@ public class Converter {
       System.err.println("Input file extension should be '.ebc'");
       return;
     }
-    String outputFileName = inputFileName.substring(0, inputFileName.length() - 4) + ".mkv";
+    String outputFileName = inputFileName.substring(0, inputFileName.length() - 4) + "_" + speedUpFactor + ".mkv";
     FileInputStream fis;
     try {
       fis = new FileInputStream(inputFileName);
