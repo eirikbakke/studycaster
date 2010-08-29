@@ -69,8 +69,10 @@ public final class RecordingConverter {
 
         System.err.print(".");
       }
-    } catch (EOFException e) {
+    } catch (IOException e) {
       System.err.println("ops");
+      if (!(e instanceof EOFException))
+        e.printStackTrace();
       hadError = true;
       StudyCaster.log.warning("Incomplete screencast file");
     }

@@ -67,6 +67,8 @@ http://download.oracle.com/docs/cd/E17476_01/javase/1.4.2/docs/guide/jni/spec/fu
 * Make force-quit a little more elegant so it doesn't trigger entries in the fail log.
   * Make video streams end elegantly, too.
 * Fix deadlock bug that sometimes happens in the waiting-for-screencast phase.
+* Fix screencast encoding bug.
+* Make screencast codec resynchronization easier.
 * Generate human-readable report
   * Include detection of log files containing "exception", "error", or "warning" in them
 * Make sure the Open/Save locale thing works (see c4ca600... for a bug)
