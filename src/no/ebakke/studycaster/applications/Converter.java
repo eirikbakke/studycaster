@@ -35,7 +35,7 @@ public class Converter {
       return;
     }
     try {
-      RecordingConverter.convert(new FileInputStream(inputFileName), outputFileName, speedUpFactor);
+      RecordingConverter.convert(fis, outputFileName, speedUpFactor);
     } catch (IOException e) {
       System.err.println("Got an error: " + e.getMessage());
       e.printStackTrace();

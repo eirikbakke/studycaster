@@ -27,11 +27,7 @@ public class ConfirmationCodeDialog extends JDialog {
         super(parent);
         initComponents();
         codeBox.setText(confcode);
-        Clipboard cb = Toolkit.getDefaultToolkit().getSystemClipboard();
-        cb.setContents(new StringSelection(confcode), new ClipboardOwner() {
-          public void lostOwnership(Clipboard clipboard, Transferable contents) {
-          }
-        });
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(confcode), null);
         getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "close");
         getRootPane().getActionMap().put("close", new AbstractAction() {
             public void actionPerformed(ActionEvent e) {

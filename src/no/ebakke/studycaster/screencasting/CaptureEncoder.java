@@ -57,15 +57,13 @@ public class CaptureEncoder extends Codec {
   private final void encodeRun(byte code, int runLength) throws IOException {
     if (code == INDEX_REPEAT || runLength < 0)
       throw new AssertionError();
-    if (runLength != 0) {
-      if (runLength <= 6) {
-        for (int i = 0; i < runLength; i++)
-          dout.write(code);
-      } else {
+    if (runLength <= 6) {
+      for (int i = 0; i < runLength; i++)
         dout.write(code);
-        dout.write(INDEX_REPEAT);
-        dout.writeInt(runLength - 1);
-      }
+    } else {
+      dout.write(code);
+      dout.write(INDEX_REPEAT);
+      dout.writeInt(runLength - 1);
     }
   }
 
@@ -82,7 +80,8 @@ public class CaptureEncoder extends Codec {
     compressAndOutputFrame(image, permittedArea);
   }
 
-  private final byte blurredPixel(byte buf[], int width, int x, int y) {
+  private static final byte blurredPixel(byte buf[], int width, int x, int y) {
+    // TODO: What if the "color" is INDEX_NO_DIFF?
     return buf[y * width + (x / ScreenCensor.MOSAIC_WIDTH) * ScreenCensor.MOSAIC_WIDTH];
   }
 

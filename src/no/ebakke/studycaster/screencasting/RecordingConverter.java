@@ -53,6 +53,7 @@ public final class RecordingConverter {
     int index = 0;
     try {
       while ((image = dec.nextFrame()) != null) {
+        //ImageDebugDialog.showImage(image);
         index++;
         if (index % speedUpFactor != 0)
           continue;

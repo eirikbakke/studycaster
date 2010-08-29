@@ -64,10 +64,15 @@ http://download.oracle.com/docs/cd/E17476_01/javase/1.4.2/docs/guide/jni/spec/fu
   * Consider using a separate ticket for identification
 * Include client-side file size limit.
 * Retry POST uploads, supply file size to append command to make operations idempotent
+* Make force-quit a little more elegant so it doesn't trigger entries in the fail log.
+  * Make video streams end elegantly, too.
+* Fix deadlock bug that sometimes happens in the waiting-for-screencast phase.
 * Generate human-readable report
+  * Include detection of log files containing "exception", "error", or "warning" in them
 * Make sure the Open/Save locale thing works (see c4ca600... for a bug)
 * Give the user the option to open the file him/herself if the association operation fails
 * Make sure Excel is closed before the study starts
+* See if stream utility classes can be replaced by classes from Apache Commons IO (e.g. Tee). Remember to add the library to the JWS bunch.
 * Upgrade relevant errors from Level.WARNING to Level.SEVERE.
 * Consider using a special preview mode with disabled button or marked upload
   (http://docs.amazonwebservices.com/AWSMechanicalTurkRequester/2008-04-01/ApiReference_ExternalQuestionArticle.html)
