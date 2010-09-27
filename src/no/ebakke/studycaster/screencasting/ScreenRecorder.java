@@ -81,7 +81,7 @@ public class ScreenRecorder {
     enc.setServerSecondsAhead(serverSecondsAhead);
   }
 
-  public void setCensor(ScreenCensor censor) {
+  public synchronized void setCensor(ScreenCensor censor) {
     enc.setCensor(censor);
   }
 
@@ -96,14 +96,21 @@ public class ScreenRecorder {
   }
 
 
-  public synchronized void stop() {
-    if (stopped) {
-      StudyCaster.log.warning("Already stopped");
-      return;
+  public void stop() {
+    // TODO: Remove these logging messages once we're confident that the deadlock bug has been resolved.
+    StudyCaster.log.info("ScreenRecorder.stop() called");
+    synchronized (this) {
+      if (stopped) {
+        StudyCaster.log.warning("Already stopped");
+        return;
+      }
+      stopped = true;
     }
-    stopped = true;
+    StudyCaster.log.info("Calling pointerRecorder.finish()");
     pointerRecorder.finish();
+    StudyCaster.log.info("Calling frameRecorder.finish()");
     frameRecorder.finish();
+    StudyCaster.log.info("ScreenRecorder.stop() completed");
   }
 
   /** Closes the underlying OutputStream as well. */

@@ -60,7 +60,7 @@ function output_launch() {
 EOD;
 }
 
-function output_jnlpfile($app_args) {
+function output_jnlpfile($app_args, $exp) {
   # TODO: Check with http://pscode.org/janela/
   $url  = serverURL();
   $urls = addslashes($url);
@@ -71,7 +71,7 @@ function output_jnlpfile($app_args) {
   header('Content-Disposition: attachment; filename="studycaster.jnlp"');
   echo <<<EOD
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
-<jnlp codebase="$url" href="index.php?cmd=lnc&amp;ver=jnlpscript" spec="1.0+">
+<jnlp codebase="${url}" href="index.php?cmd=lnc&amp;exp=${exp}&amp;ver=jnlpscript" spec="1.0+">
 <information>
   <title>MTurk User Study Screencaster</title>
   <vendor>Eirik Bakke (ebakke@mit.edu)</vendor>

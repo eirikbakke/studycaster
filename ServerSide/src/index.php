@@ -84,14 +84,14 @@
 
     if ($cmd == 'lnc') {
       if (!array_key_exists('exp', $_GET)) {
-        // TODO: Remove this
-        $_GET['exp'] = '5782';
-        //return 'missing experiment code';
+        // TODO: Get rid of this debris. Give experiment code only once to output_jnlpfile.
+        //$_GET['exp'] = '5782';
+        return 'missing experiment code';
       }
       if (!sane_string($_GET['exp'], '/^[0-9a-f]*$/'))
         return 'insane experiment code';
       require_once('templates.php');
-      output_jnlpfile(array($_GET['exp']));
+      output_jnlpfile(array($_GET['exp']), $_GET['exp']);
       $sent_ver = array_key_exists('ver', $_GET) ? $_GET['ver'] : '(no ver)';
       studylog($tickets, $cmd, '(N/A)', $_GET['exp'] . ';' . $sent_ver . ';' . $_SERVER['HTTP_USER_AGENT'] . ';' . get_geoip_info());
       $success = true;

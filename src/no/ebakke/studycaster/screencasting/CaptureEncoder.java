@@ -12,6 +12,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
+import no.ebakke.studycaster.api.StudyCaster;
 
 public class CaptureEncoder extends Codec {
   private DataOutputStream dout;
@@ -126,5 +127,6 @@ public class CaptureEncoder extends Codec {
   public void finish() throws IOException {
     flushMeta();
     dout.close();
+    StudyCaster.log.info("Closed the encoding stream.");
   }
 }

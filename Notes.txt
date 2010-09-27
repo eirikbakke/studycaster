@@ -68,6 +68,13 @@ http://download.oracle.com/docs/cd/E17476_01/javase/1.4.2/docs/guide/jni/spec/fu
   * Make video streams end elegantly, too.
 * Fix deadlock bug that sometimes happens in the waiting-for-screencast phase.
 * Fix screencast encoding bug.
+* Host HITs on same server.
+* Host Java Web Start script and button image on same server.
+* Convert video to a better format, make speedup smoother and potentially using regular frame sampling.
+* Allow changed IP address during session (avoid "server ticket mismatch" error).
+* Go over logs from RS experiment, eliminate errors.
+* Increase file size limit.
+* Make sure client log, server log, and fail log are all in GMT, an consider doing this with data downloaded from Mechanical Turk, too.
 * Make screencast codec resynchronization easier.
 * Generate human-readable report
   * Include detection of log files containing "exception", "error", or "warning" in them
@@ -95,9 +102,9 @@ http://download.oracle.com/docs/cd/E17476_01/javase/1.4.2/docs/guide/jni/spec/fu
   * Don't use a temporary directory that contains the user name in its path
   * Move as much functionality from native library to Java as possible, make improvements
   * Port window detection library to Mac
-  * Investigate Chrome issue with window detection library
+  * Investigate window detection bug; possibly related to hardware-accelerated Windows 7 desktops
   * Improve progress bar
-  * Avoid users clicking the web start link before accepting the HIT.
+  * Avoid users clicking the web start link before accepting the HIT (reduce noise).
   * Opaquify GET link data
   * Avoid sending desktop background
 * Absolutely needed for phase two
