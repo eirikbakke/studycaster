@@ -44,16 +44,17 @@
 # NOCDDL
 
 # TODO: Don't hard-code this here.
-JDKBIN="/c/program files/java/jdk1.6.0_17/bin"
+# Use mingw path format, e.g. "/c/Program Files/Java/jdk1.5.0_22/bin"
+SC_JDK_HOME="/c/Program Files (x86)/Java/jdk1.5.0_22"
 
 # Environment 
 MKDIR=mkdir
 CP=cp
 CCADMIN=CCadmin
 RANLIB=ranlib
-JAVAH=${JDKBIN}/javah
-JAR=${JDKBIN}/jar
-JAVAC=${JDKBIN}/javac
+JAVAH=${SC_JDK_HOME}/bin/javah
+JAR=${SC_JDK_HOME}/bin/jar
+JAVAC=${SC_JDK_HOME}/bin/javac
 
 CLASSTMP=${CND_BASEDIR}/${CND_BUILDDIR}/classtmp
 

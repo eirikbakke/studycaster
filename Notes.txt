@@ -109,6 +109,10 @@ http://download.oracle.com/docs/cd/E17476_01/javase/1.4.2/docs/guide/jni/spec/fu
   * Avoid sending desktop background
 * Absolutely needed for phase two
   * Make it possible to launch a Java app
+* Provide 64-bit native library for 64-bit Java VM
+* See "The Splash Screen Firewall Dead-Lock"
+  (http://lopica.sourceforge.net/faq.html) and see if there is anything I can
+  do from the developer side to fix this (it's a problem under Comodo). 
 
 02:37 2010-08-15
 * Identification methods
@@ -175,3 +179,43 @@ http://download.oracle.com/docs/cd/E17476_01/javase/1.4.2/docs/guide/jni/spec/fu
       else
         current user cookie = // TODO: Continue from here
     }
+
+18:19 2011-04-28
+
+Features
+* PHP lint
+* Build everything from one makefile
+  * Including ZIP/tar distro
+* Configurability without recompiling
+* Rsync to server (no ftp)
+* NetBeans project with external sources, to edit forms.
+* Simplified logging system, dashboard
+* Still no database
+* Retry failed appends
+* Sign jar
+* To bundle an executable JAR, must build from source (because all JARs must be
+  signed).
+* Simplify video decoding
+* Don't require NetBeans (except for editing dialog boxes)
+  * Distribute a NetBeans project folder for that purpose.
+
+Considerations
+* Might want to use NetBean's Ant scripts to ensure profiling and debugging can
+  still be used.
+  * Could in theory do everything in Ant
+
+Strategic
+* This could take months. Just go with the previous build process and fix enough
+  of this to make it usable for a new study. Most people will not want to embed
+  executable JARs anyway.
+  * (Ugh, does our system allow native executables to be opened? I think it
+    does...)
+
+Prioritized for this study
+* Add configurability, separate from build system.
+* Simplify logging, add dashboard.
+* Simplify video transcoding.
+* Fix blurring bugs on Windows 7.
+* Retry failed appends.
+* Keep JWS Launch Button image on my own server.
+

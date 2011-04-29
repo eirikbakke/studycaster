@@ -11,9 +11,34 @@ Installation Notes
   of "index.php". This way, the database won't end up being uploaded or copied around as much
   during deployment or development.
 
-Build Notes (for NetBeans)
+Build Notes
+* Tested under Windows XP x64 with NetBeans 7.0, JDK 1.5 update 22.
+* Install NetBeans with the "PHP" and "C/C++" plugins.
+* Install 32-bit JDK 1.5 and add it as a Java platform in NetBeans
+  (Tools->Java Platforms). Compiling with this older JDK will ensure backwards
+  compatibility.
+* Recommended: Download a ZIP file distribution of the Javadoc for JDK 1.5, put
+  it in the JDK directory, and point to it from the NetBeans "Java Platform"
+  settings. This will enable context-sensitive Javadoc help.
+* To be able to compile the native windows libraries
+  * Install MinGW and MSYS via mingw-get-inst
+    (http://www.mingw.org/wiki/Getting_Started).
+  * Register MinGW/MSYS as a tool collection in NetBeans
+    (Tools->Options->C/C++->Add...) with the name "MingGW_32". The base
+    directory is "C:\MinGW32\bin". Every binary will be from this directory
+    except "make" which will be at "C:\MinGW\msys\1.0\bin\make.exe".
+    * Note: If Cygwin is installed, _do not_ use any of its binaries.
+  * Set the SC_JDK_HOME variable in SCNative/Makefile to point to the JDK 1.5
+    directory. Also add the "include" and "include/win32" JDK 1.5 directories to
+    the include directories for the SCNative C compiler configuration, for both
+    the Debug and the Release configuration. For instance:
+      C:/Program Files (x86)/Java/jdk1.5.0_22/include;
+      C:/Program Files (x86)/Java/jdk1.5.0_22/include/win32
+    This hardcoding is ugly and should be avoided in the future.
 * To set server location
   (e.g. http://www.example.com/studycaster_devel)
+  * ServerSide project->Properties->Run Configuration->Run As
+    Remote Web Site (FTP, SFTP)
   * ServerSide project->Properties->Run Configuration->Project URL
     (e.g. http://www.example.com/studycaster_devel/)
   * ServerSide project->Properties->Run Configuration->Remote Connection
@@ -46,3 +71,4 @@ Acknowledgements
   Download locations:
     http://geolite.maxmind.com/download/geoip/api/php
     http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
+
