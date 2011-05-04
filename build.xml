@@ -10,9 +10,8 @@
 <project name="StudyCaster" default="default" basedir=".">
     <description>Builds, tests, and runs the project StudyCaster.</description>
     <import file="nbproject/build-impl.xml"/>
-    <import file="nbproject/profiler-build-impl.xml"/>
 
-    <target name="-post-jar" depends="sign-jars">
+    <target name="-post-jar" depends="jnlp">
         <copy todir="ServerSide/src/app/icons">
             <fileset dir="${src.dir}/no/ebakke/studycaster/resources" includes="icon*.png"/>
         </copy>
@@ -20,7 +19,7 @@
             <fileset file="${dist.jar}"/>
         </copy>
         <copy todir="ServerSide/src/app/lib">
-          <fileset dir="${dist.dir}/lib"/>
+            <fileset dir="${dist.dir}/lib"/>
         </copy>
     </target>
     <target name="-post-clean">
