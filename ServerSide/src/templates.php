@@ -32,17 +32,17 @@ function output_launch() {
   </head>
   <body>
     <h3>Link version:</h3>
-    <p><a href="$link_static">Launch the application</a></p>
+    <p><a href="${link_static}">Launch the application</a></p>
     <h3>Button version:</h3>
     <p>
-      <script type="text/javascript" src="http://java.com/js/deployJava.js"></script>
+      <script type="text/javascript" src="deployJava.js"></script>
       <script type="text/javascript">
         var version_arg = encodeURIComponent(String(deployJava.getBrowser()) + ";" + String(deployJava.getJREs()));
-        deployJava.createWebStartLaunchButton("$link_button" + version_arg, "1.6");
+        deployJava.createWebStartLaunchButton("${link_button}" + version_arg, "1.6");
       </script>
     </p>
     <h3>Information:</h3>
-    <p>This page: <a href="$urls">$url</a></p>
+    <p>This page: <a href="${urls}">${url}</a></p>
     <p>Browser:
       <script type="text/javascript">
         document.write(deployJava.getBrowser());
@@ -93,7 +93,7 @@ function output_jnlpfile($app_args, $exp) {
 <resources>
   <!-- TODO: Get this back to Java 1.5 (see above as well). -->
   <j2se version="1.6+"/>
-  <property name="jnlp.studycaster.serveruri" value="$urls"/>
+  <property name="jnlp.studycaster.serveruri" value="${urls}"/>
   <jar download="eager" href="app/StudyCaster.jar" main="true"/>
   <jar download="eager" href="app/lib/apache-mime4j-0.6.jar"/>
   <jar download="eager" href="app/lib/commons-codec-1.3.jar"/>
@@ -109,7 +109,7 @@ function output_jnlpfile($app_args, $exp) {
   <jar download="eager" href="app/lib/xstream-1.3.1.jar"/>
 </resources>
 <application-desc main-class="no.ebakke.studycaster.applications.StudyLauncher">
-$xml_args</application-desc>
+${xml_args}</application-desc>
 </jnlp>
 
 EOD;

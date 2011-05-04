@@ -112,7 +112,10 @@ http://download.oracle.com/docs/cd/E17476_01/javase/1.4.2/docs/guide/jni/spec/fu
 * Provide 64-bit native library for 64-bit Java VM
 * See "The Splash Screen Firewall Dead-Lock"
   (http://lopica.sourceforge.net/faq.html) and see if there is anything I can
-  do from the developer side to fix this (it's a problem under Comodo). 
+  do from the developer side to fix this (it's a problem under Comodo).
+* Make sure JWS application does not stick around on the Add/Remove Programs
+  list after exit.
+* Add a "purge data" option at exit.
 
 02:37 2010-08-15
 * Identification methods
