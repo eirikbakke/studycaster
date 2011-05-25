@@ -47,7 +47,8 @@ public abstract class Codec {
       int y = din.readInt();
       if (x == Integer.MIN_VALUE && y != Integer.MIN_VALUE)
         throw new IOException("Inconsistent inavailability of mouse coordinates");
-      return new MetaStamp(time, (x == Integer.MIN_VALUE) ? null : new Point(x, y), FrameType.values()[type]);
+      return new MetaStamp(time, (x == Integer.MIN_VALUE) ? null : new Point(x, y),
+          FrameType.values()[type]);
     }
 
     public Point getMouseLocation() {

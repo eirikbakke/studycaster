@@ -37,7 +37,8 @@ public class StudyCasterUI {
       public void updateProgress(final int bytesWritten, final int bytesRemaining) {
         SwingUtilities.invokeLater(new Runnable() {
           public void run() {
-            getProgressBarUI().setBounds(streamProgressStart, bytesWritten + bytesRemaining + ServerContext.DEF_UPLOAD_CHUNK_SZ);
+            getProgressBarUI().setBounds(streamProgressStart,
+                bytesWritten + bytesRemaining + ServerContext.DEF_UPLOAD_CHUNK_SZ);
             getProgressBarUI().setProgress(bytesWritten);
           }
         });
@@ -45,12 +46,15 @@ public class StudyCasterUI {
     };
 
 
-  public StudyCasterUI(final String instructions, final FileFilter fileFilter) throws StudyCasterException {
+  public StudyCasterUI(final String instructions, final FileFilter fileFilter)
+      throws StudyCasterException
+  {
     StatusFrame.setSystemLookAndFeel();
 
-    // TODO: Move this to a more appropriate place and make it more robust.
+    // TODO: Move this to a more appropriate place, and make it more robust.
     try {
-      singleInstanceService = (SingleInstanceService) ServiceManager.lookup("javax.jnlp.SingleInstanceService");
+      singleInstanceService =
+          (SingleInstanceService) ServiceManager.lookup("javax.jnlp.SingleInstanceService");
       singleInstanceListener = new SingleInstanceListener() {
         public void newActivation(String[] strings) {
           SwingUtilities.invokeLater(new Runnable() {
@@ -68,7 +72,9 @@ public class StudyCasterUI {
       };
       singleInstanceService.addSingleInstanceListener(singleInstanceListener);
     } catch (UnavailableServiceException e) {
-      StudyCaster.log.info("Couldn't create a SingleInstanceService (normal when run outside of JWS); " + e.getMessage());
+      StudyCaster.log.log(Level.INFO,
+          "Couldn''t create a SingleInstanceService (normal when run outside of JWS); {0}",
+          e.getMessage());
     }
 
     Util.checkedSwingInvokeAndWait(new Util.CallableExt<Void, StudyCasterException>() {
@@ -91,7 +97,8 @@ public class StudyCasterUI {
                 } catch (InterruptedException e) {
                   Thread.currentThread().interrupt();
                 }
-                StudyCaster.log.warning("Forcing exit in three seconds (this may be last log message)");
+                StudyCaster.log.warning(
+                    "Forcing exit in three seconds (this may be last log message)");
                 try {
                   Thread.sleep(3000);
                 } catch (InterruptedException e) {
@@ -120,13 +127,14 @@ public class StudyCasterUI {
         });
         sf.setVisible(true);
         int decision = JOptionPane.showConfirmDialog(sf.getPositionDialog(),
-                "<html>This tool will record the contents of your screen while you perform the HIT,<br>" +
-                "so we can learn about how different people approached the task.<br><br>" +
-                "OK to start recording?</html>",
-                "Screencasting",
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+          "<html>This tool will record the contents of your screen while you perform the HIT,<br>" +
+          "so we can learn about how different people approached the task.<br><br>" +
+          "OK to start recording?</html>",
+          "Screencasting",
+          JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
         if (decision == JOptionPane.CANCEL_OPTION || decision == JOptionPane.CLOSED_OPTION) {
-          StudyCaster.log.info("User rejected consent dialog (" + ((decision == JOptionPane.CANCEL_OPTION) ? "pressed cancel" : "closed dialog") + ")");
+          StudyCaster.log.log(Level.INFO, "User rejected consent dialog ({0})",
+              ((decision == JOptionPane.CANCEL_OPTION) ? "pressed cancel" : "closed dialog"));
           sf.dispose();
           actionTaken = UIAction.CLOSE;
         }
@@ -157,7 +165,8 @@ public class StudyCasterUI {
         final String downloadOption = "Download New File";
         final String existingOption = "Keep Existing File";
         int res = JOptionPane.showOptionDialog(sf.getPositionDialog(),
-            "<html>The User Study Console found a file from an old session:<br>" + fileName + "<br><br>" +
+            "<html>The User Study Console found a file from an old session:<br>" + fileName +
+            "<br><br>" +
             "Would you like to keep working on the existing file, or download a new one?</html>",
             "Open Sample Document",
             JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
@@ -167,7 +176,9 @@ public class StudyCasterUI {
     });
   }
 
-  public void showConfirmationCodeDialog(final String confirmationCode, boolean block) throws StudyCasterException {
+  public void showConfirmationCodeDialog(final String confirmationCode, boolean block)
+      throws StudyCasterException
+  {
     Util.checkedSwingInvokeAndWait(new CallableExt<Void, StudyCasterException>() {
       public Void call() {
         ConfirmationCodeDialog.show(sf, confirmationCode);

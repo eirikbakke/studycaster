@@ -47,7 +47,12 @@ public class StatusFrame extends javax.swing.JFrame {
     }
   }
 
-  private static void initIcon(Frame frame) {
+  private static Image getIconImage(String postFix) {
+    return Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource(
+        "no/ebakke/studycaster/resources/icon" + postFix + ".png"));
+  }
+
+  private void initIcon() {
     try {
       Method setIconImagesMethod = null;
       try {
@@ -55,21 +60,22 @@ public class StatusFrame extends javax.swing.JFrame {
       } catch (NoSuchMethodException e) { }
       if (setIconImagesMethod == null) {
         // Running JRE < 1.6
-        StudyCaster.log.info("Can't find Window.setIconImages(), using Frame.setIconImage() instead (probably on JRE 1.5 or earlier)");
-        frame.setIconImage(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon256.png")));
+        StudyCaster.log.info("Can't find Window.setIconImages(), using Frame.setIconImage() " +
+            "instead (probably on JRE 1.5 or earlier)");
+        setIconImage(getIconImage("256"));
       } else {
         // Running JRE >= 1.6
         List<Image> icons = new ArrayList<Image>();
-        icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon16.png")));
-        icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon22.png")));
-        icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon24.png")));
-        icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon32.png")));
-        icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon48.png")));
-        icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon64.png")));
-        icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon128.png")));
-        icons.add(Toolkit.getDefaultToolkit().getImage(StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/icon256.png")));
+        icons.add(getIconImage("16"));
+        icons.add(getIconImage("22"));
+        icons.add(getIconImage("24"));
+        icons.add(getIconImage("32"));
+        icons.add(getIconImage("48"));
+        icons.add(getIconImage("64"));
+        icons.add(getIconImage("128"));
+        icons.add(getIconImage("256"));
         try {
-          setIconImagesMethod.invoke(frame, icons);
+          setIconImagesMethod.invoke(this, icons);
         } catch (IllegalAccessException e) {
           StudyCaster.log.log(Level.WARNING, "Unexpected error while invoking Window.setIconImages()", e);
         } catch (InvocationTargetException e) {
@@ -98,15 +104,15 @@ public class StatusFrame extends javax.swing.JFrame {
     ymargin = Math.max(YMARGIN_MIN, ymargin);
     setLocation(sdim.width - wdim.width - xmargin, sdim.height - wdim.height - ymargin);
 
-    initIcon(this);
+    this.initIcon();
 
     addWindowListener(new WindowAdapter() {
       @Override
       public void windowClosing(WindowEvent e) {
         StudyCaster.log.info("User tried to close main StudyCaster window");
         int decision = JOptionPane.showConfirmDialog(getPositionDialog(),
-                "If you exit the User Study Console without uploading first, your changes will be lost.", "Exit Without Uploading?",
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+          "If you exit the User Study Console without uploading first, your changes will be lost.",
+          "Exit Without Uploading?", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
         if (decision == JOptionPane.OK_OPTION) {
           StudyCaster.log.info("User confirmed closing of main StudyCaster window");
           dispose();

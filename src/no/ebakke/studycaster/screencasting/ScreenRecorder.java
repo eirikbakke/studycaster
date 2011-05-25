@@ -49,7 +49,8 @@ public class ScreenRecorder {
         return 5.0;
       } else {
         // TODO: Find a less ad-hoc way of doing this.
-        double fillLevel = ((double) nbos.getRemainingBytes()) / ((double) nbos.getBufferLimitBytes());
+        double fillLevel =
+            ((double) nbos.getRemainingBytes()) / ((double) nbos.getBufferLimitBytes());
         if (fillLevel > 0.9) {
           return 0.0;
         } else if (fillLevel > 0.75) {
@@ -72,7 +73,9 @@ public class ScreenRecorder {
     }
   };
 
-  public ScreenRecorder(OutputStream out, long serverSecondsAhead) throws IOException, AWTException {
+  public ScreenRecorder(OutputStream out, long serverSecondsAhead)
+      throws IOException, AWTException
+  {
     // TODO: Get rid of this hack.
     if (out instanceof NonBlockingOutputStream)
       nbos = (NonBlockingOutputStream) out;
@@ -97,7 +100,8 @@ public class ScreenRecorder {
 
 
   public void stop() {
-    // TODO: Remove these logging messages once we're confident that the deadlock bug has been resolved.
+    /* TODO: Remove these logging messages once we're confident that the deadlock bug has been
+    resolved. */
     StudyCaster.log.info("ScreenRecorder.stop() called");
     synchronized (this) {
       if (stopped) {

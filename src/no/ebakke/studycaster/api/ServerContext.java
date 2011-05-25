@@ -53,7 +53,8 @@ public class ServerContext {
     ticketCC = new Ticket(CLIENT_TICKET_BYTES);
 
     // Read ticket store.
-    File ticketStore = new File(System.getProperty("java.io.tmpdir") + File.separator + TICKET_STORE_FILENAME);
+    File ticketStore =
+        new File(System.getProperty("java.io.tmpdir") + File.separator + TICKET_STORE_FILENAME);
     boolean writeTicketStore = true;
     try {
       BufferedReader br = new BufferedReader(new FileReader(ticketStore));
@@ -105,7 +106,8 @@ public class ServerContext {
     if (ticketFS == null)
       ticketFS = ticketCS;
 
-    StudyCaster.log.info(String.format("Tickets: FC = %s, CC = %s, FS = %s, CS = %s", ticketFC, ticketCC, ticketFS, ticketCS));
+    StudyCaster.log.info(String.format("Tickets: FC = %s, CC = %s, FS = %s, CS = %s",
+        ticketFC, ticketCC, ticketFS, ticketCS));
     Util.logEnvironmentInfo();
 
     // Write ticket store.
@@ -213,9 +215,10 @@ public class ServerContext {
 
   public InputStream downloadFile(String remoteName) throws IOException {
     final HttpClient httpClient = new DefaultHttpClient();
-    final InputStream ret = requestHelper(httpClient, "dnl", new StringBody(remoteName)).getEntity().getContent();
+    final InputStream ret = requestHelper(httpClient, "dnl",
+        new StringBody(remoteName)).getEntity().getContent();
     return new InputStream() {
-      boolean closed;
+      private boolean closed;
 
       @Override
       public int read() throws IOException {

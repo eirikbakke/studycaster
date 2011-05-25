@@ -108,7 +108,7 @@ public class StudyLauncher {
 
         while (true) {
           download = scui.showDownloadOrExistingDialog(Util.getPathString(openedFile));
-          StudyCaster.log.info("User chose to " + (download ? "download new file" : "keep existing file"));
+          StudyCaster.log.log(Level.INFO, "User chose to {0}", (download ? "download new file" : "keep existing file"));
           // TODO: Move this mess out of here.
           if (download) {
             String path = openedFile.getPath();
@@ -190,7 +190,7 @@ public class StudyLauncher {
         }
         if (download && isSameFile && (nowLastModified == lastModified1 || nowLastModified == lastModified2) && !warnedAboutUnchanged) {
           warnedAboutUnchanged = true;
-          StudyCaster.log.info("Got upload on unchanged document; exclusive=" + Util.fileAvailableExclusive(selectedFile));
+          StudyCaster.log.log(Level.INFO, "Got upload on unchanged document; exclusive={0}", Util.fileAvailableExclusive(selectedFile));
 
           scui.showMessageDialog("Upload",
                   "<html>Please edit, save, and close the spreadsheet document, then try again.<br><br>" +
@@ -207,7 +207,7 @@ public class StudyLauncher {
           StudyCaster.log.info("Now starting upload");
           try {
             scui.getProgressBarUI().setTaskAppearance("Uploading document...", true);
-            StudyCaster.log.info("Uploading file " + selectedFile.getName());
+            StudyCaster.log.log(Level.INFO, "Uploading file {0}", selectedFile.getName());
             sc.uploadFile(selectedFile, "uploaded_" + Util.sanitizeFileNameComponent(selectedFile.getName()));
             scui.getProgressBarUI().setTaskAppearance("Finishing screencast upload...", true);
             sc.stopRecording();

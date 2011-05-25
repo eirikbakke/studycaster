@@ -6,7 +6,8 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import javax.swing.TransferHandler;
 
-// Simplified version of class with same name at http://java.sun.com/developer/technicalArticles/releases/data/
+/* Simplified version of class with same name at
+http://java.sun.com/developer/technicalArticles/releases/data/ */
 public class ImageSelection extends TransferHandler implements Transferable {
   private static final long serialVersionUID = -5954556582641675851L;
   private static final DataFlavor flavors[] = {DataFlavor.imageFlavor};

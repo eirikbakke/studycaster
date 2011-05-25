@@ -13,11 +13,14 @@ public class ScreenCensor {
   private List<String> whiteList, blackList;
   private boolean nativeFail;
 
-  public ScreenCensor(List<String> whiteList, List<String> blackList, boolean excludeFileDialogs) throws StudyCasterException {
+  public ScreenCensor(List<String> whiteList, List<String> blackList, boolean excludeFileDialogs)
+      throws StudyCasterException
+  {
     try {
       NativeLibrary.initialize();
     } catch (Exception e) {
-      StudyCaster.log.log(Level.WARNING, "Can't initialize native library; censoring entire screen area", e);
+      StudyCaster.log.log(Level.WARNING,
+          "Can't initialize native library; censoring entire screen area", e);
       nativeFail = true;
     }
     this.whiteList = new ArrayList<String>(whiteList);

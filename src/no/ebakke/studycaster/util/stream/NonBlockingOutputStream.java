@@ -24,7 +24,8 @@ public class NonBlockingOutputStream extends OutputStream {
   private final Object observerLock = new Object();
   private List<StreamProgressObserver> observers = new ArrayList<StreamProgressObserver>();
 
-  /* All of this wackyness exists as a workaround for the fact that a PipedOutputStream will only work reliably with a single owner thread. */
+  /* All of this wackyness exists as a workaround for the fact that a PipedOutputStream will only
+  work reliably with a single owner thread. */
   private byte[] writeOpB;
   private int writeOpOff, writeOpLen;
   private final Object writeOpLock = new Object();
@@ -125,7 +126,8 @@ public class NonBlockingOutputStream extends OutputStream {
   }
 
 
-  /** Upon close, out will be closed as well (analogous to a BufferedOutputStream with out as the underlying stream). */
+  /** Upon close, out will be closed as well (analogous to a BufferedOutputStream with out as the
+  underlying stream). */
   public void connect(final OutputStream out) throws IOException {
     if (writerThread != null)
       throw new IOException("Already connected");
@@ -222,9 +224,11 @@ public class NonBlockingOutputStream extends OutputStream {
 
   @Override
   public void flush() throws IOException {
-    /* PipedOutputStream.flush() does not actually seem to block, only notify, so we can use it here. */
+    /* PipedOutputStream.flush() does not actually seem to block, only notify, so we can use it
+    here. */
     outPipe.flush();
-    /* Relaxed interpretation of flush; just flush the underlying output stream as soon as we've gotten around to write to it. */
+    /* Relaxed interpretation of flush; just flush the underlying output stream as soon as we've
+    gotten around to write to it. */
     flushDue = true;
   }
 

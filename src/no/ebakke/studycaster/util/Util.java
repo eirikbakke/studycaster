@@ -55,18 +55,21 @@ public final class Util {
 
   public static void logEnvironmentInfo() {
     String propkeys[] = new String[]
-      {"java.vendor", "java.version", "java.class.version", "os.name", "os.arch", "os.version", "user.language", "user.region", "user.timezone"};
+      {"java.vendor", "java.version", "java.class.version", "os.name", "os.arch", "os.version",
+      "user.language", "user.region", "user.timezone"};
     StringBuffer props = new StringBuffer();
     boolean first = true;
     for (String key : propkeys) {
       props.append((first ? "" : ", ") + key + "=" + System.getProperty(key));
       first = false;
     }
-    StudyCaster.log.info("Environment: " + props);
+    StudyCaster.log.log(Level.INFO, "Environment: {0}", props);
 
     for (GraphicsDevice gd : GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()) {
-      StudyCaster.log.info("Found a screen " + gd.getDisplayMode().getWidth() + "x" + gd.getDisplayMode().getHeight()
-          + ((gd.equals(GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice())) ? " (default)" : ""));
+      StudyCaster.log.log(Level.INFO, "Found a screen {0}x{1}{2}",
+          new Object[]{gd.getDisplayMode().getWidth(), gd.getDisplayMode().getHeight(),
+          (gd.equals(GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice())) ?
+          " (default)" : ""});
     }
   }
 
@@ -100,7 +103,9 @@ public final class Util {
     public void run() throws InterruptedException;
   }
 
-  public static void desktopOpenFile(File fileToOpen, String requiredApp) throws StudyCasterException {
+  public static void desktopOpenFile(File fileToOpen, String requiredApp)
+      throws StudyCasterException
+  {
     Class<?> desktopClass = null;
     try {
       desktopClass = Class.forName("java.awt.Desktop");
@@ -109,8 +114,10 @@ public final class Util {
       try {
         Method getDesktopMethod = desktopClass.getMethod("getDesktop");
         Object desktopObject = getDesktopMethod.invoke(null);
-        if (desktopObject == null || !(desktopClass.isInstance(desktopObject)))
-          throw new StudyCasterException("Unexpected return value from Desktop.getDesktop(): " + desktopObject);
+        if (desktopObject == null || !(desktopClass.isInstance(desktopObject))) {
+          throw new StudyCasterException(
+              "Unexpected return value from Desktop.getDesktop(): " + desktopObject);
+        }
         Method openMethod = desktopClass.getMethod("open", File.class);
         openMethod.invoke(desktopObject, fileToOpen);
         return;
@@ -123,13 +130,17 @@ public final class Util {
           throw (RuntimeException) e.getCause();
         if (e.getCause() instanceof Error)
           throw (Error) e.getCause();
-        if (e.getCause() instanceof IOException)
-          throw new StudyCasterException("Failed to open the file " + fileToOpen.getName() + "; do you have " + requiredApp + " installed?", e);
+        if (e.getCause() instanceof IOException) {
+          throw new StudyCasterException("Failed to open the file " + fileToOpen.getName() +
+              "; do you have " + requiredApp + " installed?", e);
+        }
       }
     } else {
-      StudyCaster.log.info("Did not find Java Desktop API, using platform-specific implementation instead (probably on JRE 1.5 or earlier)");
+      StudyCaster.log.info("Did not find Java Desktop API, using platform-specific " +
+          "implementation instead (probably on JRE 1.5 or earlier)");
       String osString = System.getProperty("os.name").toLowerCase();
-      // Note: The implementations below should work equally well for opening URLs in the default web browser.
+      /* Note: The implementations below should work equally well for opening URLs in the default
+      web browser. */
       String fileURL;
       try {
         fileURL = fileToOpen.toURI().toURL().toString();
@@ -140,24 +151,29 @@ public final class Util {
       String command[];
       // See http://www.rgagnon.com/javadetails/java-0014.html
       // See http://frank.neatstep.com/node/84
-      if        (osString.contains("windows 95") || osString.contains("windows 98") || osString.contains("windows me")) {
+      /* TODO: The MAX argument maximizes even the "pick association" dialog; consider removing. */
+      if (osString.contains("windows 95") || osString.contains("windows 98") ||
+          osString.contains("windows me"))
+      {
         // TODO: Test this.
         // See http://www.javaworld.com/javaworld/jw-12-2000/jw-1229-traps.html?page=4
         command = new String[] {"command.com", "/C", "start", "\"WindowTitle\"", "/MAX", fileURL};
       } else if (osString.contains("win")) {
         command = new String[] {"cmd.exe", "/C", "start", "\"WindowTitle\"", "/MAX", fileURL};
       } else if (osString.contains("mac")) {
-        /* Note: This was verified to work, opening an XLS file on MacOS X with Java 1.5.0_24. Putting single quotes
-        around the URL would break it, so don't. */
-        // See http://developer.apple.com/mac/library/documentation/Darwin/Reference/ManPages/man1/open.1.html
+        /* Note: This was verified to work, opening an XLS file on MacOS X with Java 1.5.0_24.
+        Putting single quotes around the URL would break it, so don't. */
+        /* See http://developer.apple.com/mac/library/documentation/Darwin/Reference/ManPages/man1/open.1.html */
         command = new String[] {"open", fileURL};
       } else {
-        throw new StudyCasterException("Can't open document; Java Desktop API or platform-specific implementation not found");
+        throw new StudyCasterException(
+            "Can't open document; Java Desktop API or platform-specific implementation not found");
       }
       try {
         executeShellCommand(command);
       } catch (StudyCasterException e) {
-        throw new StudyCasterException("Can't open document; problem while executing shell command", e);
+        throw new StudyCasterException(
+            "Can't open document; problem while executing shell command", e);
       }
     }
   }
@@ -173,7 +189,9 @@ public final class Util {
   }
 
   @SuppressWarnings("unchecked")
-  public static <V,E extends Exception> V checkedSwingInvokeAndWait(final CallableExt<V,E> r) throws StudyCasterException, E {
+  public static <V,E extends Exception> V checkedSwingInvokeAndWait(final CallableExt<V,E> r)
+      throws StudyCasterException, E
+  {
     final Wrapper<V> ret = new Wrapper<V>();
     final Wrapper<Exception> retE = new Wrapper<Exception>();
     try {

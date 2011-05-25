@@ -21,6 +21,7 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.logging.Level;
 import java.util.zip.GZIPInputStream;
 import no.ebakke.studycaster.api.StudyCaster;
 import no.ebakke.studycaster.ui.StatusFrame;
@@ -44,7 +45,8 @@ public class CaptureDecoder extends Codec {
     int height = dis.readInt();
     init(new Dimension(width, height));
 
-    URL pointerImageURL = StatusFrame.class.getClassLoader().getResource("no/ebakke/studycaster/resources/pointer_shine_weaker.png");
+    URL pointerImageURL = StatusFrame.class.getClassLoader().getResource(
+        "no/ebakke/studycaster/resources/pointer_shine_weaker.png");
     pointerImage = Toolkit.getDefaultToolkit().getImage(pointerImageURL);
     pointerImageHotSpot = new Point(41,40);
     MediaTracker mt = new MediaTracker(new Canvas());
@@ -88,7 +90,8 @@ public class CaptureDecoder extends Codec {
     g.dispose();
   }
 
-  /** Skip forward, one byte at a time, until a valid MARKER_META structure has been read. */
+  /** Skip forward, one byte at a time, until a valid MARKER_META structure has been read. Used to
+  recover data in corrupted streams. */
   private void resync() throws IOException {
     // TODO: Avoid loosing the metadata read to sync.
     // TODO: Consider removing all of this once we have found the bug that led us to write it.
@@ -98,7 +101,8 @@ public class CaptureDecoder extends Codec {
     while (curReadLoc < MARKER_META_STRUCT_SZ)
       buf[curReadLoc++] = dis.readByte();
     while (true) {
-      DataInputStream din = new DataInputStream(new ByteArrayInputStream(buf, curReadLoc - MARKER_META_STRUCT_SZ, MARKER_META_STRUCT_SZ));
+      DataInputStream din = new DataInputStream(new ByteArrayInputStream(buf,
+          curReadLoc - MARKER_META_STRUCT_SZ, MARKER_META_STRUCT_SZ));
       byte struct_head = din.readByte();
       byte struct_type = din.readByte();
       long struct_time = din.readLong();
@@ -107,11 +111,14 @@ public class CaptureDecoder extends Codec {
 
       if (struct_head != Codec.MARKER_META) {
       } else if (struct_type < 0 || struct_type >= FrameType.values().length) {
-      } else if (struct_time < 1250816790841L || struct_time > 1345424790841L) { // Five years before/two years after this code was written.
+        // Five years before/two years after this code was written.
+        // TODO: Expand this range.
+      } else if (struct_time < 1250816790841L || struct_time > 1345424790841L) {
       } else if (struct_x == Integer.MIN_VALUE && struct_y != Integer.MIN_VALUE) {
-      } else if (struct_x != Integer.MIN_VALUE && (struct_x < 0 || struct_y < 0 || struct_x > 30000 || struct_y > 30000)) {
+      } else if (struct_x != Integer.MIN_VALUE &&
+          (struct_x < 0 || struct_y < 0 || struct_x > 30000 || struct_y > 30000)) {
       } else {
-        StudyCaster.log.info("Resynced after skipping " + curReadLoc + " bytes");
+        StudyCaster.log.log(Level.INFO, "Resynced after skipping {0} bytes", curReadLoc);
         return;
       }
 
@@ -172,7 +179,8 @@ public class CaptureDecoder extends Codec {
       }
       metaStamps.remove();
       if (firstFrameRead && ms.getType() == FrameType.PERIODIC) {
-        currentFrameTime += (currentMetaTime < 0) ? 0 : Math.max(1L, ms.getTimeMillis() - currentMetaTime);
+        currentFrameTime +=
+            (currentMetaTime < 0) ? 0 : Math.max(1L, ms.getTimeMillis() - currentMetaTime);
         currentMetaTime = ms.getTimeMillis();
         firstMetaTime = (firstMetaTime >= 0) ? firstMetaTime : currentMetaTime;
         BufferedImage ret = new ScreenCastImage(getDimension());
@@ -204,20 +212,24 @@ public class CaptureDecoder extends Codec {
         }
       }
       if (currentRunLength <= 0 || currentRunLength > newBuf.length - i) {
-        StudyCaster.log.warning("Invalid or overflowing run length " + currentRunLength);
+        StudyCaster.log.log(Level.WARNING,
+            "Invalid or overflowing run length {0}", currentRunLength);
         currentRunLength = 0;
         // 23 = light blue, 14 = turquoise
         for (; i < newBuf.length; i++)
           newBuf[i] = 23;
-        drawString(getCurrentFrame(), "Encoder warning: invalid run length", 50, getDimension().height - 100);
+        drawString(getCurrentFrame(), "Encoder warning: invalid run length", 50,
+            getDimension().height - 100);
         resync();
         break;
       }
       newBuf[i] = (currentRunCode == INDEX_NO_DIFF) ? oldBuf[i] : currentRunCode;
       currentRunLength--;
     }
-    if (currentRunLength > 0)
-      throw new AssertionError("Invalid run length should have been caught by earlier consistency check");
+    if (currentRunLength > 0) {
+      throw new AssertionError(
+          "Invalid run length should have been caught by earlier consistency check");
+    }
     frameNo++;
   }
 }

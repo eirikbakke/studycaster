@@ -2,14 +2,16 @@ StudyCaster README
   Eirik Bakke (ebakke@mit.edu)
 
 Installation Notes
-* If you downloaded a precompiled archive, just unpack it onto some public directory of a web
-  server that supports PHP. Then browse to that directory on the web to see an example
-  deployment page with a Java Web Start link and button.
-* To use or update a GeoIP database, download and gunzip a new version of GeoLiteCity.dat from
+* If you downloaded a precompiled archive, just unpack it onto some public
+  directory of a web server that supports PHP. Then browse to that directory on
+  the web to see an example deployment page with a Java Web Start link and
+  button.
+* To use or update a GeoIP database, download and gunzip a new version of
+  GeoLiteCity.dat from
     http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
-  By default, the "GeoLiteCity.dat" file should be placed in the directory one level above that
-  of "index.php". This way, the database won't end up being uploaded or copied around as much
-  during deployment or development.
+  By default, the "GeoLiteCity.dat" file should be placed in the directory one
+  level above that of "index.php". This way, the GeoIP database won't end up
+  being uploaded or copied around as much during deployment or development.
 
 Build Notes
 * Tested under Windows XP x64 with NetBeans 7.0, JDK 1.5 update 22.
@@ -27,7 +29,8 @@ Build Notes
     (Tools->Options->C/C++->Add...) with the name "MingGW_32". The base
     directory is "C:\MinGW32\bin". Every binary will be from this directory
     except "make" which will be at "C:\MinGW\msys\1.0\bin\make.exe".
-    * Note: If Cygwin is installed, _do not_ use any of its binaries.
+    * Note: If Cygwin is installed, make sure _not_ to use any of its binaries;
+      they are incompatible with the MSYS ones.
   * Set the SC_JDK_HOME variable in SCNative/Makefile to point to the JDK 1.5
     directory. Also add the "include" and "include/win32" JDK 1.5 directories to
     the include directories for the SCNative C compiler configuration, for both
@@ -51,7 +54,8 @@ Build Notes
   1) Build the SCNative project
   2) Build the StudyCaster project
   3) Upload the "Source Files" in the ServerSide project
-     (if project was previously cleaned, or to reset logs, select all files for uploading)
+     (if project was previously cleaned, or to reset logs, select all files for
+     uploading)
 * To clean:
   * Remove the StudyCaster directory on the server.
   * Clean the StudyCaster project
@@ -62,7 +66,10 @@ Build Notes
 Acknowledgements
 * Icon was from the Tango Icon Library
     http://tango.freedesktop.org/Tango_Icon_Library
-* An early version of this software used the java-remote-control screencasting library
+* An early version of this software used the java-remote-control screencasting
+  library; 
+  The RLE+GZIP encoding was inspired by the one used by the java-remote-control
+  project:
     http://code.google.com/p/java-remote-control
 * The GeoIP PHP API and database are from MaxMind
   Main page:
@@ -71,4 +78,13 @@ Acknowledgements
   Download locations:
     http://geolite.maxmind.com/download/geoip/api/php
     http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
+
+Known Issues
+* Under certain firewall configurations, notably while running
+  COMODO Internet Security 5.4, the client may receive an intermittent error
+  "Splash: recv failed" when opening the application via Java Web Start. There
+  seems to be little that can be done about this problem from a deployment point
+  of view, and I would not recommend asking users to turn off their firewalls.
+  See http://lopica.sourceforge.net/faq.html ("The Splash Screen Firewall
+  Dead-Lock.") for a related issue.
 

@@ -21,8 +21,10 @@ public class ScreenCastImage extends BufferedImage {
     byte bd[][] = ((DataBufferByte) db).getBankData();
     if (bd.length != 1)
       throw new AssertionError("Expected one bank, got " + bd.length);
-    if (bd[0].length != getWidth() * getHeight())
-      throw new AssertionError("Expected bank size " + getWidth() * getHeight() + ", got " + bd[0].length);
+    if (bd[0].length != getWidth() * getHeight()) {
+      throw new AssertionError(
+          "Expected bank size " + getWidth() * getHeight() + ", got " + bd[0].length);
+    }
     return bd[0];
   }
 
@@ -43,7 +45,8 @@ public class ScreenCastImage extends BufferedImage {
         }
       }
     }
-    // Assign the remaining non-reserved indicies to gray values (from black, exclusive, to white, inclusive)
+    /* Assign the remaining non-reserved indicies to gray values (from black, exclusive, to white,
+    inclusive) */
     double grayIncr = 255.0 / (256 - i - RESERVED_INDICES);
     double gray = 0;
     for (; i < 256 - RESERVED_INDICES; i++) {

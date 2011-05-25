@@ -39,8 +39,11 @@ public class UploadDialog extends javax.swing.JDialog {
         // TODO: Do I need to remove all these listeners?
         super(parent);
         initComponents();
-        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "close");
+        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+            KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "close");
         getRootPane().getActionMap().put("close", new AbstractAction() {
+            private static final long serialVersionUID = 1L;
+
             public void actionPerformed(ActionEvent e) {
               dispose();
             }

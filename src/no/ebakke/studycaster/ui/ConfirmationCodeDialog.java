@@ -9,6 +9,7 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.util.logging.Level;
 import javax.swing.AbstractAction;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -20,16 +21,21 @@ public class ConfirmationCodeDialog extends JDialog {
 
     public static void show(Frame parent, String confcode) {
       new ConfirmationCodeDialog(parent, confcode).setVisible(true);
-      StudyCaster.log.info("Now displaying confirmation code dialog with confirmation code " + confcode);
+      StudyCaster.log.log(Level.INFO,
+          "Now displaying confirmation code dialog with confirmation code {0}", confcode);
     }
 
     private ConfirmationCodeDialog(Frame parent, String confcode) {
         super(parent);
         initComponents();
         codeBox.setText(confcode);
-        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(confcode), null);
-        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "close");
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(
+            new StringSelection(confcode), null);
+        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+            KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "close");
         getRootPane().getActionMap().put("close", new AbstractAction() {
+            private static final long serialVersionUID = 1L;
+
             public void actionPerformed(ActionEvent e) {
               dispose();
             }

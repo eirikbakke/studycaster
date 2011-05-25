@@ -81,13 +81,15 @@ public class CaptureEncoder extends Codec {
     compressAndOutputFrame(image, permittedArea);
   }
 
-  private static final byte blurredPixel(byte buf[], int width, int x, int y) {
+  private static byte blurredPixel(byte buf[], int width, int x, int y) {
     // TODO: What if the "color" is INDEX_NO_DIFF?
     return buf[y * width + (x / ScreenCensor.MOSAIC_WIDTH) * ScreenCensor.MOSAIC_WIDTH];
   }
 
   // TODO: If pixel has no difference and was previously blurred, continue blurring.
-  private void compressAndOutputFrame(BufferedImage frame, Rectangle permittedArea) throws IOException {
+  private void compressAndOutputFrame(BufferedImage frame, Rectangle permittedArea)
+      throws IOException
+  {
     swapOldNew();
     copyImage(frame, getCurrentFrame());
     final byte oldBuf[] = getPreviousFrame().getBuffer();

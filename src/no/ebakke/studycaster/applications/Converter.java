@@ -5,7 +5,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import no.ebakke.studycaster.screencasting.RecordingConverter;
 
-public class Converter {
+public final class Converter {
+  private Converter() {}
+
   // SCTOP=z:/Unfinished/ResearchRepo/archive/100713_StudyCaster/
   // find -name *.ebc -exec java -cp "$SCTOP/build/classes;$SCTOP/lib/xuggler/xuggle-xuggler.jar" no.ebakke.studycaster.applications.Converter {} 8 \;
 
@@ -38,7 +40,7 @@ public class Converter {
       RecordingConverter.convert(fis, outputFileName, speedUpFactor);
     } catch (IOException e) {
       System.err.println("Got an error: " + e.getMessage());
-      e.printStackTrace();
+      e.printStackTrace(System.err);
       return;
     }
   }

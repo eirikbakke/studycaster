@@ -32,10 +32,10 @@ public class Ticket {
 
   @Override
   public String toString() {
-    StringBuffer ret = new StringBuffer();
+    StringBuilder ret = new StringBuilder();
     for (int i = 0; i < value.length; i++) {
       ret.append(Character.forDigit((value[i] & 0xF0) >> 4, 16));
-      ret.append(Character.forDigit((value[i] & 0x0F) >> 0, 16));
+      ret.append(Character.forDigit((value[i] & 0x0F)     , 16));
     }
     return ret.toString();
   }
