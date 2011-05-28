@@ -24,7 +24,7 @@ import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 
-/** Handles protocol details specific to our server-side PHP script. */
+/** Handles protocol details specific to the server-side PHP script. */
 public class ServerContext {
   public static final int DEF_UPLOAD_CHUNK_SZ = 64 * 1024; // TODO: Don't expose this.
   private static final String TICKET_STORE_FILENAME = "sc_7403204709139484951.tmp";
@@ -96,8 +96,9 @@ public class ServerContext {
       throw new StudyCasterException("Cannot retrieve server info.", e);
     }
     try {
-      serverSecondsAhead = Long.parseLong(headerSTM.getValue()) - ((timeBef / 2 + timeAft / 2) / 1000L);
-      StudyCaster.log.info("Server time ahead by " + serverSecondsAhead + " seconds.");
+      serverSecondsAhead =
+          Long.parseLong(headerSTM.getValue()) - ((timeBef / 2 + timeAft / 2) / 1000L);
+      StudyCaster.log.log(Level.INFO, "Server time ahead by {0} seconds.", serverSecondsAhead);
     } catch (NumberFormatException e) {
       StudyCaster.log.log(Level.WARNING, "Got bad time format from server", e);
     }
@@ -127,7 +128,9 @@ public class ServerContext {
     }
   }
 
-  private HttpResponse requestHelper(HttpClient httpClient, String cmd, ContentBody content) throws IOException {
+  private HttpResponse requestHelper(HttpClient httpClient, String cmd, ContentBody content)
+      throws IOException
+  {
     HttpPost httpPost = new HttpPost(serverScriptURI);
     MultipartEntity params = new MultipartEntity();
     String allTickets =
@@ -165,7 +168,7 @@ public class ServerContext {
   }
 
   public void enterRemoteLogRecord(final String msg) {
-    StudyCaster.log.info("Queueing remote log entry \"" + msg + "\"");
+    StudyCaster.log.log(Level.INFO, "Queueing remote log entry \"{0}\"", msg);
     final HttpClient httpClient = new DefaultHttpClient();
     new Thread(new Runnable() {
       public void run() {
@@ -194,7 +197,8 @@ public class ServerContext {
       public void write(byte[] b, int off, final int len) throws IOException {
         if (closed)
           throw new IOException("Stream closed");
-        InputStreamBody isb = new InputStreamBody(new ByteArrayInputStream(b, off, len), remoteName) {
+        InputStreamBody isb = new InputStreamBody(new ByteArrayInputStream(b, off, len), remoteName)
+        {
           @Override
           public long getContentLength() {
             return len;

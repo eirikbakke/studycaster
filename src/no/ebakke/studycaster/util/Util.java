@@ -179,7 +179,7 @@ public final class Util {
   }
 
   public static String sanitizeFileNameComponent(String s) {
-    StringBuffer ret = new StringBuffer();
+    StringBuilder ret = new StringBuilder();
     for (char c : s.toCharArray()) {
       ret.append((Character.isDigit(c) || Character.isLetter(c) || c == '.') ? c : '_');
       if (ret.length() > 150)
