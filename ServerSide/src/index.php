@@ -5,10 +5,11 @@
   define('SERVER_TICKET_BYTES', 3);
   define('DOWNLOAD_DIR'       , 'files');
   define('UPLOAD_DIR'         , 'files/uploads');
-  define('STUDY_LOG_FILE'     , 'study.log');
-  define('STUDYP_LOG_FILE'    , 'studyp.log');
-  define('FAIL_LOG_FILE'      , 'fail.log');
-  define('DEBUG_LOG_FILE'     , 'debug.log');
+  define('STUDY_LOG_FILE'     , 'log/study.log');
+  define('STUDYP_LOG_FILE'    , 'log/studyp.log');
+  define('BADREQ_LOG_FILE'    , 'log/badreq.log');
+  define('INTERR_LOG_FILE'    , 'log/interr.log');
+  define('DEBUG_LOG_FILE'     , 'log/debug.log');
   // TODO: Get rid of this configuration detail.
   define('GEOIP_DATABASE_FILE', '../GeoLiteCity.dat');
 
@@ -100,7 +101,7 @@
 
     $updir = constant('UPLOAD_DIR') . DIRECTORY_SEPARATOR . $tickets[1];
     if        ($cmd == 'gsi') {
-      # TODO: Move the GeoIP info elsewhere.
+      // TODO: Move the GeoIP info elsewhere.
 
       header('X-StudyCaster-ServerTicket: ' . $server_ticket);
       header('X-StudyCaster-ServerTime: ' . time());
@@ -198,7 +199,27 @@
     }
   }
 
+  function internal_error_handler($code, $message, $errfile, $errline) {
+    error_log($errfile . ' (' . $errline . '): ' . $message);
+    # TODO: Make e-mail notifications configurable.
+    #mail('ebakke@mit.edu', "Test Message", "There was a test error.");
+    #header('HTTP/1.0 400 Bad Request');
+    header('HTTP/1.0 500 Internal Server Error');
+    exit();
+  }
+
   function main() {
+    // TODO: Consider making this work for PHP4 (need to define E_STRICT equivalent etc.).
+    /* TODO: Make the log less accessible. Consider removing the calls to ini_set (might be more
+             correct to honor the hosting environment's php.ini. */
+    // See http://www.nyphp.org/PHundamentals/7_PHP-Error-Handling .
+    error_reporting(E_ALL | E_STRICT);
+    ini_set('display_errors', '0');
+    ini_set('error_log', constant('INTERR_LOG_FILE'));
+    ini_set('log_errors','1');
+    set_error_handler('internal_error_handler');
+    #trigger_error('This is a test error', E_USER_ERROR);
+
     session_cache_limiter('nocache');
 
     if (empty($_POST) && empty($_GET) && empty($_FILES)) {
@@ -217,7 +238,7 @@
     if (!$success) {
       header('HTTP/1.0 400 Bad Request');
 
-      $flog = fopen(constant('FAIL_LOG_FILE'), 'a');
+      $flog = fopen(constant('BADREQ_LOG_FILE'), 'a');
       fwrite($flog, "================== Unsuccessful request ==================\n");
       fwrite($flog, 'TIME = ' . gmdate('Y-m-d H:i:s') . "\n");
       fwrite($flog, 'CAUSE = ' . $message . "\n");
