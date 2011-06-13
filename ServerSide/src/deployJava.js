@@ -77,9 +77,7 @@ var deployJava = {
     mimeType: 'application/java-deployment-toolkit',
 
     // location of the Java Web Start launch button graphic
-    // launchButtonPNG: 'http://java.sun.com/products/jfc/tsc/articles/swing2d/webstart.png',
-    // NOTE 2011-05-03: Changed by Eirik Bakke to access local copy instead.
-    launchButtonPNG: 'webstart_button.png',
+    launchButtonPNG: 'http://java.sun.com/products/jfc/tsc/articles/swing2d/webstart.png',
 
     browserName: null,
     browserName2: null,

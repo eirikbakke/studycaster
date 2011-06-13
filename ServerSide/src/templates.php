@@ -1,7 +1,7 @@
 <?php
 function serverURL() {
-  # See http://www.webcheatsheet.com/PHP/get_current_page_url.php
-  # See http://www.php.net/manual/en/reserved.variables.server.php
+  // See http://www.webcheatsheet.com/PHP/get_current_page_url.php
+  // See http://www.php.net/manual/en/reserved.variables.server.php
   $port = ($_SERVER['SERVER_PORT'] == '80') ? '' : (':' . $_SERVER['SERVER_PORT']);
   $sn = $_SERVER['SCRIPT_NAME'];
   $ipos = strpos($sn, "/index.php");
@@ -38,6 +38,7 @@ function output_launch() {
       <script type="text/javascript" src="deployJava.js"></script>
       <script type="text/javascript">
         var version_arg = encodeURIComponent(String(deployJava.getBrowser()) + ";" + String(deployJava.getJREs()));
+        deployJava.launchButtonPNG = 'webstart_button.png';
         deployJava.createWebStartLaunchButton("${link_button}" + version_arg, "1.6");
       </script>
     </p>
@@ -61,7 +62,10 @@ EOD;
 }
 
 function output_jnlpfile($app_args, $exp) {
-  # TODO: Check with http://pscode.org/janela/
+  // TODO: Check with http://pscode.org/janela/
+  // TODO: Consider using a custom progress indicator.
+  /* TODO: Find a workaround for the Comodo IS "splash: recv failed" problem.
+           One option is instructions to run "javaws -Xnosplash <JNLP URL>". */
   $url  = serverURL();
   $urls = addslashes($url);
   $xml_args = '';

@@ -22,7 +22,7 @@ Build Notes
 * Recommended: Download a ZIP file distribution of the Javadoc for JDK 1.5, put
   it in the JDK directory, and point to it from the NetBeans "Java Platform"
   settings. This will enable context-sensitive Javadoc help.
-* To be able to compile the native windows libraries
+* To be able to compile the native Win32 libraries
   * Install MinGW and MSYS via mingw-get-inst
     (http://www.mingw.org/wiki/Getting_Started).
   * Register MinGW/MSYS as a tool collection in NetBeans
@@ -34,9 +34,11 @@ Build Notes
   * Set the SC_JDK_HOME variable in SCNative/Makefile to point to the JDK 1.5
     directory. Also add the "include" and "include/win32" JDK 1.5 directories to
     the include directories for the SCNative C compiler configuration, for both
-    the Debug and the Release configuration. For instance:
+    the Debug and the Release configuration. It also seems the working directory
+    must be explicitly included for context-sensitive help to work. For instance:
       C:/Program Files (x86)/Java/jdk1.5.0_22/include;
       C:/Program Files (x86)/Java/jdk1.5.0_22/include/win32
+      .
     This hardcoding is ugly and should be avoided in the future.
 * To set server location
   (e.g. http://www.example.com/studycaster_devel)
@@ -53,10 +55,10 @@ Build Notes
 * To build (order matters):
   1) Build the SCNative project
   2) Build the StudyCaster project
-  3) Upload the "Source Files" in the ServerSide project
+  3) Upload ("Run"/F6) the "Source Files" in the ServerSide project
      (if project was previously cleaned, or to reset logs, select all files for
      uploading)
-* To clean:
+* To clean (not necessary during regular development):
   * Remove the StudyCaster directory on the server.
   * Clean the StudyCaster project
   * Clean the SCNative project

@@ -33,6 +33,7 @@
           <incDir>
             <pElem>C:/Program Files (x86)/Java/jdk1.5.0_22/include</pElem>
             <pElem>C:/Program Files (x86)/Java/jdk1.5.0_22/include/win32</pElem>
+            <pElem>.</pElem>
           </incDir>
           <commandLine>-m32</commandLine>
           <preprocessorList>
@@ -63,6 +64,7 @@
           <incDir>
             <pElem>C:/Program Files (x86)/Java/jdk1.5.0_22/include</pElem>
             <pElem>C:/Program Files (x86)/Java/jdk1.5.0_22/include/win32</pElem>
+            <pElem>.</pElem>
           </incDir>
           <commandLine>-m32</commandLine>
           <preprocessorList>

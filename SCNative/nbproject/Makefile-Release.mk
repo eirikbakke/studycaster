@@ -64,7 +64,7 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libSCNative.dll: ${OBJECTFILES}
 ${OBJECTDIR}/NativeLibrary.o: NativeLibrary.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.c) -O2 -Wall -D_JNI_IMPLEMENTATION_ -I/C/Program\ Files\ \(x86\)/Java/jdk1.5.0_22/include -I/C/Program\ Files\ \(x86\)/Java/jdk1.5.0_22/include/win32  -MMD -MP -MF $@.d -o ${OBJECTDIR}/NativeLibrary.o NativeLibrary.c
+	$(COMPILE.c) -O2 -Wall -D_JNI_IMPLEMENTATION_ -I/C/Program\ Files\ \(x86\)/Java/jdk1.5.0_22/include -I/C/Program\ Files\ \(x86\)/Java/jdk1.5.0_22/include/win32 -I.  -MMD -MP -MF $@.d -o ${OBJECTDIR}/NativeLibrary.o NativeLibrary.c
 
 # Subprojects
 .build-subprojects:

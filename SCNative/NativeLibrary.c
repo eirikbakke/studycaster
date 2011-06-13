@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
+#include <jni.h>
 #include "NativeLibrary.h"
 
 static wchar_t *lastInterestingWindowTitle = NULL;
