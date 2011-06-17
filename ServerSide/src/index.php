@@ -1,4 +1,7 @@
 <?php
+  // TODO: Move this file and templates.php into a separate private directory, and have a small
+  //       import in the new index.php.
+
   define('MAX_FILE_SIZE'      , 50000000);
   define('MAX_APPEND_CHUNK'   , 1024 * 256);
   // TODO: Get this from the client.
@@ -19,9 +22,13 @@
       require_once("geoip/geoipregionvars.php");
       $gi = geoip_open(constant('GEOIP_DATABASE_FILE'), GEOIP_STANDARD);
       $record = geoip_record_by_addr($gi, $_SERVER['REMOTE_ADDR']);
-      $ret = $record->country_name . ', ' . $GEOIP_REGION_NAME[$record->country_code][$record->region];
+      $country_name = $record->country_name;
+      $region_name  = (
+              isset($GEOIP_REGION_NAME[$record->country_code]) &&
+              isset($GEOIP_REGION_NAME[$record->country_code][$record->region])) ?
+              $GEOIP_REGION_NAME[$record->country_code][$record->region] : "(unknown region)";
       geoip_close($gi);
-      return $ret;
+      return $country_name . ', ' . $region_name;
     } else {
       return "(GeoIP database file missing)";
     }
