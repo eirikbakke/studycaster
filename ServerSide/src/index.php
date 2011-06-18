@@ -193,7 +193,7 @@
         return 'invalid path or file does not exist';
       }
       header('Content-Type: application/octet-stream');
-      header('Content-Disposition: attachment; filename="' . basename($fullname) . '"');
+      header('Content-Disposition: attachment; filename="' . basename($fullpath) . '"');
       $fsize = filesize($fullpath);
       header('Content-Length: ' . $fsize);
       header('X-StudyCaster-OK: dnl');

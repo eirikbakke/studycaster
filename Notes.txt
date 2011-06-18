@@ -222,3 +222,19 @@ Prioritized for this study
 * Retry failed appends.
 * Keep JWS Launch Button image on my own server.
 
+19:49 2011-06-17
+Features desired for new study
+* "Please close the following windows"
+* Questions asked in User Study Console
+* Questions timed by User Study Console, based on foreground window
+* Resume from previously answered question
+* Open multiple files at different steps
+* Different instructions at each step
+* Randomize questions
+  * Many possibilities for how to do this; some subgroups of questions still
+    have to be kept together.
+* Might need to actually design the study I need before implementing
+  configurability options.
+  * Base configuration examples on next study, not the previous.
+  * Still, prevoius study is a good stepping stone for development.
+
