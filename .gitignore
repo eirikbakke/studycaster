@@ -1,0 +1,10 @@
+StudyCasterClient/nbproject/private/
+StudyCasterClient/build
+StudyCasterClient/dist
+StudyCasterClient/nbproject/build-impl.xml
+StudyCasterClient/nbproject/genfiles.properties
+StudyCasterServer/nbproject/private/
+StudyCasterServer/build
+StudyCasterServer/dist
+StudyCasterServer/nbproject/build-impl.xml
+StudyCasterServer/nbproject/genfiles.properties
