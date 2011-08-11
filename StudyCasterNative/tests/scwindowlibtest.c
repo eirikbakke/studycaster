@@ -1,20 +1,16 @@
-/*
- * File:   newsimpletest.c
- * Author: Administrator
- *
- * Created on Aug 10, 2011, 5:08:38 PM
- */
-
 #include <stdio.h>
 #include <stdlib.h>
-#include "windowlib.h"
+#include "scwindowlib.h"
 
 void simpletest() {
-    get_windows();
+    GetWindowList();
     // printf("%%TEST_FAILED%% time=0 testname=simpletest (windowlibtest) message=some error message\n");
 }
 
 int main(int argc, char** argv) {
+    (void) argc; // Unused.
+    (void) argv; // Unused.
+
     printf("%%SUITE_STARTING%% windowlibtest\n");
     printf("%%SUITE_STARTED%%\n");
 
