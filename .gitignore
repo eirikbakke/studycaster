@@ -1,10 +1,14 @@
-StudyCasterClient/nbproject/private/
 StudyCasterClient/build
 StudyCasterClient/dist
+StudyCasterClient/nbproject/private/
 StudyCasterClient/nbproject/build-impl.xml
 StudyCasterClient/nbproject/genfiles.properties
-StudyCasterServer/nbproject/private/
 StudyCasterServer/build
 StudyCasterServer/dist
+StudyCasterServer/nbproject/private/
 StudyCasterServer/nbproject/build-impl.xml
 StudyCasterServer/nbproject/genfiles.properties
+StudyCasterNative/build
+StudyCasterNative/dist
+StudyCasterNative/nbproject/private
+StudyCasterNative/.dep.inc
