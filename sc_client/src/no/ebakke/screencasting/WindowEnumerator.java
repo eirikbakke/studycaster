@@ -10,7 +10,6 @@ import com.sun.jna.platform.win32.WinUser;
 public class WindowEnumerator {
   public static void test() {
     User32.INSTANCE.EnumWindows(new WinUser.WNDENUMPROC() {
-      @Override
       public boolean callback(HWND hWnd, Pointer pntr) {
         if (!User32.INSTANCE.IsWindowVisible(hWnd))
           return true;
