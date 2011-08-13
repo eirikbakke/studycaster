@@ -3,6 +3,7 @@ sc_client/dist
 sc_client/nbproject/private/
 sc_client/nbproject/build-impl.xml
 sc_client/nbproject/genfiles.properties
+sc_client/hs_err_*.log
 
 sc_server/build
 sc_server/dist

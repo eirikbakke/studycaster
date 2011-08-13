@@ -1,0 +1,28 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html">
+<h:head><title>Using Beans to Handle Request Parameters</title>
+<link href="./css/styles.css" 
+      rel="stylesheet" type="text/css"/> 
+</h:head>
+<h:body>
+
+<div align="center">
+<table class="title">
+  <tr><th>Using Beans to Handle Request Parameters</th></tr>
+</table>
+<p/>
+<fieldset>
+<legend>Choose JSF Language</legend>
+<h:form>
+  Enter a programming language that can be used to implement
+  JSF managed beans:<br/>
+  <h:inputText value="#{languageForm.language}"/><br/>
+  <h:commandButton value="Check Language" 
+                   action="#{languageForm.showChoice}"/>
+</h:form>
+</fieldset>
+</div>
+
+</h:body></html>

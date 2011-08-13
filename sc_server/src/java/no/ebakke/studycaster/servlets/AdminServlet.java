@@ -7,6 +7,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+// TODO: Consider removing the FacesServlet, or learn to use JSF properly.
+
 public class AdminServlet extends HttpServlet {
   private static final long serialVersionUID = 1L;
 
@@ -18,7 +20,8 @@ public class AdminServlet extends HttpServlet {
 
     RequestDispatcher rd = getServletContext().getRequestDispatcher(
         "/WEB-INF/AdminPage.xhtml");
-    
+
+    request.setAttribute("testString", "foubleroughes");
     rd.forward(request, response);
   }
 
