@@ -1,23 +1,12 @@
-StudyCasterClient/build
-StudyCasterClient/dist
-StudyCasterClient/nbproject/private/
-StudyCasterClient/nbproject/build-impl.xml
-StudyCasterClient/nbproject/genfiles.properties
+sc_client/build
+sc_client/dist
+sc_client/nbproject/private/
+sc_client/nbproject/build-impl.xml
+sc_client/nbproject/genfiles.properties
 
-StudyCasterServer/build
-StudyCasterServer/dist
-StudyCasterServer/nbproject/private/
-StudyCasterServer/nbproject/build-impl.xml
-StudyCasterServer/nbproject/genfiles.properties
-
-StudyCasterNative/.dep.inc
-StudyCasterNative/build
-StudyCasterNative/dist
-StudyCasterNative/nbproject/private
-StudyCasterNative/nbproject/Makefile-Debug.mk
-StudyCasterNative/nbproject/Makefile-Release.mk
-StudyCasterNative/nbproject/Package-Debug.bash
-StudyCasterNative/nbproject/Package-Release.bash
-StudyCasterNative/nbproject/Makefile-impl.mk
-StudyCasterNative/nbproject/Makefile-variables.mk
+sc_server/build
+sc_server/dist
+sc_server/nbproject/private/
+sc_server/nbproject/build-impl.xml
+sc_server/nbproject/genfiles.properties
 

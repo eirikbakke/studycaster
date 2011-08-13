@@ -1,0 +1,3 @@
+platform.jar was compiled separately from jna-3.3.0-72-cea1743 in order to get
+the lastest version of the User32 class. jna.jar is the standard stable 3.3.0
+version.
