@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns    = "http://www.w3.org/1999/xhtml"
+      xmlns:ui = "http://java.sun.com/jsf/facelets"
+      xmlns:h  = "http://java.sun.com/jsf/html"
+      xmlns:f  = "http://java.sun.com/jsf/core">
+  <h:head>
+    <meta charset="UTF-8"/>
+    <title>StudyCaster Management Console</title>
+  </h:head>
+  <h:body>
+    <p>JSW Button for Launching the StudyCaster Console:</p>
+      <script type="text/javascript" src="deployJava.min.js"></script>
+      <script type="text/javascript">
+        deployJava.launchButtonPNG = 'webstart_button.png';
+        deployJava.createWebStartLaunchButton("client/launch.jnlp", "1.5");
+      </script>
+  </h:body>
+</html>
