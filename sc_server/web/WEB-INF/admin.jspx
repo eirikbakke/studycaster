@@ -1,0 +1,32 @@
+<jsp:root 
+  xmlns:jsp="http://java.sun.com/JSP/Page"
+  xmlns:c="http://java.sun.com/jsp/jstl/core"
+  xmlns="http://www.w3.org/1999/xhtml"
+  version="2.0">
+
+<jsp:directive.page contentType="text/html" pageEncoding="UTF-8"/>
+<jsp:output omit-xml-declaration="true"/>
+<jsp:output doctype-root-element="HTML" doctype-system="about:legacy-compat"/>
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8"/>
+    <title>StudyCaster Management Console</title>
+  </head>
+  <body>
+    <p>JSW Button for Launching the StudyCaster Console:</p>
+      ${scriptCode}
+    <p>The code used to generate the button above is as follows: </p>
+    <pre>
+      <c:out value="${scriptCode}"/>
+    </pre>
+    <p>Here is a test to make sure JSTL for loops are working correctly:</p>
+    <ol>
+      <c:forEach items="${listTest}" var="item">
+        <li>${item}</li>
+      </c:forEach>
+    </ol>
+  </body>
+</html>
+
+</jsp:root>

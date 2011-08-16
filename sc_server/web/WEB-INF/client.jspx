@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<jsp:root 
+  xmlns:jsp="http://java.sun.com/JSP/Page"
+  xmlns:c="http://java.sun.com/jsp/jstl/core"
+  version="2.0">
+
+<jsp:element name="jnlp">
+   <jsp:attribute name="codebase"><c:out value="${codebaseURL}"/></jsp:attribute>
+   <jsp:attribute name="href">launch.jnlp</jsp:attribute>
+   <jsp:attribute name="spec">1.0+</jsp:attribute>
+   <jsp:body>
+    <information>
+
+    <title>StudyCaster Client</title>
+    <vendor>Eirik Bakke</vendor>
+    <homepage href=""/>
+    <description>StudyCaster Client</description>
+    <description kind="short">StudyCaster Client</description>
+
+
+    </information>
+    <update check="always"/>
+    <security>
+    <all-permissions/>
+    </security>
+    <resources>
+    <j2se version="1.5+"/>
+    <jar href="sc_client.jar" main="true"/>
+
+
+    <jar href="lib/jna.jar"/>
+    <jar href="lib/platform.jar"/>
+    </resources>
+    <application-desc main-class="no.ebakke.studycaster.driver.Main">
+
+    </application-desc>
+  </jsp:body>	
+</jsp:element>
+</jsp:root>
