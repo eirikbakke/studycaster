@@ -12,14 +12,15 @@ import org.apache.commons.lang3.StringEscapeUtils;
 @WebServlet(name = "JNLPServlet",
     urlPatterns = {JNLPServlet.JNLP_PATH})
 public class JNLPServlet extends HttpServlet {
-  /* To change this, must also change the mapping in the project properties
-  (Build->Packaging). */
+  /* To change JNLP_DIR, would also have to update project properties
+  (Build->Packaging) and build.xml. To change JNLP_FILE, also update
+  build.xml. */
   public static final String JNLP_DIR  = "/client";
   public static final String JNLP_FILE = "sc_client.jnlp";
   public static final String JNLP_PATH =
       JNLPServlet.JNLP_DIR + "/" + JNLPServlet.JNLP_FILE;
   private static final long serialVersionUID = 1L;
-  
+
   @Override
   protected void service(HttpServletRequest req, HttpServletResponse resp)
           throws ServletException, IOException

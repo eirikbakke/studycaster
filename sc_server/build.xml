@@ -68,4 +68,13 @@
     nbproject/build-impl.xml file. 
 
     -->
+
+    <target name="-pre-compile">
+        <!-- Add this as a build customization rather than as a file reference
+        in the project properties, as the latter would get confused and give a
+        "broken reference" message whenever the client project was cleaned.
+        Also, this lets us rename the generated JNLP file, which is actually a
+        JSPX file. -->
+        <copyfiles files="${project.sc_client}/dist/lib" todir="${build.web.dir}/client/lib"/>
+    </target>
 </project>
