@@ -6,7 +6,7 @@
 
 <jsp:element name="jnlp">
    <jsp:attribute name="codebase"><c:out value="${codebaseURL}"/></jsp:attribute>
-   <jsp:attribute name="href">sc_client.jnlp</jsp:attribute>
+   <jsp:attribute name="href"><c:out value="${jnlpFile}"/></jsp:attribute>
    <jsp:attribute name="spec">1.0+</jsp:attribute>
    <jsp:body>
     <information>

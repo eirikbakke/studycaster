@@ -7,11 +7,19 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.lang3.StringEscapeUtils;
 
-@WebServlet(name = "JNLPServlet", urlPatterns = {"/sc_client.jnlp"})
+@WebServlet(name = "JNLPServlet",
+    urlPatterns = {JNLPServlet.JNLP_PATH})
 public class JNLPServlet extends HttpServlet {
+  /* To change this, must also change the mapping in the project properties
+  (Build->Packaging). */
+  public static final String JNLP_DIR  = "/client";
+  public static final String JNLP_FILE = "sc_client.jnlp";
+  public static final String JNLP_PATH =
+      JNLPServlet.JNLP_DIR + "/" + JNLPServlet.JNLP_FILE;
   private static final long serialVersionUID = 1L;
-
+  
   @Override
   protected void service(HttpServletRequest req, HttpServletResponse resp)
           throws ServletException, IOException
@@ -24,12 +32,14 @@ public class JNLPServlet extends HttpServlet {
       resp.setContentType("text/html");
     } else {
       resp.setContentType("application/x-java-jnlp-file");
-      resp.setHeader("Content-Disposition",
-          "attachment; filename=\"sc_client.jnlp\"");
+      resp.setHeader("Content-Disposition", "attachment; filename=\"" +
+          StringEscapeUtils.escapeJava(JNLPServlet.JNLP_FILE) + "\"");
     }
-    /* TODO: Consider whether the codebase URL should be a configuration
+    /* TODO: Consider whether the server URL should be a configuration
     parameter rather than being derived dynamically. */
-    req.setAttribute("codebaseURL", ServletUtil.getApplicationBase(req));
+    String serverURL = ServletUtil.getApplicationBase(req);
+    req.setAttribute("codebaseURL", serverURL + JNLPServlet.JNLP_DIR);
+    req.setAttribute("jnlpFile", JNLPServlet.JNLP_FILE);
     RequestDispatcher rd =
         getServletContext().getRequestDispatcher("/WEB-INF/client.jspx");
     rd.forward(req, resp);

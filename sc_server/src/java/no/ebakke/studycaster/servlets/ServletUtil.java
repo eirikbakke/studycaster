@@ -71,8 +71,8 @@ public final class ServletUtil {
   }
 
   /** A less pessimistic escape mechanism for producing safe JavaScript strings;
-  don't escape single quotes forward slashes, with an exception for the
-  forbidden sequence "</". */
+  enclose in double quotes and don't escape single quotes or forward slashes,
+  with an exception for the forbidden sequence "</". */
   public static String quoteAndEscapeJS(String s) {
     return
         "\"" + StringEscapeUtils.escapeJava(s).replace("</", "<\\/") + "\"";

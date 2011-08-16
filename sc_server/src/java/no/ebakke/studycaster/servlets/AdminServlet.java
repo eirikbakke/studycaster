@@ -19,15 +19,14 @@ public class AdminServlet extends HttpServlet {
   {
     resp.setHeader("Cache-Control", "no-cache");
     resp.setHeader("Pragma"       , "no-cache");
-    String codebaseURL = ServletUtil.getApplicationBase(req);
+    String serverURL = ServletUtil.getApplicationBase(req);
 
-    req.setAttribute("codebaseURL", codebaseURL);
-    req.setAttribute("urlDeployScript", codebaseURL + "/deployJava.min.js");
+    req.setAttribute("serverURL", serverURL);
+    req.setAttribute("urlDeployScript", serverURL + "/deployJava.min.js");
     req.setAttribute("urlButtonImage", ServletUtil.quoteAndEscapeJS(
-        codebaseURL + "/webstart_button.png"));
-    // TODO: Keep the JNLP file name in a single location.
+        serverURL + "/webstart_button.png"));
     req.setAttribute("urlJNLP", ServletUtil.quoteAndEscapeJS(
-        codebaseURL + "/sc_client.jnlp"));
+        serverURL + JNLPServlet.JNLP_PATH));
     // TODO: Synchronize with JNLP file.
     req.setAttribute("minJavaVer", ServletUtil.quoteAndEscapeJS("1.5"));
 

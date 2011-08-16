@@ -17,8 +17,8 @@
     <h1>StudyCaster Management Console</h1>
     <p>This page was accessed via
     <jsp:element name="a">
-      <jsp:attribute name="href"><c:out value="${codebaseURL}"/></jsp:attribute>
-      <jsp:body><c:out value="${codebaseURL}"/></jsp:body>
+      <jsp:attribute name="href"><c:out value="${serverURL}"/></jsp:attribute>
+      <jsp:body><c:out value="${serverURL}"/></jsp:body>
     </jsp:element>.
     </p>
     <p>JWS button for launching the StudyCaster Client (based on the absolute
