@@ -24,7 +24,8 @@
     <p>JWS button for launching the StudyCaster Client (based on the absolute
       URL above):</p>
       ${scriptCode}
-    <p>The code used to generate the button above is as follows: </p>
+    <p>The code used to generate the button above can be copied and pasted as
+    follows: </p>
     <pre>
       <c:out value="${scriptCode}"/>
     </pre>

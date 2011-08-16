@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 public final class ServletUtil {
   private ServletUtil() { }
@@ -58,14 +59,22 @@ public final class ServletUtil {
     return byteStream.toString(response.getCharacterEncoding());
   }
 
-	/** Retrieve a string parameter from the request, throwing a
+  /** Retrieve a string parameter from the request, throwing a
   BadRequestException if it was not supplied by the client. */
-	public static String getStringParamChecked(
+  public static String getStringParamChecked(
       HttpServletRequest req, String paramName) throws BadRequestException
-	{
-		String ret = req.getParameter(paramName);
-		if (ret == null)
-			throw new BadRequestException("Missing parameter \"" + paramName + "\"");
-		return ret;
-	}
+  {
+    String ret = req.getParameter(paramName);
+    if (ret == null)
+      throw new BadRequestException("Missing parameter \"" + paramName + "\"");
+    return ret;
+  }
+
+  /** A less pessimistic escape mechanism for producing safe JavaScript strings;
+  don't escape single quotes forward slashes, with an exception for the
+  forbidden sequence "</". */
+  public static String quoteAndEscapeJS(String s) {
+    return
+        "\"" + StringEscapeUtils.escapeJava(s).replace("</", "<\\/") + "\"";
+  }
 }

@@ -7,7 +7,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.lang3.StringEscapeUtils;
 
 // TODO: Does this root mapping work on all containers?
 @WebServlet(name = "AdminServlet", urlPatterns = {"/index.html"})
@@ -21,11 +20,16 @@ public class AdminServlet extends HttpServlet {
     resp.setHeader("Cache-Control", "no-cache");
     resp.setHeader("Pragma"       , "no-cache");
     String codebaseURL = ServletUtil.getApplicationBase(req);
+
     req.setAttribute("codebaseURL", codebaseURL);
-    /* Use Java escaping for aesthetic reasons; just make sure to use double
-    quotes rather than single quotes in the Javascript code. */
-    req.setAttribute("codebaseURLescaped",
-        StringEscapeUtils.escapeJava(codebaseURL));
+    req.setAttribute("urlDeployScript", codebaseURL + "/deployJava.min.js");
+    req.setAttribute("urlButtonImage", ServletUtil.quoteAndEscapeJS(
+        codebaseURL + "/webstart_button.png"));
+    // TODO: Keep the JNLP file name in a single location.
+    req.setAttribute("urlJNLP", ServletUtil.quoteAndEscapeJS(
+        codebaseURL + "/sc_client.jnlp"));
+    // TODO: Synchronize with JNLP file.
+    req.setAttribute("minJavaVer", ServletUtil.quoteAndEscapeJS("1.5"));
 
     // TODO: Consider if there's a better way to do this.
     String scriptCode =

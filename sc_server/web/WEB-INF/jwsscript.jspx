@@ -6,13 +6,13 @@
 
 <jsp:element name="script">
   <jsp:attribute name="type">text/javascript</jsp:attribute>
-  <jsp:attribute name="src"><c:out value="${codebaseURL}"/>/deployJava.min.js</jsp:attribute>
+  <jsp:attribute name="src"><c:out value="${urlDeployScript}"/></jsp:attribute>
   <jsp:body></jsp:body>
 </jsp:element>
 <!-- Hack to get a newline: -->${""}
 <script type="text/javascript">
-  deployJava.launchButtonPNG = "${codebaseURLescaped}/webstart_button.png";
-  deployJava.createWebStartLaunchButton("${codebaseURLescaped}/sc_client.jnlp", "1.5");
+  deployJava.launchButtonPNG = ${urlButtonImage};
+  deployJava.createWebStartLaunchButton(${urlJNLP}, ${minJavaVer});
 </script>
 
 </jsp:root>
