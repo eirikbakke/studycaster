@@ -4,11 +4,15 @@
   xmlns:c="http://java.sun.com/jsp/jstl/core"
   version="2.0">
 
-<!-- TODO: Remember that the button image and script will be remote. -->
-<![CDATA[<script type="text/javascript" src="deployJava.min.js"></script>]]>
+<jsp:element name="script">
+  <jsp:attribute name="type">text/javascript</jsp:attribute>
+  <jsp:attribute name="src"><c:out value="${codebaseURL}"/>/deployJava.min.js</jsp:attribute>
+  <jsp:body></jsp:body>
+</jsp:element>
+<!-- Hack to get a newline: -->${""}
 <script type="text/javascript">
-  deployJava.launchButtonPNG = 'webstart_button.png';
-  deployJava.createWebStartLaunchButton("sc_client.jnlp", "1.5");
+  deployJava.launchButtonPNG = "${codebaseURLescaped}/webstart_button.png";
+  deployJava.createWebStartLaunchButton("${codebaseURLescaped}/sc_client.jnlp", "1.5");
 </script>
 
 </jsp:root>

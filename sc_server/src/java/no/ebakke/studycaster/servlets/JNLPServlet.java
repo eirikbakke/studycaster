@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package no.ebakke.studycaster.servlets;
 
 import java.io.IOException;
@@ -12,71 +8,30 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-/**
- *
- * @author Administrator
- */
-@WebServlet(name = "JNLPServlet", urlPatterns = {"/client"})
+@WebServlet(name = "JNLPServlet", urlPatterns = {"/sc_client.jnlp"})
 public class JNLPServlet extends HttpServlet {
+  private static final long serialVersionUID = 1L;
 
-  /** 
-   * Processes requests for both HTTP <code>GET</code> and <code>POST</code> methods.
-   * @param request servlet request
-   * @param response servlet response
-   * @throws ServletException if a servlet-specific error occurs
-   * @throws IOException if an I/O error occurs
-   */
-  protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-          throws ServletException, IOException {
-    response.setHeader("Cache-Control", "no-cache");
-    response.setHeader("Pragma"       , "no-cache");
-    response.setCharacterEncoding("UTF-8");
+  @Override
+  protected void service(HttpServletRequest req, HttpServletResponse resp)
+          throws ServletException, IOException
+  {
+    resp.setHeader("Cache-Control", "no-cache");
+    resp.setHeader("Pragma"       , "no-cache");
+    resp.setCharacterEncoding("UTF-8");
 
-    if (request.getParameter("debug") != null) {
-      response.setContentType("text/html");
+    if (req.getParameter("debug") != null) {
+      resp.setContentType("text/html");
     } else {
-      response.setContentType("application/x-java-jnlp-file");
-      response.setHeader("Content-Disposition", "attachment; filename=\"sc_client.jnlp\"");
+      resp.setContentType("application/x-java-jnlp-file");
+      resp.setHeader("Content-Disposition",
+          "attachment; filename=\"sc_client.jnlp\"");
     }
-    //request.setAttribute("codebaseURL", "http://localhost:8080/sc_server/");
-    request.setAttribute("codebaseURL", "http://localhost:8080/sc_server/moo\"<sdf>asdf");
-    RequestDispatcher rd = getServletContext().getRequestDispatcher("/WEB-INF/client.jspx");
-    rd.forward(request, response);
+    /* TODO: Consider whether the codebase URL should be a configuration
+    parameter rather than being derived dynamically. */
+    req.setAttribute("codebaseURL", ServletUtil.getApplicationBase(req));
+    RequestDispatcher rd =
+        getServletContext().getRequestDispatcher("/WEB-INF/client.jspx");
+    rd.forward(req, resp);
   }
-
-  // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-  /** 
-   * Handles the HTTP <code>GET</code> method.
-   * @param request servlet request
-   * @param response servlet response
-   * @throws ServletException if a servlet-specific error occurs
-   * @throws IOException if an I/O error occurs
-   */
-  @Override
-  protected void doGet(HttpServletRequest request, HttpServletResponse response)
-          throws ServletException, IOException {
-    processRequest(request, response);
-  }
-
-  /** 
-   * Handles the HTTP <code>POST</code> method.
-   * @param request servlet request
-   * @param response servlet response
-   * @throws ServletException if a servlet-specific error occurs
-   * @throws IOException if an I/O error occurs
-   */
-  @Override
-  protected void doPost(HttpServletRequest request, HttpServletResponse response)
-          throws ServletException, IOException {
-    processRequest(request, response);
-  }
-
-  /** 
-   * Returns a short description of the servlet.
-   * @return a String containing servlet description
-   */
-  @Override
-  public String getServletInfo() {
-    return "Short description";
-  }// </editor-fold>
 }

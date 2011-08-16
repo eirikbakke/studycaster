@@ -17,10 +17,10 @@ public final class ServletUtil {
   // See http://stackoverflow.com/questions/675730 .
   public static String getApplicationBase(HttpServletRequest req) {
     String scheme = req.getScheme().toLowerCase();
-    String port = ("http".equals(scheme)  && req.getServerPort() != 80 ||
-                   "https".equals(scheme) && req.getServerPort() != 443)
-                     ? (":" + req.getServerPort()) : "";
-    return scheme + "://" + req.getServerName() + port + req.getContextPath();
+    int port = req.getServerPort();
+    String portS = ("http".equals(scheme)  && port != 80 ||
+                    "https".equals(scheme) && port != 443) ? (":" + port) : "";
+    return scheme + "://" + req.getServerName() + portS + req.getContextPath();
   }
 
   public static String renderServletToString(
@@ -57,4 +57,15 @@ public final class ServletUtil {
 
     return byteStream.toString(response.getCharacterEncoding());
   }
+
+	/** Retrieve a string parameter from the request, throwing a
+  BadRequestException if it was not supplied by the client. */
+	public static String getStringParamChecked(
+      HttpServletRequest req, String paramName) throws BadRequestException
+	{
+		String ret = req.getParameter(paramName);
+		if (ret == null)
+			throw new BadRequestException("Missing parameter \"" + paramName + "\"");
+		return ret;
+	}
 }

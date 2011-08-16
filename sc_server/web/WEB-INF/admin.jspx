@@ -14,18 +14,20 @@
     <title>StudyCaster Management Console</title>
   </head>
   <body>
-    <p>JSW Button for Launching the StudyCaster Console:</p>
+    <h1>StudyCaster Management Console</h1>
+    <p>This page was accessed via
+    <jsp:element name="a">
+      <jsp:attribute name="href"><c:out value="${codebaseURL}"/></jsp:attribute>
+      <jsp:body><c:out value="${codebaseURL}"/></jsp:body>
+    </jsp:element>.
+    </p>
+    <p>JWS button for launching the StudyCaster Client (based on the absolute
+      URL above):</p>
       ${scriptCode}
     <p>The code used to generate the button above is as follows: </p>
     <pre>
       <c:out value="${scriptCode}"/>
     </pre>
-    <p>Here is a test to make sure JSTL for loops are working correctly:</p>
-    <ol>
-      <c:forEach items="${listTest}" var="item">
-        <li>${item}</li>
-      </c:forEach>
-    </ol>
   </body>
 </html>
 
