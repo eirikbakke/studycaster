@@ -19,23 +19,29 @@ public class AdminServlet extends HttpServlet {
   {
     resp.setHeader("Cache-Control", "no-cache");
     resp.setHeader("Pragma"       , "no-cache");
-    String serverURL = ServletUtil.getApplicationBase(req);
+    try {
+      String serverURL = ServletUtil.getApplicationBase(req);
 
-    req.setAttribute("serverURL", serverURL);
-    req.setAttribute("urlDeployScript", serverURL + "/deployJava.min.js");
-    req.setAttribute("urlButtonImage", ServletUtil.quoteAndEscapeJS(
-        serverURL + "/webstart_button.png"));
-    req.setAttribute("urlJNLP", ServletUtil.quoteAndEscapeJS(
-        serverURL + JNLPServlet.JNLP_PATH));
-    // TODO: Synchronize with JNLP file.
-    req.setAttribute("minJavaVer", ServletUtil.quoteAndEscapeJS("1.5"));
+      req.setAttribute("serverURL", serverURL);
+      req.setAttribute("urlDeployScript", serverURL + "/deployJava.min.js");
+      /* Don't allow strings with characters that would need escaping, since
+      deployJava.js doesn't support them. */
+      req.setAttribute("urlButtonImage", ServletUtil.ensureSafeString(
+          serverURL + "/webstart_button.png"));
+      req.setAttribute("urlJNLP", ServletUtil.ensureSafeString(
+          serverURL + JNLPServlet.JNLP_PATH));
+      // TODO: Synchronize with JNLP file.
+      req.setAttribute("minJavaVer", ServletUtil.ensureSafeString("1.5"));
 
-    // TODO: Consider if there's a better way to do this.
-    String scriptCode =
-        ServletUtil.renderServletToString("/WEB-INF/jwsButton.jspx", req, resp);
-    req.setAttribute("scriptCode", scriptCode);
-    RequestDispatcher rd =
-        getServletContext().getRequestDispatcher("/WEB-INF/adminPage.jspx");
-    rd.forward(req, resp);
+      // TODO: Consider if there's a better way to do this.
+      String scriptCode = ServletUtil.renderServletToString(
+          "/WEB-INF/jwsButton.jspx", req, resp);
+      req.setAttribute("scriptCode", scriptCode);
+      RequestDispatcher rd =
+          getServletContext().getRequestDispatcher("/WEB-INF/adminPage.jspx");
+      rd.forward(req, resp);
+    } catch (BadRequestException e) {
+      resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+    }
   }
 }

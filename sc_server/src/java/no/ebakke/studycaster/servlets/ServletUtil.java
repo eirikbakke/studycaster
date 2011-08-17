@@ -65,16 +65,18 @@ public final class ServletUtil {
       HttpServletRequest req, String paramName) throws BadRequestException
   {
     String ret = req.getParameter(paramName);
-    if (ret == null)
-      throw new BadRequestException("Missing parameter \"" + paramName + "\"");
+    if (ret == null) {
+      throw new BadRequestException("Missing parameter \"" +
+          StringEscapeUtils.escapeJava(paramName) + "\"");
+    }
     return ret;
   }
 
-  /** A less pessimistic escape mechanism for producing safe JavaScript strings;
-  enclose in double quotes and don't escape single quotes or forward slashes,
-  with an exception for the forbidden sequence "</". */
-  public static String quoteAndEscapeJS(String s) {
-    return
-        "\"" + StringEscapeUtils.escapeJava(s).replace("</", "<\\/") + "\"";
+  public static String ensureSafeString(String s) throws BadRequestException {
+    if (s.contains("\'") || s.contains("\"") || s.contains("</")) {
+      throw new BadRequestException("Cannot use unsafe string \"" +
+          StringEscapeUtils.escapeJava(s) + "\" in this context");
+    }
+    return s;
   }
 }

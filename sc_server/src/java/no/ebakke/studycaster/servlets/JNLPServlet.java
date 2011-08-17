@@ -13,8 +13,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
     urlPatterns = {JNLPServlet.JNLP_PATH})
 public class JNLPServlet extends HttpServlet {
   /* To change JNLP_DIR, would also have to update project properties
-  (Build->Packaging) and build.xml. To change JNLP_FILE, also update
-  build.xml. */
+  (Build->Packaging) and build.xml. */
   public static final String JNLP_DIR  = "/client";
   public static final String JNLP_FILE = "sc_client.jnlp";
   public static final String JNLP_PATH =

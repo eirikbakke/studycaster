@@ -2,17 +2,14 @@
 <jsp:root 
   xmlns:jsp="http://java.sun.com/JSP/Page"
   xmlns:c="http://java.sun.com/jsp/jstl/core"
+  xmlns:fn="http://java.sun.com/jsp/jstl/functions"
   version="2.0">
 
-<jsp:element name="script">
-  <jsp:attribute name="type">text/javascript</jsp:attribute>
-  <jsp:attribute name="src"><c:out value="${urlDeployScript}"/></jsp:attribute>
-  <jsp:body></jsp:body>
-</jsp:element>
+<script type="text/javascript" src="${fn:escapeXml(urlDeployScript)}">${""}</script>
 <!-- Hack to get a newline: -->${""}
 <script type="text/javascript">
-  deployJava.launchButtonPNG = ${urlButtonImage};
-  deployJava.createWebStartLaunchButton(${urlJNLP}, ${minJavaVer});
+  deployJava.launchButtonPNG = "${urlButtonImage}";
+  deployJava.createWebStartLaunchButton("${urlJNLP}", "${minJavaVer}");
 </script>
 
 </jsp:root>
