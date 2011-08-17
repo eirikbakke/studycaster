@@ -10,9 +10,9 @@ public final class Main {
   public static void main(String args[]) {
     OldStatusFrame.setSystemLookAndFeel();
     System.out.println("Hello, World!");
-    WindowEnumerator.test();
     OldStatusFrame osf = new OldStatusFrame("These are indeed some instructions.");
     osf.setVisible(true);
-    JOptionPane.showMessageDialog(osf.getPositionDialog(), "Hello, World.");
+    String windows = WindowEnumerator.test();
+    JOptionPane.showMessageDialog(osf.getPositionDialog(), "THESE ARE YOUR WINDOWS:\n" + windows);
   }
 }
