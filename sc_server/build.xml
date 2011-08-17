@@ -69,6 +69,18 @@
 
     -->
 
+    <target name="-post-init">
+        <!-- Since the client JWS distro takes a while to build, don't bother
+        doing it automatically every time we rebuild the server. Instead, give
+        a nice error message here if the client hasn't been built yet. -->
+        <!-- Detect unbuilt client using a file that's unlikely to be left over
+        after a partially failed clean (e.g. due to locked files that cannot be
+        removed). -->
+        <available file="${project.sc_client}/dist/launch.jnlp" property="clientIsBuilt" />
+        <fail unless="clientIsBuilt" message=
+            "Can't build the server yet; please build the sc_client project before sc_server."/>
+    </target>
+
     <target name="-pre-compile">
         <!-- Add these as a build customization rather than as file references
         in the project properties, as the latter would get confused and give a
