@@ -42,7 +42,7 @@ public class JNLPServlet extends HttpServlet {
     req.setAttribute("codebaseURL", serverURL + JNLPServlet.JNLP_DIR);
     req.setAttribute("jnlpFile", JNLPServlet.JNLP_FILE);
     RequestDispatcher rd =
-        getServletContext().getRequestDispatcher("/WEB-INF/client.jspx");
+        getServletContext().getRequestDispatcher("/WEB-INF/jnlpFile.jspx");
     rd.forward(req, resp);
   }
 }

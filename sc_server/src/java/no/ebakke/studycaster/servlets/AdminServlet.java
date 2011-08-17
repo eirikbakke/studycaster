@@ -32,10 +32,10 @@ public class AdminServlet extends HttpServlet {
 
     // TODO: Consider if there's a better way to do this.
     String scriptCode =
-        ServletUtil.renderServletToString("/WEB-INF/jwsscript.jspx", req, resp);
+        ServletUtil.renderServletToString("/WEB-INF/jwsButton.jspx", req, resp);
     req.setAttribute("scriptCode", scriptCode);
     RequestDispatcher rd =
-        getServletContext().getRequestDispatcher("/WEB-INF/admin.jspx");
+        getServletContext().getRequestDispatcher("/WEB-INF/adminPage.jspx");
     rd.forward(req, resp);
   }
 }
