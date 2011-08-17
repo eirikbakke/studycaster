@@ -70,12 +70,18 @@
     -->
 
     <target name="-pre-compile">
-        <!-- Add this as a build customization rather than as a file reference
+        <!-- Add these as a build customization rather than as file references
         in the project properties, as the latter would get confused and give a
         "broken reference" message whenever the client project was cleaned.
         Also, this lets us rename the generated JNLP file, which is actually a
         JSPX file. -->
         <copyfiles files="${project.sc_client}/dist/lib" todir="${build.web.dir}/client/lib"/>
         <copy file="${project.sc_client}/dist/launch.jnlp" tofile="${build.web.dir}/WEB-INF/generatedJNLP.jspx"/>
+        <unzip src="${libs.StudyCasterIcons.classpath}" dest="${build.web.dir}/client/icons">
+            <patternset>
+                <include name="no/ebakke/studycaster/resources/icon*.png"/>
+            </patternset>
+            <mapper type="flatten"/>
+        </unzip>
     </target>
 </project>

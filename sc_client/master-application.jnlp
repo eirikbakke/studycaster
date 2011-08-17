@@ -10,7 +10,16 @@
     <homepage href="${APPLICATION.HOMEPAGE}"/>
     <description>${APPLICATION.DESC}</description>
     <description kind="short">${APPLICATION.DESC.SHORT}</description>
-    <!--${JNLP.ICONS}-->
+
+    <icon href="icons/icon22.png" kind="default" width="22" height="22"/>
+    <icon href="icons/icon24.png" kind="default" width="24" height="24"/>
+    <icon href="icons/icon32.png" kind="default" width="32" height="32"/>
+    <icon href="icons/icon48.png" kind="default" width="48" height="48"/>
+    <!-- JNLP seems to scale everything from a 64x64 icon if one is included. -->
+    <!--<icon href="icons/icon64.png" kind="default" width="64" height="64"/>-->
+    <icon href="icons/icon128.png" kind="default" width="128" height="128"/>
+    <icon href="icons/icon256.png" kind="default" width="256" height="256"/>
+
     <!--${JNLP.OFFLINE.ALLOWED}-->
   </information>
   <!--${JNLP.UPDATE}-->

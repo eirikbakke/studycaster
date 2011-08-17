@@ -1,4 +1,4 @@
-package no.ebakke.screencasting;
+package no.ebakke.studycaster.screencasting;
 
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
