@@ -76,5 +76,6 @@
         Also, this lets us rename the generated JNLP file, which is actually a
         JSPX file. -->
         <copyfiles files="${project.sc_client}/dist/lib" todir="${build.web.dir}/client/lib"/>
+        <copy file="${project.sc_client}/dist/launch.jnlp" tofile="${build.web.dir}/WEB-INF/generatedJNLP.jspx"/>
     </target>
 </project>
