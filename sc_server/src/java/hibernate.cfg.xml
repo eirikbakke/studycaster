@@ -2,10 +2,9 @@
 <!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
 <hibernate-configuration>
   <session-factory>
-    <property name="hibernate.dialect">org.hibernate.dialect.DerbyDialect</property>
-    <property name="hibernate.connection.driver_class">org.apache.derby.jdbc.ClientDriver</property>
+    <!-- TODO: Use a proper connection pool. -->
     <property name="hibernate.connection.url">jdbc:derby://localhost:1527/sc_devel;create=true;user=studycaster</property>
-    <property name="current_session_context_class">thread</property>
+    <property name="hibernate.current_session_context_class">thread</property>
     <property name="hbm2ddl.auto">create</property>
     <mapping resource="hibernate.hbm.xml"/>
   </session-factory>
