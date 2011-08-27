@@ -17,21 +17,12 @@ public final class DomainTests {
     System.out.println(r3);
 
     // TODO: Should I rather used "managed" sessions and close them explicitly?
-    Session s = HibernateUtil.getSessionFactory().getCurrentSession();
-    s.beginTransaction();
-    s.save(r1);
-    s.save(r2);
-    s.save(r3);
-    s.getTransaction().commit();
+    DomainUtil.storeRequest(r1);
+    DomainUtil.storeRequest(r2);
+    DomainUtil.storeRequest(r3);
 
     System.out.println("Loading requests:");
-    s = HibernateUtil.getSessionFactory().getCurrentSession();
-    s.beginTransaction();
-
-    for (Request r : (List<Request>) s.createQuery("from Request").list()) {
+    for (Request r : DomainUtil.getRequests())
       System.out.println(r);
-    }
-
-    s.getTransaction().commit();
   }
 }
