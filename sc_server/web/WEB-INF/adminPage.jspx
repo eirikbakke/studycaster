@@ -25,7 +25,7 @@
     <h1><img src="client/icons/icon32.png" alt="Icon"/>
       StudyCaster Management Console</h1>
     <p>This page was accessed via
-    <a href="${fn:escapeXml(serverURL)}"><c:out value="${serverURL}"/></a>
+    <a href="${fn:escapeXml(serverURL)}"><c:out value="${serverURL}"/></a>.
     </p>
     <p>JWS button for launching the StudyCaster Client (based on the absolute
       URL above):</p>

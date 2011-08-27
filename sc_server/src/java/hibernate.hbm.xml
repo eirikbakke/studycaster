@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+  "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="no.ebakke.studycaster.domain"
+    default-access="field">
+  <class name="Request" table="Requests">
+    <id name="id" column="rid">
+      <generator class="native"/>
+    </id>
+    <property name="time" column="rtime" type="timestamp"/>
+    <property name="type" column="rtype"/>
+  </class>
+</hibernate-mapping>
