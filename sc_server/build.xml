@@ -96,4 +96,17 @@
             <mapper type="flatten"/>
         </unzip>
     </target>
+
+    <!-- Exclude the default hibernate configuration file from the WAR
+    distribution build, but keep it for local deployment during development.
+    Doing it this way (as opposed to including the file in
+    build.classes.excludes in project.properties) ensures that incremental local
+    deployments of the file work as well. This approach also keeps the file
+    where NetBeans expects it to be. -->
+    <target name="-pre-dist">
+        <delete file="${build.classes.dir}/hibernate.cfg.xml"/>
+    </target>
+    <target name="-post-dist">
+        <copy file="${src.dir}/hibernate.cfg.xml" tofile="${build.classes.dir}/hibernate.cfg.xml"/>
+    </target>
 </project>

@@ -1,11 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+
 <hibernate-configuration>
+  <!-- NOTE: This file is used for local deployments during development only.
+             See the comment in build.xml. -->
   <session-factory>
-    <!-- TODO: Use a proper connection pool. -->
-    <property name="hibernate.connection.url">jdbc:derby://localhost:1527/sc_devel;create=true;user=studycaster</property>
+    <!-- See http://db.apache.org/derby/integrate/plugin_help/derby_app.html . -->
+    <property name="hibernate.dialect">org.hibernate.dialect.DerbyDialect</property>
+    <property name="hibernate.connection.driver_class">org.apache.derby.jdbc.EmbeddedDriver</property>
+    <!-- Note: Setting create=true will trigger a warning (but no change) if the DB already exist. -->
+    <property name="hibernate.connection.url">jdbc:derby:sc_derby_develdb;create=true</property>
+    <property name="hibernate.connection.username">studycaster</property>
+
     <property name="hibernate.current_session_context_class">thread</property>
-    <property name="hbm2ddl.auto">create</property>
+    <!-- Either "create" or "validate". -->
+    <property name="hbm2ddl.auto">validate</property>
     <mapping resource="hibernate.hbm.xml"/>
+
+    <!-- TODO: Use a proper connection pool. -->
+    <!-- See http://docs.jboss.org/hibernate/core/3.3/reference/en/html/session-configuration.html . -->
+    <!--
+    hibernate.c3p0.min_size=5
+    hibernate.c3p0.max_size=20
+    hibernate.c3p0.timeout=1800
+    hibernate.c3p0.max_statements=50
+    -->
   </session-factory>
 </hibernate-configuration>

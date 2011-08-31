@@ -10,4 +10,6 @@ sc_server/dist
 sc_server/nbproject/private/
 sc_server/nbproject/build-impl.xml
 sc_server/nbproject/genfiles.properties
+sc_server/sc_derby_develdb
+sc_server/derby.log
 

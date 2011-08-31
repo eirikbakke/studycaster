@@ -27,6 +27,17 @@
     <p>This page was accessed via
     <a href="${fn:escapeXml(serverURL)}"><c:out value="${serverURL}"/></a>.
     </p>
+    <p>
+      <c:choose>
+        <c:when test="${empty jdbcURLinUse}">
+          <code><c:out value="${jdbcURLproperty}"/></code> is not set.
+        </c:when>
+        <c:otherwise>
+          <code><c:out value="${jdbcURLproperty}"/></code> =
+          <code><c:out value="${jdbcURLinUse}"/></code>
+        </c:otherwise>
+      </c:choose>
+    </p>
     <p>JWS button for launching the StudyCaster Client (based on the absolute
       URL above):</p>
       ${scriptCode}

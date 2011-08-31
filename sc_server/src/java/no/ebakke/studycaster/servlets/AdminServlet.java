@@ -7,6 +7,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import no.ebakke.studycaster.domain.DomainUtil;
 
 // TODO: Does this root mapping work on all containers?
 @WebServlet(name = "AdminServlet", urlPatterns = {"/index.html"})
@@ -33,6 +34,9 @@ public class AdminServlet extends HttpServlet {
       // TODO: Synchronize with JNLP file.
       req.setAttribute("minJavaVer", ServletUtil.ensureSafeString("1.5"));
 
+      req.setAttribute("jdbcURLproperty", DomainUtil.JDBC_URL_PROPERTY);
+      req.setAttribute("jdbcURLinUse"   , DomainUtil.getJDBCURLinUse());
+
       // TODO: Consider if there's a better way to do this.
       String scriptCode = ServletUtil.renderServletToString(
           "/WEB-INF/jwsButton.jspx", req, resp);
@@ -40,6 +44,9 @@ public class AdminServlet extends HttpServlet {
       RequestDispatcher rd =
           getServletContext().getRequestDispatcher("/WEB-INF/adminPage.jspx");
       rd.forward(req, resp);
+
+      /*for (Request r : DomainUtil.getRequests())
+        System.out.println(r);*/
     } catch (BadRequestException e) {
       resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
     }
