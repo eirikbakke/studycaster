@@ -1,10 +1,41 @@
 body {
   margin-left: 25px;
   margin-right: 25px;
-  margin-top: 25px;
+  margin-top: 10px;
   margin-bottom: 25px;
   background-color: rgb(240,240,240);
   font-family: arial, sans-serif;
   font-size: 14px;
   max-width: 800px;
+}
+
+#connectionURLfield {
+  width: 100%;
+}
+
+#newPasswordField {
+  width: 16em;
+}
+
+label[for='newPasswordField'] {
+  margin-left: 50px;
+}
+
+input[type='button'] {
+  width: 8em;
+  height: 24px;
+}
+
+p, form {
+  margin-top: 0px;
+  margin-bottom: 12px;
+}
+
+h1, h2, h3 {
+  margin-top: 12px;
+  margin-bottom: 0px;
+}
+
+code.separateLine {
+  margin-left: 25px;
 }

@@ -49,22 +49,27 @@
       taken from <code>hibernate.cfg.xml</code>.
     </p>
     <h2>Database Setup</h2>
-    <p>
-      <form action="#">
-        <label for="connectionURLfield">JDBC connection URL: </label><br/>
-        <input type="text" name="connectionURLparam" id="connectionURLfield"/><br/>
+    <form action="#" id="dbSetupForm">
+      <label for="connectionURLfield">JDBC connection URL: </label><br/>
+      <input type="text" name="connectionURLparam" id="connectionURLfield"/><br/>
 
-        <input type="radio" name="dbActionChoice" id="verifyRadio" value="verify" checked="checked"/>
-        <label for="verifyRadio">Verify Connection/Schema</label><br/>
+      <input type="radio" name="dbActionChoice" id="verifyRadio" value="verify" checked="checked"/>
+      <label for="verifyRadio">Verify Connection/Schema</label><br/>
 
-        <input type="radio" name="dbActionChoice" id="createRadio" value="create"/>
-        <label for="verifyRadio">Create new schema (<em>warning: existing data will be lost!</em>)</label><br/>
+      <input type="radio" name="dbActionChoice" id="createRadio" value="create"/>
+      <label for="createRadio">Create new schema (existing data will be lost)</label><br/>
 
-        <label for="newPasswordField">New admin password: </label>
-        <input type="text" name="newPasswordParam" id="newPasswordField"/><br/>
+      <label for="newPasswordField">New admin password: </label>
+      <input type="text" name="newPasswordParam" id="newPasswordField" disabled="disabled"/><br/>
 
-        <input type="button" value="Submit" id="dbSetupSubmit"/>
-      </form>
+      <input type="button" value="Submit" id="dbSetupSubmit"/>
+    </form>
+    <p>Example JDBC connection URL (for MySQL):<br/>
+      <!-- TODO: Is this &amp;amp; thing really the best way to get an ampersand? -->
+      <code class="separateLine">jdbc:mysql://<em>host</em>:<em>port</em>/<em>database</em>?user=<em>username</em>&amp;amp;password=<em>password</em></code><br/>
+    </p>
+    <p>For local StudyCaster development:<br/>
+      <code class="separateLine">jdbc:derby:sc_derby_develdb;create=true</code><br/>
     </p>
     <h2>Launch Button</h2>
     <p>JWS button for launching the StudyCaster Client (based on the absolute
