@@ -20,11 +20,12 @@
     <link rel="icon" href="client/icons/icon128.png" sizes="128x128" type="image/png"/>
     <link rel="icon" href="client/icons/icon256.png" sizes="256x256" type="image/png"/>
     <title>StudyCaster Management Console</title>
-    <link href="style.css" rel="stylesheet" title="Normal" />
+    <link href="style.css" rel="stylesheet" title="Normal"/>
   </head>
   <body>
     <h1><img src="client/icons/icon32.png" alt="Icon"/>
       StudyCaster Management Console</h1>
+    <h2>Configuration Status</h2>
     <p>Access URL for this request:
       <a href="${fn:escapeXml(serverURL)}"><c:out value="${serverURL}"/></a>.
     </p>
@@ -47,6 +48,25 @@
       Properties". In development mode, the JDBC connection URL will instead be
       taken from <code>hibernate.cfg.xml</code>.
     </p>
+    <h2>Database Setup</h2>
+    <p>
+      <form action="#">
+        <label for="connectionURLfield">JDBC connection URL: </label><br/>
+        <input type="text" name="connectionURLparam" id="connectionURLfield"/><br/>
+
+        <input type="radio" name="dbActionChoice" id="verifyRadio" value="verify" checked="checked"/>
+        <label for="verifyRadio">Verify Connection/Schema</label><br/>
+
+        <input type="radio" name="dbActionChoice" id="createRadio" value="create"/>
+        <label for="verifyRadio">Create new schema (<em>warning: existing data will be lost!</em>)</label><br/>
+
+        <label for="newPasswordField">New admin password: </label>
+        <input type="text" name="newPasswordParam" id="newPasswordField"/><br/>
+
+        <input type="button" value="Submit" id="dbSetupSubmit"/>
+      </form>
+    </p>
+    <h2>Launch Button</h2>
     <p>JWS button for launching the StudyCaster Client (based on the absolute
       access URL above):</p>
       ${scriptCode}
@@ -55,6 +75,8 @@
     <pre>
       <c:out value="${scriptCode}"/>
     </pre>
+    <![CDATA[<script type="text/javascript" src="jquery-1.6.3.min.js"></script>]]>
+    <![CDATA[<script type="text/javascript" src="admin.js"></script>]]>
   </body>
 </html>
 
