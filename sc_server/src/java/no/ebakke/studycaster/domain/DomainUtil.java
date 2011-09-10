@@ -20,10 +20,11 @@ public final class DomainUtil {
     Throwable      tmpSessionFactoryError = null;
     Configuration  tmpConfigurationInUse  = null;
     try {
-      tmpConfigurationInUse = createHibernateConfiguration(null, false);
-      tmpSessionFactory = tmpConfigurationInUse.buildSessionFactory();
+      //tmpConfigurationInUse = createHibernateConfiguration(null, false);
+      //tmpSessionFactory = tmpConfigurationInUse.buildSessionFactory();
+      if (tmpConfigurationInUse == null || tmpSessionFactory == null)
+        throw new HibernateException(new NullPointerException());
     } catch (Throwable e) {
-      e.printStackTrace();
       tmpSessionFactoryError = e;
     }
     sessionFactoryError = tmpSessionFactoryError;
@@ -51,7 +52,7 @@ public final class DomainUtil {
   }
 
   /** If connectionURL is null, take from environment. */
-  private static Configuration createHibernateConfiguration(
+  public static Configuration createHibernateConfiguration(
         String connectionURL, boolean create)
   {
     Configuration ret = new Configuration();
@@ -61,11 +62,9 @@ public final class DomainUtil {
     } else {
       try {
         ret.configure();
-        System.out.println("CONFIGURE SUCCESS");
       } catch (HibernateException e) {
         /* Normal case for production; hibernate.cfg.xml is only used in
         development. */
-        System.out.println("CONFIGURE FAIL");
       }
       String prop = System.getProperty(JDBC_URL_PROPERTY);
       if (ret.getProperties().containsKey(HCU_KEY)) {
@@ -83,7 +82,7 @@ public final class DomainUtil {
     Properties p = new Properties();
     if (setConnectionURL != null)
       p.setProperty(HCU_KEY, setConnectionURL);
-    if (ret.getProperties().contains(HDA_KEY))
+    if (ret.getProperty(HDA_KEY) != null)
       throw new HibernateException("Hibernate configuration may not set " + HDA_KEY);
     p.setProperty(HDA_KEY, create ? "create" : "validate");
     ret.addProperties(p);

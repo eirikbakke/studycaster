@@ -1,3 +1,11 @@
+/* JSLint directives:  */
+/*jslint devel: true, browser: true, indent: 2 */
+/*global jQuery, $ */
+
+function unused() {
+  "use strict";
+}
+
 function submitDBsetup() {
   "use strict";
   if (!$("#connectionURLfield").val()) {
@@ -13,15 +21,22 @@ function submitDBsetup() {
       return;
     }
   }
-  $.post("admin", $("#dbSetupForm").serializeArray(), function () {
-    alert("The call returned.");
-  }, "json");
+  // TODO: Is there a way to not assign unused parameters to names?
+  $.post("admin", $("#dbSetupForm").serializeArray(),
+    function (data, textStatus, jqXHR) {
+      unused(textStatus, jqXHR);
+      alert("Result: " + data);
+    })
+    .error(function (jqXHR, textStatus, errorThrown) {
+      unused(textStatus, jqXHR);
+      alert("Unexpected error: " + errorThrown);
+    });
 }
 
 $(document).ready(function () {
   "use strict";
   $("#dbSetupSubmit").click(submitDBsetup);
-  $("input[name='dbActionChoice']").change(function () {
+  $("input[name='dbAction']").change(function () {
     if ($("#createRadio").attr("checked")) {
       $("#newPasswordField").removeAttr("disabled");
     } else {

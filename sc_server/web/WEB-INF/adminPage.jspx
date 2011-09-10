@@ -23,7 +23,7 @@
     <link href="style.css" rel="stylesheet" title="Normal"/>
   </head>
   <body>
-    <h1><img src="client/icons/icon32.png" alt="Icon"/>
+    <h1><img src="client/icons/icon32.png" alt="Icon" class="main"/>
       StudyCaster Management Console</h1>
     <h2>Configuration Status</h2>
     <p>Access URL for this request:
@@ -51,16 +51,16 @@
     <h2>Database Setup</h2>
     <form action="#" id="dbSetupForm">
       <label for="connectionURLfield">JDBC connection URL: </label><br/>
-      <input type="text" name="connectionURLparam" id="connectionURLfield"/><br/>
+      <input type="text" name="connectionURL" id="connectionURLfield"/><br/>
 
-      <input type="radio" name="dbActionChoice" id="verifyRadio" value="verify" checked="checked"/>
-      <label for="verifyRadio">Verify Connection/Schema</label><br/>
+      <input type="radio" name="dbAction" id="validateRadio" value="validate" checked="checked"/>
+      <label for="validateRadio">Validate Connection/Schema</label><br/>
 
-      <input type="radio" name="dbActionChoice" id="createRadio" value="create"/>
+      <input type="radio" name="dbAction" id="createRadio" value="create"/>
       <label for="createRadio">Create new schema (existing data will be lost)</label><br/>
 
       <label for="newPasswordField">New admin password: </label>
-      <input type="text" name="newPasswordParam" id="newPasswordField" disabled="disabled"/><br/>
+      <input type="text" name="newPassword" id="newPasswordField" disabled="disabled"/><br/>
 
       <input type="button" value="Submit" id="dbSetupSubmit"/>
     </form>

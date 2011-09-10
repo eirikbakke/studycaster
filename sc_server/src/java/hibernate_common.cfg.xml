@@ -4,8 +4,6 @@
 <hibernate-configuration>
   <session-factory>
     <property name="hibernate.current_session_context_class">thread</property>
-    <!-- Either "create" or "validate". -->
-    <property name="hbm2ddl.auto">validate</property>
     <mapping resource="hibernate.hbm.xml"/>
 
     <!-- TODO: Use a proper connection pool. -->

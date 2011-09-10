@@ -26,7 +26,7 @@ input[type='button'] {
   height: 24px;
 }
 
-p, form {
+p, form, img, pre {
   margin-top: 0px;
   margin-bottom: 12px;
 }
@@ -38,4 +38,9 @@ h1, h2, h3 {
 
 code.separateLine {
   margin-left: 25px;
+}
+
+img.main {
+  vertical-align: top;
+  margin-bottom: 0px;
 }
