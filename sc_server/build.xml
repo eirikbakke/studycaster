@@ -97,16 +97,22 @@
         </unzip>
     </target>
 
-    <!-- Exclude the default hibernate configuration file from the WAR
-    distribution build, but keep it for local deployment during development.
-    Doing it this way (as opposed to including the file in
-    build.classes.excludes in project.properties) ensures that incremental local
-    deployments of the file work as well. This approach also keeps the file
-    where NetBeans expects it to be. -->
-    <target name="-pre-dist">
-        <delete file="${build.classes.dir}/hibernate.cfg.xml"/>
-    </target>
+    <!-- Create a production version of the WAR file that excludes the default
+    hibernate configuration as well as the default context.xml file. The default
+    generated WAR is still needed for local deployment during development. -->
     <target name="-post-dist">
-        <copy file="${src.dir}/hibernate.cfg.xml" tofile="${build.classes.dir}/hibernate.cfg.xml"/>
+        <!-- See http://stackoverflow.com/questions/2025950/ant-how-to-strip-the-basedir-from-an-absolute-path-to-get-a-relative-path -->
+        <property name="hibernatecfg.jar.path"
+            location="${build.classes.dir}/hibernate.cfg.xml"
+            basedir="${build.web.dir}" relative="yes" />
+        <dirname file="${dist.war}" property="dist.war.dir" />
+        <basename file="${dist.war}" property="dist.war.base" suffix=".war" />
+        <!-- See http://stackoverflow.com/questions/2521231/ant-task-to-remove-files-from-a-jar . -->
+        <jar destfile="${dist.war.dir}/${dist.war.base}_prod.war">
+            <zipfileset src="${dist.war}">
+                <exclude name="${hibernatecfg.jar.path}" />
+                <exclude name="META-INF/context.xml"     />
+            </zipfileset>
+        </jar>
     </target>
 </project>
