@@ -8,57 +8,86 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
 public final class DomainUtil {
-  public static final String JDBC_URL_PROPERTY = "JDBC_CONNECTION_STRING";
+  public  static final String JDBC_URL_PROPERTY = "JDBC_CONNECTION_STRING";
+  private static final String HCU_KEY = "hibernate.connection.url";
+  private static final String HDA_KEY = "hbm2ddl.auto";
   private static final SessionFactory sessionFactory;
-  private static final Throwable sessionFactoryError;
-  private static final String jdbcURLinUse;
+  private static final Configuration  configurationInUse;
+  private static final Throwable      sessionFactoryError;
 
   static {
     SessionFactory tmpSessionFactory      = null;
     Throwable      tmpSessionFactoryError = null;
-    String         tmpJDBCURLinUse;
-    tmpJDBCURLinUse = System.getProperty(JDBC_URL_PROPERTY);
-    jdbcURLinUse = (tmpJDBCURLinUse == null || tmpJDBCURLinUse.isEmpty())
-        ? null : tmpJDBCURLinUse;
+    Configuration  tmpConfigurationInUse  = null;
     try {
-      /*if (jdbcURLinUse == null) {
-        throw new HibernateException(
-                "The " + JDBC_URL_PROPERTY + " system property is not set.");
-      }*/
-      tmpSessionFactory = DomainUtil.buildSessionFactory(jdbcURLinUse);
+      tmpConfigurationInUse = createHibernateConfiguration(null, false);
+      tmpSessionFactory = tmpConfigurationInUse.buildSessionFactory();
     } catch (Throwable e) {
+      e.printStackTrace();
       tmpSessionFactoryError = e;
     }
     sessionFactoryError = tmpSessionFactoryError;
     sessionFactory      = tmpSessionFactory;
+    configurationInUse  = tmpConfigurationInUse;
   }
 
   private DomainUtil() { }
 
-  public static String getJDBCURLinUse() {
-    return jdbcURLinUse;
+  public static String getConnectionURLinUse() {
+    if (configurationInUse == null)
+      return null;
+    Object ret = configurationInUse.getProperty(HCU_KEY);
+    if (ret == null)
+      return null;
+    return ret.toString();
   }
 
   public static SessionFactory getSessionFactory() {
-    if (sessionFactory == null) {
+    if (sessionFactoryError != null) {
       throw new HibernateException("Hibernate was not properly initialized.",
           sessionFactoryError);
     }
     return sessionFactory;
   }
 
-  private static SessionFactory buildSessionFactory(String jdbcURL)
-      throws HibernateException
+  /** If connectionURL is null, take from environment. */
+  private static Configuration createHibernateConfiguration(
+        String connectionURL, boolean create)
   {
-    Configuration conf = new Configuration();
-    /* Take base configuration from hibernate.cfg.xml . */
-    conf.configure();
-    if (jdbcURL != null) {
-      Properties p = new Properties();
-      p.setProperty("hibernate.connection.url", jdbcURL);
-      conf.addProperties(p);
+    Configuration ret = new Configuration();
+    String setConnectionURL;
+    if (connectionURL != null) {
+      setConnectionURL = connectionURL;
+    } else {
+      try {
+        ret.configure();
+        System.out.println("CONFIGURE SUCCESS");
+      } catch (HibernateException e) {
+        /* Normal case for production; hibernate.cfg.xml is only used in
+        development. */
+        System.out.println("CONFIGURE FAIL");
+      }
+      String prop = System.getProperty(JDBC_URL_PROPERTY);
+      if (ret.getProperties().containsKey(HCU_KEY)) {
+        setConnectionURL = null;
+        // TODO: Use logger instead.
+        if (prop != null) {
+          System.err.println("Warning: " + HCU_KEY + " was already defined; " +
+              "ignoring " + JDBC_URL_PROPERTY + " environment variable.");
+        }
+      } else {
+        setConnectionURL = prop;
+      }
     }
-    return conf.buildSessionFactory();
+    ret.configure("hibernate_common.cfg.xml");
+    Properties p = new Properties();
+    if (setConnectionURL != null)
+      p.setProperty(HCU_KEY, setConnectionURL);
+    if (ret.getProperties().contains(HDA_KEY))
+      throw new HibernateException("Hibernate configuration may not set " + HDA_KEY);
+    p.setProperty(HDA_KEY, create ? "create" : "validate");
+    ret.addProperties(p);
+    return ret;
   }
 
   public static void storeRequest(Request r) {

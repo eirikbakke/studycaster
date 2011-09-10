@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+  <session-factory>
+    <property name="hibernate.current_session_context_class">thread</property>
+    <!-- Either "create" or "validate". -->
+    <property name="hbm2ddl.auto">validate</property>
+    <mapping resource="hibernate.hbm.xml"/>
+
+    <!-- TODO: Use a proper connection pool. -->
+    <!-- See http://docs.jboss.org/hibernate/core/3.3/reference/en/html/session-configuration.html . -->
+    <!--
+    hibernate.c3p0.min_size=5
+    hibernate.c3p0.max_size=20
+    hibernate.c3p0.timeout=1800
+    hibernate.c3p0.max_statements=50
+    -->
+  </session-factory>
+</hibernate-configuration>

@@ -20,26 +20,35 @@
     <link rel="icon" href="client/icons/icon128.png" sizes="128x128" type="image/png"/>
     <link rel="icon" href="client/icons/icon256.png" sizes="256x256" type="image/png"/>
     <title>StudyCaster Management Console</title>
+    <link href="style.css" rel="stylesheet" title="Normal" />
   </head>
   <body>
     <h1><img src="client/icons/icon32.png" alt="Icon"/>
       StudyCaster Management Console</h1>
-    <p>This page was accessed via
-    <a href="${fn:escapeXml(serverURL)}"><c:out value="${serverURL}"/></a>.
+    <p>Access URL for this request:
+      <a href="${fn:escapeXml(serverURL)}"><c:out value="${serverURL}"/></a>.
     </p>
     <p>
+      JDBC Connection URL: 
       <c:choose>
         <c:when test="${empty jdbcURLinUse}">
-          <code><c:out value="${jdbcURLproperty}"/></code> is not set.
+          <em>(not set)</em>
         </c:when>
         <c:otherwise>
-          <code><c:out value="${jdbcURLproperty}"/></code> =
           <code><c:out value="${jdbcURLinUse}"/></code>
         </c:otherwise>
       </c:choose>
     </p>
+    <p>
+      You can configure the JDBC connection URL by setting the
+      <code><c:out value="${jdbcURLproperty}"/></code> environment variable on
+      the server. On AWS Elastic Beanstalk, this can be done from
+      "Actions&#8594;Edit/Load Configuration&#8594;Container&#8594;Environment
+      Properties". In development mode, the JDBC connection URL will instead be
+      taken from <code>hibernate.cfg.xml</code>.
+    </p>
     <p>JWS button for launching the StudyCaster Client (based on the absolute
-      URL above):</p>
+      access URL above):</p>
       ${scriptCode}
     <p>The code used to generate the button above can be copied and pasted as
     follows: </p>

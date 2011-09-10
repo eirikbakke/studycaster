@@ -35,7 +35,7 @@ public class AdminServlet extends HttpServlet {
       req.setAttribute("minJavaVer", ServletUtil.ensureSafeString("1.5"));
 
       req.setAttribute("jdbcURLproperty", DomainUtil.JDBC_URL_PROPERTY);
-      req.setAttribute("jdbcURLinUse"   , DomainUtil.getJDBCURLinUse());
+      req.setAttribute("jdbcURLinUse"   , DomainUtil.getConnectionURLinUse());
 
       // TODO: Consider if there's a better way to do this.
       String scriptCode = ServletUtil.renderServletToString(
