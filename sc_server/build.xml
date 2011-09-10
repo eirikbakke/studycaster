@@ -101,14 +101,13 @@
     hibernate configuration as well as the default context.xml file. The default
     generated WAR is still needed for local deployment during development. -->
     <target name="-post-dist">
+        <fail unless="dist.prod.war">Must set dist.prod.war</fail>
         <!-- See http://stackoverflow.com/questions/2025950/ant-how-to-strip-the-basedir-from-an-absolute-path-to-get-a-relative-path -->
         <property name="hibernatecfg.jar.path"
             location="${build.classes.dir}/hibernate.cfg.xml"
             basedir="${build.web.dir}" relative="yes" />
-        <dirname file="${dist.war}" property="dist.war.dir" />
-        <basename file="${dist.war}" property="dist.war.base" suffix=".war" />
         <!-- See http://stackoverflow.com/questions/2521231/ant-task-to-remove-files-from-a-jar . -->
-        <jar destfile="${dist.war.dir}/${dist.war.base}_prod.war">
+        <jar destfile="${dist.prod.war}">
             <zipfileset src="${dist.war}">
                 <exclude name="${hibernatecfg.jar.path}" />
                 <exclude name="META-INF/context.xml"     />
