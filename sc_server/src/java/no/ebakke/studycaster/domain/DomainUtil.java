@@ -136,7 +136,7 @@ public final class DomainUtil {
               "ignoring " + JDBC_URL_PROPERTY + " environment variable.");
         }
       } else {
-        if (prop == null)
+        if (prop == null || prop.isEmpty())
           throw new BackendException(JDBC_URL_PROPERTY + " not set.");
         setConnectionURL = prop;
       }

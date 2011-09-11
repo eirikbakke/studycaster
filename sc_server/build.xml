@@ -8,7 +8,7 @@
 <!-- You can turn off the Compile on Save (or Deploy on Save) setting -->
 <!-- in the project's Project Properties dialog box.-->
 <project name="sc_server" default="default" basedir=".">
-    <description>Builds, tests, and runs the project sc_server.</description>
+    <description>Builds, tests, and runs the StudyCaster server.</description>
     <import file="nbproject/build-impl.xml"/>
     <!--
 
@@ -69,7 +69,11 @@
 
     -->
 
-    <target name="-post-init">
+    <target name="-pre-compile">
+        <fail unless="dist.prod.war"  >Must set dist.prod.war</fail>
+        <fail unless="hiberdevel.prop">Must set hiberdevel.prop</fail>
+        <fail unless="develdb.name"   >Must set develdb.name</fail>
+
         <!-- Since the client JWS distro takes a while to build, don't bother
         doing it automatically every time we rebuild the server. Instead, give
         a nice error message here if the client hasn't been built yet. -->
@@ -80,12 +84,6 @@
         <fail unless="clientIsBuilt" message=
             "Can't build the server yet; please build the sc_client project before sc_server."/>
 
-        <fail unless="dist.prod.war"  >Must set dist.prod.war</fail>
-        <fail unless="hiberdevel.prop">Must set hiberdevel.prop</fail>
-        <fail unless="develdb.name"   >Must set develdb.name</fail>
-    </target>
-
-    <target name="-pre-compile">
         <!-- Add these as a build customization rather than as file references
         in the project properties, as the latter would get confused and give a
         "broken reference" message whenever the client project was cleaned.
