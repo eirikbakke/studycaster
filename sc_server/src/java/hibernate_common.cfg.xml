@@ -3,6 +3,8 @@
 
 <hibernate-configuration>
   <session-factory>
+    <!-- TODO: Should this rather be JTA?
+    See http://community.jboss.org/wiki/SessionsAndTransactions#Transaction_demarcation_with_JTA . -->
     <property name="hibernate.current_session_context_class">thread</property>
 
     <!-- Connection pool settings.

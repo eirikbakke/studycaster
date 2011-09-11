@@ -30,16 +30,8 @@
       <a href="${fn:escapeXml(serverURL)}"><c:out value="${serverURL}"/></a>.
     </p>
     <p>
-      JDBC Connection URL: 
-      <c:choose>
-        <c:when test="${empty jdbcURLinUse}">
-          <em>(not set)</em>
-        </c:when>
-        <c:otherwise>
-          <code><c:out value="${jdbcURLinUse}"/></code>
-        </c:otherwise>
-      </c:choose>
-    </p>
+      Database connection status at server startup:<br/>
+    <code class="quote"><c:out value="${dbStatus}"/></code></p>
     <p>
       You can configure the JDBC connection URL by setting the
       <code><c:out value="${jdbcURLproperty}"/></code> environment variable on
@@ -50,7 +42,7 @@
     </p>
     <h2>Database Setup</h2>
     <form action="#" id="dbSetupForm">
-      <label for="connectionURLfield">JDBC connection URL: </label><br/>
+      <label for="connectionURLfield">JDBC connection URL (include authentication): </label><br/>
       <input type="text" name="connectionURL" id="connectionURLfield"/><br/>
 
       <input type="radio" name="dbAction" id="validateRadio" value="validate" checked="checked"/>
@@ -67,10 +59,10 @@
     </form>
     <p>Example JDBC connection URL (for MySQL):<br/>
       <!-- TODO: Is this &amp;amp; thing really the best way to get an ampersand? -->
-      <code class="separateLine">jdbc:mysql://<em>host</em>:<em>port</em>/<em>database</em>?user=<em>username</em>&amp;amp;password=<em>password</em></code><br/>
+      <code class="quote">jdbc:mysql://<em>host</em>:<em>port</em>/<em>database</em>?user=<em>username</em>&amp;amp;password=<em>password</em></code><br/>
     </p>
     <p>For local StudyCaster development:<br/>
-      <code class="separateLine">jdbc:derby:sc_derby_develdb;create=true</code><br/>
+      <code class="quote">jdbc:derby:sc_derby_develdb;create=true</code><br/>
     </p>
     <h2>Launch Button</h2>
     <p>JWS button for launching the StudyCaster Client (based on the absolute
