@@ -23,7 +23,7 @@
     <link href="style.css" rel="stylesheet" title="Normal"/>
   </head>
   <body>
-    <h1><img src="client/icons/icon32.png" alt="Icon" class="main"/>
+    <h1><img src="client/icons/icon32.png" alt="Icon" id="mainIcon"/>
       StudyCaster Management Console</h1>
     <h2>Configuration Status</h2>
     <p>Access URL for this request:
@@ -63,6 +63,7 @@
       <input type="text" name="newPassword" id="newPasswordField" disabled="disabled"/><br/>
 
       <input type="button" value="Submit" id="dbSetupSubmit"/>
+      <img src="ajax-loader.gif" alt="[progress wheel]" id="progressWheel"/>
     </form>
     <p>Example JDBC connection URL (for MySQL):<br/>
       <!-- TODO: Is this &amp;amp; thing really the best way to get an ampersand? -->

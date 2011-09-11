@@ -4,15 +4,14 @@
 <hibernate-configuration>
   <session-factory>
     <property name="hibernate.current_session_context_class">thread</property>
-    <mapping resource="hibernate.hbm.xml"/>
 
-    <!-- TODO: Use a proper connection pool. -->
-    <!-- See http://docs.jboss.org/hibernate/core/3.3/reference/en/html/session-configuration.html . -->
-    <!--
-    hibernate.c3p0.min_size=5
-    hibernate.c3p0.max_size=20
-    hibernate.c3p0.timeout=1800
-    hibernate.c3p0.max_statements=50
-    -->
+    <!-- Connection pool settings.
+    See http://docs.jboss.org/hibernate/core/3.3/reference/en/html/session-configuration.html . -->
+    <property name="hibernate.c3p0.min_size">5</property>
+    <property name="hibernate.c3p0.max_size">20</property>
+    <property name="hibernate.c3p0.timeout">1800</property>
+    <property name="hibernate.c3p0.max_statements">50</property>
+
+    <mapping resource="hibernate.hbm.xml"/>
   </session-factory>
 </hibernate-configuration>

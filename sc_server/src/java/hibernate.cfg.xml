@@ -8,6 +8,8 @@
     <!-- See http://db.apache.org/derby/integrate/plugin_help/derby_app.html . -->
     <property name="hibernate.dialect">org.hibernate.dialect.DerbyDialect</property>
     <property name="hibernate.connection.driver_class">org.apache.derby.jdbc.EmbeddedDriver</property>
+
+    <!-- TODO: Figure out a way to use an absolute URL here. -->
     <!-- Note: Setting create=true will trigger a warning (but no change) if the DB already exist. -->
     <property name="hibernate.connection.url">jdbc:derby:sc_derby_develdb;create=true</property>
     <property name="hibernate.connection.username">studycaster</property>

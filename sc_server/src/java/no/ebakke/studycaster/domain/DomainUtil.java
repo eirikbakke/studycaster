@@ -20,8 +20,8 @@ public final class DomainUtil {
     Throwable      tmpSessionFactoryError = null;
     Configuration  tmpConfigurationInUse  = null;
     try {
-      //tmpConfigurationInUse = createHibernateConfiguration(null, false);
-      //tmpSessionFactory = tmpConfigurationInUse.buildSessionFactory();
+      tmpConfigurationInUse = createHibernateConfiguration(null, false);
+      tmpSessionFactory = tmpConfigurationInUse.buildSessionFactory();
       if (tmpConfigurationInUse == null || tmpSessionFactory == null)
         throw new HibernateException(new NullPointerException());
     } catch (Throwable e) {

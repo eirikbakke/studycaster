@@ -40,7 +40,15 @@ code.separateLine {
   margin-left: 25px;
 }
 
-img.main {
+#mainIcon {
   vertical-align: top;
   margin-bottom: 0px;
+}
+
+#progressWheel {
+  vertical-align: middle;
+  margin-bottom: 0px;
+  margin-left: 20px;
+  padding-bottom: 4px;
+  display: none;
 }

@@ -21,14 +21,25 @@ function submitDBsetup() {
       return;
     }
   }
-  // TODO: Is there a way to not assign unused parameters to names?
+  function setInProgress(inProgress) {
+    if (inProgress) {
+      $("#progressWheel").show();
+      $("#dbSetupSubmit").attr("disabled", "disabled");
+    } else {
+      $("#progressWheel").hide();
+      $("#dbSetupSubmit").removeAttr("disabled");
+    }
+  }
+  setInProgress(true);
   $.post("admin", $("#dbSetupForm").serializeArray(),
     function (data, textStatus, jqXHR) {
       unused(textStatus, jqXHR);
+      setInProgress(false);
       alert("Result: " + data);
     })
     .error(function (jqXHR, textStatus, errorThrown) {
       unused(textStatus, jqXHR);
+      setInProgress(false);
       alert("Unexpected error: " + errorThrown);
     });
 }
