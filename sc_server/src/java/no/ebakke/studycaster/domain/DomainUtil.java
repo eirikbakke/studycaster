@@ -1,5 +1,7 @@
 package no.ebakke.studycaster.domain;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
@@ -113,11 +115,17 @@ public final class DomainUtil {
     if (connectionURL != null) {
       setConnectionURL = connectionURL;
     } else {
-      try {
-        ret.configure();
-      } catch (HibernateException e) {
-        /* Normal case for production; hibernate.cfg.xml is only used in
-        development. */
+      InputStream in =
+          DomainUtil.class.getResourceAsStream("/hibernate_devel.properties");
+      if (in != null) {
+        // Development mode.
+        Properties develProp = new Properties();
+        try {
+          develProp.load(in);
+        } catch (IOException e) {
+          throw new BackendException(e);
+        }
+        ret.addProperties(develProp);
       }
       String prop = System.getProperty(JDBC_URL_PROPERTY);
       if (ret.getProperty(HCU_KEY) != null) {
@@ -133,7 +141,7 @@ public final class DomainUtil {
         setConnectionURL = prop;
       }
     }
-    ret.configure("hibernate_common.cfg.xml");
+    ret.configure("hibernate.cfg.xml");
     Properties p = new Properties();
     if (setConnectionURL != null)
       p.setProperty(HCU_KEY, setConnectionURL);

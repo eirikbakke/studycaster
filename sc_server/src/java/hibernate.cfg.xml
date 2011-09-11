@@ -2,12 +2,18 @@
 <!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
 
 <hibernate-configuration>
-  <!-- NOTE: This file is used for local deployments during development only.
-             See the comment in build.xml. -->
   <session-factory>
-    <!-- See http://db.apache.org/derby/integrate/plugin_help/derby_app.html . -->
-    <!-- TODO: Figure out a way to use an absolute URL here. -->
-    <!-- Note: Setting create=true will trigger a warning (but no change) if the DB already exist. -->
-    <property name="hibernate.connection.url">jdbc:derby:sc_derby_develdb</property>
+    <!-- TODO: Should this rather be JTA?
+    See http://community.jboss.org/wiki/SessionsAndTransactions#Transaction_demarcation_with_JTA . -->
+    <property name="hibernate.current_session_context_class">thread</property>
+
+    <!-- Connection pool settings.
+    See http://docs.jboss.org/hibernate/core/3.3/reference/en/html/session-configuration.html . -->
+    <property name="hibernate.c3p0.min_size">5</property>
+    <property name="hibernate.c3p0.max_size">20</property>
+    <property name="hibernate.c3p0.timeout">1800</property>
+    <property name="hibernate.c3p0.max_statements">50</property>
+
+    <mapping resource="hibernate.hbm.xml"/>
   </session-factory>
 </hibernate-configuration>

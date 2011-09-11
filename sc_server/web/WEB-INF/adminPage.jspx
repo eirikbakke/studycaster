@@ -24,13 +24,13 @@
   </head>
   <body>
     <h1><img src="client/icons/icon32.png" alt="Icon" id="mainIcon"/>
-      StudyCaster Management Console</h1>
+      StudyCaster Admin Page</h1>
     <h2>Configuration Status</h2>
     <p>Access URL for this request:
       <a href="${fn:escapeXml(serverURL)}"><c:out value="${serverURL}"/></a>.
     </p>
     <p>
-      Database connection status at server startup:<br/>
+      Database connection status at application deployment:<br/>
     <code class="quote"><c:out value="${dbStatus}"/></code></p>
     <p>
       You can configure the JDBC connection URL by setting the
@@ -57,13 +57,12 @@
       <input type="button" value="Submit" id="dbSetupSubmit"/>
       <img src="ajax-loader.gif" alt="[progress wheel]" id="progressWheel"/>
     </form>
-    <p>Example JDBC connection URL (for MySQL):<br/>
+    <p>JDBC connection URL format for MySQL:<br/>
       <!-- TODO: Is this &amp;amp; thing really the best way to get an ampersand? -->
       <code class="quote">jdbc:mysql://<em>host</em>:<em>port</em>/<em>database</em>?user=<em>username</em>&amp;amp;password=<em>password</em></code><br/>
     </p>
-    <p>For local StudyCaster development:<br/>
-      <code class="quote">jdbc:derby:sc_derby_develdb;create=true</code><br/>
-    </p>
+    <p>For local StudyCaster development with Derby, see the build log for the
+    URL of the current development database.</p>
     <h2>Launch Button</h2>
     <p>JWS button for launching the StudyCaster Client (based on the absolute
       access URL above):</p>

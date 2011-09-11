@@ -79,6 +79,10 @@
         <available file="${project.sc_client}/dist/launch.jnlp" property="clientIsBuilt" />
         <fail unless="clientIsBuilt" message=
             "Can't build the server yet; please build the sc_client project before sc_server."/>
+
+        <fail unless="dist.prod.war"  >Must set dist.prod.war</fail>
+        <fail unless="hiberdevel.prop">Must set hiberdevel.prop</fail>
+        <fail unless="develdb.name"   >Must set develdb.name</fail>
     </target>
 
     <target name="-pre-compile">
@@ -95,21 +99,29 @@
             </patternset>
             <mapper type="flatten"/>
         </unzip>
+
+        <!-- TODO: Detect unsupported characters in path name (e.g. semicolon). -->
+        <property name="develdb.path" location="${develdb.name}"/>
+        <filelist id="develdb.path.filelist" files="${develdb.path}"/>
+        <pathconvert property="develdb.path.conv" dirsep="/" refid="develdb.path.filelist"/>
+        <property name="develdb.jdbc.url" value="jdbc:derby:directory:${develdb.path.conv}"/>
+        <echo message="Using development database '${develdb.jdbc.url}'" />
+        <echo message="hibernate.connection.url=${develdb.jdbc.url}"
+              file="${build.classes.dir}/${hiberdevel.prop}"/>
     </target>
 
     <!-- Create a production version of the WAR file that excludes the default
     hibernate configuration as well as the default context.xml file. The default
     generated WAR is still needed for local deployment during development. -->
     <target name="-post-dist">
-        <fail unless="dist.prod.war">Must set dist.prod.war</fail>
         <!-- See http://stackoverflow.com/questions/2025950/ant-how-to-strip-the-basedir-from-an-absolute-path-to-get-a-relative-path -->
-        <property name="hibernatecfg.jar.path"
-            location="${build.classes.dir}/hibernate.cfg.xml"
+        <property name="hiberdevel.prop.path"
+            location="${build.classes.dir}/${hiberdevel.prop}"
             basedir="${build.web.dir}" relative="yes" />
         <!-- See http://stackoverflow.com/questions/2521231/ant-task-to-remove-files-from-a-jar . -->
         <jar destfile="${dist.prod.war}">
             <zipfileset src="${dist.war}">
-                <exclude name="${hibernatecfg.jar.path}" />
+                <exclude name="${hiberdevel.prop.path}" />
                 <exclude name="META-INF/context.xml"     />
             </zipfileset>
         </jar>
