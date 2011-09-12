@@ -23,6 +23,8 @@ import org.apache.http.entity.mime.content.ContentBody;
 import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.util.EntityUtils;
 
 /** Handles protocol details specific to the server-side PHP script. */
 public class ServerContext {
@@ -36,6 +38,9 @@ public class ServerContext {
   private Ticket ticketFS; // First server ticket on this machine
   private Ticket ticketCS; // Current server ticket
   private long   serverSecondsAhead;
+  /* Keep the HttpClient in common for all requests to preserve the session
+  cookie. */
+  private HttpClient httpClient;
 
   public ServerContext() throws StudyCasterException {
     String serverScriptURIs = System.getProperty("jnlp.studycaster.serveruri");
@@ -81,16 +86,14 @@ public class ServerContext {
     long timeBef, timeAft;
     try {
       timeBef = System.currentTimeMillis();
-      HttpClient httpClient = new DefaultHttpClient();
-      try {
-        HttpResponse response = requestHelper(httpClient, "gsi", null);
-        timeAft = System.currentTimeMillis();
-        headerSTM = response.getFirstHeader("X-StudyCaster-ServerTime");
-        headerSTK = response.getFirstHeader("X-StudyCaster-ServerTicket");
-        response.getEntity().consumeContent();
-      } finally {
-        httpClient.getConnectionManager().shutdown();
-      }
+      ThreadSafeClientConnManager connectionManager =
+          new ThreadSafeClientConnManager();
+      httpClient = new DefaultHttpClient(connectionManager);
+      HttpResponse response = requestHelper(httpClient, "gsi", null);
+      timeAft = System.currentTimeMillis();
+      headerSTM = response.getFirstHeader("X-StudyCaster-ServerTime");
+      headerSTK = response.getFirstHeader("X-StudyCaster-ServerTicket");
+      EntityUtils.consume(response.getEntity());
       if (headerSTM == null || headerSTK == null)
         throw new StudyCasterException("Server response missing initialization headers.");
     } catch (IOException e) {
@@ -160,21 +163,20 @@ public class ServerContext {
         throw new IOException("Got invalid StudyCaster response header: " + okHeader.getValue());
       return response;
     } catch (IOException e) {
-      response.getEntity().consumeContent();
+      EntityUtils.consume(response.getEntity());
       throw e;
     } catch (RuntimeException e) {
-      response.getEntity().consumeContent();
+      EntityUtils.consume(response.getEntity());
       throw e;
     }
   }
 
   public void enterRemoteLogRecord(final String msg) {
     StudyCaster.log.log(Level.INFO, "Queueing remote log entry \"{0}\"", msg);
-    final HttpClient httpClient = new DefaultHttpClient();
     new Thread(new Runnable() {
       public void run() {
         try {
-          requestHelper(httpClient, "log", new StringBody(msg)).getEntity().consumeContent();
+          EntityUtils.consume(requestHelper(httpClient, "log", new StringBody(msg)).getEntity());
         } catch (IOException e) {
           StudyCaster.log.log(Level.WARNING, "Failed to enter remote log entry \"" + msg + "\"", e);
         }
@@ -183,8 +185,7 @@ public class ServerContext {
   }
 
   public OutputStream uploadFile(final String remoteName) throws IOException {
-    final HttpClient httpClient = new DefaultHttpClient();
-    requestHelper(httpClient, "upc", new StringBody(remoteName)).getEntity().consumeContent();
+    EntityUtils.consume(requestHelper(httpClient, "upc", new StringBody(remoteName)).getEntity());
 
     // TODO: If writes exceed DEF_UPLOAD_CHUNK_SZ, split into separate packets.
     return new BufferedOutputStream(new OutputStream() {
@@ -206,7 +207,7 @@ public class ServerContext {
             return len;
           }
         };
-        requestHelper(httpClient, "upa", isb).getEntity().consumeContent();
+        EntityUtils.consume(requestHelper(httpClient, "upa", isb).getEntity());
       }
 
       @Override
@@ -214,13 +215,11 @@ public class ServerContext {
         if (closed)
           return;
         closed = true;
-        httpClient.getConnectionManager().shutdown();
       }
     }, DEF_UPLOAD_CHUNK_SZ);
   }
 
   public InputStream downloadFile(String remoteName) throws IOException {
-    final HttpClient httpClient = new DefaultHttpClient();
     final InputStream ret = requestHelper(httpClient, "dnl",
         new StringBody(remoteName)).getEntity().getContent();
     return new InputStream() {
@@ -239,11 +238,7 @@ public class ServerContext {
         if (closed)
           return;
         closed = true;
-        try {
-          ret.close();
-        } finally {
-          httpClient.getConnectionManager().shutdown();
-        }
+        ret.close();
       }
     };
   }
@@ -254,5 +249,10 @@ public class ServerContext {
 
   public long getServerSecondsAhead() {
     return serverSecondsAhead;
+  }
+
+  // TODO: Finish the implementation of this, and have clients call it.
+  public void close() {
+    httpClient.getConnectionManager().shutdown();
   }
 }

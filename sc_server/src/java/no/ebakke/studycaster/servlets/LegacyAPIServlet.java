@@ -11,6 +11,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import no.ebakke.studycaster.api.Ticket;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.io.IOUtils;
@@ -29,7 +30,7 @@ public class LegacyAPIServlet extends HttpServlet {
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-    resp.getWriter().println("Version 9");
+    resp.getWriter().println("Version 10");
   }
 
   @Override
@@ -43,10 +44,27 @@ public class LegacyAPIServlet extends HttpServlet {
       File storageDir = new File(STORAGE_DIR);
 
       String cmd = ServletUtil.getStringParamChecked(multiPart, "cmd");
-      if        (cmd.equals("gsi")) {
+
+      HttpSession session = req.getSession(false);
+      Ticket serverTicket;
+      if (cmd.equals("gsi")) {
+        if (session != null)
+          throw new BadRequestException("Session already established");
+        session = req.getSession(true);
         // TODO: Use an IP hash.
-        resp.setHeader("X-StudyCaster-ServerTicket",
-                new Ticket(SERVER_TICKET_BYTES).toString());
+        serverTicket = new Ticket(SERVER_TICKET_BYTES);
+        session.setAttribute("serverTicket", serverTicket);
+      } else {
+        if (session == null)
+          throw new BadRequestException("Missing session");
+        Object obj = session.getAttribute("serverTicket");
+        if (obj == null || !(obj instanceof Ticket))
+          throw new ServletException("Invalid session: " + obj);
+        serverTicket = (Ticket) obj;
+      }
+
+      if        (cmd.equals("gsi")) {
+        resp.setHeader("X-StudyCaster-ServerTicket", serverTicket.toString());
         resp.setHeader("X-StudyCaster-ServerTime",
                 Long.toString(new Date().getTime() / 1000));
         resp.setHeader("X-StudyCaster-OK", "gsi");
