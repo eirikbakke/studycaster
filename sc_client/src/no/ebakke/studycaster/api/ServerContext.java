@@ -185,7 +185,8 @@ public class ServerContext {
   public OutputStream uploadFile(final String remoteName) throws IOException {
     final HttpClient httpClient = new DefaultHttpClient();
     requestHelper(httpClient, "upc", new StringBody(remoteName)).getEntity().consumeContent();
-    
+
+    // TODO: If writes exceed DEF_UPLOAD_CHUNK_SZ, split into separate packets.
     return new BufferedOutputStream(new OutputStream() {
       private boolean closed;
 
