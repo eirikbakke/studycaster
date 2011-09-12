@@ -1,0 +1,240 @@
+00:13 2010-07-16 (updated 15:23 2010-08-10)
+Icon was from the Tango Icon Library:
+http://tango.freedesktop.org/Tango_Icon_Library
+
+Original screencasting library (no longer used) was from java-remote-control:
+http://code.google.com/p/java-remote-control/wiki/UsingTheScreenRecorder
+
+19:02 2010-07-18 (updated 22:49 2010-07-19, 17:40 2010-07-20)
+TODO
+* Requires Win32 Access
+  * Don't capture other windows than Excel when in foreground
+  * Strip user names from saved files.
+  * Not useful until the above have been implemented
+    * Ask for Excel to be closed prior to screencasting (to avoid capturing other Excel documents).
+* Requires $$$
+  * Add SSL support
+  * Sign JAR
+* Ask for permission to screencast
+* Dump Java console output to log.
+* Have a real progress bar.
+* Optimize screencast encoding.
+* Don't use a temporary directory that contains the user name in its path.
+* Store less IP information (e.g. a shorter hash or a separate file).
+* Confirm that application does not hang around in Add/Remove programs
+
+Later
+* Java screencast.
+* Consider real-time screencast uploading.
+* Verify timing of videos.
+* Find the double-upload bug.
+* Sign the JAR.
+
+Done
+V Don't reopen; dangerous.
+V Have a confirmation dialog if the window is closed before uploading.
+V Fix window positioning for all resolutions.
+
+Considered, decided to make no change:
+* Add notice about not having to save the document elsewhere.
+* Add notice about possibly closed document.
+
+21:37 2010-07-19
+* Renewed logging/screencasting functionality
+  * One class queues up stderr/stdout output, mouse pointer movements, log entries, and screenshots.
+    These can be queued even before the server has been contacted.
+  * Another class intercepts stderr/stdout and the default logger, routing things different places.
+  * Another class transmits as soon as the server has been contacted.
+  * Philosophy: make the logging entirely independent of the rest, don't require proper shutdown.
+* Other notes
+  * Might need to send keepalive packets
+
+01:44 2010-07-22
+http://msdn.microsoft.com/en-us/library/ff468919%28v=VS.85%29.aspx
+http://download.oracle.com/docs/cd/E17476_01/javase/1.4.2/docs/guide/jni/spec/functions.html
+
+20:45 2010-07-28
+* Don't use the StreamMuxer after all. It has inconvenient semantics. Instead, have one PostOutputStream for the (untimestamped) console output and
+  one for the video/mouse pointer stream.
+
+13:57 2010-08-14 New TODO (supercedes previous, updated continously)
+* Rearchitect identification mechanism
+  * Send a cookie
+  * Generate client ticket on server (and rename it)
+  * Consider using a separate ticket for identification
+* Include client-side file size limit.
+* Retry POST uploads, supply file size to append command to make operations idempotent
+* Make force-quit a little more elegant so it doesn't trigger entries in the fail log.
+  * Make video streams end elegantly, too.
+* Fix deadlock bug that sometimes happens in the waiting-for-screencast phase.
+* Fix screencast encoding bug.
+* Host HITs on same server.
+* Host Java Web Start script and button image on same server.
+* Convert video to a better format, make speedup smoother and potentially using regular frame sampling.
+* Allow changed IP address during session (avoid "server ticket mismatch" error).
+* Go over logs from RS experiment, eliminate errors.
+* Increase file size limit.
+* Make sure client log, server log, and fail log are all in GMT, an consider doing this with data downloaded from Mechanical Turk, too.
+* Make screencast codec resynchronization easier.
+* Generate human-readable report
+  * Include detection of log files containing "exception", "error", or "warning" in them
+* Make sure the Open/Save locale thing works (see c4ca600... for a bug)
+* Give the user the option to open the file him/herself if the association operation fails
+* Make sure Excel is closed before the study starts
+* See if stream utility classes can be replaced by classes from Apache Commons IO (e.g. Tee). Remember to add the library to the JWS bunch.
+* Upgrade relevant errors from Level.WARNING to Level.SEVERE.
+* Consider using a special preview mode with disabled button or marked upload
+  (http://docs.amazonwebservices.com/AWSMechanicalTurkRequester/2008-04-01/ApiReference_ExternalQuestionArticle.html)
+* Consider fetching worker ID
+  (http://docs.amazonwebservices.com/AWSMechanicalTurkRequester/2008-04-01/ApiReference_ExternalQuestionArticle.html)
+* Make tickets numbers (without prepending zeroes) to make them easier to punch and handle with Excel (or always strings)
+* Send Java version before Web Start javascript code is executed.
+* Future
+  * Store experiment info in XML file, get rid of the horrible ExcelLauncher class.
+  * Include a configured experiment ID in logged info
+  * Log free disk space if below a certain threshold (due to an error seen once)
+  * Generalize download, report, and log security
+  * Start uploading log immediately, though don't wait for this operation to complete before starting UI.
+  * Post-processing of video stream for additional obscurification
+  * Sign the JAR
+  * Add SSL support
+  * Strip user names from saved files (on client side)
+  * Don't use a temporary directory that contains the user name in its path
+  * Move as much functionality from native library to Java as possible, make improvements
+  * Port window detection library to Mac
+  * Investigate window detection bug; possibly related to hardware-accelerated Windows 7 desktops
+  * Improve progress bar
+  * Avoid users clicking the web start link before accepting the HIT (reduce noise).
+  * Opaquify GET link data
+  * Avoid sending desktop background
+* Absolutely needed for phase two
+  * Make it possible to launch a Java app
+* Provide 64-bit native library for 64-bit Java VM
+* See "The Splash Screen Firewall Dead-Lock"
+  (http://lopica.sourceforge.net/faq.html) and see if there is anything I can
+  do from the developer side to fix this (it's a problem under Comodo).
+* Make sure JWS application does not stick around on the Add/Remove Programs
+  list after exit.
+* Add a "purge data" option at exit.
+
+02:37 2010-08-15
+* Identification methods
+  * IP address hash
+  * Run number
+  * JNLP link retrieval number
+  * MTurk Worker ID
+* Persistence methods
+  * Web cookie
+  * Temp file
+  * JNLP muffin
+  * IP address
+* Ticket generation opportunities
+  * Upon receiving a request for the JNLP file.
+  * In JavaScript
+* Report structure (for a dashboard page):
+  * For each unique IP address
+
+00:08 2010-08-16 New cookie system
+* Cookie locations
+  * Browser
+  * Temp dir
+* Cookie types
+  * User cookie
+* Notes
+  * Multiple user cookies may be declared to be synonymous
+  * Logs are always appended, never changed
+  * Store IP hashes in separate file mapping IP hashes to user cookies
+* Actions
+  * In PHP script, when generating example launch button:
+    * Embed submission of browser/JRE version in JNLP GET URL
+  * In PHP script, when request is made for JNLP file:
+    if (browser had user cookie)
+      current user cookie = browser's user cookie
+      if (GET URL had user cookie && GET URL's user cookie != browser's user cookie)
+        declare GET URL's user cookie and browser's user cookie synonymous
+    else
+      if (GET URL had user cookie)
+        current user cookie = GET URL's user cookie
+      else
+        current user cookie = randomly generated cookie
+      send current user cookie to browser
+    log event including:
+      timestamp
+      current user cookie
+      partial hash of user's IP address (in separate file)
+      country and region from GeoIP database
+      GET URL's browser/JRE version, if any
+      HTTP request's browser type
+    embed in JNLP script's GET URL and in a property:
+      current user cookie
+      server URL
+  * In Java application, when executed
+    if (user cookie specified in property)
+      current user cookie = user cookie from property
+
+    if (temp dir cookie exists) {
+      current user cookie = temp dir cookie
+      if (user cookie specified in property && temp dir cookie != user cookie specified in property)
+        declare cookie specified in property and temp dir cookie synonymous
+    } else {
+      if (user cookie specified in property)
+        current user cookie = user cookie specified in property
+      else
+        current user cookie = // TODO: Continue from here
+    }
+
+18:19 2011-04-28
+
+Features
+* PHP lint
+* Build everything from one makefile
+  * Including ZIP/tar distro
+* Configurability without recompiling
+* Rsync to server (no ftp)
+* NetBeans project with external sources, to edit forms.
+* Simplified logging system, dashboard
+* Still no database
+* Retry failed appends
+* Sign jar
+* To bundle an executable JAR, must build from source (because all JARs must be
+  signed).
+* Simplify video decoding
+* Don't require NetBeans (except for editing dialog boxes)
+  * Distribute a NetBeans project folder for that purpose.
+
+Considerations
+* Might want to use NetBean's Ant scripts to ensure profiling and debugging can
+  still be used.
+  * Could in theory do everything in Ant
+
+Strategic
+* This could take months. Just go with the previous build process and fix enough
+  of this to make it usable for a new study. Most people will not want to embed
+  executable JARs anyway.
+  * (Ugh, does our system allow native executables to be opened? I think it
+    does...)
+
+Prioritized for this study
+* Add configurability, separate from build system.
+* Simplify logging, add dashboard.
+* Simplify video transcoding.
+* Fix blurring bugs on Windows 7.
+* Retry failed appends.
+* Keep JWS Launch Button image on my own server.
+
+19:49 2011-06-17
+Features desired for new study
+* "Please close the following windows"
+* Questions asked in User Study Console
+* Questions timed by User Study Console, based on foreground window
+* Resume from previously answered question
+* Open multiple files at different steps
+* Different instructions at each step
+* Randomize questions
+  * Many possibilities for how to do this; some subgroups of questions still
+    have to be kept together.
+* Might need to actually design the study I need before implementing
+  configurability options.
+  * Base configuration examples on next study, not the previous.
+  * Still, prevoius study is a good stepping stone for development.
+
