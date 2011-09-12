@@ -7,6 +7,7 @@ import java.io.OutputStream;
 public final class TestUtil {
   private TestUtil() { }
 
+  // TODO: Replace with IOUtils.copy(), but make sure clients close is.
   /** Note, is is automatically closed, os is not. */
   public static void hookupStreams(InputStream is, OutputStream os) throws IOException {
     byte buffer[] = new byte[16 * 1024];

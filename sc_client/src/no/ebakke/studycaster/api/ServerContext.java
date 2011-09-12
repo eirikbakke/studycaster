@@ -56,8 +56,6 @@ public class ServerContext {
       throw new StudyCasterException("Malformed server URI", e);
     }
 
-    ticketCC = new Ticket(CLIENT_TICKET_BYTES);
-
     // Read ticket store.
     File ticketStore =
         new File(System.getProperty("java.io.tmpdir") + File.separator + TICKET_STORE_FILENAME);
@@ -78,11 +76,9 @@ public class ServerContext {
     } catch (StudyCasterException e) {
       StudyCaster.log.log(Level.WARNING, "Problem reading ticket store.", e);
     }
-    if (ticketFC == null)
-      ticketFC = ticketCC;
 
     // Get server info.
-    Header headerSTM, headerSTK;
+    Header headerSTM, headerSTK, headerCTK;
     long timeBef, timeAft;
     try {
       timeBef = System.currentTimeMillis();
@@ -93,8 +89,9 @@ public class ServerContext {
       timeAft = System.currentTimeMillis();
       headerSTM = response.getFirstHeader("X-StudyCaster-ServerTime");
       headerSTK = response.getFirstHeader("X-StudyCaster-ServerTicket");
+      headerCTK = response.getFirstHeader("X-StudyCaster-ClientTicket");
       EntityUtils.consume(response.getEntity());
-      if (headerSTM == null || headerSTK == null)
+      if (headerSTM == null || headerSTK == null || headerCTK == null)
         throw new StudyCasterException("Server response missing initialization headers.");
     } catch (IOException e) {
       throw new StudyCasterException("Cannot retrieve server info.", e);
@@ -106,10 +103,13 @@ public class ServerContext {
     } catch (NumberFormatException e) {
       StudyCaster.log.log(Level.WARNING, "Got bad time format from server", e);
     }
-    // Let this exception propagate.
+    // Let these exceptions propagate.
+    ticketCC = new Ticket(headerCTK.getValue());
     ticketCS = new Ticket(headerSTK.getValue());
     if (ticketFS == null)
       ticketFS = ticketCS;
+    if (ticketFC == null)
+      ticketFC = ticketCC;
 
     StudyCaster.log.info(String.format("Tickets: FC = %s, CC = %s, FS = %s, CS = %s",
         ticketFC, ticketCC, ticketFS, ticketCS));
@@ -137,12 +137,14 @@ public class ServerContext {
   {
     HttpPost httpPost = new HttpPost(serverScriptURI);
     MultipartEntity params = new MultipartEntity();
+    /*
     String allTickets =
             ticketFC + "," +
             ticketCC + "," +
            ((ticketFS != null) ? ticketFS : "") + "," +
            ((ticketCS != null) ? ticketCS : "");
     params.addPart("tickets", new StringBody(allTickets));
+    */
     params.addPart("cmd", new StringBody(cmd));
     if (content != null)
       params.addPart("content", content);

@@ -24,8 +24,9 @@ public class LegacyAPIServlet extends HttpServlet {
   private static final long   serialVersionUID = 1L;
   private static final int    MAX_FILE_SIZE = 50000000;
   private static final int    MAX_APPEND_CHUNK = 1024 * 256;
+  private static final int    CLIENT_TICKET_BYTES = 6;
   private static final int    SERVER_TICKET_BYTES = 3;
-  private static final String UPLOAD_DIR   = "upload";
+  private static final String UPLOAD_DIR   = "uploads";
   // TODO: Figure out a better storage strategy.
   private static final String STORAGE_DIR  = "z:/studycaster_storagedir";
 
@@ -48,27 +49,36 @@ public class LegacyAPIServlet extends HttpServlet {
       String cmd = ServletUtil.getMultipartStringParam(multiPart, "cmd");
 
       HttpSession session = req.getSession(false);
-      Ticket serverTicket;
+      Ticket clientTicket, serverTicket;
       if (cmd.equals("gsi")) {
         if (session != null)
           throw new BadRequestException("Session already established");
         session = req.getSession(true);
+        // TODO: Change ticket naming conventions, or get rid of this system.
         // TODO: Use an IP hash. But then don't use it for file naming.
         serverTicket = new Ticket(SERVER_TICKET_BYTES);
+        clientTicket = new Ticket(CLIENT_TICKET_BYTES);
         session.setAttribute("serverTicket", serverTicket);
+        session.setAttribute("clientTicket", clientTicket);
       } else {
         if (session == null)
           throw new BadRequestException("Missing session");
-        Object obj = session.getAttribute("serverTicket");
+        Object obj;
+        obj = session.getAttribute("serverTicket");
         if (obj == null || !(obj instanceof Ticket))
           throw new ServletException("Invalid session: " + obj);
         serverTicket = (Ticket) obj;
+        obj = session.getAttribute("clientTicket");
+        if (obj == null || !(obj instanceof Ticket))
+          throw new ServletException("Invalid session: " + obj);
+        clientTicket = (Ticket) obj;
       }
       uploadDir.mkdir();
-      File ticketDir = ServletUtil.getSaneFile(uploadDir, serverTicket.toString(), true);
+      File ticketDir = ServletUtil.getSaneFile(uploadDir, clientTicket.toString(), true);
       ticketDir.mkdir();
       if        (cmd.equals("gsi")) {
         resp.setHeader("X-StudyCaster-ServerTicket", serverTicket.toString());
+        resp.setHeader("X-StudyCaster-ClientTicket", clientTicket.toString());
         resp.setHeader("X-StudyCaster-ServerTime",
                 Long.toString(new Date().getTime() / 1000));
         resp.setHeader("X-StudyCaster-OK", "gsi");
