@@ -187,7 +187,6 @@ public class ServerContext {
   public OutputStream uploadFile(final String remoteName) throws IOException {
     EntityUtils.consume(requestHelper(httpClient, "upc", new StringBody(remoteName)).getEntity());
 
-    // TODO: If writes exceed DEF_UPLOAD_CHUNK_SZ, split into separate packets.
     return new BufferedOutputStream(new OutputStream() {
       private boolean closed;
 
@@ -200,14 +199,20 @@ public class ServerContext {
       public void write(byte[] b, int off, final int len) throws IOException {
         if (closed)
           throw new IOException("Stream closed");
-        InputStreamBody isb = new InputStreamBody(new ByteArrayInputStream(b, off, len), remoteName)
-        {
-          @Override
-          public long getContentLength() {
-            return len;
-          }
-        };
-        EntityUtils.consume(requestHelper(httpClient, "upa", isb).getEntity());
+
+        for (int subOff = 0; subOff < len; ) {
+          final int subLen = Math.min(len - subOff, DEF_UPLOAD_CHUNK_SZ);
+          InputStreamBody isb = new InputStreamBody(
+              new ByteArrayInputStream(b, off + subOff, subLen), remoteName)
+          {
+            @Override
+            public long getContentLength() {
+              return subLen;
+            }
+          };
+          EntityUtils.consume(requestHelper(httpClient, "upa", isb).getEntity());
+          subOff += subLen;
+        }
       }
 
       @Override

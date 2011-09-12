@@ -20,14 +20,14 @@ public class AdminActionsServlet extends HttpServlet {
       throws ServletException, IOException
   {
     try {
-      String dbAction      = ServletUtil.getStringParamChecked(req, "dbAction");
-      String connectionURL = ServletUtil.getStringParamChecked(req, "connectionURL");
+      String dbAction      = ServletUtil.getStringParam(req, "dbAction");
+      String connectionURL = ServletUtil.getStringParam(req, "connectionURL");
       String newPassword = null;
       boolean create;
       if        (dbAction.equals("validate")) {
         create = false;
       } else if (dbAction.equals("create")) {
-        newPassword = ServletUtil.getStringParamChecked(req, "newPassword");
+        newPassword = ServletUtil.getStringParam(req, "newPassword");
         create = true;
       } else {
         throw new BadRequestException("Invalid action \"" +

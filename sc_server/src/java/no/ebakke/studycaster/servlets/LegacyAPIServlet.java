@@ -2,8 +2,10 @@ package no.ebakke.studycaster.servlets;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Date;
 import java.util.Map;
 import javax.servlet.ServletException;
@@ -29,7 +31,7 @@ public class LegacyAPIServlet extends HttpServlet {
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-    resp.getWriter().println("Version 12");
+    resp.getWriter().println("Version 14");
   }
 
   @Override
@@ -43,7 +45,7 @@ public class LegacyAPIServlet extends HttpServlet {
       File storageDir = new File(STORAGE_DIR);
       File uploadDir = new File(storageDir, UPLOAD_DIR);
 
-      String cmd = ServletUtil.getStringParamChecked(multiPart, "cmd");
+      String cmd = ServletUtil.getMultipartStringParam(multiPart, "cmd");
 
       HttpSession session = req.getSession(false);
       Ticket serverTicket;
@@ -62,7 +64,9 @@ public class LegacyAPIServlet extends HttpServlet {
           throw new ServletException("Invalid session: " + obj);
         serverTicket = (Ticket) obj;
       }
-
+      uploadDir.mkdir();
+      File ticketDir = ServletUtil.getSaneFile(uploadDir, serverTicket.toString(), true);
+      ticketDir.mkdir();
       if        (cmd.equals("gsi")) {
         resp.setHeader("X-StudyCaster-ServerTicket", serverTicket.toString());
         resp.setHeader("X-StudyCaster-ServerTime",
@@ -70,17 +74,13 @@ public class LegacyAPIServlet extends HttpServlet {
         resp.setHeader("X-StudyCaster-OK", "gsi");
       } else if (cmd.equals("log")) {
         String content =
-            ServletUtil.getStringParamChecked(multiPart, "content");
+            ServletUtil.getMultipartStringParam(multiPart, "content");
         // TODO: Do proper logging here.
         System.err.println("Log entry from client: \"" +
             StringEscapeUtils.escapeJava(content) + "\"");
         resp.setHeader("X-StudyCaster-OK", "log");
       } else if (cmd.equals("upc")) {
-        uploadDir.mkdir();
-        File ticketDir = ServletUtil.getSaneFile(uploadDir, serverTicket.toString(), true);
-        ticketDir.mkdir();
-
-        String base = ServletUtil.getStringParamChecked(multiPart, "content");
+        String base = ServletUtil.getMultipartStringParam(multiPart, "content");
         File outFile = ServletUtil.getSaneFile(ticketDir, base, false);
 
         /* Rename old files with the same name until we can create a new one
@@ -92,18 +92,32 @@ public class LegacyAPIServlet extends HttpServlet {
                 base + "_" + Integer.toString(suffixNo), false);
             suffixNo++;
             if (suffixedFile.createNewFile()) {
-              outFile.renameTo(suffixedFile);
+              if (!outFile.renameTo(suffixedFile)) {
+                suffixedFile.delete();
+                if (!outFile.renameTo(suffixedFile))
+                  throw new ServletException("Failed to rename existing file");
+              }
               break;
             }
           } while (true);          
         }
         resp.setHeader("X-StudyCaster-OK", "upc");
       } else if (cmd.equals("upa")) {
-        // TODO: Implement.
+        FileItem content = ServletUtil.getParam(multiPart, "content");
+        File outFile = ServletUtil.getSaneFile(ticketDir, content.getName(), false);
+        if (outFile.length() + content.getSize() > MAX_FILE_SIZE)
+          throw new BadRequestException("File size reached limit");
+        // TODO: Switch to RandomAccessFile and make idempotent.
+        OutputStream os = new FileOutputStream(outFile, true);
+        try {
+          IOUtils.copy(content.getInputStream(), os);
+        } finally {
+          os.close();
+        }
         resp.setHeader("X-StudyCaster-OK", "upa");
       } else if (cmd.equals("dnl")) {
         File input = ServletUtil.getSaneFile(storageDir,
-            ServletUtil.getStringParamChecked(multiPart, "content"), false);
+            ServletUtil.getMultipartStringParam(multiPart, "content"), false);
         if (!input.exists()) {
           resp.sendError(HttpServletResponse.SC_NOT_FOUND);
         } else {
@@ -115,7 +129,6 @@ public class LegacyAPIServlet extends HttpServlet {
             throw new BadRequestException("Requested file too large");
           resp.setContentLength((int) length);
           resp.setHeader("X-StudyCaster-OK", "dnl");
-          // TODO: Do I need to close the FileInputStream?
           // TODO: Check the number of bytes copied.
           InputStream is = new FileInputStream(input);
           try {

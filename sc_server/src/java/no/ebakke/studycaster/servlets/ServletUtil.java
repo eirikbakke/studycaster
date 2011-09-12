@@ -69,25 +69,25 @@ public final class ServletUtil {
     return byteStream.toString(response.getCharacterEncoding());
   }
 
-  public static String getStringParamChecked(
+  public static String getStringParam(
       HttpServletRequest req, String paramName) throws BadRequestException
   {
-    return getStringChecked(req.getParameterMap(), paramName);
+    return getParam(req.getParameterMap(), paramName);
   }
 
-  public static String getStringParamChecked(
+  public static String getMultipartStringParam(
       Map<String,FileItem[]> multiPart, String paramName)
           throws BadRequestException, ServletException
   {
     try {
       // TODO: Check encoding on client end.
-      return getStringChecked(multiPart, paramName).getString("UTF-8");
+      return getParam(multiPart, paramName).getString("UTF-8");
     } catch (UnsupportedEncodingException e) {
       throw new ServletException(e);
     }
   }
 
-  private static <R> R getStringChecked(
+  public static <R> R getParam(
       Map<String,R[]> map, String paramName) throws BadRequestException
   {
     R[] v = map.get(paramName);
