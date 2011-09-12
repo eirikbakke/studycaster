@@ -41,9 +41,10 @@ public class ServerContext {
     String serverScriptURIs = System.getProperty("jnlp.studycaster.serveruri");
     if (serverScriptURIs == null)
       throw new StudyCasterException("Property jnlp.studycaster.serveruri not set");
+    StudyCaster.log.log(Level.INFO, "Using server URI {0}", serverScriptURIs);
     // Needed for POST requests to succeed in the case where index.php is not specified explicitly.
-    if (!serverScriptURIs.endsWith("index.php") && !serverScriptURIs.endsWith("/"))
-      serverScriptURIs += "/";
+    // if (!serverScriptURIs.endsWith("index.php") && !serverScriptURIs.endsWith("/"))
+    //  serverScriptURIs += "/";
     try {
       serverScriptURI = new URI(serverScriptURIs);
     } catch (URISyntaxException e) {

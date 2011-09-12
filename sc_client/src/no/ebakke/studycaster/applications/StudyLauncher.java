@@ -12,6 +12,7 @@ import no.ebakke.studycaster.ui.StudyCasterUI;
 import no.ebakke.studycaster.ui.StudyCasterUI.UIAction;
 import no.ebakke.studycaster.util.Util;
 import no.ebakke.studycaster.screencasting.ScreenCensor;
+import no.ebakke.studycaster.screencasting.WindowEnumerator;
 import no.ebakke.studycaster.util.MyFileNameExtensionFilter;
 
 public class StudyLauncher {
@@ -29,6 +30,8 @@ public class StudyLauncher {
 
   public static void main(String args[]) {
     StudyCaster.log.info("Entering initial log message to promote fail-fast behavior of potential ConsoleTee bugs.");
+
+    args = new String[] { "5782" };
 
     if (args.length != 1) {
       System.err.println("Usage: StudyLauncher <experiment-code>");
@@ -72,6 +75,11 @@ public class StudyLauncher {
       }
       System.exit(0);
     }
+
+    String windows = WindowEnumerator.test();
+    scui.showMessageDialog("WindowEnumerator test",
+        "Window list:\n" + windows, JOptionPane.INFORMATION_MESSAGE);
+
     StudyCaster sc = null;
     long lastModified1, lastModified2;
     boolean download = true;

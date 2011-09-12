@@ -29,6 +29,7 @@
     <!--${JNLP.RESOURCES.MAIN.JAR}-->
     <!--${JNLP.RESOURCES.JARS}-->
     <!--${JNLP.RESOURCES.EXTENSIONS}-->
+    <property name="jnlp.studycaster.serveruri" value="${fn:escapeXml(codebaseURL)}/legacy_api"/>
   </resources>
   <application-desc main-class="${jnlp.main.class}">
     <!--${JNLP.APPLICATION.ARGS}-->

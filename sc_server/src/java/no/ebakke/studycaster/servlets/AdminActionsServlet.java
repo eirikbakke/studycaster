@@ -24,7 +24,7 @@ public class AdminActionsServlet extends HttpServlet {
       String connectionURL = ServletUtil.getStringParamChecked(req, "connectionURL");
       String newPassword = null;
       boolean create;
-      if (dbAction.equals("validate")) {
+      if        (dbAction.equals("validate")) {
         create = false;
       } else if (dbAction.equals("create")) {
         newPassword = ServletUtil.getStringParamChecked(req, "newPassword");
@@ -46,8 +46,6 @@ public class AdminActionsServlet extends HttpServlet {
       }
       resp.getWriter().print(msg);
     } catch (BadRequestException e) {
-      //resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-      //resp.getWriter().print(e.getMessage());
       resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
     }
   }

@@ -212,13 +212,14 @@ public class NonBlockingOutputStream extends OutputStream {
       }
     });
     outPipe.close();
-    if (writerThread == null)
-      throw new IOException("Never connected.");
-    Util.ensureInterruptible(new Interruptible() {
-      public void run() throws InterruptedException {
-        writerThread.join();
-      }
-    });
+    if (writerThread != null) {
+      Util.ensureInterruptible(new Interruptible() {
+        public void run() throws InterruptedException {
+          writerThread.join();
+        }
+      });
+      writerThread = null;
+    }
     checkStoredException();
   }
 
