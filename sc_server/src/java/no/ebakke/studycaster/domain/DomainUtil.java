@@ -75,6 +75,7 @@ public final class DomainUtil {
   {
     try {
       Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
+      Class.forName("org.apache.derby.jdbc.ClientDriver");
       Class.forName("com.mysql.jdbc.Driver");
 
       Configuration conf = createHibernateConfiguration(connectionURL, create);

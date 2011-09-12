@@ -98,12 +98,19 @@
             <mapper type="flatten"/>
         </unzip>
 
+        <!-- Note: The following code for setting develdb.jdbc.url is currently
+        unactive, as the property is being set in project.properties instead; I
+        decided using a networked Derby database for development would be easier
+        because it allows concurrent connections. Keep the code below in here to
+        validate and maintain it, though. -->
         <!-- TODO: Detect unsupported characters in path name (e.g. semicolon). -->
         <property name="develdb.path" location="${develdb.name}"/>
         <filelist id="develdb.path.filelist" files="${develdb.path}"/>
         <pathconvert property="develdb.path.conv" dirsep="/" refid="develdb.path.filelist"/>
         <property name="develdb.jdbc.url" value="jdbc:derby:directory:${develdb.path.conv}"/>
-        <echo message="Using development database '${develdb.jdbc.url}'" />
+
+        <echo message="Using development database '${develdb.jdbc.url}'"/>
+        <echo message="You can override this by setting develdb.jdbc.url in nbproject/private/private.properties"/>
         <echo message="hibernate.connection.url=${develdb.jdbc.url}"
               file="${build.classes.dir}/${hiberdevel.prop}"/>
     </target>
