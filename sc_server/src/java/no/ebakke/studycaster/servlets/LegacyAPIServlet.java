@@ -23,14 +23,13 @@ public class LegacyAPIServlet extends HttpServlet {
   private static final int    MAX_FILE_SIZE = 50000000;
   private static final int    MAX_APPEND_CHUNK = 1024 * 256;
   private static final int    SERVER_TICKET_BYTES = 3;
-  private static final String DOWNLOAD_DIR = "files";
-  private static final String UPLOAD_DIR   = "files/upload";
+  private static final String UPLOAD_DIR   = "upload";
   // TODO: Figure out a better storage strategy.
-  private static final String STORAGE_DIR  = "z:/studycaster_workdir";
+  private static final String STORAGE_DIR  = "z:/studycaster_storagedir";
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-    resp.getWriter().println("Version 10");
+    resp.getWriter().println("Version 12");
   }
 
   @Override
@@ -42,6 +41,7 @@ public class LegacyAPIServlet extends HttpServlet {
               ServletUtil.parseMultiPart(req, MAX_APPEND_CHUNK);
 
       File storageDir = new File(STORAGE_DIR);
+      File uploadDir = new File(storageDir, UPLOAD_DIR);
 
       String cmd = ServletUtil.getStringParamChecked(multiPart, "cmd");
 
@@ -51,7 +51,7 @@ public class LegacyAPIServlet extends HttpServlet {
         if (session != null)
           throw new BadRequestException("Session already established");
         session = req.getSession(true);
-        // TODO: Use an IP hash.
+        // TODO: Use an IP hash. But then don't use it for file naming.
         serverTicket = new Ticket(SERVER_TICKET_BYTES);
         session.setAttribute("serverTicket", serverTicket);
       } else {
@@ -76,14 +76,34 @@ public class LegacyAPIServlet extends HttpServlet {
             StringEscapeUtils.escapeJava(content) + "\"");
         resp.setHeader("X-StudyCaster-OK", "log");
       } else if (cmd.equals("upc")) {
-        // TODO: Implement.
+        uploadDir.mkdir();
+        File ticketDir = ServletUtil.getSaneFile(uploadDir, serverTicket.toString(), true);
+        ticketDir.mkdir();
+
+        String base = ServletUtil.getStringParamChecked(multiPart, "content");
+        File outFile = ServletUtil.getSaneFile(ticketDir, base, false);
+
+        /* Rename old files with the same name until we can create a new one
+        with the specified name. */
+        while (!outFile.createNewFile()) {
+          int suffixNo = 1;
+          do {
+            File suffixedFile = ServletUtil.getSaneFile(ticketDir,
+                base + "_" + Integer.toString(suffixNo), false);
+            suffixNo++;
+            if (suffixedFile.createNewFile()) {
+              outFile.renameTo(suffixedFile);
+              break;
+            }
+          } while (true);          
+        }
         resp.setHeader("X-StudyCaster-OK", "upc");
       } else if (cmd.equals("upa")) {
         // TODO: Implement.
         resp.setHeader("X-StudyCaster-OK", "upa");
       } else if (cmd.equals("dnl")) {
         File input = ServletUtil.getSaneFile(storageDir,
-            ServletUtil.getStringParamChecked(multiPart, "content"));
+            ServletUtil.getStringParamChecked(multiPart, "content"), false);
         if (!input.exists()) {
           resp.sendError(HttpServletResponse.SC_NOT_FOUND);
         } else {

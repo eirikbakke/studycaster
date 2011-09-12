@@ -139,10 +139,11 @@ public final class ServletUtil {
     return ret;
   }
 
-  public static File getSaneFile(File root, String untrustedRelativePath)
+  public static File getSaneFile(File root, String untrustedRelativePath, boolean allowDir)
       throws BadRequestException, ServletException {
     // Intentionally do not differentiate error messages here.
-    final String MSG = "Invalid file name";
+    final String MSG = "Invalid path \"" +
+        StringEscapeUtils.escapeJava(untrustedRelativePath) + "\"";
     File rootC;
     try {
       rootC = root.getCanonicalFile();
@@ -160,7 +161,7 @@ public final class ServletUtil {
     {
       throw new BadRequestException(MSG);
     }
-    if (targetFile.isDirectory())
+    if (!allowDir && targetFile.isDirectory())
       throw new BadRequestException(MSG);
 
     try {
