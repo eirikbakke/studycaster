@@ -3,6 +3,12 @@ package no.ebakke.studycaster.servlets;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.ServletResponse;
@@ -10,6 +16,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.lang3.StringEscapeUtils;
 
 public final class ServletUtil {
@@ -59,17 +69,37 @@ public final class ServletUtil {
     return byteStream.toString(response.getCharacterEncoding());
   }
 
-  /** Retrieve a string parameter from the request, throwing a
-  BadRequestException if it was not supplied by the client. */
   public static String getStringParamChecked(
       HttpServletRequest req, String paramName) throws BadRequestException
   {
-    String ret = req.getParameter(paramName);
-    if (ret == null) {
+    return getStringChecked(req.getParameterMap(), paramName);
+  }
+
+  public static String getStringParamChecked(
+      Map<String,FileItem[]> multiPart, String paramName)
+          throws BadRequestException, ServletException
+  {
+    try {
+      // TODO: Check encoding on client end.
+      return getStringChecked(multiPart, paramName).getString("UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      throw new ServletException(e);
+    }
+  }
+
+  private static <R> R getStringChecked(
+      Map<String,R[]> map, String paramName) throws BadRequestException
+  {
+    R[] v = map.get(paramName);
+    if (v == null) {
       throw new BadRequestException("Missing parameter \"" +
           StringEscapeUtils.escapeJava(paramName) + "\"");
     }
-    return ret;
+    if (v.length != 1) {
+      throw new BadRequestException("Expected exactly one parameter \"" +
+          StringEscapeUtils.escapeJava(paramName) + "\"; got " + v.length);
+    }
+    return v[0];
   }
 
   public static String ensureSafeString(String s) throws BadRequestException {
@@ -78,5 +108,34 @@ public final class ServletUtil {
           StringEscapeUtils.escapeJava(s) + "\" in this context");
     }
     return s;
+  }
+  
+  public static Map<String,FileItem[]> parseMultiPart(
+      HttpServletRequest req, int maxPartThreshold) throws BadRequestException
+  {
+    if (!ServletFileUpload.isMultipartContent(req))
+      throw new BadRequestException("Expected a multipart HTTP request.");
+    DiskFileItemFactory dfif = new DiskFileItemFactory();
+    // TODO: Should this be set slightly higher?
+    dfif.setSizeThreshold(maxPartThreshold);
+    ServletFileUpload upload = new ServletFileUpload(dfif);
+    upload.setFileSizeMax(maxPartThreshold);
+
+    Map<String,FileItem[]> ret = new LinkedHashMap<String,FileItem[]>();
+    try {
+      for (Object item : upload.parseRequest(req)) {
+        FileItem fileItem = (FileItem) item;
+        FileItem[] val = ret.get(fileItem.getFieldName());
+        if (val == null)
+          val = new FileItem[0];
+        FileItem[] newVal = Arrays.copyOf(val, val.length + 1);
+        newVal[newVal.length - 1] = fileItem;
+        ret.put(fileItem.getFieldName(), newVal);
+      }
+    } catch (FileUploadException e) {
+      throw new BadRequestException("Could not parse multipart request: " +
+          e.getMessage());
+    }
+    return ret;
   }
 }
