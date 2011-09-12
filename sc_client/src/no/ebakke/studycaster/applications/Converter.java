@@ -8,8 +8,8 @@ import no.ebakke.studycaster.screencasting.RecordingConverter;
 public final class Converter {
   private Converter() {}
 
-  // SCTOP=z:/Unfinished/ResearchRepo/archive/100713_StudyCaster/
-  // find -name *.ebc -exec java -cp "$SCTOP/build/classes;$SCTOP/lib/xuggler/xuggle-xuggler.jar" no.ebakke.studycaster.applications.Converter {} 8 \;
+  // SCTOP=z:/studycaster2/
+  // find -name *.ebc -exec java -cp "$SCTOP/lib/sc_icons/icons.jar;$SCTOP/sc_client/build/classes;$SCTOP/lib/xuggler/xuggle-xuggler.jar" no.ebakke.studycaster.applications.Converter {} 8 \;
 
   public static void main(String args[]) {
     if (args.length != 2) {

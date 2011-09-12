@@ -23,7 +23,6 @@ public final class RecordingConverter {
       throws IOException
   {
     CaptureDecoder dec = new CaptureDecoder(input);
-
     System.err.format("Converting to %s at %dx speedup: \n", fileTo, speedUpFactor);
     boolean hadError = false;
     IContainer outContainer = IContainer.make();

@@ -63,16 +63,16 @@ public class HardCode {
 
   public static void main(String args[]) throws Exception {
     int speedupFactor = 1;
-    String confCode = "0391c6e4df35";
-    boolean download = false;
+    String confCode = "c4eaf63dcee3";
+    boolean download = true;
 
     if (download) {
-      String fileName = "z:/rectest/downloaded.ebc";
+      String fileName = "z:/studycaster_storagedir/downloaded.ebc";
       ServerContext sc = new ServerContext();
       OutputStream fos = new FileOutputStream(fileName);
       IOUtils.copy(sc.downloadFile("uploads/" + confCode + "/screencast.ebc"), fos);
       fos.close();
-      //RecordingConverter.convert(new FileInputStream(fileName), "z:/rectest/downconv.mkv", speedupFactor);
+      RecordingConverter.convert(new FileInputStream(fileName), "z:/studycaster_storagedir/downconv.mkv", speedupFactor);
     } else {
       //RecordingConverter.convert(new FileInputStream("z:/testdown/" + confCode + "/screencast.ebc"),
       //      "z:/testdown/screencast_hardcode.mkv", speedupFactor);

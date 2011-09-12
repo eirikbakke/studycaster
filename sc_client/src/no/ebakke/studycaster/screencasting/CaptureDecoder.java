@@ -36,6 +36,8 @@ public class CaptureDecoder extends Codec {
   private boolean firstFrameRead = false;
   private static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
   private int frameNo = 0;
+  private static final String POINTER_IMAGE_PATH =
+      "no/ebakke/studycaster/resources/pointer_shine_weaker.png";
 
   public CaptureDecoder(InputStream is) throws IOException {
     dis = new DataInputStream(new BufferedInputStream(new GZIPInputStream(is)));
@@ -45,8 +47,18 @@ public class CaptureDecoder extends Codec {
     int height = dis.readInt();
     init(new Dimension(width, height));
 
+    /* Do this to properly catch an error which may otherwise cause waitForAll()
+    below to hang with an "Uncaught error fetching image" output. */
+    InputStream testIS = StatusFrame.class.getClassLoader().getResourceAsStream(
+        POINTER_IMAGE_PATH);
+    if (testIS == null) {
+      throw new IOException("Cannot load pointer image; check classpath.");
+    } else {
+      testIS.close();
+    }
     URL pointerImageURL = StatusFrame.class.getClassLoader().getResource(
-        "no/ebakke/studycaster/resources/pointer_shine_weaker.png");
+       POINTER_IMAGE_PATH);
+    
     pointerImage = Toolkit.getDefaultToolkit().getImage(pointerImageURL);
     pointerImageHotSpot = new Point(41,40);
     MediaTracker mt = new MediaTracker(new Canvas());
@@ -56,6 +68,7 @@ public class CaptureDecoder extends Codec {
     } catch (InterruptedException e) {
       throw new InterruptedIOException();
     }
+    System.out.println("got here 8");
   }
 
   public long getCurrentTimeMillis() {
@@ -111,9 +124,8 @@ public class CaptureDecoder extends Codec {
 
       if (struct_head != Codec.MARKER_META) {
       } else if (struct_type < 0 || struct_type >= FrameType.values().length) {
-        // Five years before/two years after this code was written.
-        // TODO: Expand this range.
-      } else if (struct_time < 1250816790841L || struct_time > 1345424790841L) {
+        // Two years before this code was written/January 1st 2050.
+      } else if (struct_time < 1250816790841L || struct_time > 2524608000000L) {
       } else if (struct_x == Integer.MIN_VALUE && struct_y != Integer.MIN_VALUE) {
       } else if (struct_x != Integer.MIN_VALUE &&
           (struct_x < 0 || struct_y < 0 || struct_x > 30000 || struct_y > 30000)) {
