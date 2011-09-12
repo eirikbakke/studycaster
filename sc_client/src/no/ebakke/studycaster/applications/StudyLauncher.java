@@ -148,7 +148,7 @@ public class StudyLauncher {
         if (studyType == StudyType.MAIN_RS) {
           try {
             StudyCaster.log.info("Now starting Relational Spreadsheet");
-            no.ebakke.hier.view.Main.main(new String[] {Util.getPathString(openedFile)});
+            // no.ebakke.hier.view.Main.main(new String[] {Util.getPathString(openedFile)});
             StudyCaster.log.info("Relational Spreadsheet started");
           } catch (Exception e) {
             StudyCaster.log.log(Level.SEVERE, "Caught exception from Relational Spreadsheet main method", e);
