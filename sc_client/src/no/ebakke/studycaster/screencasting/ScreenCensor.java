@@ -1,5 +1,4 @@
 package no.ebakke.studycaster.screencasting;
-import no.ebakke.studycaster.api.NativeLibrary;
 import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,13 +15,16 @@ public class ScreenCensor {
   public ScreenCensor(List<String> whiteList, List<String> blackList, boolean excludeFileDialogs)
       throws StudyCasterException
   {
+    // TODO: Use new interface.
+    /*
     try {
       NativeLibrary.initialize();
     } catch (Exception e) {
       StudyCaster.log.log(Level.WARNING,
           "Can't initialize native library; censoring entire screen area", e);
       nativeFail = true;
-    }
+    }*/
+    nativeFail = true;
     this.whiteList = new ArrayList<String>(whiteList);
     this.blackList = new ArrayList<String>(blackList);
     if (excludeFileDialogs) {
@@ -37,8 +39,11 @@ public class ScreenCensor {
   }
 
   public Rectangle getPermittedRecordingArea() {
+    /*
     if (nativeFail)
       return new Rectangle();
     return NativeLibrary.getPermittedRecordingArea(whiteList, blackList);
+    */
+    return new Rectangle();
   }
 }

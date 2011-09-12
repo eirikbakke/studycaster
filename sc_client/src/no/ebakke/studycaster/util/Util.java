@@ -41,18 +41,6 @@ public final class Util {
     }
   }
 
-  public static void hookupStreams(InputStream is, OutputStream os) throws IOException {
-    byte buffer[] = new byte[16 * 1024];
-    try {
-      int got;
-      while ((got = is.read(buffer)) >= 0) {
-        os.write(buffer, 0, got);
-      }
-    } finally {
-      is.close();
-    }
-  }
-
   public static void logEnvironmentInfo() {
     String propkeys[] = new String[]
       {"java.vendor", "java.version", "java.class.version", "os.name", "os.arch", "os.version",

@@ -9,11 +9,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import no.ebakke.studycaster.util.Util;
 import no.ebakke.studycaster.util.stream.NonBlockingOutputStream;
 import no.ebakke.studycaster.screencasting.ScreenCensor;
 import no.ebakke.studycaster.screencasting.ScreenRecorder;
 import no.ebakke.studycaster.util.stream.ConsoleTee;
+import org.apache.commons.io.IOUtils;
 
 public class StudyCaster {
   public static final Logger log = Logger.getLogger("no.ebakke.studycaster");
@@ -125,7 +125,7 @@ public class StudyCaster {
       try {
         InputStream is = serverContext.downloadFile(remoteName);
         try {
-          Util.hookupStreams(is, os);
+          IOUtils.copy(is, os);
           return;
         } finally {
           is.close();
@@ -143,7 +143,7 @@ public class StudyCaster {
       //System.out.println("Uploading a file of length " + f.length());
       OutputStream os = serverContext.uploadFile(remoteName);
       try {
-        Util.hookupStreams(new FileInputStream(f), os);
+        IOUtils.copy(new FileInputStream(f), os);
       } finally {
         os.close();
       }

@@ -1,13 +1,13 @@
 package no.ebakke.studycaster.servlets;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
@@ -137,5 +137,36 @@ public final class ServletUtil {
           e.getMessage());
     }
     return ret;
+  }
+
+  public static File getSaneFile(File root, String untrustedRelativePath)
+      throws BadRequestException, ServletException {
+    // Intentionally do not differentiate error messages here.
+    final String MSG = "Invalid file name";
+    File rootC;
+    try {
+      rootC = root.getCanonicalFile();
+    } catch (IOException e) {
+      throw new ServletException(e);
+    }
+    if (!rootC.isDirectory())
+      throw new ServletException(new FileNotFoundException(rootC.toString()));
+
+    File targetFile = new File(rootC, untrustedRelativePath);
+    String base   = rootC.getPath();
+    String target = targetFile.getParent();
+    if (target.length() < base.length() ||
+        !base.equals(target.substring(0, base.length())))
+    {
+      throw new BadRequestException(MSG);
+    }
+    if (targetFile.isDirectory())
+      throw new BadRequestException(MSG);
+
+    try {
+      return targetFile.getCanonicalFile();
+    } catch (IOException e) {
+      throw new BadRequestException(MSG);
+    }
   }
 }

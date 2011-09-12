@@ -9,6 +9,7 @@ import no.ebakke.studycaster.screencasting.RecordingConverter;
 import no.ebakke.studycaster.screencasting.ScreenCensor;
 import no.ebakke.studycaster.screencasting.ScreenRecorder;
 import no.ebakke.studycaster.util.Util;
+import org.apache.commons.io.IOUtils;
 
 public class HardCode {
   /*
@@ -69,7 +70,7 @@ public class HardCode {
       String fileName = "z:/rectest/downloaded.ebc";
       ServerContext sc = new ServerContext();
       OutputStream fos = new FileOutputStream(fileName);
-      Util.hookupStreams(sc.downloadFile("uploads/" + confCode + "/screencast.ebc"), fos);
+      IOUtils.copy(sc.downloadFile("uploads/" + confCode + "/screencast.ebc"), fos);
       fos.close();
       //RecordingConverter.convert(new FileInputStream(fileName), "z:/rectest/downconv.mkv", speedupFactor);
     } else {

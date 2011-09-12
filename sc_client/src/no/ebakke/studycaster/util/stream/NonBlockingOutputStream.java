@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.logging.Level;
 import javax.swing.SwingUtilities;
 import no.ebakke.studycaster.api.StudyCaster;
-import no.ebakke.studycaster.util.PipedInputStreamExt;
 import no.ebakke.studycaster.util.Util;
 import no.ebakke.studycaster.util.Util.Interruptible;
 

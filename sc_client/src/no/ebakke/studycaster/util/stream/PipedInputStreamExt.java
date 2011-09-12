@@ -1,4 +1,4 @@
-package no.ebakke.studycaster.util;
+package no.ebakke.studycaster.util.stream;
 
 import java.io.IOException;
 import java.io.PipedInputStream;
