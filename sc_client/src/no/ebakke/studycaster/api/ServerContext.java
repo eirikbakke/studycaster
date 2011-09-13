@@ -18,6 +18,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.ByteArrayBody;
@@ -25,6 +26,7 @@ import org.apache.http.entity.mime.content.ContentBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 
 /** Handles protocol details specific to the server-side PHP script. */
@@ -39,7 +41,7 @@ public class ServerContext {
   private long   serverSecondsAhead;
   /* Keep the HttpClient in common for all requests to preserve the session
   cookie. */
-  private HttpClient httpClient;
+  private DefaultHttpClient httpClient;
 
   public ServerContext() throws StudyCasterException {
     String serverScriptURIs = System.getProperty("jnlp.studycaster.serveruri");
@@ -82,6 +84,21 @@ public class ServerContext {
       ThreadSafeClientConnManager connectionManager =
           new ThreadSafeClientConnManager();
       httpClient = new DefaultHttpClient(connectionManager);
+      httpClient.setHttpRequestRetryHandler(new HttpRequestRetryHandler() {
+        public boolean retryRequest(IOException exception, int executionCount,
+            HttpContext context)
+        {
+          StudyCaster.log.log(Level.WARNING,
+              "Waiting to retry request ({0} times)", executionCount);
+          try {
+            Thread.sleep(10000);
+          } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+          }
+          return true;
+        }
+      });
+      
       HttpResponse response = requestHelper(httpClient, "gsi", null, null);
       timeAft = System.currentTimeMillis();
       headerSTM = response.getFirstHeader("X-StudyCaster-ServerTime");
@@ -231,6 +248,8 @@ public class ServerContext {
         for (int subOff = 0; subOff < len; ) {
           final int subLen = Math.min(len - subOff, DEF_UPLOAD_CHUNK_SZ);
           byte chunk[] = Util.copyOfRange(b, off + subOff, off + subOff + subLen);
+          /* Use a ByteArrayBody rather than an InputStreamBody in case the
+          request needs to be repeated. */
           ByteArrayBody bab = new ByteArrayBody(chunk, remoteName);
           EntityUtils.consume(requestHelper(httpClient, "upa", bab,
               Long.toString(written)).getEntity());
