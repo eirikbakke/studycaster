@@ -6,12 +6,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
-import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import javax.swing.SwingUtilities;
 import no.ebakke.studycaster.api.StudyCaster;
@@ -210,5 +208,17 @@ public final class Util {
 
   public interface CallableExt<V,E extends Exception> {
     V call() throws E;
+  }
+
+  /* This function is copied directly from the 1.6 version of java.util.Arrays.
+  Include it here to work for 1.5. */
+  public static byte[] copyOfRange(byte[] original, int from, int to) {
+    int newLength = to - from;
+    if (newLength < 0)
+        throw new IllegalArgumentException(from + " > " + to);
+    byte[] copy = new byte[newLength];
+    System.arraycopy(original, from, copy, 0,
+                     Math.min(original.length - from, newLength));
+    return copy;
   }
 }

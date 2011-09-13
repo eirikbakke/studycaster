@@ -2,7 +2,6 @@ package no.ebakke.studycaster.api;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -10,17 +9,19 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
 import no.ebakke.studycaster.util.Util;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.ByteArrayBody;
 import org.apache.http.entity.mime.content.ContentBody;
-import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
@@ -30,8 +31,6 @@ import org.apache.http.util.EntityUtils;
 public class ServerContext {
   public static final int DEF_UPLOAD_CHUNK_SZ = 64 * 1024; // TODO: Don't expose this.
   private static final String TICKET_STORE_FILENAME = "sc_7403204709139484951.tmp";
-  private static final int CLIENT_TICKET_BYTES = 6;
-  private static final int SERVER_TICKET_BYTES = 3;
   private URI    serverScriptURI;
   private String ticketFC; // First client ticket on this machine
   private String ticketCC; // Current client ticket
@@ -83,7 +82,7 @@ public class ServerContext {
       ThreadSafeClientConnManager connectionManager =
           new ThreadSafeClientConnManager();
       httpClient = new DefaultHttpClient(connectionManager);
-      HttpResponse response = requestHelper(httpClient, "gsi", null);
+      HttpResponse response = requestHelper(httpClient, "gsi", null, null);
       timeAft = System.currentTimeMillis();
       headerSTM = response.getFirstHeader("X-StudyCaster-ServerTime");
       headerSTK = response.getFirstHeader("X-StudyCaster-ServerTicket");
@@ -130,8 +129,29 @@ public class ServerContext {
     }
   }
 
-  private HttpResponse requestHelper(HttpClient httpClient, String cmd, ContentBody content)
-      throws IOException
+  public static String getContentString(HttpResponse resp) throws IOException {
+    StringWriter ret = new StringWriter();
+    InputStream errContent = resp.getEntity().getContent();
+    try {
+      Header encoding = resp.getEntity().getContentEncoding();
+      IOUtils.copy(errContent, ret,
+          (encoding == null) ? "UTF-8" : encoding.getValue());
+    } finally {
+      errContent.close();
+    }
+    return ret.toString();
+  }
+
+  private HttpResponse requestHelper(HttpClient httpClient, String cmd,
+      ContentBody content, String arg) throws IOException
+  {
+    // TODO: Get rid of this debris.
+    // EntityUtils.consume(requestHelperSingle(httpClient, cmd, content, arg).getEntity());
+    return requestHelperSingle(httpClient, cmd, content, arg);
+  }
+
+  private HttpResponse requestHelperSingle(HttpClient httpClient, String cmd,
+      ContentBody content, String arg) throws IOException
   {
     HttpPost httpPost = new HttpPost(serverScriptURI);
     MultipartEntity params = new MultipartEntity();
@@ -146,6 +166,8 @@ public class ServerContext {
     params.addPart("cmd", new StringBody(cmd));
     if (content != null)
       params.addPart("content", content);
+    if (arg != null)
+      params.addPart("arg", new StringBody(arg));
     httpPost.setEntity(params);
     HttpResponse response = httpClient.execute(httpPost);
     if (response.getEntity() == null)
@@ -154,7 +176,10 @@ public class ServerContext {
       if (response.getStatusLine().getStatusCode() != 200) {
         if (response.getStatusLine().getStatusCode() == 404)
           throw new FileNotFoundException();
-        throw new IOException("Got bad status code " + response.getStatusLine().getReasonPhrase());
+
+        throw new IOException("Command " + cmd + " got bad status code " +
+            response.getStatusLine().getReasonPhrase() + " (" +
+            getContentString(response) + ")");
       }
       Header okHeader = response.getFirstHeader("X-StudyCaster-OK");
       if (okHeader == null)
@@ -176,7 +201,8 @@ public class ServerContext {
     new Thread(new Runnable() {
       public void run() {
         try {
-          EntityUtils.consume(requestHelper(httpClient, "log", new StringBody(msg)).getEntity());
+          EntityUtils.consume(requestHelper(httpClient, "log",
+              new StringBody(msg), null).getEntity());
         } catch (IOException e) {
           StudyCaster.log.log(Level.WARNING, "Failed to enter remote log entry \"" + msg + "\"", e);
         }
@@ -185,10 +211,12 @@ public class ServerContext {
   }
 
   public OutputStream uploadFile(final String remoteName) throws IOException {
-    EntityUtils.consume(requestHelper(httpClient, "upc", new StringBody(remoteName)).getEntity());
+    EntityUtils.consume(requestHelper(httpClient, "upc",
+        new StringBody(remoteName), null).getEntity());
 
     return new BufferedOutputStream(new OutputStream() {
       private boolean closed;
+      private long written = 0;
 
       @Override
       public void write(int b) throws IOException {
@@ -202,16 +230,12 @@ public class ServerContext {
 
         for (int subOff = 0; subOff < len; ) {
           final int subLen = Math.min(len - subOff, DEF_UPLOAD_CHUNK_SZ);
-          InputStreamBody isb = new InputStreamBody(
-              new ByteArrayInputStream(b, off + subOff, subLen), remoteName)
-          {
-            @Override
-            public long getContentLength() {
-              return subLen;
-            }
-          };
-          EntityUtils.consume(requestHelper(httpClient, "upa", isb).getEntity());
+          byte chunk[] = Util.copyOfRange(b, off + subOff, off + subOff + subLen);
+          ByteArrayBody bab = new ByteArrayBody(chunk, remoteName);
+          EntityUtils.consume(requestHelper(httpClient, "upa", bab,
+              Long.toString(written)).getEntity());
           subOff += subLen;
+          written += subLen;
         }
       }
 
@@ -226,7 +250,7 @@ public class ServerContext {
 
   public InputStream downloadFile(String remoteName) throws IOException {
     final InputStream ret = requestHelper(httpClient, "dnl",
-        new StringBody(remoteName)).getEntity().getContent();
+        new StringBody(remoteName), null).getEntity().getContent();
     return new InputStream() {
       private boolean closed;
 

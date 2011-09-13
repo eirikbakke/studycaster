@@ -32,7 +32,7 @@ public class LegacyAPIServlet extends HttpServlet {
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-    resp.getWriter().println("Version 14");
+    resp.getWriter().println("Version 16");
   }
 
   @Override
@@ -48,22 +48,19 @@ public class LegacyAPIServlet extends HttpServlet {
 
       String cmd = ServletUtil.getMultipartStringParam(multiPart, "cmd");
 
-      HttpSession session = req.getSession(false);
       Ticket clientTicket, serverTicket;
-      if (cmd.equals("gsi")) {
-        if (session != null)
-          throw new BadRequestException("Session already established");
-        session = req.getSession(true);
+      HttpSession session = req.getSession(false);
+      if (session == null) {
+        if (!cmd.equals("gsi"))
+          throw new BadRequestException("Missing session");
         // TODO: Change ticket naming conventions, or get rid of this system.
-        System.out.println(req.getRemoteAddr());
         serverTicket = new Ticket(SERVER_TICKET_BYTES,
             "stick " + req.getRemoteAddr().trim());
         clientTicket = new Ticket(CLIENT_TICKET_BYTES);
+        session = req.getSession(true);
         session.setAttribute("serverTicket", serverTicket);
         session.setAttribute("clientTicket", clientTicket);
       } else {
-        if (session == null)
-          throw new BadRequestException("Missing session");
         Object obj;
         obj = session.getAttribute("serverTicket");
         if (obj == null || !(obj instanceof Ticket))
@@ -74,16 +71,19 @@ public class LegacyAPIServlet extends HttpServlet {
           throw new ServletException("Invalid session: " + obj);
         clientTicket = (Ticket) obj;
       }
+
       uploadDir.mkdir();
       File ticketDir = ServletUtil.getSaneFile(uploadDir, clientTicket.toString(), true);
       ticketDir.mkdir();
       if        (cmd.equals("gsi")) {
+        // Idempotent due to the session code above.
         resp.setHeader("X-StudyCaster-ServerTicket", serverTicket.toString());
         resp.setHeader("X-StudyCaster-ClientTicket", clientTicket.toString());
         resp.setHeader("X-StudyCaster-ServerTime",
                 Long.toString(new Date().getTime() / 1000));
         resp.setHeader("X-StudyCaster-OK", "gsi");
       } else if (cmd.equals("log")) {
+        // TODO: Make this idempotent.
         String content =
             ServletUtil.getMultipartStringParam(multiPart, "content");
         // TODO: Do proper logging here.
@@ -91,12 +91,14 @@ public class LegacyAPIServlet extends HttpServlet {
             StringEscapeUtils.escapeJava(content) + "\"");
         resp.setHeader("X-StudyCaster-OK", "log");
       } else if (cmd.equals("upc")) {
+        // Idempotent.
         String base = ServletUtil.getMultipartStringParam(multiPart, "content");
         File outFile = ServletUtil.getSaneFile(ticketDir, base, false);
 
         /* Rename old files with the same name until we can create a new one
-        with the specified name. */
-        while (!outFile.createNewFile()) {
+        with the specified name. The length check ensures idempotence. */
+        while (!outFile.createNewFile() && outFile.length() > 0) {
+          
           int suffixNo = 1;
           do {
             File suffixedFile = ServletUtil.getSaneFile(ticketDir,
@@ -114,19 +116,39 @@ public class LegacyAPIServlet extends HttpServlet {
         }
         resp.setHeader("X-StudyCaster-OK", "upc");
       } else if (cmd.equals("upa")) {
+        // Idempotent.
+        String argS = ServletUtil.getMultipartStringParam(multiPart, "arg");
+        long writtenArg;
+        try {
+          writtenArg = Long.parseLong(argS);
+        } catch (NumberFormatException e) {
+          throw new BadRequestException("Malformed integer argument");
+        }
         FileItem content = ServletUtil.getParam(multiPart, "content");
         File outFile = ServletUtil.getSaneFile(ticketDir, content.getName(), false);
-        if (outFile.length() + content.getSize() > MAX_FILE_SIZE)
+        long existingLength = outFile.length();
+        if (existingLength + content.getSize() > MAX_FILE_SIZE)
           throw new BadRequestException("File size reached limit");
-        // TODO: Switch to RandomAccessFile and make idempotent.
-        OutputStream os = new FileOutputStream(outFile, true);
+        InputStream is = content.getInputStream();
         try {
-          IOUtils.copy(content.getInputStream(), os);
+          // This test ensures idempotency.
+          if (writtenArg == existingLength) {
+            OutputStream os = new FileOutputStream(outFile, true);
+            try {
+              IOUtils.copy(is, os);
+            } finally {
+              os.close();
+            }
+          } else {
+            // TODO: Do proper logging.
+            System.err.println("Warning: Ignored double append.");
+          }
         } finally {
-          os.close();
+          is.close();
         }
         resp.setHeader("X-StudyCaster-OK", "upa");
       } else if (cmd.equals("dnl")) {
+        // Idempotent (read-only).
         File input = ServletUtil.getSaneFile(storageDir,
             ServletUtil.getMultipartStringParam(multiPart, "content"), false);
         if (!input.exists()) {
