@@ -75,7 +75,8 @@ public class CaptureEncoder extends Codec {
   public synchronized void captureFrame() throws IOException {
     addMeta(FrameType.BEFORE_CAPTURE);
     BufferedImage image = robot.createScreenCapture(screenRect);
-    Rectangle permittedArea = (censor == null) ? screenRect : censor.getPermittedRecordingArea();
+    Quilt permittedArea = (censor == null) ?
+        new Quilt(screenRect) : censor.getPermittedRecordingArea();
     addMeta(FrameType.AFTER_CAPTURE);
     flushMeta();
     compressAndOutputFrame(image, permittedArea);
@@ -87,7 +88,7 @@ public class CaptureEncoder extends Codec {
   }
 
   // TODO: If pixel has no difference and was previously blurred, continue blurring.
-  private void compressAndOutputFrame(BufferedImage frame, Rectangle permittedArea)
+  private void compressAndOutputFrame(BufferedImage frame, Quilt permittedArea)
       throws IOException
   {
     swapOldNew();

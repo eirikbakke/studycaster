@@ -1,30 +1,31 @@
 package no.ebakke.studycaster.screencasting;
+import java.awt.AWTException;
 import java.awt.Rectangle;
+import java.awt.Robot;
+import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import javax.swing.UIManager;
 import no.ebakke.studycaster.api.StudyCaster;
 import no.ebakke.studycaster.api.StudyCasterException;
+import no.ebakke.studycaster.screencasting.WindowEnumerator.WindowInfo;
+import no.ebakke.studycaster.util.ImageDebugDialog;
 
-public class ScreenCensor {
+public final class ScreenCensor {
   public static final int MOSAIC_WIDTH = 5;
+
   private List<String> whiteList, blackList;
-  private boolean nativeFail;
+  private Quilt nativeFail;
+  private WindowEnumerator windowEnumerator;
 
   public ScreenCensor(List<String> whiteList, List<String> blackList, boolean excludeFileDialogs)
       throws StudyCasterException
   {
-    // TODO: Use new interface.
-    /*
-    try {
-      NativeLibrary.initialize();
-    } catch (Exception e) {
-      StudyCaster.log.log(Level.WARNING,
-          "Can't initialize native library; censoring entire screen area", e);
-      nativeFail = true;
-    }*/
-    nativeFail = true;
     this.whiteList = new ArrayList<String>(whiteList);
     this.blackList = new ArrayList<String>(blackList);
     if (excludeFileDialogs) {
@@ -36,14 +37,63 @@ public class ScreenCensor {
       if ((localized = UIManager.getString("FileChooser.openDialogTitleText")) != null)
         this.blackList.add(localized);
     }
+    windowEnumerator = Win32WindowEnumerator.create();
+    if (windowEnumerator == null) {
+      StudyCaster.log.log(Level.WARNING,
+          "Can't initialize native library; censoring entire screen area");
+      nativeFail = new Quilt();
+    }
   }
 
-  public Rectangle getPermittedRecordingArea() {
+  public Quilt getPermittedRecordingArea() {
+    if (nativeFail != null)
+      return nativeFail;
+
+    List<WindowInfo> windows = windowEnumerator.getWindowList();
+    Set<Integer> pidWhiteList = new LinkedHashSet<Integer>();
+    for (WindowInfo wi : windows) {
+      for (String whiteListItem : whiteList) {
+        if (wi.title.toLowerCase().contains(whiteListItem.toLowerCase()))
+          pidWhiteList.add(wi.pid);
+      }
+    }
+    Quilt ret = new Quilt();
+    for (WindowInfo wi : windows) {
+      boolean ok = pidWhiteList.contains(wi.pid);
+      if (ok) {
+        for (String blackListItem : blackList) {
+          if (wi.title.toLowerCase().contains(blackListItem.toLowerCase())) {
+            ok = false;
+            break;
+          }
+        }
+      }
+      ret.addPatch(wi.location, ok);
+    }
+    return ret;
+  }
+
+  public static void main(String args[]) throws StudyCasterException, AWTException {
+    ScreenCensor censor = new ScreenCensor(
+      Arrays.asList(new String[] {"User Study Console", "Excel", "Calc", "Numbers", "Gnumeric", "KSpread", "Quattro", "Mesa", "Spreadsheet Study Application"}),
+      Arrays.asList(new String[] {"Firefox", "Internet Explorer", "Outlook", "Chrome", "Safari", "Upload and Retrieve Confirmation Code",
+      "Open Sample Document"}),
+      true);
+    Rectangle screenRect = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
+    BufferedImage image = new Robot().createScreenCapture(screenRect);
+    Quilt permitted = censor.getPermittedRecordingArea();
     /*
-    if (nativeFail)
-      return new Rectangle();
-    return NativeLibrary.getPermittedRecordingArea(whiteList, blackList);
+    permitted = new Quilt();
+    permitted.addPatch(screenRect, true);
+    permitted.addPatch(new Rectangle(100, 100, 800, 600), false);
+    permitted.addPatch(new Rectangle(400, 150, 300, 200), true);
     */
-    return new Rectangle();
+    for (int x = 0; x < image.getWidth(); x++) {
+      for (int y = 0; y < image.getHeight(); y++) {
+        if (!permitted.contains(x, y))
+          image.setRGB(x, y, image.getRGB(x, y) & 0xE0E00000);
+      }
+    }
+    ImageDebugDialog.showImage(image);
   }
 }
