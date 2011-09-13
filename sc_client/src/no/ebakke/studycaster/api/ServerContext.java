@@ -33,10 +33,10 @@ public class ServerContext {
   private static final int CLIENT_TICKET_BYTES = 6;
   private static final int SERVER_TICKET_BYTES = 3;
   private URI    serverScriptURI;
-  private Ticket ticketFC; // First client ticket on this machine
-  private Ticket ticketCC; // Current client ticket
-  private Ticket ticketFS; // First server ticket on this machine
-  private Ticket ticketCS; // Current server ticket
+  private String ticketFC; // First client ticket on this machine
+  private String ticketCC; // Current client ticket
+  private String ticketFS; // First server ticket on this machine
+  private String ticketCS; // Current server ticket
   private long   serverSecondsAhead;
   /* Keep the HttpClient in common for all requests to preserve the session
   cookie. */
@@ -63,8 +63,8 @@ public class ServerContext {
     try {
       BufferedReader br = new BufferedReader(new FileReader(ticketStore));
       try {
-        ticketFC = new Ticket(br.readLine(), CLIENT_TICKET_BYTES);
-        ticketFS = new Ticket(br.readLine(), SERVER_TICKET_BYTES);
+        ticketFC = br.readLine();
+        ticketFS = br.readLine();
       } finally {
         br.close();
       }
@@ -72,8 +72,6 @@ public class ServerContext {
     } catch (FileNotFoundException e) {
       // Ignore.
     } catch (IOException e) {
-      StudyCaster.log.log(Level.WARNING, "Problem reading ticket store.", e);
-    } catch (StudyCasterException e) {
       StudyCaster.log.log(Level.WARNING, "Problem reading ticket store.", e);
     }
 
@@ -104,8 +102,8 @@ public class ServerContext {
       StudyCaster.log.log(Level.WARNING, "Got bad time format from server", e);
     }
     // Let these exceptions propagate.
-    ticketCC = new Ticket(headerCTK.getValue());
-    ticketCS = new Ticket(headerSTK.getValue());
+    ticketCC = headerCTK.getValue();
+    ticketCS = headerSTK.getValue();
     if (ticketFS == null)
       ticketFS = ticketCS;
     if (ticketFC == null)
@@ -250,7 +248,7 @@ public class ServerContext {
     };
   }
 
-  public Ticket getTicketCC() {
+  public String getTicketCC() {
     return ticketCC;
   }
 

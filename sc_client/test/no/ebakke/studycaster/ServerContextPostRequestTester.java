@@ -21,5 +21,4 @@ public class ServerContextPostRequestTester {
     TestUtil.hookupStreams(returnedFile, os);
     os.close();
   }
-
 }

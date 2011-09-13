@@ -55,8 +55,9 @@ public class LegacyAPIServlet extends HttpServlet {
           throw new BadRequestException("Session already established");
         session = req.getSession(true);
         // TODO: Change ticket naming conventions, or get rid of this system.
-        // TODO: Use an IP hash. But then don't use it for file naming.
-        serverTicket = new Ticket(SERVER_TICKET_BYTES);
+        System.out.println(req.getRemoteAddr());
+        serverTicket = new Ticket(SERVER_TICKET_BYTES,
+            "stick " + req.getRemoteAddr().trim());
         clientTicket = new Ticket(CLIENT_TICKET_BYTES);
         session.setAttribute("serverTicket", serverTicket);
         session.setAttribute("clientTicket", clientTicket);
