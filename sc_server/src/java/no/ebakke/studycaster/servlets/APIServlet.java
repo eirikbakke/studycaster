@@ -27,8 +27,9 @@ public class APIServlet extends HttpServlet {
   private static final long   serialVersionUID = 1L;
   private static final int    MAX_FILE_SIZE = 50000000;
   private static final int    MAX_APPEND_CHUNK = 1024 * 256;
-  private static final int    CLIENT_TICKET_BYTES = 6;
-  private static final int    SERVER_TICKET_BYTES = 3;
+  private static final int    CLIENT_COOKIE_BYTES = 6;
+  private static final int    LAUNCH_TICKET_BYTES = 6;
+  private static final int    IPHASH_BYTES        = 3;
   private static final String UPLOAD_DIR   = "uploads";
   // TODO: Figure out a better storage strategy.
 
@@ -43,13 +44,12 @@ public class APIServlet extends HttpServlet {
   {
     String cmd = null;
     Map<String,FileItem[]> multiPart = null;
-    // TODO: Get clientCookie.
     String logEntry = null, clientCookie = null;
-    Ticket launchTicket = null, remoteAddrHash = null;
+    String launchTicket = null, ipHash = null;
     boolean wroteContent = false;
 
-    remoteAddrHash = new Ticket(SERVER_TICKET_BYTES,
-        "stick " + req.getRemoteAddr().trim());
+    ipHash = new Ticket(IPHASH_BYTES, "stick " +
+        req.getRemoteAddr().trim()).toString();
     try {
       multiPart = ServletUtil.parseMultiPart(req, MAX_APPEND_CHUNK);
 
@@ -65,26 +65,29 @@ public class APIServlet extends HttpServlet {
         This way we'll be able to persist session across redeployments. */
         if (!cmd.equals("gsi"))
           throw new BadRequestException("Missing session");
-        launchTicket = new Ticket(CLIENT_TICKET_BYTES);
+        launchTicket = new Ticket(LAUNCH_TICKET_BYTES).toString();
         session = req.getSession(true);
         session.setAttribute("launchTicket"  , launchTicket);
       } else {
         Object obj = session.getAttribute("launchTicket");
-        if (obj == null || !(obj instanceof Ticket))
+        if (obj == null || !(obj instanceof String))
           throw new ServletException("Invalid session launchTicket: " + obj);
-        launchTicket = (Ticket) obj;
+        launchTicket = (String) obj;
       }
 
       uploadDir.mkdir();
       File ticketDir = ServletUtil.getSaneFile(uploadDir, launchTicket.toString(), true);
       ticketDir.mkdir();
       if        (cmd.equals("gsi")) {
+        clientCookie = ServletUtil.getMultipartStringParam(multiPart, "arg");
+        if (clientCookie.isEmpty())
+          clientCookie = new Ticket(CLIENT_COOKIE_BYTES).toString();
         // Idempotent due to the session code above.
-        // TODO: Consistify ticket naming conventions, or get rid of this system.
-        // TODO: No need to send ServerTicket to client.
-        resp.setHeader("X-StudyCaster-ServerTicket", remoteAddrHash.toString());
-        resp.setHeader("X-StudyCaster-ClientTicket", launchTicket.toString());
-        resp.setHeader("X-StudyCaster-ServerTime",
+        // TODO: No need to send IPHash to client.
+        resp.setHeader("X-StudyCaster-IPHash"      , ipHash.toString());
+        resp.setHeader("X-StudyCaster-LaunchTicket", launchTicket.toString());
+        resp.setHeader("X-StudyCaster-ClientCookie", clientCookie.toString());
+        resp.setHeader("X-StudyCaster-ServerTime"  ,
                 Long.toString(new Date().getTime() / 1000));
         resp.setHeader("X-StudyCaster-OK", "gsi");
       } else if (cmd.equals("log")) {
@@ -102,7 +105,6 @@ public class APIServlet extends HttpServlet {
         /* Rename old files with the same name until we can create a new one
         with the specified name. The length check ensures idempotence. */
         while (!outFile.createNewFile() && outFile.length() > 0) {
-          
           int suffixNo = 1;
           do {
             File suffixedFile = ServletUtil.getSaneFile(ticketDir,
@@ -190,11 +192,10 @@ public class APIServlet extends HttpServlet {
           contentSize = content[0].getSize();
         }
       }
-      // TODO: Set.
+      // TODO: Set this one.
       String geoLocation = null;
       DomainUtil.storeRequest(new Request(new Date(), cmd, contentSize,
-          remoteAddrHash.toString(), geoLocation, launchTicket.toString(),
-          clientCookie, logEntry));
+          ipHash, geoLocation, launchTicket, clientCookie, logEntry));
     }
   }
 }

@@ -7,8 +7,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Random;
 
+// TODO: Make this a couple of static utility functions instead.
+
 /* This class needs to be serializable in order to be retained in the session
-store across server restarts or redeployments. */
+store across server restarts. */
 public class Ticket implements Serializable {
   private static final long serialVersionUID = 1L;
   private static Random random = new Random();

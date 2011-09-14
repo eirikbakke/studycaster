@@ -221,7 +221,7 @@ public class StudyLauncher {
             sc.enterRemoteLogRecord("Concluding after successful upload");
             sc.concludeStudy();
             scui.getProgressBarUI().setTaskAppearance("", false);
-            scui.showConfirmationCodeDialog(sc.getServerContext().getTicketCC().toString(), true);
+            scui.showConfirmationCodeDialog(sc.getServerContext().getLaunchTicket().toString(), true);
             scui.disposeUI();
           } catch (StudyCasterException e) {
             StudyCaster.log.log(Level.SEVERE, "Failed to upload", e);

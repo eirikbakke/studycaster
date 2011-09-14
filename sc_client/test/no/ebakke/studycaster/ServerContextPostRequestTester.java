@@ -15,7 +15,7 @@ public class ServerContextPostRequestTester {
     TestUtil.hookupStreams(ris, uploadOS);
     uploadOS.close();
 
-    InputStream returnedFile = sc.downloadFile("uploads/" + sc.getTicketCC().toString() + "/" + remoteName);
+    InputStream returnedFile = sc.downloadFile("uploads/" + sc.getLaunchTicket().toString() + "/" + remoteName);
     OutputStream os = new ExpectRandomOutputStream(43, 50000, 50000);
 
     TestUtil.hookupStreams(returnedFile, os);

@@ -35,10 +35,10 @@ public class ServerContext {
   public static final int DEF_UPLOAD_CHUNK_SZ = 64 * 1024; // TODO: Don't expose this.
   private static final String TICKET_STORE_FILENAME = "sc_7403204709139484951.tmp";
   private URI    serverScriptURI;
-  private String ticketFC; // First client ticket on this machine
-  private String ticketCC; // Current client ticket
-  private String ticketFS; // First server ticket on this machine
-  private String ticketCS; // Current server ticket
+  private String clientCookie; // First client ticket on this machine
+  private String launchTicket; // Current client ticket
+  private String firstIPHash; // First server ticket on this machine
+  private String ipHash; // Current server ticket
   private long   serverSecondsAhead;
   /* Keep the HttpClient in common for all requests to preserve the session
   cookie. */
@@ -65,8 +65,8 @@ public class ServerContext {
     try {
       BufferedReader br = new BufferedReader(new FileReader(ticketStore));
       try {
-        ticketFC = br.readLine();
-        ticketFS = br.readLine();
+        clientCookie        = br.readLine();
+        firstIPHash = br.readLine();
       } finally {
         br.close();
       }
@@ -78,7 +78,7 @@ public class ServerContext {
     }
 
     // Get server info.
-    Header headerSTM, headerSTK, headerCTK;
+    Header headerSTM, headerIPH, headerLAT, headerCIE;
     long timeBef, timeAft;
     try {
       timeBef = System.currentTimeMillis();
@@ -100,14 +100,19 @@ public class ServerContext {
         }
       });
       
-      HttpResponse response = requestHelper(httpClient, "gsi", null, null);
+      HttpResponse response = requestHelper(httpClient, "gsi", null,
+          clientCookie == null ? "" : clientCookie);
       timeAft = System.currentTimeMillis();
       headerSTM = response.getFirstHeader("X-StudyCaster-ServerTime");
-      headerSTK = response.getFirstHeader("X-StudyCaster-ServerTicket");
-      headerCTK = response.getFirstHeader("X-StudyCaster-ClientTicket");
+      headerIPH = response.getFirstHeader("X-StudyCaster-IPHash");
+      headerLAT = response.getFirstHeader("X-StudyCaster-LaunchTicket");
+      headerCIE = response.getFirstHeader("X-StudyCaster-ClientCookie");
       EntityUtils.consume(response.getEntity());
-      if (headerSTM == null || headerSTK == null || headerCTK == null)
+      if (headerSTM == null || headerIPH == null || headerLAT == null || headerCIE == null)
         throw new StudyCasterException("Server response missing initialization headers.");
+      if (clientCookie != null && !clientCookie.equals(headerCIE.getValue()))
+        throw new StudyCasterException("Server returned odd client cookie");
+      clientCookie = headerCIE.getValue();
     } catch (IOException e) {
       throw new StudyCasterException("Cannot retrieve server info.", e);
     }
@@ -119,15 +124,15 @@ public class ServerContext {
       StudyCaster.log.log(Level.WARNING, "Got bad time format from server", e);
     }
     // Let these exceptions propagate.
-    ticketCC = headerCTK.getValue();
-    ticketCS = headerSTK.getValue();
-    if (ticketFS == null)
-      ticketFS = ticketCS;
-    if (ticketFC == null)
-      ticketFC = ticketCC;
+    launchTicket = headerLAT.getValue();
+    ipHash       = headerIPH.getValue();
+    if (firstIPHash == null)
+      firstIPHash = ipHash;
+    if (clientCookie == null)
+      clientCookie = launchTicket;
 
-    StudyCaster.log.info(String.format("Tickets: FC = %s, CC = %s, FS = %s, CS = %s",
-        ticketFC, ticketCC, ticketFS, ticketCS));
+    StudyCaster.log.info(String.format("CC = %s, LT = %s, FIPH = %s, IPH = %s",
+        clientCookie, launchTicket, firstIPHash, ipHash));
     Util.logEnvironmentInfo();
 
     // Write ticket store.
@@ -135,8 +140,8 @@ public class ServerContext {
       try {
         FileWriter fw = new FileWriter(ticketStore);
         try {
-          fw.write(ticketFC.toString() + "\n");
-          fw.write(ticketFS.toString() + "\n");
+          fw.write(clientCookie.toString() + "\n");
+          fw.write(firstIPHash.toString() + "\n");
         } finally {
           fw.close();
         }
@@ -307,8 +312,8 @@ public class ServerContext {
     };
   }
 
-  public String getTicketCC() {
-    return ticketCC;
+  public String getLaunchTicket() {
+    return launchTicket;
   }
 
   public long getServerSecondsAhead() {
