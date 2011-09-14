@@ -137,6 +137,8 @@ public class NonBlockingOutputStream extends OutputStream {
             byte buffer[] = new byte[16 * 1024];
             try {
               int got;
+              /* TODO: Fix a bug which caused this call to result in an
+              IOException "Write end dead". */
               while ((got = inPipe.read(buffer)) >= 0) {
                 out.write(buffer, 0, got);
                 synchronized (observerLock) {
