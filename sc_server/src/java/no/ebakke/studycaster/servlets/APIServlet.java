@@ -35,20 +35,17 @@ public class APIServlet extends HttpServlet {
   protected void doPost(HttpServletRequest req, HttpServletResponse resp)
       throws ServletException, IOException
   {
-    String cmd = null;
     Map<String,FileItem[]> multiPart = null;
-    String logEntry = null, clientCookie = null;
-    String launchTicket = null, ipHash = null;
-    boolean wroteContent = false;
+    String cmd = null, logEntry = null, clientCookie = null,
+        launchTicket = null;
+    Long wroteContent = null;
 
-    ipHash = ServletUtil.toHex(ServletUtil.sha1("stick " +
-        req.getRemoteAddr().trim()), IPHASH_BYTES);
+    File storageDir = Backend.INSTANCE.getStorageDirectory();
+    File uploadDir = new File(storageDir, UPLOAD_DIR);
+    uploadDir.mkdir();
+
     try {
-      multiPart = ServletUtil.parseMultiPart(req, MAX_APPEND_CHUNK);
-
-      File storageDir = Backend.INSTANCE.getStorageDirectory();
-      File uploadDir = new File(storageDir, UPLOAD_DIR);
-
+      multiPart    = ServletUtil.parseMultiPart(req, MAX_APPEND_CHUNK);
       cmd          = ServletUtil.getMultipartStringParam(multiPart, "cmd");
       launchTicket = ServletUtil.getMultipartStringParam(multiPart, "lt");
       if (launchTicket.isEmpty()) {
@@ -58,28 +55,28 @@ public class APIServlet extends HttpServlet {
             ServletUtil.toHex(ServletUtil.randomBytes(LAUNCH_TICKET_BYTES));
       }
 
-      uploadDir.mkdir();
-      File ticketDir = ServletUtil.getSaneFile(uploadDir, launchTicket.toString(), true);
+      File ticketDir =
+          ServletUtil.getSaneFile(uploadDir, launchTicket.toString(), true);
       ticketDir.mkdir();
+
       if        (cmd.equals("gsi")) {
         // Idempotent.
         clientCookie = ServletUtil.getMultipartStringParam(multiPart, "arg");
-        if (clientCookie.isEmpty())
+        if (clientCookie.isEmpty()) {
           clientCookie =
               ServletUtil.toHex(ServletUtil.randomBytes(CLIENT_COOKIE_BYTES));
-        // TODO: No need to send ipHash to client.
-        resp.setHeader("X-StudyCaster-IPHash"      , ipHash.toString());
+        }
         resp.setHeader("X-StudyCaster-LaunchTicket", launchTicket.toString());
         resp.setHeader("X-StudyCaster-ClientCookie", clientCookie.toString());
         resp.setHeader("X-StudyCaster-ServerTime"  ,
-                Long.toString(new Date().getTime() / 1000));
+                Long.toString(new Date().getTime()));
         resp.setHeader("X-StudyCaster-OK", "gsi");
       } else if (cmd.equals("log")) {
         // TODO: Make this properly idempotent.
         String content =
             ServletUtil.getMultipartStringParam(multiPart, "content");
         String argS = ServletUtil.getMultipartStringParam(multiPart, "arg");
-        logEntry = "Client: " + content + " (nonce=" + argS + ")";
+        logEntry = content + " (nonce=" + argS + ")";
         resp.setHeader("X-StudyCaster-OK", "log");
       } else if (cmd.equals("upc")) {
         // Idempotent.
@@ -115,6 +112,7 @@ public class APIServlet extends HttpServlet {
           throw new BadRequestException("Malformed integer argument");
         }
         FileItem content = ServletUtil.getParam(multiPart, "content");
+        logEntry = content.getName();
         File outFile = ServletUtil.getSaneFile(ticketDir, content.getName(), false);
         long existingLength = outFile.length();
         if (existingLength + content.getSize() > MAX_FILE_SIZE)
@@ -123,7 +121,7 @@ public class APIServlet extends HttpServlet {
         try {
           // This test ensures idempotency.
           if (writtenArg == existingLength) {
-            wroteContent = true;
+            wroteContent = content.getSize();
             OutputStream os = new FileOutputStream(outFile, true);
             try {
               IOUtils.copy(is, os);
@@ -168,18 +166,11 @@ public class APIServlet extends HttpServlet {
     } catch (BadRequestException e) {
       resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
     }
-    {
-      Long contentSize = null;
-      if (multiPart != null) {
-        FileItem content[] = multiPart.get("content");
-        if (content != null && content.length == 1 && wroteContent) {
-          contentSize = content[0].getSize();
-        }
-      }
-      // TODO: Set this one.
-      String geoLocation = null;
-      DomainUtil.storeRequest(new Request(new Date(), cmd, contentSize,
-          ipHash, geoLocation, launchTicket, clientCookie, logEntry));
-    }
+    String ipHash = ServletUtil.toHex(ServletUtil.sha1("stick " +
+      req.getRemoteAddr().trim()), IPHASH_BYTES);
+    // TODO: Set this one.
+    String geoLocation = null;
+    DomainUtil.storeRequest(new Request(new Date(), cmd, wroteContent,
+        ipHash, geoLocation, launchTicket, clientCookie, logEntry));
   }
 }

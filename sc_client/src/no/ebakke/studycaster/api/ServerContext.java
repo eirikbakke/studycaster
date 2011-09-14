@@ -32,26 +32,25 @@ import org.apache.http.util.EntityUtils;
 /** Handles protocol details specific to the server-side PHP script. */
 public class ServerContext {
   private static final String SERVERURI_PROP_NAME = "studycaster.server.uri";
-  public static final int DEF_UPLOAD_CHUNK_SZ = 64 * 1024; // TODO: Don't expose this.
-  private static final String TICKET_STORE_FILENAME = "sc_7403204709139484951.tmp";
+  // TODO: Don't expose this.
+  public  static final int    DEF_UPLOAD_CHUNK_SZ = 64 * 1024;
+  private static final String TICKET_STORE_FILENAME =
+      "sc_7403204709139484951.tmp";
   private URI    serverScriptURI;
-  private String clientCookie; // First client ticket on this machine
-  private String launchTicket; // Current client ticket
-  private String firstIPHash; // First server ticket on this machine
-  private String ipHash; // Current server ticket
+  private String launchTicket;
   private long   serverSecondsAhead;
   /* Keep the HttpClient in common for all requests to preserve the session
   cookie. */
   private DefaultHttpClient httpClient;
 
   public ServerContext() throws StudyCasterException {
+    String clientCookie = null;
     String serverScriptURIs = System.getProperty(SERVERURI_PROP_NAME);
-    if (serverScriptURIs == null)
-      throw new StudyCasterException("Property " + SERVERURI_PROP_NAME + " not set");
+    if (serverScriptURIs == null) {
+      throw new StudyCasterException(
+          "Property " + SERVERURI_PROP_NAME + " not set");
+    }
     StudyCaster.log.log(Level.INFO, "Using server URI {0}", serverScriptURIs);
-    // Needed for POST requests to succeed in the case where index.php is not specified explicitly.
-    // if (!serverScriptURIs.endsWith("index.php") && !serverScriptURIs.endsWith("/"))
-    //  serverScriptURIs += "/";
     try {
       serverScriptURI = new URI(serverScriptURIs + "/api");
     } catch (URISyntaxException e) {
@@ -59,14 +58,13 @@ public class ServerContext {
     }
 
     // Read ticket store.
-    File ticketStore =
-        new File(System.getProperty("java.io.tmpdir") + File.separator + TICKET_STORE_FILENAME);
+    File ticketStore = new File(System.getProperty("java.io.tmpdir") +
+        File.separator + TICKET_STORE_FILENAME);
     boolean writeTicketStore = true;
     try {
       BufferedReader br = new BufferedReader(new FileReader(ticketStore));
       try {
-        clientCookie        = br.readLine();
-        firstIPHash = br.readLine();
+        clientCookie = br.readLine();
       } finally {
         br.close();
       }
@@ -78,7 +76,7 @@ public class ServerContext {
     }
 
     // Get server info.
-    Header headerSTM, headerIPH, headerLAT, headerCIE;
+    Header headerSTM, headerLAT, headerCIE;
     long timeBef, timeAft;
     try {
       timeBef = System.currentTimeMillis();
@@ -104,33 +102,29 @@ public class ServerContext {
           clientCookie == null ? "" : clientCookie);
       timeAft = System.currentTimeMillis();
       headerSTM = response.getFirstHeader("X-StudyCaster-ServerTime");
-      headerIPH = response.getFirstHeader("X-StudyCaster-IPHash");
       headerLAT = response.getFirstHeader("X-StudyCaster-LaunchTicket");
       headerCIE = response.getFirstHeader("X-StudyCaster-ClientCookie");
       EntityUtils.consume(response.getEntity());
-      if (headerSTM == null || headerIPH == null || headerLAT == null || headerCIE == null)
-        throw new StudyCasterException("Server response missing initialization headers.");
+      if (headerSTM == null || headerLAT == null || headerCIE == null)
+        throw new StudyCasterException("Missing initialization headers.");
       if (clientCookie != null && !clientCookie.equals(headerCIE.getValue()))
         throw new StudyCasterException("Server returned odd client cookie");
       clientCookie = headerCIE.getValue();
     } catch (IOException e) {
       throw new StudyCasterException("Cannot retrieve server info.", e);
     }
+    launchTicket = headerLAT.getValue();
     try {
-      serverSecondsAhead =
-          Long.parseLong(headerSTM.getValue()) - ((timeBef / 2 + timeAft / 2) / 1000L);
-      StudyCaster.log.log(Level.INFO, "Server time ahead by {0} seconds.", serverSecondsAhead);
+      // TODO: Do this only for a single successful request.
+      serverSecondsAhead = (Long.parseLong(headerSTM.getValue()) -
+          (timeBef / 2 + timeAft / 2)) / 1000L;
+      StudyCaster.log.log(Level.INFO, "Server time ahead by {0} seconds.",
+          serverSecondsAhead);
     } catch (NumberFormatException e) {
       StudyCaster.log.log(Level.WARNING, "Got bad time format from server", e);
     }
-    // Let these exceptions propagate.
-    launchTicket = headerLAT.getValue();
-    ipHash       = headerIPH.getValue();
-    if (firstIPHash == null)
-      firstIPHash = ipHash;
-
-    StudyCaster.log.info(String.format("CC = %s, LT = %s, FIPH = %s, IPH = %s",
-        clientCookie, launchTicket, firstIPHash, ipHash));
+    StudyCaster.log.info(String.format("clientCookie = %s, launchTicket = %s",
+        clientCookie, launchTicket));
     Util.logEnvironmentInfo();
 
     // Write ticket store.
@@ -139,7 +133,6 @@ public class ServerContext {
         FileWriter fw = new FileWriter(ticketStore);
         try {
           fw.write(clientCookie.toString() + "\n");
-          fw.write(firstIPHash.toString() + "\n");
         } finally {
           fw.close();
         }
@@ -177,7 +170,7 @@ public class ServerContext {
         StudyCaster.log.log(Level.INFO, "Waiting to retry request");
         try {
           Thread.sleep(10000);
-        } catch (InterruptedException ex) {
+        } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
         }
       }
@@ -191,7 +184,8 @@ public class ServerContext {
     HttpPost httpPost = new HttpPost(serverScriptURI);
     MultipartEntity params = new MultipartEntity();
     params.addPart("cmd", new StringBody(cmd));
-    params.addPart("lt", new StringBody(launchTicket == null ? "" : launchTicket));
+    params.addPart("lt",
+        new StringBody(launchTicket == null ? "" : launchTicket));
     if (content != null)
       params.addPart("content", content);
     if (arg != null)
