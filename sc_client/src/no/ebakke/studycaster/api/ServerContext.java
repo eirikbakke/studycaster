@@ -89,7 +89,7 @@ public class ServerContext {
         public boolean retryRequest(IOException exception, int executionCount,
             HttpContext context)
         {
-          StudyCaster.log.log(Level.WARNING,
+          StudyCaster.log.log(Level.INFO,
               "Waiting to retry request ({0} times)", executionCount);
           try {
             Thread.sleep(10000);
@@ -163,9 +163,23 @@ public class ServerContext {
   private HttpResponse requestHelper(HttpClient httpClient, String cmd,
       ContentBody content, String arg) throws IOException
   {
-    // TODO: Get rid of this debris.
-    // EntityUtils.consume(requestHelperSingle(httpClient, cmd, content, arg).getEntity());
-    return requestHelperSingle(httpClient, cmd, content, arg);
+    HttpResponse ret = null;
+    do {
+      try {
+        ret = requestHelperSingle(httpClient, cmd, content, arg);
+      } catch (IOException e) {
+        StudyCaster.log.log(Level.WARNING, "Failed request beyond HttpClient", e);
+      }
+      if (ret == null) {
+        StudyCaster.log.log(Level.INFO, "Waiting to retry request");
+        try {
+          Thread.sleep(10000);
+        } catch (InterruptedException ex) {
+          Thread.currentThread().interrupt();
+        }
+      }
+    } while (ret == null);
+    return ret;
   }
 
   private HttpResponse requestHelperSingle(HttpClient httpClient, String cmd,
@@ -220,7 +234,8 @@ public class ServerContext {
       public void run() {
         try {
           EntityUtils.consume(requestHelper(httpClient, "log",
-              new StringBody(msg), null).getEntity());
+              new StringBody(msg), Integer.toString((int) Math.random() *
+              Integer.MAX_VALUE)).getEntity());
         } catch (IOException e) {
           StudyCaster.log.log(Level.WARNING, "Failed to enter remote log entry \"" + msg + "\"", e);
         }

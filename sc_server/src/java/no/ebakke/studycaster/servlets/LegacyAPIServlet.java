@@ -86,9 +86,10 @@ public class LegacyAPIServlet extends HttpServlet {
         // TODO: Make this idempotent.
         String content =
             ServletUtil.getMultipartStringParam(multiPart, "content");
+        String argS = ServletUtil.getMultipartStringParam(multiPart, "arg");
         // TODO: Do proper logging here.
         System.err.println("Log entry from client: \"" +
-            StringEscapeUtils.escapeJava(content) + "\"");
+            StringEscapeUtils.escapeJava(content) + "\" (nonce=" + argS + ")");
         resp.setHeader("X-StudyCaster-OK", "log");
       } else if (cmd.equals("upc")) {
         // Idempotent.

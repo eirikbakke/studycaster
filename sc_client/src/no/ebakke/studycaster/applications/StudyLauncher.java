@@ -84,7 +84,7 @@ public class StudyLauncher {
       scui.getProgressBarUI().setTaskAppearance("Initializing user study app...", false);
       sc = new StudyCaster();
       sc.startRecording(new ScreenCensor(
-          Arrays.asList(new String[] {"User Study Console", "Excel", "Calc", "Numbers", "Gnumeric", "KSpread", "Quattro", "Mesa", "Spreadsheet Study Application"}),
+          Arrays.asList(new String[] {"User Study Console", "Excel", "Calc", "Numbers", "Gnumeric", "KSpread", "Quattro", "Mesa", "Spreadsheet Study Application", "StudyCaster"}),
           Arrays.asList(new String[] {"Firefox", "Internet Explorer", "Outlook", "Chrome", "Safari", "Upload and Retrieve Confirmation Code",
           "Open Sample Document"}),
           true));
