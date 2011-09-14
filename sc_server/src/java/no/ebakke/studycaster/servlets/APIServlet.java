@@ -24,19 +24,14 @@ import org.apache.commons.lang3.StringEscapeUtils;
 
 @WebServlet(name = "APIServlet", urlPatterns = {"/client/api"})
 public class APIServlet extends HttpServlet {
-  private static final long   serialVersionUID = 1L;
-  private static final int    MAX_FILE_SIZE = 50000000;
-  private static final int    MAX_APPEND_CHUNK = 1024 * 256;
+  private static final long   serialVersionUID    = 1L;
+  private static final int    MAX_FILE_SIZE       = 50000000;
+  private static final int    MAX_APPEND_CHUNK    = 1024 * 256;
   private static final int    CLIENT_COOKIE_BYTES = 6;
   private static final int    LAUNCH_TICKET_BYTES = 6;
   private static final int    IPHASH_BYTES        = 3;
-  private static final String UPLOAD_DIR   = "uploads";
+  private static final String UPLOAD_DIR          = "uploads";
   // TODO: Figure out a better storage strategy.
-
-  @Override
-  protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-    resp.getWriter().println("Version 16");
-  }
 
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse resp)
@@ -56,34 +51,23 @@ public class APIServlet extends HttpServlet {
       File storageDir = Backend.INSTANCE.getStorageDirectory();
       File uploadDir = new File(storageDir, UPLOAD_DIR);
 
-      cmd = ServletUtil.getMultipartStringParam(multiPart, "cmd");
-
-      HttpSession session = req.getSession(false);
-      if (session == null) {
-        /* TODO: Use the database to store session tickets instead. Then have
-        the client send it on every request, and just verify that it's valid.
-        This way we'll be able to persist session across redeployments. */
+      cmd          = ServletUtil.getMultipartStringParam(multiPart, "cmd");
+      launchTicket = ServletUtil.getMultipartStringParam(multiPart, "lt");
+      if (launchTicket.isEmpty()) {
         if (!cmd.equals("gsi"))
-          throw new BadRequestException("Missing session");
+          throw new BadRequestException("Missing launch ticket");
         launchTicket = new Ticket(LAUNCH_TICKET_BYTES).toString();
-        session = req.getSession(true);
-        session.setAttribute("launchTicket"  , launchTicket);
-      } else {
-        Object obj = session.getAttribute("launchTicket");
-        if (obj == null || !(obj instanceof String))
-          throw new ServletException("Invalid session launchTicket: " + obj);
-        launchTicket = (String) obj;
       }
 
       uploadDir.mkdir();
       File ticketDir = ServletUtil.getSaneFile(uploadDir, launchTicket.toString(), true);
       ticketDir.mkdir();
       if        (cmd.equals("gsi")) {
+        // Idempotent.
         clientCookie = ServletUtil.getMultipartStringParam(multiPart, "arg");
         if (clientCookie.isEmpty())
           clientCookie = new Ticket(CLIENT_COOKIE_BYTES).toString();
-        // Idempotent due to the session code above.
-        // TODO: No need to send IPHash to client.
+        // TODO: No need to send ipHash to client.
         resp.setHeader("X-StudyCaster-IPHash"      , ipHash.toString());
         resp.setHeader("X-StudyCaster-LaunchTicket", launchTicket.toString());
         resp.setHeader("X-StudyCaster-ClientCookie", clientCookie.toString());

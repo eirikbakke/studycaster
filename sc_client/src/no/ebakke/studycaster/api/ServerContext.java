@@ -128,8 +128,6 @@ public class ServerContext {
     ipHash       = headerIPH.getValue();
     if (firstIPHash == null)
       firstIPHash = ipHash;
-    if (clientCookie == null)
-      clientCookie = launchTicket;
 
     StudyCaster.log.info(String.format("CC = %s, LT = %s, FIPH = %s, IPH = %s",
         clientCookie, launchTicket, firstIPHash, ipHash));
@@ -192,15 +190,8 @@ public class ServerContext {
   {
     HttpPost httpPost = new HttpPost(serverScriptURI);
     MultipartEntity params = new MultipartEntity();
-    /*
-    String allTickets =
-            ticketFC + "," +
-            ticketCC + "," +
-           ((ticketFS != null) ? ticketFS : "") + "," +
-           ((ticketCS != null) ? ticketCS : "");
-    params.addPart("tickets", new StringBody(allTickets));
-    */
     params.addPart("cmd", new StringBody(cmd));
+    params.addPart("lt", new StringBody(launchTicket == null ? "" : launchTicket));
     if (content != null)
       params.addPart("content", content);
     if (arg != null)
