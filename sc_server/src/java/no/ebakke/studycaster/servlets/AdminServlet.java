@@ -7,23 +7,53 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import no.ebakke.studycaster.backend.Backend;
 import no.ebakke.studycaster.backend.BackendConfiguration;
+import no.ebakke.studycaster.backend.DomainUtil;
 
 // TODO: Does this root mapping work on all containers?
 @WebServlet(name = "AdminServlet", urlPatterns = {"/index.html"})
 public class AdminServlet extends HttpServlet {
   private static final long serialVersionUID = 1L;
 
+  // TODO: Put these methods somewhere else.
+  public static boolean isAdminLoggedIn(HttpServletRequest req, String password)
+  {
+    // TODO: Remove obvious security hole here.
+    if (!Backend.INSTANCE.wasProperlyInitialized())
+      return true;
+    if (password != null)
+      setAdminLoggedIn(req, DomainUtil.passwordMatches(password));
+    HttpSession session = req.getSession(false);
+    if (session == null)
+      return false;
+    Object attr = session.getAttribute("adminLoggedIn");
+    if ((attr instanceof Boolean) && ((Boolean) attr))
+      return true;
+    return false;
+  }
+
+  public static void setAdminLoggedIn(HttpServletRequest req, boolean loggedIn)
+  {
+    // TODO: Should I rather figure out how to erase the session?
+    req.getSession(true).setAttribute("adminLoggedIn", loggedIn);
+  }
+
   @Override
-  protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+  protected void service(HttpServletRequest req, HttpServletResponse resp)
       throws ServletException, IOException
   {
     resp.setHeader("Cache-Control", "no-cache");
     resp.setHeader("Pragma"       , "no-cache");
+    if (req.getParameter("logout") != null)
+      setAdminLoggedIn(req, false);
+
     try {
       String serverURL = ServletUtil.getApplicationBase(req);
 
+      req.setAttribute("isAdminLoggedIn", isAdminLoggedIn(req,
+          req.getParameter("pwd")));
       req.setAttribute("serverURL", serverURL);
       req.setAttribute("urlDeployScript", serverURL + "/deployJava.min.js");
       /* Don't allow strings with characters that would need escaping, since

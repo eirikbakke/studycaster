@@ -6,7 +6,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import no.ebakke.studycaster.backend.BackendException;
 import no.ebakke.studycaster.backend.Backend;
 import no.ebakke.studycaster.backend.BackendConfiguration;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -19,22 +18,25 @@ public class AdminActionsServlet extends HttpServlet {
   protected void doPost(HttpServletRequest req, HttpServletResponse resp)
       throws ServletException, IOException
   {
+    if (!AdminServlet.isAdminLoggedIn(req, null)) {
+      resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Not logged in.");
+      return;
+    }
     try {
       String dbAction      = ServletUtil.getStringParam(req, "dbAction");
       String connectionURL = ServletUtil.getStringParam(req, "connectionURL");
-      String newPassword = null;
-      boolean create;
+      String createAndSetPassword;
       if        (dbAction.equals("validate")) {
-        create = false;
+        createAndSetPassword = null;
       } else if (dbAction.equals("create")) {
-        newPassword = ServletUtil.getStringParam(req, "newPassword");
-        create = true;
+        createAndSetPassword = ServletUtil.getStringParam(req, "newPassword");
       } else {
         throw new BadRequestException("Invalid action \"" +
             StringEscapeUtils.escapeJava(dbAction) + "\"");
       }
       String msg;
-      Backend testBackend = new Backend(new BackendConfiguration(connectionURL, null), create);
+      Backend testBackend = new Backend(
+          new BackendConfiguration(connectionURL, null), createAndSetPassword);
       try {
         msg = testBackend.getStatusMessage();
       } finally {

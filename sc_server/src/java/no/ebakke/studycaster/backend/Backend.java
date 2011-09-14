@@ -21,13 +21,13 @@ public final class Backend {
   private BackendException storageDirError;
 
   public Backend() {
-    this(new BackendConfiguration(), false);
+    this(new BackendConfiguration(), null);
   }
 
-  public Backend(BackendConfiguration config, boolean createDatabase) {
+  public Backend(BackendConfiguration config, String createAndSetPassword) {
     try {
       sessionFactory = buildSessionFactory(config.getDatabaseURL(),
-          createDatabase);
+          createAndSetPassword);
     } catch (BackendException e) {
       sessionFactoryError = e;
     }
@@ -78,6 +78,10 @@ public final class Backend {
     return ret;
   }
 
+  public boolean wasProperlyInitialized() {
+    return (sessionFactoryError == null && storageDirError == null);
+  }
+
   public SessionFactory getSessionFactory() throws HibernateException {
     if (sessionFactoryError != null) {
       throw new HibernateException("Backend was not properly initialized",
@@ -96,32 +100,34 @@ public final class Backend {
 
   /** If connectionURL is null, take from environment. */
   private static SessionFactory buildSessionFactory(
-      String connectionURL, boolean create) throws BackendException
+      String connectionURL, String createAndSetPassword) throws BackendException
   {
     try {
       Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
       Class.forName("org.apache.derby.jdbc.ClientDriver");
       Class.forName("com.mysql.jdbc.Driver");
 
-      Configuration conf = createHibernateConfiguration(connectionURL, create);
+      Configuration conf = createHibernateConfiguration(connectionURL,
+          createAndSetPassword != null);
       /* Try with regular JDBC first, as it gives better error messages for
       invalid URL parameters. */
       DriverManager.getConnection(conf.getProperty(HCU_KEY)).close();
       SessionFactory ret = conf.buildSessionFactory();
-      if (create) {
+
+      if (createAndSetPassword != null) {
+        DomainUtil.addPassword(ret, createAndSetPassword);
         /* Hibernate may let schema creation fail silently, so reconnect in
         validate mode to be sure the operation succeeded. Aforementioned
         behavior observed when attempting to create a schema with which the
         specified user has read-only access. */
         ret.close();
         try {
-          return buildSessionFactory(connectionURL, false);
+          ret = buildSessionFactory(connectionURL, null);
         } catch (BackendException e) {
           throw new BackendException("Validation failed at reconnect", e);
         }
-      } else {
-        return ret;
       }
+      return ret;
     } catch (ClassNotFoundException e) {
       throw new BackendException(e);
     } catch (SQLException e) {

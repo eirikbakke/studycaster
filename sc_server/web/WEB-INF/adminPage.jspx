@@ -25,10 +25,11 @@
   <body>
     <h1><img src="client/icons/icon32.png" alt="Icon" id="mainIcon"/>
       StudyCaster Admin Page</h1>
+    <h2>Login</h2>
+<c:choose>
+  <c:when test="${isAdminLoggedIn}">
+    You are logged in. <a href="?logout">Log out.</a>
     <h2>Configuration Status</h2>
-    <p>Access URL for this request:
-      <a href="${fn:escapeXml(serverURL)}"><c:out value="${serverURL}"/></a>.
-    </p>
     <p>
       Backend status at application deployment:<br/>
     <code class="quote"><c:out value="${dbStatus}"/></code></p>
@@ -66,7 +67,20 @@
     <p>For local StudyCaster development with Derby, see the build log for the
     URL of the current development database. You will need to append
     <code>;create=true</code> to create the database for the first time.</p>
+  </c:when>
+  <c:otherwise>
+    <form action="." method="post">
+      <label for="passwordField">Password: </label><br/>
+      <input type="password" name="pwd" id="passwordField"/><br/>
+      <input type="submit" value="Submit"/>
+    </form>
+  </c:otherwise>
+</c:choose>
+
     <h2>Launch Button</h2>
+    <p>Access URL for this request:
+      <a href="${fn:escapeXml(serverURL)}"><c:out value="${serverURL}"/></a>.
+    </p>
     <p>JWS button for launching the StudyCaster Client (based on the absolute
       access URL above):</p>
       ${scriptCode}

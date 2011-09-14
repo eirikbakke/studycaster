@@ -18,6 +18,9 @@ public final class DomainTests {
     DomainUtil.storeRequest(r1);
     DomainUtil.storeRequest(r2);
     DomainUtil.storeRequest(r3);
+    
+    System.out.println(DomainUtil.passwordMatches("This is a test."));
+    System.out.println(DomainUtil.passwordMatches("This is a test2."));
 
     System.out.println("Loading requests:");
     for (Request r : DomainUtil.getRequests())

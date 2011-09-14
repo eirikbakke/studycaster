@@ -2,10 +2,18 @@
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <hibernate-mapping default-access="field" package="no.ebakke.studycaster.backend">
   <class name="Request" table="Requests">
-    <id column="rid" name="id">
+    <id column="r_id" name="id">
       <generator class="native"/>
     </id>
-    <property column="rtime" name="time" type="timestamp"/>
-    <property column="rtype" name="type"/>
+    <property column="r_time" name="time" type="timestamp"/>
+    <property column="r_type" name="type"/>
+  </class>
+
+  <class name="ConfigurationProperty" table="ConfigurationProperties">
+    <id column="c_id" name="id">
+      <generator class="native"/>
+    </id>
+    <property column="c_key" name="key"/>
+    <property column="c_val" name="value"/>
   </class>
 </hibernate-mapping>
