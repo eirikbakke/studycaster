@@ -115,7 +115,7 @@
     <target name="-post-dist">
         <!-- See http://stackoverflow.com/questions/2025950/ant-how-to-strip-the-basedir-from-an-absolute-path-to-get-a-relative-path -->
         <property name="hiberdevel.prop.path"
-            location="${build.classes.dir}/${hiberdevel.prop}"
+            location="${build.classes.dir}/development.properties"
             basedir="${build.web.dir}" relative="yes" />
         <!-- See http://stackoverflow.com/questions/2521231/ant-task-to-remove-files-from-a-jar . -->
         <jar destfile="${dist.prod.war}">

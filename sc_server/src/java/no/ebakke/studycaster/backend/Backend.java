@@ -73,7 +73,7 @@ public final class Backend {
     if (storageDirError != null) {
       ret += storageDirError.getMessage();
     } else {
-      ret += "Successfully opened storage directory.";
+      ret += "Successfully opened storage directory";
     }
     return ret;
   }

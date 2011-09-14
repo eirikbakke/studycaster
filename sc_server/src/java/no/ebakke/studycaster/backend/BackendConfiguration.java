@@ -40,6 +40,8 @@ public class BackendConfiguration {
     String ret = develProp.getProperty(key);
     if (ret == null)
       ret = System.getProperty(key);
+    if (ret != null && ret.isEmpty())
+      ret = null;
     return ret;
   }
 
