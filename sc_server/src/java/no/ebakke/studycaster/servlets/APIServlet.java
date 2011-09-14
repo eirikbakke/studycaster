@@ -13,8 +13,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import no.ebakke.studycaster.api.Ticket;
 import no.ebakke.studycaster.backend.Backend;
 import no.ebakke.studycaster.backend.DomainUtil;
 import no.ebakke.studycaster.backend.Request;
@@ -43,8 +41,8 @@ public class APIServlet extends HttpServlet {
     String launchTicket = null, ipHash = null;
     boolean wroteContent = false;
 
-    ipHash = new Ticket(IPHASH_BYTES, "stick " +
-        req.getRemoteAddr().trim()).toString();
+    ipHash = ServletUtil.toHex(ServletUtil.sha1("stick " +
+        req.getRemoteAddr().trim()), IPHASH_BYTES);
     try {
       multiPart = ServletUtil.parseMultiPart(req, MAX_APPEND_CHUNK);
 
@@ -56,7 +54,8 @@ public class APIServlet extends HttpServlet {
       if (launchTicket.isEmpty()) {
         if (!cmd.equals("gsi"))
           throw new BadRequestException("Missing launch ticket");
-        launchTicket = new Ticket(LAUNCH_TICKET_BYTES).toString();
+        launchTicket =
+            ServletUtil.toHex(ServletUtil.randomBytes(LAUNCH_TICKET_BYTES));
       }
 
       uploadDir.mkdir();
@@ -66,7 +65,8 @@ public class APIServlet extends HttpServlet {
         // Idempotent.
         clientCookie = ServletUtil.getMultipartStringParam(multiPart, "arg");
         if (clientCookie.isEmpty())
-          clientCookie = new Ticket(CLIENT_COOKIE_BYTES).toString();
+          clientCookie =
+              ServletUtil.toHex(ServletUtil.randomBytes(CLIENT_COOKIE_BYTES));
         // TODO: No need to send ipHash to client.
         resp.setHeader("X-StudyCaster-IPHash"      , ipHash.toString());
         resp.setHeader("X-StudyCaster-LaunchTicket", launchTicket.toString());

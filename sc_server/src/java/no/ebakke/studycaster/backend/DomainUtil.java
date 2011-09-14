@@ -1,7 +1,7 @@
 package no.ebakke.studycaster.backend;
 
 import java.util.List;
-import no.ebakke.studycaster.api.Ticket;
+import no.ebakke.studycaster.servlets.ServletUtil;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -25,12 +25,12 @@ public final class DomainUtil {
     // TODO: Add salt.
     // TODO: Don't abuse the Ticket class for this.
     s.save(new ConfigurationProperty("passwordHash",
-        new Ticket(20, password).toString()));
+        ServletUtil.toHex(ServletUtil.sha1(password))));
     s.getTransaction().commit();
   }
 
   public static boolean passwordMatches(String password) {
-    String hashed = new Ticket(20, password).toString();
+    String hashed = ServletUtil.toHex(ServletUtil.sha1(password));
     Session s = Backend.INSTANCE.getSessionFactory().getCurrentSession();
     s.beginTransaction();
     Query q = s.createQuery("from ConfigurationProperty where key=?");

@@ -6,9 +6,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Random;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.ServletResponse;
@@ -23,6 +26,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.lang3.StringEscapeUtils;
 
 public final class ServletUtil {
+  private static Random random = new Random();
   private ServletUtil() { }
 
   // See http://stackoverflow.com/questions/675730 .
@@ -169,5 +173,37 @@ public final class ServletUtil {
     } catch (IOException e) {
       throw new BadRequestException(MSG);
     }
+  }
+
+  public static String toHex(byte[] value) {
+    return toHex(value, value.length);
+  }
+
+  public static String toHex(byte[] value, int length) {
+    StringBuilder ret = new StringBuilder();
+    for (int i = 0; i < length; i++) {
+      ret.append(Character.forDigit((value[i] & 0xF0) >> 4, 16));
+      ret.append(Character.forDigit((value[i] & 0x0F)     , 16));
+    }
+    return ret.toString();
+  }
+
+  public static byte[] sha1(String input) {
+    try {
+      MessageDigest sha1 = MessageDigest.getInstance("SHA1");
+      return sha1.digest(input.getBytes("UTF-8"));
+    } catch (NoSuchAlgorithmException e) {
+      throw new AssertionError(e);
+    } catch (UnsupportedEncodingException e) {
+      throw new AssertionError(e);
+    } catch (IOException e) {
+      throw new AssertionError(e);
+    }
+  }
+
+  public static byte[] randomBytes(int length) {
+    byte[] ret = new byte[length];
+    random.nextBytes(ret);
+    return ret;
   }
 }
