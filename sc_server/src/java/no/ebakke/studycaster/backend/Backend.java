@@ -1,5 +1,9 @@
 package no.ebakke.studycaster.backend;
 
+import com.maxmind.geoip.Location;
+import com.maxmind.geoip.LookupService;
+import com.maxmind.geoip.regionName;
+import com.maxmind.geoip.timeZone;
 import java.io.File;
 import java.io.IOException;
 import java.sql.DriverManager;
@@ -19,6 +23,8 @@ public final class Backend {
   private BackendException sessionFactoryError;
   private File             storageDir;
   private BackendException storageDirError;
+  private LookupService    lookupService;
+  private BackendException lookupServiceError;
 
   public Backend() {
     this(new BackendConfiguration(), null);
@@ -36,6 +42,11 @@ public final class Backend {
     } catch (BackendException e) {
       storageDirError = e;
     }
+    try {
+      lookupService = initLookupService(config.getGeoIPDatabasePath());
+    } catch (BackendException e) {
+      lookupServiceError = e;
+    }
   }
 
   private static File openStorageDir(String path) throws BackendException {
@@ -50,36 +61,56 @@ public final class Backend {
     return ret;
   }
 
+  private static LookupService initLookupService(String path) throws BackendException {
+    try {
+      return new LookupService(path, LookupService.GEOIP_MEMORY_CACHE);
+    } catch (IOException e) {
+      throw new BackendException("Failed to open GeoIP database", e);
+    }
+  }
+
+  // TODO: Move this presentation code out of here.
   public String getStatusMessage() {
-    String ret;
+    String ret = "";
+    ret += "JDBC Database: ";
     if (sessionFactoryError != null) {
+      String msg;
       Throwable cause = sessionFactoryError;
       do {
-        ret = cause.getMessage();
-        if (!ret.contains("see the next exception for details"))
+        msg = cause.getMessage();
+        if (!msg.contains("see the next exception for details"))
           break;
         cause = cause.getCause();
       } while (cause != null);
+      ret += msg;
     } else {
       // See http://stackoverflow.com/questions/1571928/retrieve-auto-detected-hibernate-dialect .
       if (sessionFactory instanceof SessionFactoryImplementor) {
-        ret = "Successful database connection, dialect=" +
+        ret += "OK, " +
           ((SessionFactoryImplementor) sessionFactory).getDialect().toString();
       } else {
-        ret = "Successful database connection, " + sessionFactory.toString();
+        ret += "OK, " + sessionFactory.toString();
       }
     }
-    ret += " / ";
+    ret += "\n";
+    ret += "Storage Directory: ";
     if (storageDirError != null) {
       ret += storageDirError.getMessage();
     } else {
-      ret += "Successfully opened storage directory";
+      ret += "OK";
+    }
+    ret += "\n";
+    ret += "GeoIP Database: ";
+    if (lookupServiceError != null) {
+      ret += lookupServiceError.getMessage();
+    } else {
+      ret += "OK, updated " + lookupService.getDatabaseInfo().getDate();
     }
     return ret;
   }
 
-  public boolean wasProperlyInitialized() {
-    return (sessionFactoryError == null && storageDirError == null);
+  public boolean wasDBproperlyInitialized() {
+    return (sessionFactoryError == null);
   }
 
   public SessionFactory getSessionFactory() throws HibernateException {
@@ -96,6 +127,10 @@ public final class Backend {
           storageDirError);
     }
     return storageDir;
+  }
+
+  public LookupService getLookupService() {
+    return lookupService;
   }
 
   /** If connectionURL is null, take from environment. */
@@ -115,7 +150,7 @@ public final class Backend {
       SessionFactory ret = conf.buildSessionFactory();
 
       if (createAndSetPassword != null) {
-        DomainUtil.addPassword(ret, createAndSetPassword);
+        BackendUtil.addPassword(ret, createAndSetPassword);
         /* Hibernate may let schema creation fail silently, so reconnect in
         validate mode to be sure the operation succeeded. Aforementioned
         behavior observed when attempting to create a schema with which the
@@ -153,5 +188,27 @@ public final class Backend {
     p.setProperty(HDA_KEY, create ? "create" : "validate");
     ret.addProperties(p);
     return ret;
+  }
+
+  public static void main(String[] args) throws IOException {
+    LookupService cl = new LookupService("Z:/sc_remote/storage/GeoLiteCity.dat",
+        LookupService.GEOIP_MEMORY_CACHE);
+    Location l1 = cl.getLocation("213.52.50.8");
+    Location l2 = cl.getLocation("128.30.5.63");
+    System.out.println("countryCode: " + l2.countryCode
+        + "\n countryName: " + l2.countryName
+        + "\n region: " + l2.region
+        + "\n regionName: " + regionName.regionNameByCode(l2.countryCode, l2.region)
+        + "\n city: " + l2.city
+        + "\n postalCode: " + l2.postalCode
+        + "\n latitude: " + l2.latitude
+        + "\n longitude: " + l2.longitude
+        + "\n distance: " + l2.distance(l1)
+        + "\n distance: " + l1.distance(l2)
+        + "\n metro code: " + l2.metro_code
+        + "\n area code: " + l2.area_code
+        + "\n timezone: " + timeZone.timeZoneByCountryAndRegion(l2.countryCode, l2.region));
+
+    cl.close();
   }
 }

@@ -19,6 +19,11 @@ Acknowledgements
 * The RLE+GZIP encoding was inspired by the one used by the java-remote-control
   project:
     http://code.google.com/p/java-remote-control
+* The GeoIP PHP API and database are from MaxMind
+    http://www.maxmind.com/app/java
+    http://www.maxmind.com/app/geolitecity
+  Download an updated database here:
+    http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
 
 Known Issues
 * Under certain firewall configurations, notably while running
@@ -37,3 +42,4 @@ Configuration
       studycaster.storage.path=../devel_storagedir
   * In sc_server:
       studycaster.server.uri=http://localhost:8084/sc_server/client
+* Put the "GeoLiteCity.dat" file in the storage folder

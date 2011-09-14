@@ -29,10 +29,10 @@
 <c:choose>
   <c:when test="${isAdminLoggedIn}">
     You are logged in. <a href="?logout">Log out.</a>
-    <h2>Configuration Status</h2>
+    <h2>Backend Status</h2>
     <p>
       Backend status at application deployment:<br/>
-    <code class="quote"><c:out value="${dbStatus}"/></code></p>
+    <pre class="quote"><c:out value="${backendStatus}"/></pre></p>
     <p>
       You can configure the production JDBC connection URL by setting the
       <code><c:out value="${serverURLproperty}"/></code> system property on the
@@ -65,21 +65,21 @@
       <code class="quote">jdbc:mysql://<em>host</em>:<em>port</em>/<em>database</em>?user=<em>username</em>&amp;amp;password=<em>password</em></code><br/>
     </p>
     <p>For local StudyCaster development with Derby, see the build log for the
-    URL of the current development database. You will need to append
-    <code>;create=true</code> to create the database for the first time.</p>
-  </c:when>
-  <c:otherwise>
-    <form action="." method="post">
-      <label for="passwordField">Password: </label><br/>
-      <input type="password" name="pwd" id="passwordField"/><br/>
-      <input type="submit" value="Submit"/>
-    </form>
-  </c:otherwise>
-</c:choose>
+    default URL of the current development database.</p>
 
     <h2>Launch Button</h2>
     <p>Access URL for this request:
       <a href="${fn:escapeXml(serverURL)}"><c:out value="${serverURL}"/></a>.
+    </p>
+    <p>GeoIP country/region for this request:
+      <c:choose>
+        <c:when test="${geoInfo != null}">
+          <code><c:out value="${geoInfo}"/></code>
+        </c:when>
+        <c:otherwise>
+          <em>(GeoIP information not available)</em>
+        </c:otherwise>
+      </c:choose>.
     </p>
     <p>JWS button for launching the StudyCaster Client (based on the absolute
       access URL above):</p>
@@ -89,6 +89,19 @@
     <pre>
       <c:out value="${scriptCode}"/>
     </pre>
+  </c:when>
+  <c:otherwise>
+    <form action="." method="post">
+      <label for="passwordField">Password: </label><br/>
+      <input type="password" name="pwd" id="passwordField"/><br/>
+      <input type="submit" value="Submit"/>
+    </form>
+    <h2>Launch Button</h2>
+    <p>JWS button for launching the StudyCaster Client:</p>
+      ${scriptCode}
+  </c:otherwise>
+</c:choose>
+
     <![CDATA[<script type="text/javascript" src="jquery-1.6.3.min.js"></script>]]>
     <![CDATA[<script type="text/javascript" src="admin.js"></script>]]>
   </body>

@@ -1,5 +1,7 @@
 package no.ebakke.studycaster.servlets;
 
+import com.maxmind.geoip.Location;
+import com.maxmind.geoip.LookupService;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -14,7 +16,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import no.ebakke.studycaster.backend.Backend;
-import no.ebakke.studycaster.backend.DomainUtil;
+import no.ebakke.studycaster.backend.BackendUtil;
 import no.ebakke.studycaster.backend.Request;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.io.IOUtils;
@@ -166,11 +168,10 @@ public class APIServlet extends HttpServlet {
     } catch (BadRequestException e) {
       resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
     }
-    String ipHash = ServletUtil.toHex(ServletUtil.sha1("stick " +
-      req.getRemoteAddr().trim()), IPHASH_BYTES);
-    // TODO: Set this one.
-    String geoLocation = null;
-    DomainUtil.storeRequest(new Request(new Date(), cmd, wroteContent,
-        ipHash, geoLocation, launchTicket, clientCookie, logEntry));
+    // TODO: Split off locations into separate table.
+    BackendUtil.storeRequest(new Request(new Date(), cmd, wroteContent,
+        ServletUtil.toHex(ServletUtil.sha1("stick " + req.getRemoteAddr()),
+        IPHASH_BYTES), BackendUtil.getGeoInfo(req), launchTicket, clientCookie,
+        logEntry));
   }
 }

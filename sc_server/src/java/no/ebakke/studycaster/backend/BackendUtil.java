@@ -1,13 +1,17 @@
 package no.ebakke.studycaster.backend;
 
+import com.maxmind.geoip.Location;
+import com.maxmind.geoip.LookupService;
+import com.maxmind.geoip.regionName;
 import java.util.List;
+import javax.servlet.http.HttpServletRequest;
 import no.ebakke.studycaster.servlets.ServletUtil;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
-public final class DomainUtil {
-  private DomainUtil() { }
+public final class BackendUtil {
+  private BackendUtil() { }
 
   public static void storeRequest(Request r) {
     // TODO: Should I not be calling getCurrentSession() every time?
@@ -59,5 +63,14 @@ public final class DomainUtil {
     return ret;
   }
 
-  
+  public static String getGeoInfo(HttpServletRequest req) {
+    LookupService lookupService = Backend.INSTANCE.getLookupService();
+    if (lookupService == null)
+      return null;
+    Location loc = lookupService.getLocation(req.getRemoteAddr());
+    if (loc == null)
+      return null;
+    return loc.countryName + " / " +
+        regionName.regionNameByCode(loc.countryCode, loc.region);
+  }
 }

@@ -1,5 +1,6 @@
 package no.ebakke.studycaster.backend;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -63,5 +64,9 @@ public class BackendConfiguration {
           STORAGE_DIR_PROPERTY + " not defined");
     }
     return storageDirPath;
+  }
+
+  public String getGeoIPDatabasePath() throws BackendException {
+    return getStorageDirPath() + File.separator + "GeoLiteCity.dat";
   }
 }

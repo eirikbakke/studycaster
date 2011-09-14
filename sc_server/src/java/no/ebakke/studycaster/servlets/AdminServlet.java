@@ -1,5 +1,6 @@
 package no.ebakke.studycaster.servlets;
 
+import com.maxmind.geoip.LookupService;
 import java.io.IOException;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -10,7 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import no.ebakke.studycaster.backend.Backend;
 import no.ebakke.studycaster.backend.BackendConfiguration;
-import no.ebakke.studycaster.backend.DomainUtil;
+import no.ebakke.studycaster.backend.BackendUtil;
 
 // TODO: Does this root mapping work on all containers?
 @WebServlet(name = "AdminServlet", urlPatterns = {"/index.html"})
@@ -21,10 +22,10 @@ public class AdminServlet extends HttpServlet {
   public static boolean isAdminLoggedIn(HttpServletRequest req, String password)
   {
     // TODO: Remove obvious security hole here.
-    if (!Backend.INSTANCE.wasProperlyInitialized())
+    if (!Backend.INSTANCE.wasDBproperlyInitialized())
       return true;
     if (password != null)
-      setAdminLoggedIn(req, DomainUtil.passwordMatches(password));
+      setAdminLoggedIn(req, BackendUtil.passwordMatches(password));
     HttpSession session = req.getSession(false);
     if (session == null)
       return false;
@@ -66,7 +67,8 @@ public class AdminServlet extends HttpServlet {
       req.setAttribute("minJavaVer", ServletUtil.ensureSafeString("1.5"));
       req.setAttribute("serverURLproperty" , BackendConfiguration.JDBC_URL_PROPERTY);
       req.setAttribute("storageDirProperty", BackendConfiguration.STORAGE_DIR_PROPERTY);
-      req.setAttribute("dbStatus", Backend.INSTANCE.getStatusMessage());
+      req.setAttribute("backendStatus", Backend.INSTANCE.getStatusMessage());
+      req.setAttribute("geoInfo", BackendUtil.getGeoInfo(req));
 
       // TODO: Consider if there's a better way to do this.
       String scriptCode = ServletUtil.renderServletToString(

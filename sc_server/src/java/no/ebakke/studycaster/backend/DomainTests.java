@@ -15,15 +15,15 @@ public final class DomainTests {
     System.out.println(r3);
 
     // TODO: Should I rather used "managed" sessions and close them explicitly?
-    DomainUtil.storeRequest(r1);
-    DomainUtil.storeRequest(r2);
-    DomainUtil.storeRequest(r3);
+    BackendUtil.storeRequest(r1);
+    BackendUtil.storeRequest(r2);
+    BackendUtil.storeRequest(r3);
 
-    System.out.println(DomainUtil.passwordMatches("This is a test."));
-    System.out.println(DomainUtil.passwordMatches("This is a test2."));
+    System.out.println(BackendUtil.passwordMatches("This is a test."));
+    System.out.println(BackendUtil.passwordMatches("This is a test2."));
 
     System.out.println("Loading requests:");
-    for (Request r : DomainUtil.getRequests())
+    for (Request r : BackendUtil.getRequests())
       System.out.println(r);
   }
 }
