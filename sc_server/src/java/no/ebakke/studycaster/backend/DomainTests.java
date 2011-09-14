@@ -7,9 +7,9 @@ public final class DomainTests {
 
   @SuppressWarnings({"unchecked", "unchecked"})
   public static void main(String args[]) {
-    Request r1 = new Request(new Date(), "testReq", 42, "someRemoteHash", "someGeoLoc", "someLaunchTicket", "someClientCookie", "A log entry!");
+    Request r1 = new Request(new Date(), "testReq", 42L, "someRemoteHash", "someGeoLoc", "someLaunchTicket", "someClientCookie", "A log entry!");
     Request r2 = new Request(new Date(), "testReq", null, null, null, null, null, "Another log entry!");
-    Request r3 = new Request(new Date(), "testReq2", 65000, null, null, null, null, "And a last one.");
+    Request r3 = new Request(new Date(), "testReq2", 65000L, null, null, null, null, "And a last one.");
     System.out.println(r1);
     System.out.println(r2);
     System.out.println(r3);

@@ -93,7 +93,7 @@ public class ServerContext {
               "Waiting to retry request ({0} times)", executionCount);
           try {
             Thread.sleep(10000);
-          } catch (InterruptedException ex) {
+          } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
           }
           return true;
@@ -234,8 +234,8 @@ public class ServerContext {
       public void run() {
         try {
           EntityUtils.consume(requestHelper(httpClient, "log",
-              new StringBody(msg), Integer.toString((int) Math.random() *
-              Integer.MAX_VALUE)).getEntity());
+              new StringBody(msg), Integer.toString((int) (Math.random() *
+              Integer.MAX_VALUE))).getEntity());
         } catch (IOException e) {
           StudyCaster.log.log(Level.WARNING, "Failed to enter remote log entry \"" + msg + "\"", e);
         }

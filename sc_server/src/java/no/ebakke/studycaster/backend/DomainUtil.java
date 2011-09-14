@@ -33,9 +33,9 @@ public final class DomainUtil {
     String hashed = new Ticket(20, password).toString();
     Session s = Backend.INSTANCE.getSessionFactory().getCurrentSession();
     s.beginTransaction();
-    @SuppressWarnings("unchecked")
     Query q = s.createQuery("from ConfigurationProperty where key=?");
     q.setString(0, "passwordHash");
+    @SuppressWarnings("unchecked")
     List<ConfigurationProperty> pairs = (List<ConfigurationProperty>) q.list();
     boolean ret = false;
     // TODO: Balk on multiple occurences of single property, or no occurences.

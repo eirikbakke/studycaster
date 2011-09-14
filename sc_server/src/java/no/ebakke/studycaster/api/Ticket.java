@@ -11,11 +11,12 @@ import java.util.Random;
 store across server restarts or redeployments. */
 public class Ticket implements Serializable {
   private static final long serialVersionUID = 1L;
+  private static Random random = new Random();
   private byte[] value;
 
   public Ticket(int length) {
     value = new byte[length];
-    new Random().nextBytes(value);
+    random.nextBytes(value);
   }
 
   public Ticket(int length, String hashMe) {

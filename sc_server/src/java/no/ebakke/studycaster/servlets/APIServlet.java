@@ -16,6 +16,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import no.ebakke.studycaster.api.Ticket;
 import no.ebakke.studycaster.backend.Backend;
+import no.ebakke.studycaster.backend.DomainUtil;
+import no.ebakke.studycaster.backend.Request;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -39,16 +41,23 @@ public class APIServlet extends HttpServlet {
   protected void doPost(HttpServletRequest req, HttpServletResponse resp)
       throws ServletException, IOException
   {
+    String cmd = null;
+    Map<String,FileItem[]> multiPart = null;
+    // TODO: Get clientCookie.
+    String logEntry = null, clientCookie = null;
+    Ticket launchTicket = null, remoteAddrHash = null;
+    boolean wroteContent = false;
+
+    remoteAddrHash = new Ticket(SERVER_TICKET_BYTES,
+        "stick " + req.getRemoteAddr().trim());
     try {
-      Map<String,FileItem[]> multiPart =
-              ServletUtil.parseMultiPart(req, MAX_APPEND_CHUNK);
+      multiPart = ServletUtil.parseMultiPart(req, MAX_APPEND_CHUNK);
 
       File storageDir = Backend.INSTANCE.getStorageDirectory();
       File uploadDir = new File(storageDir, UPLOAD_DIR);
 
-      String cmd = ServletUtil.getMultipartStringParam(multiPart, "cmd");
+      cmd = ServletUtil.getMultipartStringParam(multiPart, "cmd");
 
-      Ticket clientTicket, serverTicket;
       HttpSession session = req.getSession(false);
       if (session == null) {
         /* TODO: Use the database to store session tickets instead. Then have
@@ -56,43 +65,34 @@ public class APIServlet extends HttpServlet {
         This way we'll be able to persist session across redeployments. */
         if (!cmd.equals("gsi"))
           throw new BadRequestException("Missing session");
-        // TODO: Change ticket naming conventions, or get rid of this system.
-        serverTicket = new Ticket(SERVER_TICKET_BYTES,
-            "stick " + req.getRemoteAddr().trim());
-        clientTicket = new Ticket(CLIENT_TICKET_BYTES);
+        launchTicket = new Ticket(CLIENT_TICKET_BYTES);
         session = req.getSession(true);
-        session.setAttribute("serverTicket", serverTicket);
-        session.setAttribute("clientTicket", clientTicket);
+        session.setAttribute("launchTicket"  , launchTicket);
       } else {
-        Object obj;
-        obj = session.getAttribute("serverTicket");
+        Object obj = session.getAttribute("launchTicket");
         if (obj == null || !(obj instanceof Ticket))
-          throw new ServletException("Invalid session serverTicket: " + obj);
-        serverTicket = (Ticket) obj;
-        obj = session.getAttribute("clientTicket");
-        if (obj == null || !(obj instanceof Ticket))
-          throw new ServletException("Invalid session clientTicket: " + obj);
-        clientTicket = (Ticket) obj;
+          throw new ServletException("Invalid session launchTicket: " + obj);
+        launchTicket = (Ticket) obj;
       }
 
       uploadDir.mkdir();
-      File ticketDir = ServletUtil.getSaneFile(uploadDir, clientTicket.toString(), true);
+      File ticketDir = ServletUtil.getSaneFile(uploadDir, launchTicket.toString(), true);
       ticketDir.mkdir();
       if        (cmd.equals("gsi")) {
         // Idempotent due to the session code above.
-        resp.setHeader("X-StudyCaster-ServerTicket", serverTicket.toString());
-        resp.setHeader("X-StudyCaster-ClientTicket", clientTicket.toString());
+        // TODO: Consistify ticket naming conventions, or get rid of this system.
+        // TODO: No need to send ServerTicket to client.
+        resp.setHeader("X-StudyCaster-ServerTicket", remoteAddrHash.toString());
+        resp.setHeader("X-StudyCaster-ClientTicket", launchTicket.toString());
         resp.setHeader("X-StudyCaster-ServerTime",
                 Long.toString(new Date().getTime() / 1000));
         resp.setHeader("X-StudyCaster-OK", "gsi");
       } else if (cmd.equals("log")) {
-        // TODO: Make this idempotent.
+        // TODO: Make this properly idempotent.
         String content =
             ServletUtil.getMultipartStringParam(multiPart, "content");
         String argS = ServletUtil.getMultipartStringParam(multiPart, "arg");
-        // TODO: Do proper logging here.
-        System.err.println("Log entry from client: \"" +
-            StringEscapeUtils.escapeJava(content) + "\" (nonce=" + argS + ")");
+        logEntry = "Client: " + content + " (nonce=" + argS + ")";
         resp.setHeader("X-StudyCaster-OK", "log");
       } else if (cmd.equals("upc")) {
         // Idempotent.
@@ -137,6 +137,7 @@ public class APIServlet extends HttpServlet {
         try {
           // This test ensures idempotency.
           if (writtenArg == existingLength) {
+            wroteContent = true;
             OutputStream os = new FileOutputStream(outFile, true);
             try {
               IOUtils.copy(is, os);
@@ -180,6 +181,20 @@ public class APIServlet extends HttpServlet {
       }
     } catch (BadRequestException e) {
       resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+    }
+    {
+      Long contentSize = null;
+      if (multiPart != null) {
+        FileItem content[] = multiPart.get("content");
+        if (content != null && content.length == 1 && wroteContent) {
+          contentSize = content[0].getSize();
+        }
+      }
+      // TODO: Set.
+      String geoLocation = null;
+      DomainUtil.storeRequest(new Request(new Date(), cmd, contentSize,
+          remoteAddrHash.toString(), geoLocation, launchTicket.toString(),
+          clientCookie, logEntry));
     }
   }
 }
