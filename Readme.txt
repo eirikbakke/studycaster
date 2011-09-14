@@ -5,6 +5,14 @@ Other Notes
 * It's useful to test network functionality using NetLimiter
   (http://www.netlimiter.com)
 
+Build Requirements
+* NetBeans EE 7.0.1
+* JDK 1.5 for building backwards-compatible client
+* Tomcat (other containers possible)
+* JavaDB (other databases possible)
+  TODO: Think it should be possible to install this with NetBeans?
+* Xuggler
+
 Acknowledgements
 * Icon was from the Tango Icon Library
     http://tango.freedesktop.org/Tango_Icon_Library

@@ -36,7 +36,7 @@ function submitDBsetup() {
       unused(textStatus, jqXHR);
       setInProgress(false);
       alert("Result: " + data);
-    })
+    }, "html")
     .error(function (jqXHR, textStatus, errorThrown) {
       unused(textStatus, jqXHR);
       setInProgress(false);

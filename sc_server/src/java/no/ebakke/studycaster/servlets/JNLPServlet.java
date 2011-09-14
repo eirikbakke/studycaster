@@ -28,13 +28,10 @@ public class JNLPServlet extends HttpServlet {
     resp.setHeader("Pragma"       , "no-cache");
     resp.setCharacterEncoding("UTF-8");
 
-    if (req.getParameter("debug") != null) {
-      resp.setContentType("text/html");
-    } else {
-      resp.setContentType("application/x-java-jnlp-file");
-      resp.setHeader("Content-Disposition", "attachment; filename=\"" +
-          StringEscapeUtils.escapeJava(JNLPServlet.JNLP_FILE) + "\"");
-    }
+    /* Note: The content type is set by the <jsp:directive.page/> element in
+    master-application.jnlp (in the client project). */
+    resp.setHeader("Content-Disposition", "attachment; filename=\"" +
+        StringEscapeUtils.escapeJava(JNLPServlet.JNLP_FILE) + "\"");
     /* TODO: Consider whether the server URL should be a configuration
     parameter rather than being derived dynamically. */
     String serverURL = ServletUtil.getApplicationBase(req);

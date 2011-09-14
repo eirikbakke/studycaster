@@ -68,7 +68,6 @@ public class CaptureDecoder extends Codec {
     } catch (InterruptedException e) {
       throw new InterruptedIOException();
     }
-    System.out.println("got here 8");
   }
 
   public long getCurrentTimeMillis() {
