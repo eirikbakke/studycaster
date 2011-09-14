@@ -31,6 +31,7 @@ import org.apache.http.util.EntityUtils;
 
 /** Handles protocol details specific to the server-side PHP script. */
 public class ServerContext {
+  private static final String SERVERURI_PROP_NAME = "studycaster.server.uri";
   public static final int DEF_UPLOAD_CHUNK_SZ = 64 * 1024; // TODO: Don't expose this.
   private static final String TICKET_STORE_FILENAME = "sc_7403204709139484951.tmp";
   private URI    serverScriptURI;
@@ -44,15 +45,15 @@ public class ServerContext {
   private DefaultHttpClient httpClient;
 
   public ServerContext() throws StudyCasterException {
-    String serverScriptURIs = System.getProperty("jnlp.studycaster.serveruri");
+    String serverScriptURIs = System.getProperty(SERVERURI_PROP_NAME);
     if (serverScriptURIs == null)
-      throw new StudyCasterException("Property jnlp.studycaster.serveruri not set");
+      throw new StudyCasterException("Property " + SERVERURI_PROP_NAME + " not set");
     StudyCaster.log.log(Level.INFO, "Using server URI {0}", serverScriptURIs);
     // Needed for POST requests to succeed in the case where index.php is not specified explicitly.
     // if (!serverScriptURIs.endsWith("index.php") && !serverScriptURIs.endsWith("/"))
     //  serverScriptURIs += "/";
     try {
-      serverScriptURI = new URI(serverScriptURIs);
+      serverScriptURI = new URI(serverScriptURIs + "/legacy_api");
     } catch (URISyntaxException e) {
       throw new StudyCasterException("Malformed server URI", e);
     }

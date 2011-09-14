@@ -71,4 +71,11 @@
     nbproject/build-impl.xml file. 
 
     -->
+
+    <target name="-pre-compile">
+        <fail unless="studycaster.server.uri">Must set studycaster.server.uri</fail>
+
+        <echo message="Using development server URI '${studycaster.server.uri}' (studycaster.server.uri)"/>
+        <echo message="You can override this setting in nbproject/private/private.properties"/>
+    </target>
 </project>

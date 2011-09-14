@@ -20,3 +20,12 @@ Known Issues
   of view, and I would not recommend asking users to turn off their firewalls.
   See http://lopica.sourceforge.net/faq.html ("The Splash Screen Firewall
   Dead-Lock.") for a related issue.
+
+Configuration
+* In nbproject/project.properties
+  (override in nbproject/private/private.properties):
+  * In sc_server:
+      studycaster.jdbc.url=jdbc:derby://localhost:1527/sc_devel;create=true
+      studycaster.storage.path=../devel_storagedir
+  * In sc_server:
+      studycaster.server.uri=http://localhost:8084/sc_server/client

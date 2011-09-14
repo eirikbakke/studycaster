@@ -1,4 +1,4 @@
-package no.ebakke.studycaster.domain;
+package no.ebakke.studycaster.backend;
 
 public class BackendException extends Exception {
   public BackendException(String message) {

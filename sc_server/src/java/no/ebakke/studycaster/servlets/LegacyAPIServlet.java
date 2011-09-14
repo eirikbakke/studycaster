@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import no.ebakke.studycaster.api.Ticket;
+import no.ebakke.studycaster.backend.Backend;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -28,7 +29,6 @@ public class LegacyAPIServlet extends HttpServlet {
   private static final int    SERVER_TICKET_BYTES = 3;
   private static final String UPLOAD_DIR   = "uploads";
   // TODO: Figure out a better storage strategy.
-  private static final String STORAGE_DIR  = "z:/studycaster_storagedir";
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -43,7 +43,7 @@ public class LegacyAPIServlet extends HttpServlet {
       Map<String,FileItem[]> multiPart =
               ServletUtil.parseMultiPart(req, MAX_APPEND_CHUNK);
 
-      File storageDir = new File(STORAGE_DIR);
+      File storageDir = Backend.INSTANCE.getStorageDirectory();
       File uploadDir = new File(storageDir, UPLOAD_DIR);
 
       String cmd = ServletUtil.getMultipartStringParam(multiPart, "cmd");

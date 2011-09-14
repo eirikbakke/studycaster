@@ -7,7 +7,8 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import no.ebakke.studycaster.domain.DomainUtil;
+import no.ebakke.studycaster.backend.Backend;
+import no.ebakke.studycaster.backend.BackendConfiguration;
 
 // TODO: Does this root mapping work on all containers?
 @WebServlet(name = "AdminServlet", urlPatterns = {"/index.html"})
@@ -33,8 +34,9 @@ public class AdminServlet extends HttpServlet {
           serverURL + JNLPServlet.JNLP_PATH));
       // TODO: Synchronize with JNLP file.
       req.setAttribute("minJavaVer", ServletUtil.ensureSafeString("1.5"));
-      req.setAttribute("jdbcURLproperty", DomainUtil.JDBC_URL_PROPERTY);
-      req.setAttribute("dbStatus", DomainUtil.getStatus());
+      req.setAttribute("serverURLproperty" , BackendConfiguration.JDBC_URL_PROPERTY);
+      req.setAttribute("storageDirProperty", BackendConfiguration.STORAGE_DIR_PROPERTY);
+      req.setAttribute("dbStatus", Backend.INSTANCE.getStatusMessage());
 
       // TODO: Consider if there's a better way to do this.
       String scriptCode = ServletUtil.renderServletToString(
