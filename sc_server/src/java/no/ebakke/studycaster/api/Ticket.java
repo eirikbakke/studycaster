@@ -1,12 +1,16 @@
 package no.ebakke.studycaster.api;
 import java.io.IOException;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Random;
 
-public class Ticket {
+/* This class needs to be serializable in order to be retained in the session
+store across server restarts or redeployments. */
+public class Ticket implements Serializable {
+  private static final long serialVersionUID = 1L;
   private byte[] value;
 
   public Ticket(int length) {

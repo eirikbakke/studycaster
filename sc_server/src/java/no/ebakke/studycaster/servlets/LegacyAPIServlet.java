@@ -64,11 +64,11 @@ public class LegacyAPIServlet extends HttpServlet {
         Object obj;
         obj = session.getAttribute("serverTicket");
         if (obj == null || !(obj instanceof Ticket))
-          throw new ServletException("Invalid session: " + obj);
+          throw new ServletException("Invalid session serverTicket: " + obj);
         serverTicket = (Ticket) obj;
         obj = session.getAttribute("clientTicket");
         if (obj == null || !(obj instanceof Ticket))
-          throw new ServletException("Invalid session: " + obj);
+          throw new ServletException("Invalid session clientTicket: " + obj);
         clientTicket = (Ticket) obj;
       }
 

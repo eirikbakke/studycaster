@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 import no.ebakke.studycaster.backend.Backend;
 import no.ebakke.studycaster.backend.BackendConfiguration;
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.hibernate.HibernateException;
 
 @WebServlet(name = "AdminActionsServlet", urlPatterns = {"/admin"})
 public class AdminActionsServlet extends HttpServlet {
@@ -40,7 +41,11 @@ public class AdminActionsServlet extends HttpServlet {
       try {
         msg = testBackend.getStatusMessage();
       } finally {
-        testBackend.getSessionFactory().close();
+        try {
+          testBackend.getSessionFactory().close();
+        } catch (HibernateException e){
+          // Take no action.
+        }
       }
       resp.getWriter().print(msg);
     } catch (BadRequestException e) {
