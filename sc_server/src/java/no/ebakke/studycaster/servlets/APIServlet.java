@@ -20,8 +20,8 @@ import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 
-@WebServlet(name = "LegacyAPIServlet", urlPatterns = {"/client/legacy_api"})
-public class LegacyAPIServlet extends HttpServlet {
+@WebServlet(name = "APIServlet", urlPatterns = {"/client/api"})
+public class APIServlet extends HttpServlet {
   private static final long   serialVersionUID = 1L;
   private static final int    MAX_FILE_SIZE = 50000000;
   private static final int    MAX_APPEND_CHUNK = 1024 * 256;
@@ -51,6 +51,9 @@ public class LegacyAPIServlet extends HttpServlet {
       Ticket clientTicket, serverTicket;
       HttpSession session = req.getSession(false);
       if (session == null) {
+        /* TODO: Use the database to store session tickets instead. Then have
+        the client send it on every request, and just verify that it's valid.
+        This way we'll be able to persist session across redeployments. */
         if (!cmd.equals("gsi"))
           throw new BadRequestException("Missing session");
         // TODO: Change ticket naming conventions, or get rid of this system.

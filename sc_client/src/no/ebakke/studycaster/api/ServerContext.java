@@ -53,7 +53,7 @@ public class ServerContext {
     // if (!serverScriptURIs.endsWith("index.php") && !serverScriptURIs.endsWith("/"))
     //  serverScriptURIs += "/";
     try {
-      serverScriptURI = new URI(serverScriptURIs + "/legacy_api");
+      serverScriptURI = new URI(serverScriptURIs + "/api");
     } catch (URISyntaxException e) {
       throw new StudyCasterException("Malformed server URI", e);
     }
