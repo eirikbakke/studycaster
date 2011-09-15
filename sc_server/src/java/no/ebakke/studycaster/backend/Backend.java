@@ -3,10 +3,8 @@ package no.ebakke.studycaster.backend;
 import com.maxmind.geoip.LookupService;
 import java.io.File;
 import java.io.IOException;
-import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Enumeration;
 import java.util.Properties;
 import javax.servlet.ServletException;
 import org.hibernate.HibernateException;
@@ -198,17 +196,5 @@ public final class Backend {
       sessionFactory.close();
     if (lookupService != null)
       lookupService.close();
-
-    // See http://stackoverflow.com/questions/3320400/jdbc-driver-unregisted-when-the-web-application-stops
-    Enumeration<Driver> drivers = DriverManager.getDrivers();
-    while (drivers.hasMoreElements()) {
-      Driver driver = drivers.nextElement();
-      try {
-        DriverManager.deregisterDriver(driver);
-      } catch (SQLException e) {
-        // TODO: Do proper logging.
-        e.printStackTrace();
-      }
-    }
   }
 }
