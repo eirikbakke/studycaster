@@ -8,8 +8,9 @@
 <script type="text/javascript" src="${fn:escapeXml(urlDeployScript)}">${""}</script>
 <!-- Hack to get a newline: -->${""}
 <script type="text/javascript">
+  var version_arg = encodeURIComponent(String(deployJava.getBrowser()) + ";" + String(deployJava.getJREs()));
   deployJava.launchButtonPNG = "${urlButtonImage}";
-  deployJava.createWebStartLaunchButton("${urlJNLP}", "${minJavaVer}");
+  deployJava.createWebStartLaunchButton("${urlJNLP}" + "?ver=" + version_arg, "${minJavaVer}");
 </script>
 
 </jsp:root>

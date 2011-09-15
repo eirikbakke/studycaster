@@ -29,7 +29,7 @@ public class APIServlet extends HttpServlet {
   private static final int    MAX_APPEND_CHUNK    = 1024 * 256;
   private static final int    CLIENT_COOKIE_BYTES = 6;
   private static final int    LAUNCH_TICKET_BYTES = 6;
-  private static final int    IPHASH_BYTES        = 3;
+  public  static final int    IPHASH_BYTES        = 3;
   private static final String UPLOAD_DIR          = "uploads";
   // TODO: Figure out a better storage strategy.
 

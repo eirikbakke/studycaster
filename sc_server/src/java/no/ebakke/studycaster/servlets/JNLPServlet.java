@@ -1,12 +1,15 @@
 package no.ebakke.studycaster.servlets;
 
 import java.io.IOException;
+import java.util.Date;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import no.ebakke.studycaster.backend.BackendUtil;
+import no.ebakke.studycaster.backend.Request;
 import org.apache.commons.lang3.StringEscapeUtils;
 
 @WebServlet(name = "JNLPServlet",
@@ -40,5 +43,11 @@ public class JNLPServlet extends HttpServlet {
     RequestDispatcher rd =
         getServletContext().getRequestDispatcher("/WEB-INF/generatedJNLP.jspx");
     rd.forward(req, resp);
+
+    // TODO: Reduce code duplication with APIServlet.
+    BackendUtil.storeRequest(new Request(new Date(), "jws", null,
+        ServletUtil.toHex(ServletUtil.sha1("stick " + req.getRemoteAddr()),
+        APIServlet.IPHASH_BYTES), BackendUtil.getGeoInfo(req), null, null,
+        req.getParameter("ver")));
   }
 }
