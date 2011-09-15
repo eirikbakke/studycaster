@@ -82,16 +82,38 @@ public final class ScreenCensor {
     Rectangle screenRect = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
     BufferedImage image = new Robot().createScreenCapture(screenRect);
     Quilt permitted = censor.getPermittedRecordingArea();
-    /*
+    
     permitted = new Quilt();
     permitted.addPatch(screenRect, true);
     permitted.addPatch(new Rectangle(100, 100, 800, 600), false);
     permitted.addPatch(new Rectangle(400, 150, 300, 200), true);
-    */
-    for (int x = 0; x < image.getWidth(); x++) {
+
+    // Profiling code below.
+    for (int i = 0; i < 100; i++) {
+      System.out.println(i);
       for (int y = 0; y < image.getHeight(); y++) {
-        if (!permitted.contains(x, y))
-          image.setRGB(x, y, image.getRGB(x, y) & 0xE0E00000);
+        int     censorRun        = 0;
+        boolean censorRunAllowed = false;
+        for (int x = 0; x < image.getWidth(); x++) {
+          if (censorRun == 0) {
+            censorRun = permitted.getHorizontalRunLength(x, y);
+            if (censorRun > 0) {
+              censorRunAllowed = true;
+            } else {
+              censorRunAllowed = false;
+              censorRun        = -censorRun;
+            }
+          }
+          //permitted.contains(x, y);
+          //screenRect.contains(x, y);
+          if (!censorRunAllowed)
+            image.setRGB(x, y, image.getRGB(x, y) & 0xE0E00000);
+          /*
+          if (!permitted.contains(x, y))
+            image.setRGB(x, y, image.getRGB(x, y) & 0xE0E00000);
+          */
+          censorRun--;
+        }
       }
     }
     ImageDebugDialog.showImage(image);

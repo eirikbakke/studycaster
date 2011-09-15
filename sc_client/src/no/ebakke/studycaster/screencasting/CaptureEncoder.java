@@ -103,12 +103,20 @@ public class CaptureEncoder extends Codec {
 
     dout.write(MARKER_FRAME);
     for (int y = 0, i = 0; y < height; y++) {
+      boolean censorRunPermitted = false;
+      int     censorRunRemaining  = 0;
       for (int x = 0; x < width; x++, i++) {
         if (newBuf[i] == INDEX_NO_DIFF || newBuf[i] == INDEX_REPEAT)
           newBuf[i] = 0;
 
-        if (!permittedArea.contains(x, y))
+        if (censorRunRemaining == 0) {
+          censorRunRemaining = permittedArea.getHorizontalRunLength(x, y);
+          censorRunPermitted = (censorRunRemaining > 0);
+          censorRunRemaining = Math.abs(censorRunRemaining);
+        }
+        if (!censorRunPermitted)
           newBuf[i] = blurredPixel(newBuf, width, x, y);
+        censorRunRemaining--;
 
         byte oldCol = oldBuf[i];
         byte newCol = newBuf[i];
