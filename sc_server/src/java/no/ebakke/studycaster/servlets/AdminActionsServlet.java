@@ -42,7 +42,7 @@ public class AdminActionsServlet extends HttpServlet {
         msg = testBackend.getDatabaseStatusMessage();
       } finally {
         try {
-          testBackend.getSessionFactory().close();
+          testBackend.close();
         } catch (HibernateException e){
           // Take no action.
         }
