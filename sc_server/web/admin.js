@@ -47,6 +47,7 @@ function submitDBsetup() {
 $(document).ready(function () {
   "use strict";
   $("#dbSetupSubmit").click(submitDBsetup);
+  $("#passwordField").focus();
   $("input[name='dbAction']").change(function () {
     if ($("#createRadio").attr("checked")) {
       $("#newPasswordField").removeAttr("disabled");

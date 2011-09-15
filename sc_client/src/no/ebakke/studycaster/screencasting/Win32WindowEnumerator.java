@@ -10,19 +10,27 @@ import com.sun.jna.ptr.IntByReference;
 import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import no.ebakke.studycaster.api.StudyCaster;
 
 /** Platform-dependent window detector. */
 public final class Win32WindowEnumerator implements WindowEnumerator {
   private static int STR_BUF_SZ = 32768;
 
-  private Win32WindowEnumerator() { }
+  private Win32WindowEnumerator() {
+    getWindowList();
+  }
 
   public static WindowEnumerator create() {
     try {
       return new Win32WindowEnumerator();
+    } catch (UnsatisfiedLinkError e) {
+      StudyCaster.log.log(Level.WARNING,
+          "Screen censor library unavailable", e);
+      return null;
     } catch (Exception e) {
-      // TODO: Fix this.
-      e.printStackTrace();
+      StudyCaster.log.log(Level.WARNING,
+          "Unknown screen censor library error", e);
       return null;
     }
   }
