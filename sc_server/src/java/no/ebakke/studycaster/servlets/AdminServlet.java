@@ -47,14 +47,23 @@ public class AdminServlet extends HttpServlet {
   {
     resp.setHeader("Cache-Control", "no-cache");
     resp.setHeader("Pragma"       , "no-cache");
-    if (req.getParameter("logout") != null)
+    if (req.getParameter("logout") != null) {
       setAdminLoggedIn(req, false);
+      // Do a redirect to get rid of the ?logout at the end of the URL.
+      resp.sendRedirect(ServletUtil.getApplicationBase(req));
+      return;
+    }
 
     try {
       String serverURL = ServletUtil.getApplicationBase(req);
 
-      req.setAttribute("isAdminLoggedIn", isAdminLoggedIn(req,
-          req.getParameter("pwd")));
+      String password = req.getParameter("pwd");
+      req.setAttribute("isAdminLoggedIn", isAdminLoggedIn(req, password));
+      if (password != null) {
+        // Do a redirect to avoid "resubmit form" warning when refreshing.
+        resp.sendRedirect(ServletUtil.getApplicationBase(req));
+        return;
+      }
       req.setAttribute("serverURL", serverURL);
       req.setAttribute("urlDeployScript", serverURL + "/deployJava.min.js");
       /* Don't allow strings with characters that would need escaping, since

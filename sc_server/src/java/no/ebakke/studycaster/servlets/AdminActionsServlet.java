@@ -39,7 +39,7 @@ public class AdminActionsServlet extends HttpServlet {
       Backend testBackend = new Backend(
           new BackendConfiguration(connectionURL, null), createAndSetPassword);
       try {
-        msg = testBackend.getStatusMessage();
+        msg = testBackend.getDatabaseStatusMessage();
       } finally {
         try {
           testBackend.getSessionFactory().close();

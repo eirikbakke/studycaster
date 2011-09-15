@@ -69,29 +69,33 @@ public final class Backend {
     }
   }
 
-  // TODO: Move this presentation code out of here.
-  public String getStatusMessage() {
-    String ret = "";
-    ret += "JDBC Database: ";
+  public String getDatabaseStatusMessage() {
     if (sessionFactoryError != null) {
-      String msg;
+      String ret;
       Throwable cause = sessionFactoryError;
       do {
-        msg = cause.getMessage();
-        if (!msg.contains("see the next exception for details"))
+        ret = cause.getMessage();
+        if (!ret.contains("see the next exception for details"))
           break;
         cause = cause.getCause();
       } while (cause != null);
-      ret += msg;
+      return ret;
     } else {
       // See http://stackoverflow.com/questions/1571928/retrieve-auto-detected-hibernate-dialect .
       if (sessionFactory instanceof SessionFactoryImplementor) {
-        ret += "OK, " +
+        return "OK, " +
           ((SessionFactoryImplementor) sessionFactory).getDialect().toString();
       } else {
-        ret += "OK, " + sessionFactory.toString();
+        return "OK, " + sessionFactory.toString();
       }
     }
+  }
+
+  // TODO: Move this presentation code out of here.
+  public String getStatusMessage() {
+    String ret = "";
+    ret += "JDBC Database    : ";
+    ret += getDatabaseStatusMessage();
     ret += "\n";
     ret += "Storage Directory: ";
     if (storageDirError != null) {
@@ -100,7 +104,7 @@ public final class Backend {
       ret += "OK";
     }
     ret += "\n";
-    ret += "GeoIP Database: ";
+    ret += "GeoIP Database   : ";
     if (lookupServiceError != null) {
       ret += lookupServiceError.getMessage();
     } else {
