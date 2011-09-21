@@ -1,6 +1,7 @@
 package no.ebakke.studycaster.reporting;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +10,7 @@ import no.ebakke.studycaster.backend.BackendUtil;
 import no.ebakke.studycaster.backend.Request;
 import no.ebakke.studycaster.servlets.ServletUtil;
 import no.ebakke.studycaster.util.ColUtil;
+import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 public final class Reports {
@@ -61,8 +63,10 @@ public final class Reports {
         launch.contentSize  = contentSize.get(launchTicket) / 1024;
         subject.launches.add(launch);
       }
+      Collections.sort(subject.launches);
       ret.add(subject);
     }
+    Collections.sort(ret);
     return ret;
   }
 
@@ -72,7 +76,7 @@ public final class Reports {
     }
   }
 
-  public static class Subject {
+  public static class Subject implements Comparable<Subject> {
     private Date         firstRequest;
     private Set<String>  clientCookie;
     private Set<String>  remoteAddrHash;
@@ -118,9 +122,14 @@ public final class Reports {
         ret.append(launch.toString());
       return ret.toString();
     }
+
+    @Override
+    public int compareTo(Subject o) {
+      return firstRequest.compareTo(o.firstRequest);
+    }
   }
 
-  public static class Launch {
+  public static class Launch implements Comparable<Launch> {
     private String launchTicket;
     private Date   firstRequest;
     private Date   lastRequest;
@@ -166,6 +175,11 @@ public final class Reports {
       ret.append("    lastRequest : ").append(lastRequest).append("\n");
       ret.append("    contentSize : ").append(contentSize).append("\n");
       return ret.toString();
+    }
+
+    @Override
+    public int compareTo(Launch o) {
+      return firstRequest.compareTo(o.firstRequest);
     }
   }
 }
