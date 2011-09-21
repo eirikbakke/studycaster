@@ -29,6 +29,8 @@ public final class ScreenCensor {
     this.whiteList = new ArrayList<String>(whiteList);
     this.blackList = new ArrayList<String>(blackList);
     if (excludeFileDialogs) {
+      // TODO: Take this string from elsewhere.
+      this.blackList.add("Select File to Upload");
       this.blackList.add("Save");
       this.blackList.add("Open");
       String localized;

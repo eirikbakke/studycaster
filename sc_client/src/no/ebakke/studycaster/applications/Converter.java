@@ -1,5 +1,6 @@
 package no.ebakke.studycaster.applications;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -29,6 +30,12 @@ public final class Converter {
       return;
     }
     String outputFileName = inputFileName.substring(0, inputFileName.length() - 4) + "_" + speedUpFactor + ".mkv";
+    File outFile = new File(outputFileName);
+    File tmpFile = new File(outFile.getParentFile(), "~" + outFile.getName());
+    if (outFile.exists()) {
+      System.err.println("Skipping existing file " + outputFileName);
+      return;
+    }
     FileInputStream fis;
     try {
       fis = new FileInputStream(inputFileName);
@@ -37,7 +44,8 @@ public final class Converter {
       return;
     }
     try {
-      RecordingConverter.convert(fis, outputFileName, speedUpFactor);
+      RecordingConverter.convert(fis, tmpFile.toString(), speedUpFactor);
+      tmpFile.renameTo(outFile);
     } catch (IOException e) {
       System.err.println("Got an error: " + e.getMessage());
       e.printStackTrace(System.err);
