@@ -8,8 +8,10 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import javax.servlet.ServletException;
@@ -205,5 +207,61 @@ public final class ServletUtil {
     byte[] ret = new byte[length];
     random.nextBytes(ret);
     return ret;
+  }
+
+  public static String humanReadableInterval(long seconds) {
+    StringBuilder ret = new StringBuilder();
+    long remainingSeconds = seconds;
+    if (remainingSeconds < 0) {
+      ret.append("negative ");
+      remainingSeconds = -remainingSeconds;
+    }
+    boolean first = true;
+    for (TimeUnit tu : TimeUnit.UNITS) {
+      long inUnit = remainingSeconds / tu.seconds;
+      if (inUnit > 0 || (tu.seconds == 1 && first)) {
+        if (!first)
+          ret.append(" ");
+        ret.append(inUnit);
+        ret.append(" ");
+        ret.append(inUnit == 1 ? tu.singular : tu.plural);
+        remainingSeconds -= inUnit * tu.seconds;
+        first = false;
+      }
+    }
+    return ret.toString();
+  }
+
+  private static class TimeUnit {
+    public static final List<TimeUnit> UNITS = Arrays.asList(new TimeUnit[] {
+      new TimeUnit("years"  , "year"  , 365 * 24 * 60 * 60),
+      new TimeUnit("months" , "month" ,  30 * 24 * 60 * 60),
+      new TimeUnit("weeks"  , "week"  ,   7 * 24 * 60 * 60),
+      new TimeUnit("days"   , "day"   ,       24 * 60 * 60),
+      new TimeUnit("hours"  , "hour"  ,            60 * 60),
+      new TimeUnit("minutes", "minute",                 60),
+      new TimeUnit("seconds", "second",                  1)
+    });
+
+    String plural, singular;
+    long   seconds;
+
+    public TimeUnit(String plural, String singular, long seconds) {
+      this.plural = plural;
+      this.singular = singular;
+      this.seconds = seconds;
+    }
+  }
+
+  public static void main(String args[]) {
+    System.out.println(humanReadableInterval(0));
+    System.out.println(humanReadableInterval(1));
+    System.out.println(humanReadableInterval(59));
+    System.out.println(humanReadableInterval(60));
+    System.out.println(humanReadableInterval(61));
+    System.out.println(humanReadableInterval(62));
+    System.out.println(humanReadableInterval(3598));
+    System.out.println(humanReadableInterval(3600));
+    System.out.println(humanReadableInterval(3600 * 2 + 60 * 3 + 4));
   }
 }

@@ -1,6 +1,7 @@
 package no.ebakke.studycaster.servlets;
 
 import java.io.IOException;
+import java.util.Date;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -52,6 +53,7 @@ public class AdminServlet extends HttpServlet {
           serverURL + JNLPServlet.JNLP_PATH));
       // TODO: Synchronize with JNLP file.
       req.setAttribute("minJavaVer", ServletUtil.ensureSafeString("1.5"));
+      req.setAttribute("currentTime", new Date());
 
       if (pageType == null) {
         req.setAttribute("serverURLproperty" , BackendConfiguration.JDBC_URL_PROPERTY);
@@ -60,6 +62,14 @@ public class AdminServlet extends HttpServlet {
         req.setAttribute("geoInfo", BackendUtil.getGeoInfo(req));
       } else if (pageType.equals("subjectReport")){
         req.setAttribute("subjectReport", Reports.getSubjectReport());
+        long highlightMinutes = 60;
+        String highlightS = req.getParameter("highlight");
+        if (highlightS != null) {
+          try {
+            highlightMinutes = Integer.parseInt(highlightS);
+          } catch (NumberFormatException e) { }
+        }
+        req.setAttribute("highlightMinutes", highlightMinutes);
       }
 
       // TODO: Consider if there's a better way to do this.

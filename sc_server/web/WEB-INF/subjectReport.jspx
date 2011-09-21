@@ -8,6 +8,16 @@
 <jsp:directive.page contentType="text/html" pageEncoding="UTF-8"/>
 <jsp:output omit-xml-declaration="true"/>
 
+<h2>Current Time</h2>
+<p>The current time on the server is <c:out value="${currentTime}"/>.</p>
+
+<form action="#" method="get">
+  <label for="highlightField">Highlighting launches active in the last </label>
+  <input type="text" name="highlight" id="highlightField" value ="${highlightMinutes}"/> minutes.
+  <input type="hidden" name="page" value="subjectReport"/> <!-- TODO: Avoid this duplication. -->
+  <input type="submit" value="Update"/>
+</form>
+
 <h2>Subject Report</h2>
 <ol>
   <c:forEach items="${subjectReport}" var="subject">
@@ -21,13 +31,15 @@
         <li><span class="reportKey">versionString</span>  = <c:out value="${subject.versionString}"/></li>
         <ol>
           <c:forEach items="${subject.launches}" var="launch">
-            <li>
+            <li class="${launch.isLastRequestAfter(highlightMinutes * 60) ? 'recentLaunch' : 'oldLaunch'}">
               Launch
               <ul>
-              <li><span class="reportKey">launchTicket</span> = <c:out value="${launch.launchTicket}"/></li>
-              <li><span class="reportKey">firstRequest</span> = <c:out value="${launch.firstRequest}"/></li>
-              <li><span class="reportKey">lastRequest</span>  = <c:out value="${launch.lastRequest}"/></li>
-              <li><span class="reportKey">contentSize</span>  = <c:out value="${launch.contentSize}"/></li>
+              <li><span class="reportKey">launchTicket</span>  = <c:out value="${launch.launchTicket}"/></li>
+              <li><span class="reportKey">firstRequest</span>  = <c:out value="${launch.firstRequest}"/></li>
+              <li><span class="reportKey">lastRequest</span>   = <c:out value="${launch.lastRequest}"/>
+                (<c:out value="${launch.timeSinceLastRequest}"/> ago)</li>
+              <li><span class="reportKey">totalDuration</span> = <c:out value="${launch.totalDuration}"/></li>
+              <li><span class="reportKey">contentSize</span>   = <c:out value="${launch.contentSize}"/></li>
               </ul>
             </li>
           </c:forEach>

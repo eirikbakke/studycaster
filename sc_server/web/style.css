@@ -21,6 +21,10 @@ label[for='newPasswordField'] {
   margin-left: 50px;
 }
 
+#highlightField {
+  width: 5em;
+}
+
 input[type='button'] {
   width: 8em;
   height: 24px;
@@ -57,4 +61,8 @@ h1, h2, h3 {
   float: left;
   width: 10em;
   font-family: monospace;
+}
+
+.recentLaunch {
+  color: red;
 }

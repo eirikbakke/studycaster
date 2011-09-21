@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import no.ebakke.studycaster.backend.BackendUtil;
 import no.ebakke.studycaster.backend.Request;
+import no.ebakke.studycaster.servlets.ServletUtil;
 import no.ebakke.studycaster.util.ColUtil;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -94,12 +95,12 @@ public final class Reports {
       return geoLocation;
     }
 
-    public List<Launch> getLaunches() {
-      return launches;
-    }
-
     public Set<String> getVersionString() {
       return versionString;
+    }
+
+    public List<Launch> getLaunches() {
+      return launches;
     }
 
     @Override
@@ -138,6 +139,22 @@ public final class Reports {
 
     public long getContentSize() {
       return contentSize;
+    }
+
+    public boolean isLastRequestAfter(long secondsAgo) {
+      return lastRequest.after(
+        new Date(new Date().getTime() - secondsAgo * 1000L));
+    }
+
+    public String getTimeSinceLastRequest() {
+      // TODO: Move presentation details out of here (and below).
+      return ServletUtil.humanReadableInterval(
+          new Date(new Date().getTime() - lastRequest.getTime()).getTime() / 1000);
+    }
+
+    public String getTotalDuration() {
+      return ServletUtil.humanReadableInterval(
+          new Date(lastRequest.getTime() - firstRequest.getTime()).getTime() / 1000);
     }
 
     @Override
