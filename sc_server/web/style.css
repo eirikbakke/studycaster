@@ -58,11 +58,15 @@ h1, h2, h3 {
 }
 
 .reportKey {
-  float: left;
+  display: inline-block;
   width: 10em;
   font-family: monospace;
 }
 
 .recentLaunch {
   color: red;
+}
+
+ol, ul {
+  padding-left: 20px;
 }

@@ -29,7 +29,7 @@
         <li><span class="reportKey">remoteAddrHash</span> = <c:out value="${subject.remoteAddrHash}"/></li>
         <li><span class="reportKey">geoLocation</span>    = <c:out value="${subject.geoLocation}"/></li>
         <li><span class="reportKey">versionString</span>  = <c:out value="${subject.versionString}"/></li>
-        <ol>
+        <li><ol>
           <c:forEach items="${subject.launches}" var="launch">
             <li class="${launch.isLastRequestAfter(highlightMinutes * 60) ? 'recentLaunch' : 'oldLaunch'}">
               Launch (<a href="download?path=uploads%2F${fn:escapeXml(launch.launchTicket)}%2Fconsole.txt">retrieve client log</a>)
@@ -43,7 +43,7 @@
               </ul>
             </li>
           </c:forEach>
-        </ol>
+        </ol></li>
       </ul>
     </li>
   </c:forEach>
