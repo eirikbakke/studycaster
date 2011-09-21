@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import no.ebakke.studycaster.backend.BackendUtil;
 import no.ebakke.studycaster.backend.Request;
 import no.ebakke.studycaster.util.ColUtil;
@@ -37,25 +38,28 @@ public final class Reports {
     }
     List<Subject> ret = new ArrayList<Subject>();
     for (Linker.Node<Request> node : linker.getContent()) {
+      Subject subject = new Subject();
       Date firstOverall = null;
       for (String remoteAddrHash : node.getLinks("remoteAddrHash")) {
         Date time = firstAddrRequest.get(remoteAddrHash);
         if (firstOverall == null || (time != null && time.before(firstOverall)))
           firstOverall = time;
       }
-      System.out.println("subject:");
-      System.out.println("  firstRequest  : " + firstOverall);
-      System.out.println("  clientCookie  : " + node.getLinks("clientCookie"));
-      System.out.println("  remoteAddrHash: " + node.getLinks("remoteAddrHash"));
-      System.out.println("  geoLocation   : " + node.getLinks("geoLocation"));
-      System.out.println("  versionString : " + node.getLinks("versionString"));
+      subject.firstRequest   = firstOverall;
+      subject.clientCookie   = node.getLinks("clientCookie");
+      subject.remoteAddrHash = node.getLinks("remoteAddrHash");
+      subject.geoLocation    = node.getLinks("geoLocation");
+      subject.versionString  = node.getLinks("versionString");
+      subject.launches       = ColUtil.newList();
       for (String launchTicket : node.getLinks("launchTicket")) {
-        System.out.println("  launchCode    : " + launchTicket);
-        System.out.println("    firstRequest: " + firstRequest.get(launchTicket));
-        System.out.println("    lastRequest : " + lastRequest.get(launchTicket));
-        System.out.println("    contentSize : " +
-            (contentSize.get(launchTicket) / 1024) + "K");
+        Launch launch = new Launch();
+        launch.launchTicket = launchTicket;
+        launch.firstRequest = firstRequest.get(launchTicket);
+        launch.lastRequest  = lastRequest.get(launchTicket);
+        launch.contentSize  = contentSize.get(launchTicket) / 1024;
+        subject.launches.add(launch);
       }
+      ret.add(subject);
     }
     return ret;
   }
@@ -68,19 +72,42 @@ public final class Reports {
 
   public static class Subject {
     Date         firstRequest;
+    Set<String>  clientCookie;
+    Set<String>  remoteAddrHash;
+    Set<String>  geoLocation;
+    Set<String>  versionString;
     List<Launch> launches;
-    List<String> clientCookies;
-    List<String> remoteAddrHashes;
+
+    @Override
+    public String toString() {
+      StringBuilder ret = new StringBuilder();
+      ret.append("subject:\n");
+      ret.append("  firstRequest  : ").append(firstRequest).append("\n");
+      ret.append("  clientCookie  : ").append(clientCookie).append("\n");
+      ret.append("  remoteAddrHash: ").append(remoteAddrHash).append("\n");
+      ret.append("  geoLocation   : ").append(geoLocation).append("\n");
+      ret.append("  versionString : ").append(versionString).append("\n");
+      ret.append("  launches      :\n");
+      for (Launch launch : launches)
+        ret.append(launch.toString());
+      return ret.toString();
+    }
   }
 
   public static class Launch {
-    Date          firstRequest;
-    String        launchTicket;
-    List<Request> requests;
-  }
+    String launchTicket;
+    Date   firstRequest;
+    Date   lastRequest;
+    long   contentSize;
 
-  public static class Location {
-    String remoteAddrHash;
-    String geoLocation;
+    @Override
+    public String toString() {
+      StringBuilder ret = new StringBuilder();
+      ret.append("    launchTicket: ").append(launchTicket).append("\n");
+      ret.append("    firstRequest: ").append(firstRequest).append("\n");
+      ret.append("    lastRequest : ").append(lastRequest).append("\n");
+      ret.append("    contentSize : ").append(contentSize).append("\n");
+      return ret.toString();
+    }
   }
 }
