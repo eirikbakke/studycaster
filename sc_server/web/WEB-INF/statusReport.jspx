@@ -1,0 +1,72 @@
+<jsp:root 
+  xmlns:jsp="http://java.sun.com/JSP/Page"
+  xmlns:c="http://java.sun.com/jsp/jstl/core"
+  xmlns:fn="http://java.sun.com/jsp/jstl/functions"
+  xmlns="http://www.w3.org/1999/xhtml"
+  version="2.0">
+
+<jsp:directive.page contentType="text/html" pageEncoding="UTF-8"/>
+<jsp:output omit-xml-declaration="true"/>
+
+    <h2>Backend Status</h2>
+    <p>
+      Backend status at application deployment:<br/>
+    <pre class="quote"><c:out value="${backendStatus}"/></pre></p>
+    <p>
+      You can configure the production JDBC connection URL by setting the
+      <code><c:out value="${serverURLproperty}"/></code> system property on the
+      the server. The server-side storage directory can be set with the
+      <code><c:out value="${storageDirProperty}"/></code> property. On AWS
+      Elastic Beanstalk, this can be done from "Actions&#8594;Edit/Load
+      Configuration&#8594;Container&#8594;Environment Properties". In
+      development mode, these parameters will be set based on settings in
+      <code>project.properties</code>/<code>private.properties</code>.
+    </p>
+    <h2>Database Setup</h2>
+    <form action="#" id="dbSetupForm">
+      <label for="connectionURLfield">JDBC connection URL (include authentication): </label><br/>
+      <input type="text" name="connectionURL" id="connectionURLfield"/><br/>
+
+      <input type="radio" name="dbAction" id="validateRadio" value="validate" checked="checked"/>
+      <label for="validateRadio">Validate Connection/Schema</label><br/>
+
+      <input type="radio" name="dbAction" id="createRadio" value="create"/>
+      <label for="createRadio">Create new schema (existing data will be lost)</label><br/>
+
+      <label for="newPasswordField">New admin password: </label>
+      <input type="text" name="newPassword" id="newPasswordField" disabled="disabled"/><br/>
+
+      <input type="button" value="Submit" id="dbSetupSubmit"/>
+      <img src="ajax-loader.gif" alt="[progress wheel]" id="progressWheel"/>
+    </form>
+    <p>JDBC connection URL format for MySQL:<br/>
+      <!-- TODO: Is this &amp;amp; thing really the best way to get an ampersand? -->
+      <code class="quote">jdbc:mysql://<em>host</em>:<em>port</em>/<em>database</em>?user=<em>username</em>&amp;amp;password=<em>password</em></code><br/>
+    </p>
+    <p>For local StudyCaster development with Derby, see the build log for the
+    default URL of the current development database.</p>
+
+    <h2>Launch Button</h2>
+    <p>Access URL for this request:
+      <a href="${fn:escapeXml(serverURL)}"><c:out value="${serverURL}"/></a>.
+    </p>
+    <p>GeoIP country/region for this request:
+      <c:choose>
+        <c:when test="${geoInfo != null}">
+          <code><c:out value="${geoInfo}"/></code>
+        </c:when>
+        <c:otherwise>
+          <em>(GeoIP information not available)</em>
+        </c:otherwise>
+      </c:choose>.
+    </p>
+    <p>JWS button for launching the StudyCaster Client (based on the absolute
+      access URL above):</p>
+      ${scriptCode}
+    <p>The code used to generate the button above can be copied and pasted as
+    follows: </p>
+    <pre>
+      <c:out value="${scriptCode}"/>
+    </pre>
+
+</jsp:root>

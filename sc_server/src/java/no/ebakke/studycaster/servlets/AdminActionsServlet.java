@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import no.ebakke.studycaster.backend.Backend;
 import no.ebakke.studycaster.backend.BackendConfiguration;
+import no.ebakke.studycaster.backend.BackendUtil;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.hibernate.HibernateException;
 
@@ -19,7 +20,7 @@ public class AdminActionsServlet extends HttpServlet {
   protected void doPost(HttpServletRequest req, HttpServletResponse resp)
       throws ServletException, IOException
   {
-    if (!AdminServlet.isAdminLoggedIn(req, null)) {
+    if (!BackendUtil.isAdminLoggedIn(req, null)) {
       resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Not logged in.");
       return;
     }

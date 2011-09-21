@@ -5,6 +5,7 @@ import com.maxmind.geoip.LookupService;
 import com.maxmind.geoip.regionName;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import no.ebakke.studycaster.servlets.ServletUtil;
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -72,5 +73,28 @@ public final class BackendUtil {
       return null;
     return loc.countryName + " / " +
         regionName.regionNameByCode(loc.countryCode, loc.region);
+  }
+  
+  // TODO: Put these methods somewhere else.
+  public static boolean isAdminLoggedIn(HttpServletRequest req, String password)
+  {
+    // TODO: Remove obvious security hole here.
+    if (!Backend.INSTANCE.wasDBproperlyInitialized())
+      return true;
+    if (password != null)
+      setAdminLoggedIn(req, BackendUtil.passwordMatches(password));
+    HttpSession session = req.getSession(false);
+    if (session == null)
+      return false;
+    Object attr = session.getAttribute("adminLoggedIn");
+    if ((attr instanceof Boolean) && ((Boolean) attr))
+      return true;
+    return false;
+  }
+
+  public static void setAdminLoggedIn(HttpServletRequest req, boolean loggedIn)
+  {
+    // TODO: Should I rather figure out how to erase the session?
+    req.getSession(true).setAttribute("adminLoggedIn", loggedIn);
   }
 }

@@ -1,0 +1,14 @@
+<jsp:root 
+  xmlns:jsp="http://java.sun.com/JSP/Page"
+  xmlns:c="http://java.sun.com/jsp/jstl/core"
+  xmlns:fn="http://java.sun.com/jsp/jstl/functions"
+  xmlns="http://www.w3.org/1999/xhtml"
+  version="2.0">
+
+<jsp:directive.page contentType="text/html" pageEncoding="UTF-8"/>
+<jsp:output omit-xml-declaration="true"/>
+
+<h2>Subject Report</h2>
+<em>(Not yet implemented.)</em>
+
+</jsp:root>

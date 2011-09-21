@@ -1,6 +1,5 @@
 package no.ebakke.studycaster.servlets;
 
-import com.maxmind.geoip.LookupService;
 import java.io.IOException;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -8,7 +7,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import no.ebakke.studycaster.backend.Backend;
 import no.ebakke.studycaster.backend.BackendConfiguration;
 import no.ebakke.studycaster.backend.BackendUtil;
@@ -18,29 +16,6 @@ import no.ebakke.studycaster.backend.BackendUtil;
 public class AdminServlet extends HttpServlet {
   private static final long serialVersionUID = 1L;
 
-  // TODO: Put these methods somewhere else.
-  public static boolean isAdminLoggedIn(HttpServletRequest req, String password)
-  {
-    // TODO: Remove obvious security hole here.
-    if (!Backend.INSTANCE.wasDBproperlyInitialized())
-      return true;
-    if (password != null)
-      setAdminLoggedIn(req, BackendUtil.passwordMatches(password));
-    HttpSession session = req.getSession(false);
-    if (session == null)
-      return false;
-    Object attr = session.getAttribute("adminLoggedIn");
-    if ((attr instanceof Boolean) && ((Boolean) attr))
-      return true;
-    return false;
-  }
-
-  public static void setAdminLoggedIn(HttpServletRequest req, boolean loggedIn)
-  {
-    // TODO: Should I rather figure out how to erase the session?
-    req.getSession(true).setAttribute("adminLoggedIn", loggedIn);
-  }
-
   @Override
   protected void service(HttpServletRequest req, HttpServletResponse resp)
       throws ServletException, IOException
@@ -48,7 +23,7 @@ public class AdminServlet extends HttpServlet {
     resp.setHeader("Cache-Control", "no-cache");
     resp.setHeader("Pragma"       , "no-cache");
     if (req.getParameter("logout") != null) {
-      setAdminLoggedIn(req, false);
+      BackendUtil.setAdminLoggedIn(req, false);
       // Do a redirect to get rid of the ?logout at the end of the URL.
       resp.sendRedirect(ServletUtil.getApplicationBase(req));
       return;
@@ -58,7 +33,7 @@ public class AdminServlet extends HttpServlet {
       String serverURL = ServletUtil.getApplicationBase(req);
 
       String password = req.getParameter("pwd");
-      req.setAttribute("isAdminLoggedIn", isAdminLoggedIn(req, password));
+      req.setAttribute("isAdminLoggedIn", BackendUtil.isAdminLoggedIn(req, password));
       if (password != null) {
         // Do a redirect to avoid "resubmit form" warning when refreshing.
         resp.sendRedirect(ServletUtil.getApplicationBase(req));
@@ -74,10 +49,16 @@ public class AdminServlet extends HttpServlet {
           serverURL + JNLPServlet.JNLP_PATH));
       // TODO: Synchronize with JNLP file.
       req.setAttribute("minJavaVer", ServletUtil.ensureSafeString("1.5"));
-      req.setAttribute("serverURLproperty" , BackendConfiguration.JDBC_URL_PROPERTY);
-      req.setAttribute("storageDirProperty", BackendConfiguration.STORAGE_DIR_PROPERTY);
-      req.setAttribute("backendStatus", Backend.INSTANCE.getStatusMessage());
-      req.setAttribute("geoInfo", BackendUtil.getGeoInfo(req));
+
+      String pageType = req.getParameter("page");
+      req.setAttribute("pageType", pageType);
+      if (pageType == null) {
+        req.setAttribute("serverURLproperty" , BackendConfiguration.JDBC_URL_PROPERTY);
+        req.setAttribute("storageDirProperty", BackendConfiguration.STORAGE_DIR_PROPERTY);
+        req.setAttribute("backendStatus", Backend.INSTANCE.getStatusMessage());
+        req.setAttribute("geoInfo", BackendUtil.getGeoInfo(req));
+      } else {
+      }
 
       // TODO: Consider if there's a better way to do this.
       String scriptCode = ServletUtil.renderServletToString(
@@ -87,8 +68,6 @@ public class AdminServlet extends HttpServlet {
           getServletContext().getRequestDispatcher("/WEB-INF/adminPage.jspx");
       rd.forward(req, resp);
 
-      /*for (Request r : DomainUtil.getRequests())
-        System.out.println(r);*/
     } catch (BadRequestException e) {
       resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
     }
