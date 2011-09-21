@@ -57,7 +57,7 @@ public final class BackendUtil {
     Session s = Backend.INSTANCE.getSessionFactory().getCurrentSession();
     s.beginTransaction();
     @SuppressWarnings("unchecked")
-    List<Request> ret = (List<Request>) s.createQuery("from Request").list();
+    List<Request> ret = (List<Request>) s.createQuery("from Request order by time, id").list();
     // TODO: Do I need this for read-only queries?
     s.getTransaction().commit();
     return ret;
