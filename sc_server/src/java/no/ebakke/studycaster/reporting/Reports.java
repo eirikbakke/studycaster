@@ -71,12 +71,36 @@ public final class Reports {
   }
 
   public static class Subject {
-    Date         firstRequest;
-    Set<String>  clientCookie;
-    Set<String>  remoteAddrHash;
-    Set<String>  geoLocation;
-    Set<String>  versionString;
-    List<Launch> launches;
+    private Date         firstRequest;
+    private Set<String>  clientCookie;
+    private Set<String>  remoteAddrHash;
+    private Set<String>  geoLocation;
+    private Set<String>  versionString;
+    private List<Launch> launches;
+
+    public Date getFirstRequest() {
+      return firstRequest;
+    }
+
+    public Set<String> getClientCookie() {
+      return clientCookie;
+    }
+
+    public Set<String> getRemoteAddrHash() {
+      return remoteAddrHash;
+    }
+
+    public Set<String> getGeoLocation() {
+      return geoLocation;
+    }
+
+    public List<Launch> getLaunches() {
+      return launches;
+    }
+
+    public Set<String> getVersionString() {
+      return versionString;
+    }
 
     @Override
     public String toString() {
@@ -95,10 +119,26 @@ public final class Reports {
   }
 
   public static class Launch {
-    String launchTicket;
-    Date   firstRequest;
-    Date   lastRequest;
-    long   contentSize;
+    private String launchTicket;
+    private Date   firstRequest;
+    private Date   lastRequest;
+    private long   contentSize;
+
+    public String getLaunchTicket() {
+      return launchTicket;
+    }
+
+    public Date getFirstRequest() {
+      return firstRequest;
+    }
+
+    public Date getLastRequest() {
+      return lastRequest;
+    }
+
+    public long getContentSize() {
+      return contentSize;
+    }
 
     @Override
     public String toString() {

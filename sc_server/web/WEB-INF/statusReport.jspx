@@ -46,6 +46,9 @@
     <p>For local StudyCaster development with Derby, see the build log for the
     default URL of the current development database.</p>
 
+    <h2>Reports</h2>
+    <a href="?page=subjectReport">Generate Subject Report</a>
+
     <h2>Launch Button</h2>
     <p>Access URL for this request:
       <a href="${fn:escapeXml(serverURL)}"><c:out value="${serverURL}"/></a>.

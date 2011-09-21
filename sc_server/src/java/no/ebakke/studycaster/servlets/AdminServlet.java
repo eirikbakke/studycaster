@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 import no.ebakke.studycaster.backend.Backend;
 import no.ebakke.studycaster.backend.BackendConfiguration;
 import no.ebakke.studycaster.backend.BackendUtil;
+import no.ebakke.studycaster.reporting.Reports;
 
 // TODO: Does this root mapping work on all containers?
 @WebServlet(name = "AdminServlet", urlPatterns = {"/index.html"})
@@ -31,9 +32,11 @@ public class AdminServlet extends HttpServlet {
 
     try {
       String serverURL = ServletUtil.getApplicationBase(req);
-
       String password = req.getParameter("pwd");
-      req.setAttribute("isAdminLoggedIn", BackendUtil.isAdminLoggedIn(req, password));
+      String pageType = req.getParameter("page");
+      if (!BackendUtil.isAdminLoggedIn(req, password))
+        pageType = "loggedOut";
+      req.setAttribute("pageType", pageType);
       if (password != null) {
         // Do a redirect to avoid "resubmit form" warning when refreshing.
         resp.sendRedirect(ServletUtil.getApplicationBase(req));
@@ -50,14 +53,13 @@ public class AdminServlet extends HttpServlet {
       // TODO: Synchronize with JNLP file.
       req.setAttribute("minJavaVer", ServletUtil.ensureSafeString("1.5"));
 
-      String pageType = req.getParameter("page");
-      req.setAttribute("pageType", pageType);
       if (pageType == null) {
         req.setAttribute("serverURLproperty" , BackendConfiguration.JDBC_URL_PROPERTY);
         req.setAttribute("storageDirProperty", BackendConfiguration.STORAGE_DIR_PROPERTY);
         req.setAttribute("backendStatus", Backend.INSTANCE.getStatusMessage());
         req.setAttribute("geoInfo", BackendUtil.getGeoInfo(req));
-      } else {
+      } else if (pageType.equals("subjectReport")){
+        req.setAttribute("subjectReport", Reports.getSubjectReport());
       }
 
       // TODO: Consider if there's a better way to do this.

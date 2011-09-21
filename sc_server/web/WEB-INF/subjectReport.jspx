@@ -9,6 +9,32 @@
 <jsp:output omit-xml-declaration="true"/>
 
 <h2>Subject Report</h2>
-<em>(Not yet implemented.)</em>
+<ol>
+  <c:forEach items="${subjectReport}" var="subject">
+    <li>
+      Subject
+      <ul>
+        <li><span class="reportKey">firstRequest</span>   = <c:out value="${subject.firstRequest}"/></li>
+        <li><span class="reportKey">clientCookie</span>   = <c:out value="${subject.clientCookie}"/></li>
+        <li><span class="reportKey">remoteAddrHash</span> = <c:out value="${subject.remoteAddrHash}"/></li>
+        <li><span class="reportKey">geoLocation</span>    = <c:out value="${subject.geoLocation}"/></li>
+        <li><span class="reportKey">versionString</span>  = <c:out value="${subject.versionString}"/></li>
+        <ol>
+          <c:forEach items="${subject.launches}" var="launch">
+            <li>
+              Launch
+              <ul>
+              <li><span class="reportKey">launchTicket</span> = <c:out value="${launch.launchTicket}"/></li>
+              <li><span class="reportKey">firstRequest</span> = <c:out value="${launch.firstRequest}"/></li>
+              <li><span class="reportKey">lastRequest</span>  = <c:out value="${launch.lastRequest}"/></li>
+              <li><span class="reportKey">contentSize</span>  = <c:out value="${launch.contentSize}"/></li>
+              </ul>
+            </li>
+          </c:forEach>
+        </ol>
+      </ul>
+    </li>
+  </c:forEach>
+</ol>
 
 </jsp:root>

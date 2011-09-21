@@ -27,7 +27,7 @@
       StudyCaster Admin Page</h1>
     <h2>Login</h2>
 <c:choose>
-  <c:when test="${isAdminLoggedIn}">
+  <c:when test="${pageType != 'loggedOut'}">
     You are logged in. <a href="?logout">Log out.</a>
 
     <c:choose>
