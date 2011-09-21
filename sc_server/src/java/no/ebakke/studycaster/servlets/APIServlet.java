@@ -1,7 +1,5 @@
 package no.ebakke.studycaster.servlets;
 
-import com.maxmind.geoip.Location;
-import com.maxmind.geoip.LookupService;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -145,21 +143,8 @@ public class APIServlet extends HttpServlet {
         if (!input.exists()) {
           resp.sendError(HttpServletResponse.SC_NOT_FOUND);
         } else {
-          resp.setContentType("application/octet-stream");
-          resp.setHeader("Content-Disposition",
-              "attachment; filename=" + input.getName());
-          long length = input.length();
-          if (length > Integer.MAX_VALUE)
-            throw new BadRequestException("Requested file too large");
-          resp.setContentLength((int) length);
           resp.setHeader("X-StudyCaster-OK", "dnl");
-          // TODO: Check the number of bytes copied.
-          InputStream is = new FileInputStream(input);
-          try {
-            IOUtils.copy(is, resp.getOutputStream());
-          } finally {
-            is.close();
-          }
+          ServletUtil.sendFile(resp, input, true);
         }
       } else {
         throw new BadRequestException("Invalid command \"" +

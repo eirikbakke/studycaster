@@ -2,13 +2,14 @@ package no.ebakke.studycaster.servlets;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -25,6 +26,7 @@ import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 
 public final class ServletUtil {
@@ -207,6 +209,29 @@ public final class ServletUtil {
     byte[] ret = new byte[length];
     random.nextBytes(ret);
     return ret;
+  }
+
+  public static void sendFile(HttpServletResponse resp, File input, boolean attachment)
+      throws IOException, BadRequestException
+  {
+    if (attachment) {
+      resp.setContentType("application/octet-stream");
+      resp.setHeader("Content-Disposition",
+          "attachment; filename=" + input.getName());
+    } else {
+      resp.setContentType("text/plain");
+    }
+    long length = input.length();
+    if (length > Integer.MAX_VALUE)
+      throw new BadRequestException("Requested file too large");
+    resp.setContentLength((int) length);
+    // TODO: Check the number of bytes copied.
+    InputStream is = new FileInputStream(input);
+    try {
+      IOUtils.copy(is, resp.getOutputStream());
+    } finally {
+      is.close();
+    }
   }
 
   public static String humanReadableInterval(long seconds) {

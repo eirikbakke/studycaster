@@ -57,6 +57,7 @@ public final class Reports {
         launch.launchTicket = launchTicket;
         launch.firstRequest = firstRequest.get(launchTicket);
         launch.lastRequest  = lastRequest.get(launchTicket);
+        // TODO: Get rid of the KB presentation detail.
         launch.contentSize  = contentSize.get(launchTicket) / 1024;
         subject.launches.add(launch);
       }

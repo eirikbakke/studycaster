@@ -32,14 +32,14 @@
         <ol>
           <c:forEach items="${subject.launches}" var="launch">
             <li class="${launch.isLastRequestAfter(highlightMinutes * 60) ? 'recentLaunch' : 'oldLaunch'}">
-              Launch
+              Launch (<a href="download?path=uploads%2F${fn:escapeXml(launch.launchTicket)}%2Fconsole.txt">retrieve client log</a>)
               <ul>
               <li><span class="reportKey">launchTicket</span>  = <c:out value="${launch.launchTicket}"/></li>
               <li><span class="reportKey">firstRequest</span>  = <c:out value="${launch.firstRequest}"/></li>
               <li><span class="reportKey">lastRequest</span>   = <c:out value="${launch.lastRequest}"/>
                 (<c:out value="${launch.timeSinceLastRequest}"/> ago)</li>
               <li><span class="reportKey">totalDuration</span> = <c:out value="${launch.totalDuration}"/></li>
-              <li><span class="reportKey">contentSize</span>   = <c:out value="${launch.contentSize}"/></li>
+              <li><span class="reportKey">contentSize</span>   = <c:out value="${launch.contentSize}"/> KB</li>
               </ul>
             </li>
           </c:forEach>
