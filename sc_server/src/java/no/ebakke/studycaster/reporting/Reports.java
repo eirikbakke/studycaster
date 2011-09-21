@@ -13,7 +13,11 @@ public final class Reports {
   private Reports() { }
 
   public static List<Subject> getSubjectReport() {
-    List<Subject> ret = new ArrayList<Subject>();
+    // Each key is a launchTicket.
+    Map<String,Date> firstRequest = ColUtil.newOrderedMap();
+    Map<String,Date> lastRequest   = ColUtil.newOrderedMap();
+    Map<String,Long> contentSize = ColUtil.newOrderedMap();
+    Map<String,Date> firstAddrRequest = ColUtil.newOrderedMap();
 
     Linker<Request> linker = new Linker<Request>();
     // TODO: Only get DISTINCT the fields we care about for correlation.
@@ -23,19 +27,36 @@ public final class Reports {
       links.put(Pair.of("clientCookie"  , true ), r.getClientCookie());
       links.put(Pair.of("launchTicket"  , true ), r.getLaunchTicket());
       links.put(Pair.of("geoLocation"   , false), r.getGeoLocation());
+      if ("jws".equals(r.getType()))
+        links.put(Pair.of("versionString", false), r.getLogEntry());
       linker.addLink(links, r);
+      ColUtil.putExtreme(firstRequest, r.getLaunchTicket(), r.getTime(), false);
+      ColUtil.putExtreme(lastRequest , r.getLaunchTicket(), r.getTime(), true );
+      ColUtil.putSum(contentSize, r.getLaunchTicket(), r.getContentSize());
+      ColUtil.putExtreme(firstAddrRequest, r.getRemoteAddrHash(), r.getTime(), false);
     }
+    List<Subject> ret = new ArrayList<Subject>();
     for (Linker.Node<Request> node : linker.getContent()) {
-      System.out.println(node);
-    }
-    /*
-    for (List<Request> list : linker.getContent()) {
-      System.out.println("****** New node: ******");
-      for (Request r : list) {
-        System.out.println(r);
+      Date firstOverall = null;
+      for (String remoteAddrHash : node.getLinks("remoteAddrHash")) {
+        Date time = firstAddrRequest.get(remoteAddrHash);
+        if (firstOverall == null || (time != null && time.before(firstOverall)))
+          firstOverall = time;
       }
-    }*/
-
+      System.out.println("subject:");
+      System.out.println("  firstRequest  : " + firstOverall);
+      System.out.println("  clientCookie  : " + node.getLinks("clientCookie"));
+      System.out.println("  remoteAddrHash: " + node.getLinks("remoteAddrHash"));
+      System.out.println("  geoLocation   : " + node.getLinks("geoLocation"));
+      System.out.println("  versionString : " + node.getLinks("versionString"));
+      for (String launchTicket : node.getLinks("launchTicket")) {
+        System.out.println("  launchCode    : " + launchTicket);
+        System.out.println("    firstRequest: " + firstRequest.get(launchTicket));
+        System.out.println("    lastRequest : " + lastRequest.get(launchTicket));
+        System.out.println("    contentSize : " +
+            (contentSize.get(launchTicket) / 1024) + "K");
+      }
+    }
     return ret;
   }
 

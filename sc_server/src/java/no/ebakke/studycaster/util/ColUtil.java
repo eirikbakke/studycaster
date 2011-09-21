@@ -49,4 +49,26 @@ public final class ColUtil {
       throw new NoSuchElementException("Could not find key " + key.toString());
     return map.get(key);
   }
+
+  public static <K,V extends Comparable<V>> void
+      putExtreme(Map<K,V> map, K key, V val, boolean highest)
+  {
+    if (val == null)
+      return;
+    V existing = map.get(key);
+    if (existing == null) {
+      map.put(key, val);
+    } else {
+      int cmp = val.compareTo(existing);
+      if (cmp != 0 && (cmp > 0) == highest)
+        map.put(key, val);
+    }
+  }
+
+  public static <K> void putSum(Map<K,Long> map, K key, Long val) {
+    if (val == null)
+      return;
+    Long existing = map.get(key);
+    map.put(key, (existing == null) ? 0L : val + existing.longValue());
+  }
 }

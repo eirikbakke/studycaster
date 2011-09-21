@@ -1,6 +1,6 @@
 package no.ebakke.studycaster.reporting;
 
-// TODO: Find a better name.
+// TODO: Improve the terminology of this class.
 
 import java.util.List;
 import java.util.Map;
@@ -33,16 +33,7 @@ public class Linker<V> {
       }
       node.addLink(linkEntry.getKey().getLeft(), linkEntry.getValue());
     }
-    node.addParticipant(val);
   }
-
-  /*
-  public List<List<V>> getContent() {
-    List<List<V>> ret = ColUtil.newList();
-    for (Node node : content)
-      ret.add(ColUtil.newList(node.participants));
-    return ret;
-  }*/
 
   public List<Node<V>> getContent() {
     return ColUtil.newList(ColUtil.newOrderedSet(contentMap.values()));
@@ -50,23 +41,17 @@ public class Linker<V> {
 
   /** Uses referential equality. */
   public static class Node<V> {
-    private Set<V>                  participants = ColUtil.newOrderedSet();
-    private Map<String,Set<String>> links        = ColUtil.newOrderedMap();
+    private Map<String,Set<String>> links = ColUtil.newOrderedMap();
 
     public Node() {
     }
 
     public void unionWith(Node<V> other) {
-      participants.addAll(other.participants);
       for (Map.Entry<String,Set<String>> entry : other.links.entrySet()) {
         for (String value : entry.getValue()) {
           addLink(entry.getKey(), value);
         }
       }
-    }
-
-    public void addParticipant(V participant) {
-      participants.add(participant);
     }
 
     public void addLink(String key, String val) {
@@ -78,13 +63,10 @@ public class Linker<V> {
       valueSet.add(val);
     }
 
-    @Override
-    public String toString() {
-      StringBuilder ret = new StringBuilder();
-      ret.append("Node:\n");
-      for (Map.Entry<String,Set<String>> entry : links.entrySet())
-        ret.append("  " + entry.getKey() + ": " + entry.getValue() + "\n");
-      return ret.toString();
+    public Set<String> getLinks(String key) {
+      Set<String> ret = links.get(key);
+      return (ret == null) ?
+          ColUtil.<String>newOrderedSet() : ColUtil.newOrderedSet(ret);
     }
   }
 }
