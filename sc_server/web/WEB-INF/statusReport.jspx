@@ -73,4 +73,7 @@
       <c:out value="${scriptCode}"/>
     </pre>
 
+    <p>Static link version:</p>
+    <p><a href="${urlJNLP}?ver=sl">${urlJNLP}?ver=sl</a></p>
+
 </jsp:root>
