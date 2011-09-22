@@ -64,7 +64,7 @@
         </c:otherwise>
       </c:choose>.
     </p>
-    <p>JWS button for launching the StudyCaster Client (based on the absolute
+    <p>JWS button for launching the StudyCaster client (based on the absolute
       access URL above):</p>
       ${scriptCode}
     <p>The code used to generate the button above can be copied and pasted as

@@ -110,7 +110,7 @@ public class StatusFrame extends javax.swing.JFrame {
       public void windowClosing(WindowEvent e) {
         StudyCaster.log.info("User tried to close main StudyCaster window");
         int decision = JOptionPane.showConfirmDialog(getPositionDialog(),
-          "If you exit the User Study Console without uploading first, your changes will be lost.",
+          "If you exit the StudyCaster client without uploading first, your changes will be lost.",
           "Exit Without Uploading?", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
         if (decision == JOptionPane.OK_OPTION) {
           StudyCaster.log.info("User confirmed closing of main StudyCaster window");
@@ -138,7 +138,7 @@ public class StatusFrame extends javax.swing.JFrame {
     underButtonLabel = new javax.swing.JLabel();
 
     setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
-    setTitle("User Study Console");
+    setTitle("StudyCaster Client");
     setAlwaysOnTop(true);
     setResizable(false);
     getContentPane().setLayout(new java.awt.GridBagLayout());

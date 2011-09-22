@@ -46,7 +46,7 @@
       <input type="submit" value="Submit"/>
     </form>
     <h2>Launch Button</h2>
-    <p>JWS button for launching the StudyCaster Client:</p>
+    <p>JWS button for launching the StudyCaster client:</p>
       ${scriptCode}
   </c:otherwise>
 </c:choose>
