@@ -12,11 +12,8 @@ public final class Quilt {
   problems with overflow first. */
   private static final int MAXVAL = Integer.MAX_VALUE / 256;
   private static final int MINVAL = -MAXVAL / 2;
-  private static final Rectangle PLANE =
-      new Rectangle(MINVAL, MINVAL, MAXVAL, MAXVAL);
 
   public Quilt() {
-    addPatch(PLANE, false);
   }
 
   public Quilt(Rectangle rect) {
@@ -71,10 +68,7 @@ public final class Quilt {
             (patch.positive ? 1 : -1);
       }
     }
-    // TODO: This is actually an unanticipated error case, but don't make it a
-    //       showstopper for now.
-    StudyCaster.log.warning("Quilt assertion fail");
-    return -100;
+    return MINVAL;
   }
 
   private static final class Patch {
