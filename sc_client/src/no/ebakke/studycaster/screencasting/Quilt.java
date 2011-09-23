@@ -10,8 +10,8 @@ public final class Quilt {
   private List<Patch> patches = new ArrayList<Patch>();
   /* TODO: Make it actually go to the edges, but make really sure there is no
   problems with overflow first. */
-  private static final int MINVAL = Integer.MIN_VALUE / 256;
   private static final int MAXVAL = Integer.MAX_VALUE / 256;
+  private static final int MINVAL = -MAXVAL / 2;
   private static final Rectangle PLANE =
       new Rectangle(MINVAL, MINVAL, MAXVAL, MAXVAL);
 
@@ -37,25 +37,19 @@ public final class Quilt {
   private static void subtractPatch(
       Patch original, Patch subtractMe, List<Patch> res)
   {
-    // TODO: Get rid of these residual constants.
-    final Rectangle a = original.rect;
-    final Rectangle b = subtractMe.rect;
-    final int Ax1 = a.x     , Bx1 = b.x;
-    final int Ay1 = a.y     , By1 = b.y;
-    final int Aw  = a.width , Bw  = b.width;
-    final int Ah  = a.height, Bh  = b.height;
-    final int Ax2 = Ax1 + Aw, Bx2 = Bx1 + Bw;
-    final int Ay2 = Ay1 + Ah, By2 = By1 + Bh;
-    addIntersection(res, original, MINVAL, MINVAL, MAXVAL,    By1);
-    addIntersection(res, original, MINVAL,    By2, MAXVAL, MAXVAL);
-    addIntersection(res, original, MINVAL,    By1,    Bx1,    By2);
-    addIntersection(res, original,    Bx2,    By1, MAXVAL,    By2);
+    final Rectangle sM = subtractMe.rect;
+    // original - subtractMe = original * (1 - subtractMe)
+    addIntersection(res, original,          MINVAL,           MINVAL, MAXVAL,                sM.y);
+    addIntersection(res, original,          MINVAL, sM.y + sM.height, MAXVAL,              MAXVAL);
+    addIntersection(res, original,          MINVAL,             sM.y,   sM.x,    sM.y + sM.height);
+    addIntersection(res, original, sM.x + sM.width,             sM.y, MAXVAL,    sM.y + sM.height);
   }
 
   public void addPatch(Rectangle rect, boolean positive) {
     Patch newPatch = new Patch(rect, positive);
     List<Patch> oldPatches = patches;
     patches = new ArrayList<Patch>(oldPatches.size() + 5);
+    // Subtract from all existing patches first to avoid overlapping.
     for (Patch oldPatch : oldPatches)
       subtractPatch(oldPatch, newPatch, patches);
     patches.add(newPatch);
