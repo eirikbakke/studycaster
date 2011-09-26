@@ -161,22 +161,20 @@ public final class ServletUtil {
     if (!rootC.isDirectory())
       throw new ServletException(new FileNotFoundException(rootC.toString()));
 
-    File targetFile = new File(rootC, untrustedRelativePath);
-    String base   = rootC.getPath();
-    String target = targetFile.getParent();
-    if (target.length() < base.length() ||
-        !base.equals(target.substring(0, base.length())))
-    {
-      throw new BadRequestException(MSG);
-    }
-    if (!allowDir && targetFile.isDirectory())
-      throw new BadRequestException(MSG);
-
+    File targetC;
     try {
-      return targetFile.getCanonicalFile();
+      targetC = (new File(rootC, untrustedRelativePath)).getCanonicalFile();
     } catch (IOException e) {
       throw new BadRequestException(MSG);
     }
+    if (!allowDir && targetC.isDirectory())
+      throw new BadRequestException(MSG);
+    String base   = rootC.getPath();
+    String target = targetC.getParent();
+    if (target.length() < base.length() || !base.equals(target.substring(0, base.length()))) {
+      throw new BadRequestException(MSG);
+    }
+    return targetC;
   }
 
   public static String toHex(byte[] value) {
