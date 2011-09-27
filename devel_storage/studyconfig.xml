@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <study xmlns="namespace://no.ebakke/studycaster-configuration">
-  <configuration>
+  <macrodef id="configuration-common">
     <instructions>
       <html xmlns="">
         <b>Instructions:</b>
@@ -17,21 +17,24 @@
         </p>
       </html>
     </instructions>
-  </configuration>
+  </macrodef>
 
-  <configuration id="5782"> <!-- RECRUITING -->
+  <configuration id="5782" name="Recruiting">
+    <macro id="configuration-common"/>
     <openfile>
       <remotename>currencies.xls</remotename>
       <localname>userstudyHIT_currencies.xls</localname>
     </openfile>
   </configuration>
-  <configuration id="6728"> <!-- MAIN_EXCEL -->
+  <configuration id="6728" name="Main Excel">
+    <macro id="configuration-common"/>
     <openfile>
       <remotename>exflat.xls</remotename>
       <localname>userstudyHIT_coursecatalog.xls</localname>
     </openfile>
   </configuration>
-  <configuration id="1093"> <!-- MAIN_RS -->
+  <configuration id="1093" name="Main Related Worksheets">
+    <macro id="configuration-common"/>
     <openfile>
       <remotename>rsnest.rzw</remotename>
       <localname>userstudyHIT_coursecatalog.rzw</localname>

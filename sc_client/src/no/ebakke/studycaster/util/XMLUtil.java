@@ -1,7 +1,16 @@
 package no.ebakke.studycaster.util;
 
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import no.ebakke.studycaster.api.StudyCasterException;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -21,24 +30,30 @@ public final class XMLUtil {
   }
 
   public static List<Element> getElements(Node parent, String namespaceURI, String localName) {
+    return getElements(parent, namespaceURI, localName, null, null);
+  }
+
+  public static List<Element> getElements(
+      Node parent, String namespaceURI, String localName, String attrName, String attrValue)
+  {
     List<Element> ret = new ArrayList<Element>();
     for (Node node : getNonEmptyChildNodes(parent)) {
       if (!(node instanceof Element))
         continue;
       Element elm = (Element) node;
       if ((namespaceURI == null && elm.getNamespaceURI() == null ||
-          elm.getNamespaceURI().equals(namespaceURI)) && elm.getLocalName().equals(localName)) {
+          namespaceURI != null && namespaceURI.equals(elm.getNamespaceURI())) &&
+          elm.getLocalName().equals(localName) &&
+          (attrName == null || elm.getAttribute(attrName).equals(attrValue)))
+      {
         ret.add((Element) node);
       }
     }
     return ret;
   }
 
-  public static Element getElement(Node parent, String namespaceURI, String localName) {
-    List<Element> ret = getElements(parent, namespaceURI, localName);
-    return ret.size() == 1 ? ret.get(0) : null;
-  }
-
+  /** Returns concatenated, then trimmed text and CDATA sections, or null if any other kinds of
+  child nodes are present. */
   public static String getTextContent(Node parent) {
     List<Node> childNodes = getNonEmptyChildNodes(parent);
     StringBuilder ret = new StringBuilder();
@@ -50,5 +65,16 @@ public final class XMLUtil {
       ret.append(((Text) childNode).getTextContent());
     }
     return ret.toString().trim();
+  }
+
+  public static String getXMLString(Element elm, boolean htmlMode) throws TransformerException {
+    Transformer t;
+    t = TransformerFactory.newInstance().newTransformer();
+    t.setOutputProperty(OutputKeys.METHOD              , htmlMode ? "html" : "xml");
+    t.setOutputProperty(OutputKeys.INDENT              , "no");
+    t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, htmlMode ? "yes" : "no");
+    StringWriter ret = new StringWriter();
+    t.transform(new DOMSource(elm), new StreamResult(ret));
+    return ret.toString();
   }
 }
