@@ -35,6 +35,8 @@ public class ConfigurableStudyCaster {
   public static void main(String args[]) {
     ConfigurableStudyCaster csc;
 
+    args = new String[] { "5782" };
+
     if (args.length != 1) {
       System.err.println("Usage: ConfigurateStudyCaster <configuration ID>");
       return;
