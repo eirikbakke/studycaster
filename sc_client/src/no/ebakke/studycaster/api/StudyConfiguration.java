@@ -3,7 +3,6 @@ package no.ebakke.studycaster.api;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -20,13 +19,10 @@ import org.xml.sax.SAXException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.Text;
 
 
 public class StudyConfiguration {
-  private static final String XMLNS_SC =
-      "http://www.mit.edu/~ebakke/namespaces/studycaster-configuration";
+  private static final String XMLNS_SC = "namespace://no.ebakke/studycaster-configuration";
 
   private String instructions;
 
@@ -89,7 +85,8 @@ public class StudyConfiguration {
       return ret.toString();
     } else {
       throw new StudyCasterException(
-          "UI caption values must be a single text node or <html xmlns=\"\"> element.");
+          "UI caption values must be specified as text nodes/CDATA sections or a single" +
+          "<html xmlns=\"\"> element.");
     }
   }
 

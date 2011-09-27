@@ -14,7 +14,7 @@ public final class XMLUtil {
     NodeList nl = parent.getChildNodes();
     List<Node> ret = new ArrayList<Node>();
     for (int i = 0; i < nl.getLength(); i++) {
-      if (!(nl.item(i) instanceof Text && ((Text) nl.item(i)).getWholeText().trim().length() == 0))
+      if (!(nl.item(i) instanceof Text && ((Text) nl.item(i)).getTextContent().trim().length() == 0))
         ret.add(nl.item(i));
     }
     return ret;
@@ -41,9 +41,14 @@ public final class XMLUtil {
 
   public static String getTextContent(Node parent) {
     List<Node> childNodes = getNonEmptyChildNodes(parent);
-    if (childNodes.isEmpty())
-      return "";
-    return (childNodes.size() == 1 && (childNodes.get(0) instanceof Text)) ?
-        ((Text) childNodes.get(0)).getWholeText().trim() : null;
+    StringBuilder ret = new StringBuilder();
+    /* This loop is necessary even under normalization, because text nodes may be adjacent to CDATA
+    sections. */
+    for (Node childNode : childNodes) {
+      if (!(childNode instanceof Text))
+        return null;
+      ret.append(((Text) childNode).getTextContent());
+    }
+    return ret.toString().trim();
   }
 }

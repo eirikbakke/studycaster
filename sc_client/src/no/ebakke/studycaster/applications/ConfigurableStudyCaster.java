@@ -18,7 +18,7 @@ import no.ebakke.studycaster.util.MyFileNameExtensionFilter;
 import no.ebakke.studycaster.util.Util;
 
 public class ConfigurableStudyCaster {
-  public static Logger log = Logger.getLogger("no.ebakke.studycaster");
+  public static final Logger log = Logger.getLogger("no.ebakke.studycaster");
   private StudyConfiguration configuration;
   private ServerContext serverContext;
 
@@ -35,6 +35,7 @@ public class ConfigurableStudyCaster {
   public static void main(String args[]) {
     ConfigurableStudyCaster csc;
 
+    // TODO: Get rid of this.
     args = new String[] { "5782" };
 
     if (args.length != 1) {
