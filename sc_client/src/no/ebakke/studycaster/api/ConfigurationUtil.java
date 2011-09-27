@@ -49,6 +49,17 @@ final class ConfigurationUtil {
     resolveMacrosInternal(macroDefs, root);
   }
 
+  public static String getNonEmptyAttribute(Element elm, String attrName)
+      throws StudyCasterException
+  {
+    String ret = elm.getAttribute(attrName);
+    if (ret.equals("")) {
+      throw new StudyCasterException(
+          "Expected an attribute " + attrName + " in element <" + elm.getTagName() + ">");
+    }
+    return ret;
+  }
+
   public static Element getUniqueElement(Node parent, String localName, String attrName, String attrValue)
       throws StudyCasterException
   {

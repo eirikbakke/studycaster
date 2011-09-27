@@ -2,8 +2,6 @@ package no.ebakke.studycaster.api;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -15,6 +13,8 @@ import org.w3c.dom.Element;
 
 
 public class StudyConfiguration {
+  private final boolean DEBUG_MACROS = false;
+  private String name;
   private String instructions;
 
   public StudyConfiguration(InputStream xmlConfiguration, String configurationID)
@@ -37,19 +37,26 @@ public class StudyConfiguration {
     Element root = ConfigurationUtil.getUniqueElement(configDoc, "study");
 
     ConfigurationUtil.resolveMacros(root);
-    System.out.println("========================================================");
-    try {
-      System.out.println(XMLUtil.getXMLString(root, false));
-    } catch (TransformerException ex) {
-      throw new StudyCasterException(ex);
+    if (DEBUG_MACROS) {
+      System.err.println("========================================================");
+      try {
+        System.err.println(XMLUtil.getXMLString(root, false));
+      } catch (TransformerException ex) {
+        throw new StudyCasterException(ex);
+      }
+      System.err.println("========================================================");
     }
-    System.out.println("========================================================");
-    
+
     Element conf = ConfigurationUtil.getUniqueElement(root, "configuration", "id", configurationID);
+    name         = ConfigurationUtil.getNonEmptyAttribute(conf, "name");
     instructions = ConfigurationUtil.getSwingCaption(conf, "instructions");
   }
 
   public String getInstructions() {
     return instructions;
+  }
+
+  public String getName() {
+    return name;
   }
 }
