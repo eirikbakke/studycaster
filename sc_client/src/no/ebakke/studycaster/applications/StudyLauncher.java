@@ -1,63 +1,64 @@
 package no.ebakke.studycaster.applications;
 
 import java.io.File;
+import javax.swing.filechooser.FileFilter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
-import javax.swing.filechooser.FileFilter;
+import no.ebakke.studycaster.api.StudyConfiguration;
+import no.ebakke.studycaster.api.ServerContext;
 import no.ebakke.studycaster.api.StudyCaster;
 import no.ebakke.studycaster.api.StudyCasterException;
+import no.ebakke.studycaster.screencasting.ScreenCensor;
 import no.ebakke.studycaster.ui.StudyCasterUI;
 import no.ebakke.studycaster.ui.StudyCasterUI.UIAction;
 import no.ebakke.studycaster.util.Util;
-import no.ebakke.studycaster.screencasting.ScreenCensor;
-import no.ebakke.studycaster.util.MyFileNameExtensionFilter;
 
 public class StudyLauncher {
-  private static enum StudyType {RECRUITING, MAIN_EXCEL, MAIN_RS};
-  private static StudyType studyType;
+  private static final Logger log = Logger.getLogger("no.ebakke.studycaster");
+  private StudyConfiguration configuration;
+  private ServerContext serverContext;
 
-  private static final String instructions =
-    "<html><b>Instructions:</b><ol>" +
-    "<li>Edit the spreadsheet that opened in another window<br>" +
-    "(according to the instructions in the HIT)." +
-    "<li>Save and close the spreadsheet.<br>" +
-    "<li>Click the button below." +
-    "<li>Paste the confirmation code into the HIT." +
-    "</ol><p align=\"right\">Thanks!<br><a href=\"mailto:ebakke@mit.edu\">ebakke@mit.edu</a></p></html>";
+  public StudyLauncher(String configurationID) throws StudyCasterException {
+    serverContext = new ServerContext();
+    try {
+      configuration =
+          new StudyConfiguration(serverContext.downloadFile("studyconfig.xml"), configurationID);
+    } catch (IOException e) {
+      throw new StudyCasterException("Error retrieving configuration file", e);
+    }
+  }
 
   public static void main(String args[]) {
-    StudyCaster.log.info("Entering initial log message to promote fail-fast behavior of potential ConsoleTee bugs.");
+    StudyLauncher csc;
 
+    // TODO: Get rid of this.
     args = new String[] { "5782" };
 
     if (args.length != 1) {
-      System.err.println("Usage: StudyLauncher <experiment-code>");
-      StudyCaster.log.severe("No experiment code provided");
-      System.exit(-1);
+      System.err.println("Usage: ConfigurateStudyCaster <configuration ID>");
+      return;
     }
-    if        (args[0].equals("5782")) {
-      studyType = StudyType.RECRUITING;
-    } else if (args[0].equals("6728")) {
-      studyType = StudyType.MAIN_EXCEL;
-    } else if (args[0].equals("1093")) {
-      studyType = StudyType.MAIN_RS;
-    } else {
-      StudyCaster.log.severe("Invalid experiment code provided");
-      System.exit(-1);
+    try {
+      csc = new StudyLauncher(args[0]);
+      csc.runStudy();
+    } catch (StudyCasterException e) {
+      log.log(Level.SEVERE, "Failed to initialize StudyCaster", e);
+      return;
     }
+  }
+
+  // TODO: Open the window before anything else, to allow force-quitting.
+  public void runStudy() throws StudyCasterException {
+    StudyCaster.log.info("Entering initial log message to promote fail-fast behavior of potential ConsoleTee bugs.");
 
     StudyCasterUI scui;
 
     try {
-      FileFilter filter;
-      if (studyType == StudyType.MAIN_RS) {
-        filter = new MyFileNameExtensionFilter(Arrays.asList(new String[] {"rzw"}), "Spreadsheet Study Application files");
-      } else {
-        filter = new MyFileNameExtensionFilter(Arrays.asList(new String[] {"xls", "xml", "xlsx", "xlsm", "xlsb"}), "Microsoft Excel Workbook");
-      }
-      scui = new StudyCasterUI(instructions, filter);
+      FileFilter filter = configuration.getUploadFileFilter();
+      scui = new StudyCasterUI(configuration.getInstructions(), filter);
     } catch (StudyCasterException e) {
       StudyCaster.log.log(Level.SEVERE, "Unexpected exception during UI initialization", e);
       System.exit(0);
@@ -90,22 +91,8 @@ public class StudyLauncher {
           true));
       scui.getProgressBarUI().setProgress(50);
       scui.getProgressBarUI().setTaskAppearance("Downloading sample document...", false);
-      String studyFileNameLocal, studyFileNameRemote;
-      switch (studyType) {
-        case        RECRUITING:
-          studyFileNameLocal  = "userstudyHIT_currencies.xls";
-          studyFileNameRemote = "currencies.xls";
-        break; case MAIN_EXCEL:
-          studyFileNameLocal  = "userstudyHIT_coursecatalog.xls";
-          studyFileNameRemote = "exflat.xls";
-        break; case MAIN_RS:
-          studyFileNameLocal  = "userstudyHIT_coursecatalog.rzw";
-          studyFileNameRemote = "rsnest.rzw";
-        break; default:
-          throw new AssertionError("Unexpected study type");
-      }
 
-      openedFile = new File(new File(System.getProperty("java.io.tmpdir")), studyFileNameLocal);
+      openedFile = new File(new File(System.getProperty("java.io.tmpdir")), configuration.getOpenFileLocalName());
       if (openedFile.exists()) {
         StudyCaster.log.info("File to be downloaded already exists in temp directory");
 
@@ -142,24 +129,15 @@ public class StudyLauncher {
         }
       }
       if (download)
-        sc.downloadFile(studyFileNameRemote, openedFile);
+        sc.downloadFile(configuration.getOpenFileRemoteName(), openedFile);
       scui.setDefaultFile(openedFile);
       lastModified1 = openedFile.lastModified();
       scui.getProgressBarUI().setProgress(75);
       scui.getProgressBarUI().setTaskAppearance("Opening sample document...", false);
-      if (Util.fileAvailableExclusive(openedFile)) {
-        if (studyType == StudyType.MAIN_RS) {
-          try {
-            StudyCaster.log.info("Now starting Relational Spreadsheet");
-            // no.ebakke.hier.view.Main.main(new String[] {Util.getPathString(openedFile)});
-            StudyCaster.log.info("Relational Spreadsheet started");
-          } catch (Exception e) {
-            StudyCaster.log.log(Level.SEVERE, "Caught exception from Relational Spreadsheet main method", e);
-          }
-        } else {
-          Util.desktopOpenFile(openedFile, "Excel or a compatible spreadsheet application");
-        }
-      }
+      // TODO: Allow opening with a downloaded application.
+      // TODO: When would this ever be the case?
+      if (Util.fileAvailableExclusive(openedFile))
+        Util.desktopOpenFile(openedFile, configuration.getOpenFileRequirement());
       lastModified2 = openedFile.lastModified();
       scui.getProgressBarUI().setProgress(100);
       scui.setUploadEnabled(true);
@@ -174,7 +152,7 @@ public class StudyLauncher {
       scui.disposeUI();
       return;
     }
-    sc.enterRemoteLogRecord("User study loaded OK; experiment " + studyType);
+    sc.enterRemoteLogRecord("User study loaded OK; experiment " + configuration.getName());
 
     UIAction action;
     boolean warnedAboutUnchanged = false;

@@ -87,4 +87,20 @@ public class StudyConfiguration {
   public String getName() {
     return name;
   }
+
+  public FileFilter getUploadFileFilter() {
+    return uploadFileFilter;
+  }
+
+  public String getOpenFileLocalName() {
+    return openFileLocalName;
+  }
+
+  public String getOpenFileRemoteName() {
+    return openFileRemoteName;
+  }
+
+  public String getOpenFileRequirement() {
+    return openFileRequirement;
+  }
 }
