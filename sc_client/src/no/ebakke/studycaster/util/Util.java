@@ -117,8 +117,10 @@ public final class Util {
         if (e.getCause() instanceof Error)
           throw (Error) e.getCause();
         if (e.getCause() instanceof IOException) {
+          String reqMsg = (requiredApp == null || requiredApp.equals("")) ? "" :
+              "; do you have " + requiredApp + " installed?";
           throw new StudyCasterException("Failed to open the file " + fileToOpen.getName() +
-              "; do you have " + requiredApp + " installed?", e);
+              reqMsg, e);
         }
       }
     } else {
@@ -137,15 +139,17 @@ public final class Util {
       String command[];
       // See http://www.rgagnon.com/javadetails/java-0014.html
       // See http://frank.neatstep.com/node/84
-      /* TODO: The MAX argument maximizes even the "pick association" dialog; consider removing. */
+      /* I considered using the /MAX argument of the windows "start" command to maximize the window
+      of the started application, but this even maximizes the pick association dialog if it happens
+      to appear, so don't. */
       if (osString.contains("windows 95") || osString.contains("windows 98") ||
           osString.contains("windows me"))
       {
         // TODO: Test this.
         // See http://www.javaworld.com/javaworld/jw-12-2000/jw-1229-traps.html?page=4
-        command = new String[] {"command.com", "/C", "start", "\"WindowTitle\"", "/MAX", fileURL};
+        command = new String[] {"command.com", "/C", "start", "\"WindowTitle\"", fileURL};
       } else if (osString.contains("win")) {
-        command = new String[] {"cmd.exe", "/C", "start", "\"WindowTitle\"", "/MAX", fileURL};
+        command = new String[] {"cmd.exe", "/C", "start", "\"WindowTitle\"", fileURL};
       } else if (osString.contains("mac")) {
         /* Note: This was verified to work, opening an XLS file on MacOS X with Java 1.5.0_24.
         Putting single quotes around the URL would break it, so don't. */

@@ -14,7 +14,7 @@ import java.util.logging.Level;
 import no.ebakke.studycaster.api.StudyCaster;
 
 /** Platform-dependent window detector. */
-public final class Win32WindowEnumerator implements WindowEnumerator {
+final class Win32WindowEnumerator implements WindowEnumerator {
   private static int STR_BUF_SZ = 32768;
 
   private Win32WindowEnumerator() {

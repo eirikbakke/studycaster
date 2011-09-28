@@ -60,8 +60,12 @@ final class ConfigurationUtil {
     return ret;
   }
 
-  public static Element getUniqueElement(Node parent, String localName, String attrName, String attrValue)
-      throws StudyCasterException
+  public static List<Element> getElements(Node parent, String localName) {
+    return XMLUtil.getElements(parent, XMLNS_SC, localName);
+  }
+
+  public static Element getUniqueElement(Node parent, String localName, String attrName,
+      String attrValue) throws StudyCasterException
   {
     List<Element> ret = XMLUtil.getElements(parent, XMLNS_SC, localName, attrName, attrValue);
     if (ret.size() != 1) {
@@ -74,12 +78,21 @@ final class ConfigurationUtil {
     return ret.get(0);
   }
 
-  public static Element getUniqueElement(Node parent, String localName) throws StudyCasterException {
+  public static Element getUniqueElement(Node parent, String localName)
+      throws StudyCasterException
+  {
     return getUniqueElement(parent, localName, null, null);
   }
 
   public static String getSwingCaption(Node parent, String localName) throws StudyCasterException {
     return getSwingCaption(getUniqueElement(parent, localName));
+  }
+
+  public static String getTextContent(Element elm) throws StudyCasterException {
+    String ret = XMLUtil.getTextContent(elm);
+    if (ret == null)
+      throw new StudyCasterException("Expected text content in <" + elm.getTagName() + "> element");
+    return ret;
   }
 
   private static String getSwingCaption(Element elm) throws StudyCasterException {

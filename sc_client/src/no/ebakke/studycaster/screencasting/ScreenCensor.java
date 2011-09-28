@@ -55,22 +55,22 @@ public final class ScreenCensor {
     Set<Integer> pidWhiteList = new LinkedHashSet<Integer>();
     for (WindowInfo wi : windows) {
       for (String whiteListItem : whiteList) {
-        if (wi.title.toLowerCase().contains(whiteListItem.toLowerCase()))
-          pidWhiteList.add(wi.pid);
+        if (wi.getTitle().toLowerCase().contains(whiteListItem.toLowerCase()))
+          pidWhiteList.add(wi.getPID());
       }
     }
     Quilt ret = new Quilt();
     for (WindowInfo wi : windows) {
-      boolean ok = pidWhiteList.contains(wi.pid);
+      boolean ok = pidWhiteList.contains(wi.getPID());
       if (ok) {
         for (String blackListItem : blackList) {
-          if (wi.title.toLowerCase().contains(blackListItem.toLowerCase())) {
+          if (wi.getTitle().toLowerCase().contains(blackListItem.toLowerCase())) {
             ok = false;
             break;
           }
         }
       }
-      ret.addPatch(wi.location, ok);
+      ret.addPatch(wi.getLocation(), ok);
     }
     return ret;
   }
