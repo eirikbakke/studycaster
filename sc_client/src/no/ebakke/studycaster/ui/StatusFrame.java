@@ -86,12 +86,12 @@ public class StatusFrame extends javax.swing.JFrame {
     }
   }
 
-  public StatusFrame(String instructions) {
-    positionDialog = new JDialog(this);
-    initComponents();
-    pbui = new ProgressBarUI(progressBar);
-    //progressBar.setIndeterminate(true);
+  public void setInstructions(String instructions) {
     instructionLabel.setText(instructions);
+    updateSizeAndLocation();
+  }
+
+  private void updateSizeAndLocation() {
     pack();
     Dimension sdim = Toolkit.getDefaultToolkit().getScreenSize();
     Dimension wdim = getSize();
@@ -102,6 +102,14 @@ public class StatusFrame extends javax.swing.JFrame {
     xmargin = Math.max(XMARGIN_MIN, xmargin);
     ymargin = Math.max(YMARGIN_MIN, ymargin);
     setLocation(sdim.width - wdim.width - xmargin, sdim.height - wdim.height - ymargin);
+  }
+
+  public StatusFrame() {
+    positionDialog = new JDialog(this);
+    initComponents();
+    pbui = new ProgressBarUI(progressBar);
+    //progressBar.setIndeterminate(true);
+    updateSizeAndLocation();
 
     this.initIcon();
 

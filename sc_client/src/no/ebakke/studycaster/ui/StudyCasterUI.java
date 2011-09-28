@@ -20,6 +20,8 @@ import no.ebakke.studycaster.util.Util.CallableExt;
 import no.ebakke.studycaster.util.stream.NonBlockingOutputStream;
 import no.ebakke.studycaster.util.stream.NonBlockingOutputStream.StreamProgressObserver;
 
+// TODO: Check that this is actually the case.
+/* This class should be thread-safe. */
 public class StudyCasterUI {
   public enum UIAction {
     NO_ACTION,
@@ -31,6 +33,7 @@ public class StudyCasterUI {
   private Blocker actionBlocker = new Blocker();
   private File defaultFile, selectedFile;
   private int streamProgressStart;
+  private FileFilter uploadFileFilter;
   private SingleInstanceService singleInstanceService;
   private SingleInstanceListener singleInstanceListener;
   private StreamProgressObserver spo = new StreamProgressObserver() {
@@ -45,8 +48,23 @@ public class StudyCasterUI {
       }
     };
 
+  public void setUploadFileFilter(final FileFilter fileFilter) {
+    SwingUtilities.invokeLater(new Runnable() {
+      public void run() {
+        uploadFileFilter = fileFilter;
+      }
+    });
+  }
 
-  public StudyCasterUI(final String instructions, final FileFilter fileFilter)
+  public void setInstructions(final String instructions) {
+    SwingUtilities.invokeLater(new Runnable() {
+      public void run() {
+        sf.setInstructions(instructions);
+      }
+    });
+  }
+
+  public StudyCasterUI()
       throws StudyCasterException
   {
     StatusFrame.setSystemLookAndFeel();
@@ -79,7 +97,7 @@ public class StudyCasterUI {
 
     Util.checkedSwingInvokeAndWait(new Util.CallableExt<Void, StudyCasterException>() {
       public Void call() {
-        sf = new StatusFrame(instructions);
+        sf = new StatusFrame();
         sf.addWindowListener(new java.awt.event.WindowAdapter() {
           @Override
           public void windowClosed(java.awt.event.WindowEvent evt) {
@@ -113,7 +131,7 @@ public class StudyCasterUI {
         sf.getUploadButton().addActionListener(new ActionListener() {
           public void actionPerformed(ActionEvent e) {
             sf.getUploadButton().setEnabled(false);
-            UploadDialog upld = new UploadDialog(sf, fileFilter, defaultFile);
+            UploadDialog upld = new UploadDialog(sf, uploadFileFilter, defaultFile);
             StudyCaster.log.info("Now displaying upload dialog");
             upld.setVisible(true);
             selectedFile = upld.getSelectedFile();

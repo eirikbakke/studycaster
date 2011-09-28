@@ -16,55 +16,40 @@ import no.ebakke.studycaster.ui.StudyCasterUI;
 import no.ebakke.studycaster.ui.StudyCasterUI.UIAction;
 import no.ebakke.studycaster.util.Util;
 
-public class StudyLauncher {
-  private static final Logger log = Logger.getLogger("no.ebakke.studycaster");
-  private StudyConfiguration configuration;
-  private ServerContext serverContext;
-
-  public StudyLauncher(String configurationID) throws StudyCasterException {
-    serverContext = new ServerContext();
-    try {
-      configuration =
-          new StudyConfiguration(serverContext.downloadFile("studyconfig.xml"), configurationID);
-    } catch (IOException e) {
-      throw new StudyCasterException("Error retrieving configuration file", e);
-    }
-  }
+public final class StudyLauncher {
+  private StudyLauncher() { }
 
   public static void main(String args[]) {
-    StudyLauncher csc;
-
     // TODO: Get rid of this.
     args = new String[] { "5782" };
 
+    // TODO: Move even this error into the UI.
     if (args.length != 1) {
       System.err.println("Usage: ConfigurateStudyCaster <configuration ID>");
       return;
     }
-    try {
-      csc = new StudyLauncher(args[0]);
-      csc.runStudy();
-    } catch (StudyCasterException e) {
-      log.log(Level.SEVERE, "Failed to initialize StudyCaster", e);
-      return;
-    }
+    runStudy(args[0]);
   }
 
   // TODO: Open the window before anything else, to allow force-quitting.
-  public void runStudy() throws StudyCasterException {
+  public static void runStudy(String configurationID) {
+    final Logger log = Logger.getLogger("no.ebakke.studycaster");
+    final StudyConfiguration configuration;
+    final ServerContext serverContext;
+
     StudyCaster.log.info("Entering initial log message to promote fail-fast behavior of potential ConsoleTee bugs.");
 
     StudyCasterUI scui;
 
     try {
-      FileFilter filter = configuration.getUploadFileFilter();
-      scui = new StudyCasterUI(configuration.getInstructions(), filter);
+      scui = new StudyCasterUI();
     } catch (StudyCasterException e) {
       StudyCaster.log.log(Level.SEVERE, "Unexpected exception during UI initialization", e);
       System.exit(0);
       return;
     }
 
+    // TODO: Load instructions before the consent dialog becomes visible.
     if (scui.wasClosed()) {
       try {
         StudyCaster sc = new StudyCaster();
@@ -81,16 +66,26 @@ public class StudyLauncher {
     boolean download = true;
     File openedFile;
     try {
+      serverContext = new ServerContext();
+      try {
+        configuration =
+            new StudyConfiguration(serverContext.downloadFile("studyconfig.xml"), configurationID);
+      } catch (IOException e) {
+        throw new StudyCasterException("Error retrieving configuration file", e);
+      }
+      scui.setInstructions(configuration.getInstructions());
+      scui.setUploadFileFilter(configuration.getUploadFileFilter());
+
       scui.getProgressBarUI().setProgress(25);
       scui.getProgressBarUI().setTaskAppearance("Initializing user study app...", false);
       sc = new StudyCaster();
+      // TODO: Parameterize this.
       sc.startRecording(new ScreenCensor(
           Arrays.asList(new String[] {"StudyCaster", "User Study Console", "Excel", "Calc", "Numbers", "Gnumeric", "KSpread", "Quattro", "Mesa", "Spreadsheet Study Application", "StudyCaster"}),
-          Arrays.asList(new String[] {"Firefox", "Internet Explorer", "Outlook", "Chrome", "Safari", "Upload and Retrieve Confirmation Code",
-          "Open Sample Document"}),
+          Arrays.asList(new String[] {"Firefox", "Internet Explorer", "Outlook", "Chrome", "Safari", "Upload and Retrieve Confirmation Code", "Open Sample File"}),
           true));
       scui.getProgressBarUI().setProgress(50);
-      scui.getProgressBarUI().setTaskAppearance("Downloading sample document...", false);
+      scui.getProgressBarUI().setTaskAppearance("Downloading sample file...", false);
 
       openedFile = new File(new File(System.getProperty("java.io.tmpdir")), configuration.getOpenFileLocalName());
       if (openedFile.exists()) {
@@ -112,12 +107,12 @@ public class StudyLauncher {
               index++;
             } while (newName.exists());
             if (!openedFile.renameTo(newName)) {
-              scui.showMessageDialog("Open Sample Document",
+              scui.showMessageDialog("Open Sample File",
                   "<html>Failed to rename<br>" + Util.getPathString(openedFile) + "<br><br>" +
                   "If the file is still open, please close it and try again.</html>",
                   JOptionPane.WARNING_MESSAGE);
             } else {
-              scui.showMessageDialog("Open Sample Document",
+              scui.showMessageDialog("Open Sample File",
                 "<html>The old file<br>" + Util.getPathString(openedFile) + "<br>was renamed to<br>" +
                 Util.getPathString(newName) + "</html>",
                 JOptionPane.INFORMATION_MESSAGE);
@@ -133,7 +128,7 @@ public class StudyLauncher {
       scui.setDefaultFile(openedFile);
       lastModified1 = openedFile.lastModified();
       scui.getProgressBarUI().setProgress(75);
-      scui.getProgressBarUI().setTaskAppearance("Opening sample document...", false);
+      scui.getProgressBarUI().setTaskAppearance("Opening sample file...", false);
       // TODO: Allow opening with a downloaded application.
       // TODO: When would this ever be the case?
       if (Util.fileAvailableExclusive(openedFile))
@@ -171,23 +166,23 @@ public class StudyLauncher {
         }
         if (download && isSameFile && (nowLastModified == lastModified1 || nowLastModified == lastModified2) && !warnedAboutUnchanged) {
           warnedAboutUnchanged = true;
-          StudyCaster.log.log(Level.INFO, "Got upload on unchanged document; exclusive={0}", Util.fileAvailableExclusive(selectedFile));
+          StudyCaster.log.log(Level.INFO, "Got upload on unchanged file; exclusive={0}", Util.fileAvailableExclusive(selectedFile));
 
           scui.showMessageDialog("Upload",
-                  "<html>Please edit, save, and close the spreadsheet document, then try again.<br><br>" +
+                  "<html>Please edit, save, and close the file, then try again.<br><br>" +
                   "(The document should have opened in a new window, possibly in the background.)<br>" +
                   "</html>"
                   , JOptionPane.WARNING_MESSAGE);
         } else if (!Util.fileAvailableExclusive(selectedFile)) {
-          StudyCaster.log.info("Got upload on changed but still open document");
+          StudyCaster.log.info("Got upload on changed but still open file");
           scui.showMessageDialog("Upload",
-                "<html>Please close the spreadsheet document, then try again.</html>"
+                "<html>Please close the file, then try again.</html>"
                 , JOptionPane.WARNING_MESSAGE);
         } else {
           sc.enterRemoteLogRecord("Now starting upload");
           StudyCaster.log.info("Now starting upload");
           try {
-            scui.getProgressBarUI().setTaskAppearance("Uploading document...", true);
+            scui.getProgressBarUI().setTaskAppearance("Uploading file...", true);
             StudyCaster.log.log(Level.INFO, "Uploading file {0}", selectedFile.getName());
             sc.uploadFile(selectedFile, "uploaded_" + Util.sanitizeFileNameComponent(selectedFile.getName()));
             scui.getProgressBarUI().setTaskAppearance("Finishing screencast upload...", true);

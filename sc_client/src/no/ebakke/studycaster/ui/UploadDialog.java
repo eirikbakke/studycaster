@@ -53,7 +53,8 @@ public class UploadDialog extends javax.swing.JDialog {
         setFile(defaultFile);
 
         fileChooser = new JFileChooser();
-        fileChooser.setFileFilter(filter);
+        if (filter != null)
+          fileChooser.setFileFilter(filter);
         fileChooser.setDialogTitle("Select File to Upload");
 
         browseButton.addActionListener(new ActionListener() {
