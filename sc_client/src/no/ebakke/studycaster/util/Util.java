@@ -157,13 +157,13 @@ public final class Util {
         command = new String[] {"open", fileURL};
       } else {
         throw new StudyCasterException(
-            "Can't open document; Java Desktop API or platform-specific implementation not found");
+            "Can't open file; Java Desktop API or platform-specific implementation not found");
       }
       try {
         executeShellCommand(command);
       } catch (StudyCasterException e) {
         throw new StudyCasterException(
-            "Can't open document; problem while executing shell command", e);
+            "Can't open file; problem while executing shell command", e);
       }
     }
   }

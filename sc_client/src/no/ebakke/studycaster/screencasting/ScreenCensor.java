@@ -14,7 +14,7 @@ import javax.swing.UIManager;
 import no.ebakke.studycaster.api.StudyCaster;
 import no.ebakke.studycaster.api.StudyCasterException;
 import no.ebakke.studycaster.screencasting.WindowEnumerator.WindowInfo;
-import no.ebakke.studycaster.util.ImageDebugDialog;
+import no.ebakke.studycaster.util.ImageDebugFrame;
 
 public final class ScreenCensor {
   public static final int MOSAIC_WIDTH = 5;
@@ -23,14 +23,17 @@ public final class ScreenCensor {
   private Quilt nativeFail;
   private WindowEnumerator windowEnumerator;
 
-  public ScreenCensor(List<String> whiteList, List<String> blackList, boolean excludeFileDialogs)
+  public ScreenCensor(List<String> whiteList, List<String> blackList, boolean blacklistFileDialogs,
+      boolean whiteListStudyCasterDialogs)
       throws StudyCasterException
   {
     this.whiteList = new ArrayList<String>(whiteList);
     this.blackList = new ArrayList<String>(blackList);
-    if (excludeFileDialogs) {
-      // TODO: Take this string from elsewhere.
+    if (blacklistFileDialogs) {
+      // TODO: Take these strings from a common place (below, too).
       this.blackList.add("Select File to Upload");
+      this.blackList.add("Open Sample File");
+      this.blackList.add("Upload and Retrieve Confirmation Code");
       this.blackList.add("Save");
       this.blackList.add("Open");
       String localized;
@@ -39,6 +42,8 @@ public final class ScreenCensor {
       if ((localized = UIManager.getString("FileChooser.openDialogTitleText")) != null)
         this.blackList.add(localized);
     }
+    if (whiteListStudyCasterDialogs)
+      this.whiteList.add("StudyCaster");
     windowEnumerator = Win32WindowEnumerator.create();
     if (windowEnumerator == null) {
       StudyCaster.log.log(Level.WARNING,
@@ -70,28 +75,29 @@ public final class ScreenCensor {
           }
         }
       }
-      ret.addPatch(wi.getLocation(), ok);
+      ret.addPatch(wi.getBounds(), ok);
     }
     return ret;
   }
 
   public static void main(String args[]) throws StudyCasterException, AWTException {
     ScreenCensor censor = new ScreenCensor(
-      Arrays.asList(new String[] {"StudyCaster", "User Study Console", "Excel", "Calc", "Numbers", "Gnumeric", "KSpread", "Quattro", "Mesa", "Spreadsheet Study Application"}),
-      Arrays.asList(new String[] {"Firefox", "Internet Explorer", "Outlook", "Chrome", "Safari", "Upload and Retrieve Confirmation Code",
-      "Open Sample Document"}),
-      true);
+      Arrays.asList(new String[] {"Excel", "Calc", "Numbers", "Gnumeric", "KSpread", "Quattro", "Mesa"}),
+      Arrays.asList(new String[] {"Firefox", "Internet Explorer", "Outlook", "Chrome", "Safari"}),
+      true, true);
     Rectangle screenRect = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
     BufferedImage image = new Robot().createScreenCapture(screenRect);
     Quilt permitted = censor.getPermittedRecordingArea();
     
+    /*
     permitted = new Quilt();
     permitted.addPatch(screenRect, true);
     permitted.addPatch(new Rectangle(100, 100, 800, 600), false);
     permitted.addPatch(new Rectangle(400, 150, 300, 200), true);
+    */
 
     // Profiling code below.
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 10; i++) {
       System.out.println(i);
       for (int y = 0; y < image.getHeight(); y++) {
         int     censorRun        = 0;
@@ -118,6 +124,6 @@ public final class ScreenCensor {
         }
       }
     }
-    ImageDebugDialog.showImage(image);
+    ImageDebugFrame.showImage(image);
   }
 }

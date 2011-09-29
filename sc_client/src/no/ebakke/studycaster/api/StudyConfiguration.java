@@ -3,8 +3,6 @@ package no.ebakke.studycaster.api;
 import javax.swing.filechooser.FileFilter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -25,6 +23,8 @@ public class StudyConfiguration {
   private String openFileRemoteName;
   private String openFileLocalName;
   private String openFileRequirement;
+  private List<String> screenCastWhiteList;
+  private List<String> screenCastBlackList;
 
   public StudyConfiguration(InputStream xmlConfiguration, String configurationID)
       throws StudyCasterException, IOException
@@ -63,11 +63,9 @@ public class StudyConfiguration {
     Element uploadFile = ConfigurationUtil.getUniqueElement(conf, "uploadfile");
     Element fileFilter = ConfigurationUtil.getUniqueElement(uploadFile, "filefilter");
 
-    List<String> extensions = new ArrayList<String>();
-    for (Element elm : ConfigurationUtil.getElements(fileFilter, "extension"))
-      extensions.add(ConfigurationUtil.getTextContent(elm));
     // TODO: Use Apache Commons file filter classes instead.
-    uploadFileFilter = new MyFileNameExtensionFilter(extensions,
+    uploadFileFilter = new MyFileNameExtensionFilter(
+        ConfigurationUtil.getStrings(fileFilter, "extension"),
         ConfigurationUtil.getTextContent(
         ConfigurationUtil.getUniqueElement(fileFilter, "description")));
 
@@ -78,6 +76,10 @@ public class StudyConfiguration {
         ConfigurationUtil.getUniqueElement(openFile, "remotename"));
     openFileRequirement = ConfigurationUtil.getTextContent(
         ConfigurationUtil.getUniqueElement(openFile, "requirement"));
+
+    Element screencast = ConfigurationUtil.getUniqueElement(conf, "screencast");
+    screenCastWhiteList = ConfigurationUtil.getStrings(screencast, "whitelist");
+    screenCastBlackList = ConfigurationUtil.getStrings(screencast, "blacklist");
   }
 
   public String getInstructions() {
@@ -102,5 +104,13 @@ public class StudyConfiguration {
 
   public String getOpenFileRequirement() {
     return openFileRequirement;
+  }
+
+  public List<String> getScreenCastWhiteList() {
+    return screenCastWhiteList;
+  }
+
+  public List<String> getScreenCastBlackList() {
+    return screenCastBlackList;
   }
 }

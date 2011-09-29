@@ -17,6 +17,23 @@
         </p>
       </html>
     </instructions>
+    <screencast>
+      <whitelist>Excel</whitelist>
+      <whitelist>Calc</whitelist>
+      <whitelist>Numbers</whitelist>
+      <whitelist>Gnumeric</whitelist>
+      <whitelist>KSpread</whitelist>
+      <whitelist>Quattro</whitelist>
+      <whitelist>Mesa</whitelist>
+      <whitelist>Spreadsheet Study Application</whitelist>
+      <blacklist>Firefox</blacklist>
+      <blacklist>Internet Explorer</blacklist>
+      <blacklist>Chrome</blacklist>
+      <blacklist>Safari</blacklist>
+      <blacklist>Opera</blacklist>
+      <blacklist>Thunderbird</blacklist>
+      <blacklist>Outlook</blacklist>
+    </screencast>
   </macrodef>
 
   <macrodef id="uploadfile-excel">

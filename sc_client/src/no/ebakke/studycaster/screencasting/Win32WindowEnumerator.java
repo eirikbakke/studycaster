@@ -44,14 +44,14 @@ final class Win32WindowEnumerator implements WindowEnumerator {
           return true;
         // Add in reverse order.
         ret.add(0, new WindowInfo(
-            getWindowLocation(hWnd), getWindowTitle(hWnd), getWindowPID(hWnd)));
+            getWindowBounds(hWnd), getWindowTitle(hWnd), getWindowPID(hWnd)));
         return true;
       }
     }, null);
     return ret;
   }
 
-  private static Rectangle getWindowLocation(HWND hWnd) {
+  private static Rectangle getWindowBounds(HWND hWnd) {
     RECT ret = new RECT();
     User32.INSTANCE.GetWindowRect(hWnd, ret);
     return new Rectangle(

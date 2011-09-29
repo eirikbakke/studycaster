@@ -1,5 +1,6 @@
 package no.ebakke.studycaster.api;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +18,7 @@ final class ConfigurationUtil {
   public static void resolveMacrosInternal(Map<String,Element> macroDefs, Element parent)
       throws StudyCasterException
   {
-    for (Element macroElm : XMLUtil.getElements(parent, XMLNS_SC, "macro")) {
+    for (Element macroElm : getElements(parent, "macro")) {
       String macroID = macroElm.getAttribute("id");
       Element macroDef = macroDefs.get(macroID);
       // TODO: Escape error message.
@@ -40,7 +41,7 @@ final class ConfigurationUtil {
 
   public static void resolveMacros(Element root) throws StudyCasterException {
     Map<String,Element> macroDefs = new LinkedHashMap<String,Element>();
-    for (Element elm : XMLUtil.getElements(root, XMLNS_SC, "macrodef")) {
+    for (Element elm : getElements(root, "macrodef")) {
       Element stored = (Element) elm.cloneNode(true);
       root.removeChild(elm);
       resolveMacrosInternal(macroDefs, stored);
@@ -62,6 +63,13 @@ final class ConfigurationUtil {
 
   public static List<Element> getElements(Node parent, String localName) {
     return XMLUtil.getElements(parent, XMLNS_SC, localName);
+  }
+
+  public static List<String> getStrings(Node parent, String localName) throws StudyCasterException {
+    List<String> ret = new ArrayList<String>();
+    for (Element elm : getElements(parent, localName))
+      ret.add(getTextContent(elm));
+    return ret;
   }
 
   public static Element getUniqueElement(Node parent, String localName, String attrName,

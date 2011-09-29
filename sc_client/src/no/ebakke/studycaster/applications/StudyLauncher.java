@@ -81,9 +81,9 @@ public final class StudyLauncher {
       sc = new StudyCaster();
       // TODO: Parameterize this.
       sc.startRecording(new ScreenCensor(
-          Arrays.asList(new String[] {"StudyCaster", "User Study Console", "Excel", "Calc", "Numbers", "Gnumeric", "KSpread", "Quattro", "Mesa", "Spreadsheet Study Application", "StudyCaster"}),
-          Arrays.asList(new String[] {"Firefox", "Internet Explorer", "Outlook", "Chrome", "Safari", "Upload and Retrieve Confirmation Code", "Open Sample File"}),
-          true));
+          configuration.getScreenCastWhiteList(),
+          configuration.getScreenCastBlackList(),
+          true, true));
       scui.getProgressBarUI().setProgress(50);
       scui.getProgressBarUI().setTaskAppearance("Downloading sample file...", false);
 
@@ -170,7 +170,7 @@ public final class StudyLauncher {
 
           scui.showMessageDialog("Upload",
                   "<html>Please edit, save, and close the file, then try again.<br><br>" +
-                  "(The document should have opened in a new window, possibly in the background.)<br>" +
+                  "(The file should have opened in a new window, possibly in the background.)<br>" +
                   "</html>"
                   , JOptionPane.WARNING_MESSAGE);
         } else if (!Util.fileAvailableExclusive(selectedFile)) {

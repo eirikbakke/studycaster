@@ -4,22 +4,25 @@ import java.awt.Rectangle;
 import java.util.List;
 
 public interface WindowEnumerator {
-  /** Return information about visible windows ordered rear-to-front. */
+  /** Return a list of visible windows on the screen, ordered rear-to-front. (Windows that are
+  partially or completely obscured by other windows may be included despite not being literally
+  visible.) */
   public List<WindowInfo> getWindowList();
 
   public static final class WindowInfo {
-    private Rectangle location;
+    private Rectangle bounds;
     private String    title;
     private int       pid;
 
-    public WindowInfo(Rectangle location, String title, int pid) {
-      this.location = location;
-      this.title    = title;
-      this.pid      = pid;
+    public WindowInfo(Rectangle bounds, String title, int pid) {
+      this.bounds = bounds;
+      this.title  = title;
+      this.pid    = pid;
+      
     }
 
-    public Rectangle getLocation() {
-      return location;
+    public Rectangle getBounds() {
+      return bounds;
     }
 
     public String getTitle() {
@@ -32,7 +35,7 @@ public interface WindowEnumerator {
 
     @Override
     public String toString() {
-      return pid + "\t" + location + "\t" + "\"" + title + "\"";
+      return pid + "\t" + bounds + "\t" + "\"" + title + "\"";
     }
   }
 }

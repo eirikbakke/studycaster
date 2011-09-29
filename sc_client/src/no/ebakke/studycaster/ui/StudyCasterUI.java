@@ -186,7 +186,7 @@ public class StudyCasterUI {
             "<html>The StudyCaster client found a file from an old session:<br>" + fileName +
             "<br><br>" +
             "Would you like to keep working on the existing file, or download a new one?</html>",
-            "Open Sample Document",
+            "Open Sample File",
             JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
             null, new String[] {downloadOption, existingOption}, existingOption);
         return res == JOptionPane.YES_OPTION;
