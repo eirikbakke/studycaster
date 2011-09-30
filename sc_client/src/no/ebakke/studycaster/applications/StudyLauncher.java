@@ -1,9 +1,7 @@
 package no.ebakke.studycaster.applications;
 
 import java.io.File;
-import javax.swing.filechooser.FileFilter;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
