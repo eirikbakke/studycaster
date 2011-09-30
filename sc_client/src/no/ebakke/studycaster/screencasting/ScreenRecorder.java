@@ -15,17 +15,19 @@ public class ScreenRecorder {
   private boolean stopped = true;
   private IOException storedException;
   private CaptureScheduler pointerRecorder, frameRecorder;
+  private ScreenRecorderConfiguration config;
+
   private CaptureTask pointerRecorderTask = new CaptureTask() {
     public void capture() {
       enc.capturePointer();
     }
 
     public double getMaxFrequency() {
-      return 15.0;
+      return config.getMaxPointerSamplingFrequency();
     }
 
     public double getMaxDutyCycle() {
-      return 0.1;
+      return config.getMaxPointerDutyCycle();
     }
 
     @Override
@@ -45,8 +47,9 @@ public class ScreenRecorder {
     }
 
     public double getMaxFrequency() {
+      double ret = config.getMaxFrameSamplingFrequency();
       if (nbos == null) {
-        return 5.0;
+        return ret;
       } else {
         // TODO: Find a less ad-hoc way of doing this.
         double fillLevel =
@@ -54,17 +57,17 @@ public class ScreenRecorder {
         if (fillLevel > 0.9) {
           return 0.0;
         } else if (fillLevel > 0.75) {
-          return 0.5;
+          return ret * 0.1;
         } else if (fillLevel > 0.50) {
-          return 1.0;
+          return ret * 0.2;
         } else {
-          return 5.0;
+          return ret;
         }
       }
     }
 
     public double getMaxDutyCycle() {
-      return 0.7;
+      return config.getMaxFrameDutyCycle();
     }
 
     @Override
@@ -73,9 +76,10 @@ public class ScreenRecorder {
     }
   };
 
-  public ScreenRecorder(OutputStream out, long serverSecondsAhead)
-      throws IOException, AWTException
+  public ScreenRecorder(OutputStream out, long serverSecondsAhead,
+      ScreenRecorderConfiguration config) throws IOException, AWTException
   {
+    this.config = config;
     // TODO: Get rid of this hack.
     if (out instanceof NonBlockingOutputStream)
       nbos = (NonBlockingOutputStream) out;

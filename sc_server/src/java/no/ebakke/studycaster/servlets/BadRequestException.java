@@ -6,7 +6,5 @@ public class BadRequestException extends Exception {
 
 	public BadRequestException(String message) {
 		super(message);
-    // TODO: Get rid of this.
-    System.err.println("Creating a BadRequestException: " + message);
 	}
 }

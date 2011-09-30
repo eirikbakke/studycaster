@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 import no.ebakke.studycaster.api.ServerContext;
 import no.ebakke.studycaster.api.StudyCasterException;
 import no.ebakke.studycaster.screencasting.ScreenRecorder;
+import no.ebakke.studycaster.screencasting.ScreenRecorderConfiguration;
 import no.ebakke.studycaster.util.stream.NonBlockingOutputStream;
 
 public final class ScreenCastExample {
@@ -22,7 +23,8 @@ public final class ScreenCastExample {
 
     NonBlockingOutputStream recordingStream = new NonBlockingOutputStream(RECORDING_BUFFER_SZ);
     ServerContext serverContext = new ServerContext();
-    ScreenRecorder recorder = new ScreenRecorder(recordingStream, serverContext.getServerSecondsAhead());
+    ScreenRecorder recorder = new ScreenRecorder(recordingStream,
+        serverContext.getServerSecondsAhead(), ScreenRecorderConfiguration.DEFAULT);
 
     recordingStream.connect(serverContext.uploadFile("screencast.ebc"));
 

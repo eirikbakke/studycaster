@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 import no.ebakke.studycaster.util.stream.NonBlockingOutputStream;
 import no.ebakke.studycaster.screencasting.ScreenCensor;
 import no.ebakke.studycaster.screencasting.ScreenRecorder;
+import no.ebakke.studycaster.screencasting.ScreenRecorderConfiguration;
 import no.ebakke.studycaster.util.stream.ConsoleTee;
 import org.apache.commons.io.IOUtils;
 
@@ -78,7 +79,8 @@ public class StudyCaster {
     });
     try {
       recordingStream.connect(serverContext.uploadFile("screencast.ebc"));
-      recorder = new ScreenRecorder(recordingStream, serverContext.getServerSecondsAhead());
+      recorder = new ScreenRecorder(recordingStream, serverContext.getServerSecondsAhead(),
+          ScreenRecorderConfiguration.DEFAULT);
     } catch (IOException e) {
       log.log(Level.WARNING, "Failed to initialize screen recorder", e);
     } catch (AWTException e) {

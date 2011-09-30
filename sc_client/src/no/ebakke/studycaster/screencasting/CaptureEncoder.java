@@ -55,7 +55,7 @@ public class CaptureEncoder extends Codec {
     }
   }
 
-  private final void encodeRun(byte code, int runLength) throws IOException {
+  private void encodeRun(byte code, int runLength) throws IOException {
     if (code == INDEX_REPEAT || runLength < 0)
       throw new AssertionError();
     if (runLength <= 6) {
@@ -87,7 +87,6 @@ public class CaptureEncoder extends Codec {
     return buf[y * width + (x / ScreenCensor.MOSAIC_WIDTH) * ScreenCensor.MOSAIC_WIDTH];
   }
 
-  // TODO: If pixel has no difference and was previously blurred, continue blurring.
   private void compressAndOutputFrame(BufferedImage frame, Quilt permittedArea)
       throws IOException
   {
@@ -106,9 +105,11 @@ public class CaptureEncoder extends Codec {
       boolean censorRunPermitted = false;
       int     censorRunRemaining  = 0;
       for (int x = 0; x < width; x++, i++) {
+        // Workaround for bug in Java 1.5. See comment in ScreenCastImage.
         if (newBuf[i] == INDEX_NO_DIFF || newBuf[i] == INDEX_REPEAT)
           newBuf[i] = 0;
 
+        // Screen censoring related.
         if (censorRunRemaining == 0) {
           censorRunRemaining = permittedArea.getHorizontalRunLength(x, y);
           censorRunPermitted = (censorRunRemaining > 0);
@@ -118,10 +119,12 @@ public class CaptureEncoder extends Codec {
           newBuf[i] = blurredPixel(newBuf, width, x, y);
         censorRunRemaining--;
 
-        byte oldCol = oldBuf[i];
-        byte newCol = newBuf[i];
-
+        // Apply differential between old and new frames.
+        final byte oldCol = oldBuf[i];
+        final byte newCol = newBuf[i];
         code = (newCol == oldCol) ? INDEX_NO_DIFF : newCol;
+
+        // Perform run-length encoding.
         if (code == currentRunCode) {
           currentRunLength++;
         } else {
