@@ -89,7 +89,7 @@ public final class Util {
     public void run() throws InterruptedException;
   }
 
-  public static void desktopOpenFile(File fileToOpen, String requiredApp)
+  public static void desktopOpenFile(File fileToOpen, String errorMessage)
       throws StudyCasterException
   {
     Class<?> desktopClass = null;
@@ -117,10 +117,9 @@ public final class Util {
         if (e.getCause() instanceof Error)
           throw (Error) e.getCause();
         if (e.getCause() instanceof IOException) {
-          String reqMsg = (requiredApp == null || requiredApp.equals("")) ? "" :
-              "; do you have " + requiredApp + " installed?";
-          throw new StudyCasterException("Failed to open the file " + fileToOpen.getName() +
-              reqMsg, e);
+          // TODO: Take whole string (with pattern for file name) from configuration.
+          throw new StudyCasterException("Failed to open the file " + fileToOpen.getName() + "; " +
+              errorMessage, e);
         }
       }
     } else {

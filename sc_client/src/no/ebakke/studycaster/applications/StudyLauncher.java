@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
-import no.ebakke.studycaster.api.StudyConfiguration;
+import no.ebakke.studycaster.configuration.StudyConfiguration;
 import no.ebakke.studycaster.api.ServerContext;
 import no.ebakke.studycaster.api.StudyCaster;
 import no.ebakke.studycaster.api.StudyCasterException;
@@ -87,7 +87,8 @@ public final class StudyLauncher {
       scui.getProgressBarUI().setProgress(50);
       scui.getProgressBarUI().setTaskAppearance("Downloading sample file...", false);
 
-      openedFile = new File(new File(System.getProperty("java.io.tmpdir")), configuration.getOpenFileLocalName());
+      openedFile = new File(new File(System.getProperty("java.io.tmpdir")),
+          configuration.getOpenFileConfiguration().getLocalName());
       if (openedFile.exists()) {
         StudyCaster.log.info("File to be downloaded already exists in temp directory");
 
@@ -124,15 +125,17 @@ public final class StudyLauncher {
         }
       }
       if (download)
-        sc.downloadFile(configuration.getOpenFileRemoteName(), openedFile);
+        sc.downloadFile(configuration.getOpenFileConfiguration().getRemoteName(), openedFile);
       scui.setDefaultFile(openedFile);
       lastModified1 = openedFile.lastModified();
       scui.getProgressBarUI().setProgress(75);
       scui.getProgressBarUI().setTaskAppearance("Opening sample file...", false);
       // TODO: Allow opening with a downloaded application.
       // TODO: When would this ever be the case?
-      if (Util.fileAvailableExclusive(openedFile))
-        Util.desktopOpenFile(openedFile, configuration.getOpenFileRequirement());
+      if (Util.fileAvailableExclusive(openedFile)) {
+        Util.desktopOpenFile(openedFile,
+            configuration.getOpenFileConfiguration().getErrorMessage());
+      }
       lastModified2 = openedFile.lastModified();
       scui.getProgressBarUI().setProgress(100);
       scui.setUploadEnabled(true);
@@ -140,9 +143,10 @@ public final class StudyLauncher {
       scui.getProgressBarUI().setProgress(0);
     } catch (StudyCasterException e) {
       StudyCaster.log.log(Level.SEVERE, "Can't Load User Study", e);
-      if (sc != null)
+      if (sc != null) {
         sc.concludeStudy();
-      sc.enterRemoteLogRecord("Failed to load user study");
+        sc.enterRemoteLogRecord("Failed to load user study");
+      }
       scui.showMessageDialog("Can't Load User Study", e.getLocalizedMessage(), JOptionPane.WARNING_MESSAGE);
       scui.disposeUI();
       return;

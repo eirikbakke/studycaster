@@ -1,10 +1,11 @@
-package no.ebakke.studycaster.api;
+package no.ebakke.studycaster.configuration;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.xml.transform.TransformerException;
+import no.ebakke.studycaster.api.StudyCasterException;
 import no.ebakke.studycaster.util.XMLUtil;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -15,7 +16,7 @@ final class ConfigurationUtil {
 
   private ConfigurationUtil() { }
 
-  public static void resolveMacrosInternal(Map<String,Element> macroDefs, Element parent)
+  public static void resolveMacrosInternal(Map<String,Element> macroDefs, Node parent)
       throws StudyCasterException
   {
     for (Element macroElm : getElements(parent, "macro")) {
@@ -72,10 +73,12 @@ final class ConfigurationUtil {
     return ret;
   }
 
-  public static Element getUniqueElement(Node parent, String localName, String attrName,
-      String attrValue) throws StudyCasterException
+  public static Element getUniqueElement(Node parent, String localName, boolean optional,
+      String attrName, String attrValue) throws StudyCasterException
   {
     List<Element> ret = XMLUtil.getElements(parent, XMLNS_SC, localName, attrName, attrValue);
+    if (optional && ret.isEmpty())
+      return null;
     if (ret.size() != 1) {
       // TODO: Escape.
       String attr = (attrName == null) ? "" : (" " + attrName + "=\"" + attrValue + "\"");
@@ -86,14 +89,20 @@ final class ConfigurationUtil {
     return ret.get(0);
   }
 
+  public static Element getUniqueElement(Node parent, String localName, boolean optional)
+      throws StudyCasterException
+  {
+    return getUniqueElement(parent, localName, optional, null, null);
+  }
+
   public static Element getUniqueElement(Node parent, String localName)
       throws StudyCasterException
   {
-    return getUniqueElement(parent, localName, null, null);
+    return getUniqueElement(parent, localName, false, null, null);
   }
 
   public static String getSwingCaption(Node parent, String localName) throws StudyCasterException {
-    return getSwingCaption(getUniqueElement(parent, localName));
+    return getSwingCaption(getUniqueElement(parent, localName, false));
   }
 
   public static String getTextContent(Element elm) throws StudyCasterException {
@@ -101,6 +110,12 @@ final class ConfigurationUtil {
     if (ret == null)
       throw new StudyCasterException("Expected text content in <" + elm.getTagName() + "> element");
     return ret;
+  }
+
+  public static String getTextContent(Node parent, String localName)
+      throws StudyCasterException
+  {
+    return getTextContent(getUniqueElement(parent, localName, false));
   }
 
   private static String getSwingCaption(Element elm) throws StudyCasterException {
@@ -120,5 +135,16 @@ final class ConfigurationUtil {
         throw new StudyCasterException("Unexpected XML transformation error", e);
       }
     }
+  }
+
+  public static <R> List<R> parseElements(List<Element> elms, ElementParser<R> parser) {
+    List<R> ret = new ArrayList<R>();
+    for (Element elm : elms)
+      ret.add(parser.parseElement(elm));
+    return ret;
+  }
+
+  public static interface ElementParser<R> {
+    R parseElement(Element elm);
   }
 }

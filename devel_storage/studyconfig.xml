@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <study xmlns="namespace://no.ebakke/studycaster-configuration">
-  <macrodef id="configuration-common">
+  <macrodef id="instructions">
     <instructions>
       <html xmlns="">
         <b>Instructions:</b>
@@ -17,6 +17,9 @@
         </p>
       </html>
     </instructions>
+  </macrodef>
+
+  <macrodef id="configuration-common">
     <screencast>
       <whitelist>Excel</whitelist>
       <whitelist>Calc</whitelist>
@@ -58,14 +61,21 @@
     </uploadfile>
   </macrodef>
 
+  <macrodef id="openfile-error-excel">
+    Do you have Excel or a compatible spreadsheet application installed?
+  </macrodef>
+
   <configuration id="5782" name="Recruiting">
     <macro id="configuration-common"/>
     <macro id="uploadfile-excel"/>
     <openfile>
       <remotename>currencies.xls</remotename>
       <localname>userstudyHIT_currencies.xls</localname>
-      <requirement>Excel or a compatible spreadsheet application</requirement>
+      <errormessage><macro id="openfile-error-excel"/></errormessage>
     </openfile>
+    <page>
+      <macro id="instructions"/>
+    </page>
   </configuration>
 
   <configuration id="6728" name="Main Excel">
@@ -74,8 +84,11 @@
     <openfile>
       <remotename>exflat.xls</remotename>
       <localname>userstudyHIT_coursecatalog.xls</localname>
-      <requirement>Excel or a compatible spreadsheet application</requirement>
+      <errormessage><macro id="openfile-error-excel"/></errormessage>
     </openfile>
+    <page>
+      <macro id="instructions"/>
+    </page>
   </configuration>
 
   <configuration id="1093" name="Main Related Worksheets">
@@ -84,8 +97,11 @@
     <openfile>
       <remotename>rsnest.rzw</remotename>
       <localname>userstudyHIT_coursecatalog.rzw</localname>
-      <requirement></requirement>
+      <errormessage>Unexpected error.</errormessage>
     </openfile>
+    <page>
+      <macro id="instructions"/>
+    </page>
   </configuration>
 </study>
 

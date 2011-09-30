@@ -93,6 +93,8 @@ public class StatusFrame extends javax.swing.JFrame {
 
   private void updateSizeAndLocation() {
     pack();
+    /* The following incantations were carefully derived through experimentation to work well with
+    a variety of screen resultions and window sizes. */
     Dimension sdim = Toolkit.getDefaultToolkit().getScreenSize();
     Dimension wdim = getSize();
     final int XMARGIN_MIN = 40;

@@ -1,4 +1,4 @@
-package no.ebakke.studycaster.api;
+package no.ebakke.studycaster.configuration;
 
 import javax.swing.filechooser.FileFilter;
 import java.io.IOException;
@@ -8,21 +8,22 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
+import no.ebakke.studycaster.api.StudyCasterException;
 import no.ebakke.studycaster.util.MyFileNameExtensionFilter;
 import no.ebakke.studycaster.util.XMLUtil;
 import org.xml.sax.SAXException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-
+/* TODO: Have a way for the server to test-parse the configuration, and read all configuration
+sections as well. */
 public class StudyConfiguration {
   private final boolean DEBUG_MACROS = false;
   private String name;
-  private String instructions;
   private FileFilter uploadFileFilter;
-  private String openFileRemoteName;
-  private String openFileLocalName;
-  private String openFileRequirement;
+  // TODO: Make this a list.
+  private PageConfiguration pageConfiguration;
+  private OpenFileConfiguration openFileConfiguration;
   private List<String> screenCastWhiteList;
   private List<String> screenCastBlackList;
 
@@ -56,9 +57,9 @@ public class StudyConfiguration {
       System.err.println("========================================================");
     }
 
-    Element conf = ConfigurationUtil.getUniqueElement(root, "configuration", "id", configurationID);
+    Element conf = ConfigurationUtil.getUniqueElement(root, "configuration", false, "id", configurationID);
     name         = ConfigurationUtil.getNonEmptyAttribute(conf, "name");
-    instructions = ConfigurationUtil.getSwingCaption(conf, "instructions");
+    pageConfiguration = new PageConfiguration(ConfigurationUtil.getUniqueElement(conf, "page"));
 
     Element uploadFile = ConfigurationUtil.getUniqueElement(conf, "uploadfile");
     Element fileFilter = ConfigurationUtil.getUniqueElement(uploadFile, "filefilter");
@@ -69,21 +70,16 @@ public class StudyConfiguration {
         ConfigurationUtil.getTextContent(
         ConfigurationUtil.getUniqueElement(fileFilter, "description")));
 
-    Element openFile = ConfigurationUtil.getUniqueElement(conf, "openfile");
-    openFileLocalName = ConfigurationUtil.getTextContent(
-        ConfigurationUtil.getUniqueElement(openFile, "localname"));
-    openFileRemoteName = ConfigurationUtil.getTextContent(
-        ConfigurationUtil.getUniqueElement(openFile, "remotename"));
-    openFileRequirement = ConfigurationUtil.getTextContent(
-        ConfigurationUtil.getUniqueElement(openFile, "requirement"));
+    openFileConfiguration = new OpenFileConfiguration(ConfigurationUtil.getUniqueElement(conf, "openfile"));
 
     Element screencast = ConfigurationUtil.getUniqueElement(conf, "screencast");
     screenCastWhiteList = ConfigurationUtil.getStrings(screencast, "whitelist");
     screenCastBlackList = ConfigurationUtil.getStrings(screencast, "blacklist");
   }
 
+  // TODO: Get rid of this.
   public String getInstructions() {
-    return instructions;
+    return pageConfiguration.getInstructions();
   }
 
   public String getName() {
@@ -94,16 +90,8 @@ public class StudyConfiguration {
     return uploadFileFilter;
   }
 
-  public String getOpenFileLocalName() {
-    return openFileLocalName;
-  }
-
-  public String getOpenFileRemoteName() {
-    return openFileRemoteName;
-  }
-
-  public String getOpenFileRequirement() {
-    return openFileRequirement;
+  public OpenFileConfiguration getOpenFileConfiguration() {
+    return openFileConfiguration;
   }
 
   public List<String> getScreenCastWhiteList() {
