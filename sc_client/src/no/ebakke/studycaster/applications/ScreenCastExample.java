@@ -19,13 +19,14 @@ public final class ScreenCastExample {
   public static void main(String args[])
       throws IOException, StudyCasterException, AWTException, InterruptedException
   {
-    System.setProperty("studycaster.server.uri", "http://localhost:8084/sc_server/client");
-
+    // Alternatively, can set studycaster.server.uri and call empty constructor.
+    ServerContext serverContext = new ServerContext("http://localhost:8084/sc_server/client");
     NonBlockingOutputStream recordingStream = new NonBlockingOutputStream(RECORDING_BUFFER_SZ);
-    ServerContext serverContext = new ServerContext();
     ScreenRecorder recorder = new ScreenRecorder(recordingStream,
         serverContext.getServerSecondsAhead(), ScreenRecorderConfiguration.DEFAULT);
 
+    /* If you just want to record to a local file instead, don't bother with the ServerContext
+    stuff; just provide a FileOutputStream here. */
     recordingStream.connect(serverContext.uploadFile("screencast.ebc"));
 
     recorder.start();
@@ -34,9 +35,10 @@ public final class ScreenCastExample {
 
     log.log(Level.INFO, "Finished recording. The confirmation code (launchTicket) is {0}",
         serverContext.getLaunchTicket());
+    /* If the recorder isn't stopped, it will keep on running in its own thread even if main()
+    returns. So don't let that happen. */
     recorder.stop();
     recorder.close();
     serverContext.close();
-
   }
 }

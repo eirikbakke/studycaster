@@ -80,7 +80,7 @@ public class ScreenRecorder {
       ScreenRecorderConfiguration config) throws IOException, AWTException
   {
     this.config = config;
-    // TODO: Get rid of this hack.
+    // TODO: Get rid of this abstraction violation.
     if (out instanceof NonBlockingOutputStream)
       nbos = (NonBlockingOutputStream) out;
     Rectangle screenRect = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());

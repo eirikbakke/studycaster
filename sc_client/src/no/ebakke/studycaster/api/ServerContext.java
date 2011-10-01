@@ -34,22 +34,27 @@ public class ServerContext {
   private static final String SERVERURI_PROP_NAME = "studycaster.server.uri";
   // TODO: Don't expose this.
   public  static final int    DEF_UPLOAD_CHUNK_SZ = 64 * 1024;
-  private static final String TICKET_STORE_FILENAME =
-      "sc_7403204709139484951.tmp";
+  private static final String TICKET_STORE_FILENAME = "sc_7403204709139484951.tmp";
   private URI    serverScriptURI;
   private String launchTicket;
   private long   serverSecondsAhead;
-  /* Keep the HttpClient in common for all requests to preserve the session
-  cookie. */
+  /* Keep the HttpClient in common for all requests to preserve the session cookie. */
   private DefaultHttpClient httpClient;
 
   public ServerContext() throws StudyCasterException {
-    String clientCookie = null;
     String serverScriptURIs = System.getProperty(SERVERURI_PROP_NAME);
     if (serverScriptURIs == null) {
       throw new StudyCasterException(
           "Property " + SERVERURI_PROP_NAME + " not set");
     }
+    init(serverScriptURIs);
+  }
+
+  public ServerContext(String serverScriptURIs) throws StudyCasterException {
+    init(serverScriptURIs);
+  }
+
+  private void init(String serverScriptURIs) throws StudyCasterException {
     StudyCaster.log.log(Level.INFO, "Using server URI {0}", serverScriptURIs);
     try {
       serverScriptURI = new URI(serverScriptURIs + "/api");
@@ -61,6 +66,7 @@ public class ServerContext {
     File ticketStore = new File(System.getProperty("java.io.tmpdir") +
         File.separator + TICKET_STORE_FILENAME);
     boolean writeTicketStore = true;
+    String clientCookie = null;
     try {
       BufferedReader br = new BufferedReader(new FileReader(ticketStore));
       try {
