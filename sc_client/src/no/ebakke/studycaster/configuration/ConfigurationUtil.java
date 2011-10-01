@@ -19,7 +19,7 @@ final class ConfigurationUtil {
   public static void resolveMacrosInternal(Map<String,Element> macroDefs, Node parent)
       throws StudyCasterException
   {
-    for (Element macroElm : getElements(parent, "macro")) {
+    for (Element macroElm : getElements(parent, "macro", false)) {
       String macroID = macroElm.getAttribute("id");
       Element macroDef = macroDefs.get(macroID);
       // TODO: Escape error message.
@@ -42,7 +42,7 @@ final class ConfigurationUtil {
 
   public static void resolveMacros(Element root) throws StudyCasterException {
     Map<String,Element> macroDefs = new LinkedHashMap<String,Element>();
-    for (Element elm : getElements(root, "macrodef")) {
+    for (Element elm : getElements(root, "macrodef", false)) {
       Element stored = (Element) elm.cloneNode(true);
       root.removeChild(elm);
       resolveMacrosInternal(macroDefs, stored);
@@ -62,43 +62,43 @@ final class ConfigurationUtil {
     return ret;
   }
 
-  public static List<Element> getElements(Node parent, String localName) {
-    return XMLUtil.getElements(parent, XMLNS_SC, localName);
+  public static List<Element> getElements(Node parent, String localName, boolean required)
+      throws StudyCasterException
+  {
+    List<Element> ret = XMLUtil.getElements(parent, XMLNS_SC, localName);
+    if (required && ret.isEmpty()) {
+      throw new StudyCasterException(
+          "Expected one or more <" + localName + " xmlns=\"" + XMLNS_SC + "> elements");
+    }
+    return ret;
   }
 
   public static List<String> getStrings(Node parent, String localName) throws StudyCasterException {
     List<String> ret = new ArrayList<String>();
-    for (Element elm : getElements(parent, localName))
+    for (Element elm : getElements(parent, localName, false))
       ret.add(getTextContent(elm));
     return ret;
-  }
-
-  public static Element getUniqueElement(Node parent, String localName, boolean optional,
-      String attrName, String attrValue) throws StudyCasterException
-  {
-    List<Element> ret = XMLUtil.getElements(parent, XMLNS_SC, localName, attrName, attrValue);
-    if (optional && ret.isEmpty())
-      return null;
-    if (ret.size() != 1) {
-      // TODO: Escape.
-      String attr = (attrName == null) ? "" : (" " + attrName + "=\"" + attrValue + "\"");
-      throw new StudyCasterException(
-          "Expected a single <" + localName + " xmlns=\"" + XMLNS_SC + "\"" + attr + "> element, " +
-          "got " + ret.size());
-    }
-    return ret.get(0);
   }
 
   public static Element getUniqueElement(Node parent, String localName, boolean optional)
       throws StudyCasterException
   {
-    return getUniqueElement(parent, localName, optional, null, null);
+    List<Element> ret = XMLUtil.getElements(parent, XMLNS_SC, localName);
+    if (optional && ret.isEmpty())
+      return null;
+    if (ret.size() != 1) {
+      // TODO: Escape.
+      throw new StudyCasterException(
+          "Expected a single <" + localName + " xmlns=\"" + XMLNS_SC + "\"> element, got " +
+          ret.size());
+    }
+    return ret.get(0);
   }
 
   public static Element getUniqueElement(Node parent, String localName)
       throws StudyCasterException
   {
-    return getUniqueElement(parent, localName, false, null, null);
+    return getUniqueElement(parent, localName, false);
   }
 
   public static String getSwingCaption(Node parent, String localName) throws StudyCasterException {
@@ -137,7 +137,9 @@ final class ConfigurationUtil {
     }
   }
 
-  public static <R> List<R> parseElements(List<Element> elms, ElementParser<R> parser) {
+  public static <R> List<R> parseElements(List<Element> elms, ElementParser<R> parser)
+      throws StudyCasterException
+  {
     List<R> ret = new ArrayList<R>();
     for (Element elm : elms)
       ret.add(parser.parseElement(elm));
@@ -145,6 +147,6 @@ final class ConfigurationUtil {
   }
 
   public static interface ElementParser<R> {
-    R parseElement(Element elm);
+    R parseElement(Element elm) throws StudyCasterException;
   }
 }

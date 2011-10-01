@@ -1,5 +1,6 @@
 package no.ebakke.studycaster.configuration;
 
+import java.util.List;
 import no.ebakke.studycaster.api.StudyCasterException;
 import org.w3c.dom.Element;
 
@@ -14,11 +15,21 @@ public class PageConfiguration {
       openFileConfiguration = new OpenFileConfiguration(openFileElm);
   }
 
+  public static List<PageConfiguration> parse(Element parent) throws StudyCasterException {
+    return ConfigurationUtil.parseElements(ConfigurationUtil.getElements(parent, "page", true),
+        new ConfigurationUtil.ElementParser<PageConfiguration>()
+    {
+      public PageConfiguration parseElement(Element elm) throws StudyCasterException {
+        return new PageConfiguration(elm);
+      }
+    });
+  }
+
   public String getInstructions() {
     return instructions;
   }
 
-  public OpenFileConfiguration getopenFileConfiguration() {
+  public OpenFileConfiguration getOpenFileConfiguration() {
     return openFileConfiguration;
   }
 }

@@ -66,8 +66,8 @@ public final class StudyLauncher {
     try {
       serverContext = new ServerContext();
       try {
-        configuration =
-            new StudyConfiguration(serverContext.downloadFile("studyconfig.xml"), configurationID);
+        configuration = StudyConfiguration.parseConfiguration(
+            serverContext.downloadFile("studyconfig.xml"), configurationID);
       } catch (IOException e) {
         throw new StudyCasterException("Error retrieving configuration file", e);
       }

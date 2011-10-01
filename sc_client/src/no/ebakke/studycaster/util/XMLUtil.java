@@ -30,12 +30,6 @@ public final class XMLUtil {
   }
 
   public static List<Element> getElements(Node parent, String namespaceURI, String localName) {
-    return getElements(parent, namespaceURI, localName, null, null);
-  }
-
-  public static List<Element> getElements(
-      Node parent, String namespaceURI, String localName, String attrName, String attrValue)
-  {
     List<Element> ret = new ArrayList<Element>();
     for (Node node : getNonEmptyChildNodes(parent)) {
       if (!(node instanceof Element))
@@ -43,8 +37,7 @@ public final class XMLUtil {
       Element elm = (Element) node;
       if ((namespaceURI == null && elm.getNamespaceURI() == null ||
           namespaceURI != null && namespaceURI.equals(elm.getNamespaceURI())) &&
-          elm.getLocalName().equals(localName) &&
-          (attrName == null || elm.getAttribute(attrName).equals(attrValue)))
+          elm.getLocalName().equals(localName))
       {
         ret.add((Element) node);
       }

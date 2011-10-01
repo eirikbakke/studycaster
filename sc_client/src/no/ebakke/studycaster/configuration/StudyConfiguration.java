@@ -3,6 +3,7 @@ package no.ebakke.studycaster.configuration;
 import javax.swing.filechooser.FileFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -18,16 +19,15 @@ import org.w3c.dom.Element;
 /* TODO: Have a way for the server to test-parse the configuration, and read all configuration
 sections as well. */
 public class StudyConfiguration {
-  private final boolean DEBUG_MACROS = false;
+  private static final boolean DEBUG_MACROS = false;
   private String name;
   private FileFilter uploadFileFilter;
-  // TODO: Make this a list.
-  private PageConfiguration pageConfiguration;
+  private List<PageConfiguration> pageConfiguration;
   private OpenFileConfiguration openFileConfiguration;
   private List<String> screenCastWhiteList;
   private List<String> screenCastBlackList;
 
-  public StudyConfiguration(InputStream xmlConfiguration, String configurationID)
+  public static StudyConfiguration parseConfiguration(InputStream xml, String configurationID)
       throws StudyCasterException, IOException
   {
     DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -40,7 +40,7 @@ public class StudyConfiguration {
       throw new StudyCasterException("Error initializing XML parser", e);
     }
     try {
-      configDoc = db.parse(xmlConfiguration);
+      configDoc = db.parse(xml);
     } catch (SAXException e) {
       throw new StudyCasterException("Error parsing configuration file", e);
     }
@@ -56,10 +56,21 @@ public class StudyConfiguration {
       }
       System.err.println("========================================================");
     }
+    // While we're only interested in one configuration here, parse all of them to detect errors.
+    List<StudyConfiguration> ret = new ArrayList<StudyConfiguration>();
+    for (Element elm : ConfigurationUtil.getElements(root, "configuration", true)) {
+      StudyConfiguration conf = new StudyConfiguration(elm);
+      if (elm.getAttribute("id").equals(configurationID))
+        ret.add(conf);
+    }
+    if (ret.size() != 1)
+      throw new StudyCasterException("Expected exactly one matching study configuration.");
+    return ret.get(0);
+  }
 
-    Element conf = ConfigurationUtil.getUniqueElement(root, "configuration", false, "id", configurationID);
-    name         = ConfigurationUtil.getNonEmptyAttribute(conf, "name");
-    pageConfiguration = new PageConfiguration(ConfigurationUtil.getUniqueElement(conf, "page"));
+  private StudyConfiguration(Element conf) throws StudyCasterException, IOException {
+    name              = ConfigurationUtil.getNonEmptyAttribute(conf, "name");
+    pageConfiguration = PageConfiguration.parse(conf);
 
     Element uploadFile = ConfigurationUtil.getUniqueElement(conf, "uploadfile");
     Element fileFilter = ConfigurationUtil.getUniqueElement(uploadFile, "filefilter");
@@ -79,7 +90,9 @@ public class StudyConfiguration {
 
   // TODO: Get rid of this.
   public String getInstructions() {
-    return pageConfiguration.getInstructions();
+    if (pageConfiguration.size() != 1)
+      throw new UnsupportedOperationException();
+    return pageConfiguration.get(0).getInstructions();
   }
 
   public String getName() {
