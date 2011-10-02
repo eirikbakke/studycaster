@@ -90,8 +90,9 @@ public class FileServlet extends HttpServlet {
    * @param content Whether the request body should be written (GET) or not (HEAD).
    * @throws IOException If something fails at I/O level.
    */
-  private void processRequest(HttpServletRequest request, HttpServletResponse response, boolean content)
-      throws IOException, ServletException {
+  private void processRequest(HttpServletRequest request, HttpServletResponse response,
+      boolean content) throws IOException, ServletException
+  {
     // Added for StudyCaster.
     if (!BackendUtil.isAdminLoggedIn(request, null)) {
       response.sendError(HttpServletResponse.SC_FORBIDDEN, "Not logged in.");

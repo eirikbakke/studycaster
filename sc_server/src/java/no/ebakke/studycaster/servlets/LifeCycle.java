@@ -4,6 +4,8 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Enumeration;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -12,6 +14,7 @@ import no.ebakke.studycaster.backend.Backend;
 import org.hibernate.SessionFactory;
 
 public class LifeCycle implements ServletContextListener {
+  private static final Logger LOG          = Logger.getLogger("no.ebakke.studycaster");
   private static final String BACKEND_ATTR = "StudyCasterBackend";
 
   public static SessionFactory getSessionFactory(ServletRequest req) {
@@ -36,7 +39,7 @@ public class LifeCycle implements ServletContextListener {
       Class.forName("org.apache.derby.jdbc.ClientDriver");
       Class.forName("com.mysql.jdbc.Driver");
     } catch (ClassNotFoundException e) {
-      throw new AssertionError(e);
+      LOG.log(Level.SEVERE, "Failed to register bundled JDBC driver; {0}", e.getMessage());
     }
 
     ServletContext ctx = sce.getServletContext();
@@ -63,8 +66,7 @@ public class LifeCycle implements ServletContextListener {
           DriverManager.deregisterDriver(driver);
         }
       } catch (SQLException e) {
-        // TODO: Do proper logging.
-        e.printStackTrace();
+        LOG.log(Level.SEVERE, "Could not deregister JDBC driver; {0}", e.getMessage());
       }
     }
 

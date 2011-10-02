@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.util.Date;
 import java.util.Map;
 import java.util.Random;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -21,6 +22,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
 
 @WebServlet(name = "APIServlet", urlPatterns = {"/client/api"})
 public class APIServlet extends HttpServlet {
+  private static final Logger LOG                 = Logger.getLogger("no.ebakke.studycaster");
   private static final long   serialVersionUID    = 1L;
   private static final int    MAX_FILE_SIZE       = 50000000;
   private static final int    MAX_APPEND_CHUNK    = 1024 * 256;
@@ -129,8 +131,7 @@ public class APIServlet extends HttpServlet {
               os.close();
             }
           } else {
-            // TODO: Do proper logging.
-            System.err.println("Warning: Ignored double append.");
+            LOG.warning("Ignored double append.");
           }
         } finally {
           is.close();
