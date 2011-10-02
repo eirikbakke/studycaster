@@ -1,5 +1,6 @@
 package no.ebakke.studycaster.screencasting;
 
+import com.xuggle.xuggler.Configuration;
 import com.xuggle.xuggler.ICodec;
 import com.xuggle.xuggler.IContainer;
 import com.xuggle.xuggler.IPacket;
@@ -14,11 +15,14 @@ import java.awt.image.BufferedImage;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Properties;
 import no.ebakke.studycaster.api.StudyCaster;
 
 public final class RecordingConverter {
+  public static final String FILE_EXTENSION = "mp4";
+
   private RecordingConverter() { }
-  
+
   public static void convert(InputStream input, String fileTo, int speedUpFactor)
       throws IOException
   {
@@ -28,27 +32,28 @@ public final class RecordingConverter {
     IContainer outContainer = IContainer.make();
     if (outContainer.open(fileTo, IContainer.Type.WRITE, null) < 0)
       throw new IOException("Could not open output file");
+
     IStream outStream = outContainer.addNewStream(0);
     IStreamCoder outStreamCoder = outStream.getStreamCoder();
-    // com.xuggle.xuggler.ICodec@53610016[type=CODEC_TYPE_VIDEO;id=CODEC_ID_THEORA;name=theora
-    // com.xuggle.xuggler.ICodec@53617504[type=CODEC_TYPE_VIDEO;id=CODEC_ID_THEORA;name=libtheora
-    //ICodec codec = ICodec.findDecodingCodec(ICodec.ID.CODEC_ID_THEORA);
-    ICodec codec =
-        ICodec.guessEncodingCodec(null, null, fileTo, null, ICodec.Type.CODEC_TYPE_VIDEO);
-    IRational frameRate = IRational.make(24, 1);
-    IPixelFormat.Type pixelFormat = IPixelFormat.Type.YUV420P; /* YUV420P, YUV422P, YUV444P */
-    outStreamCoder.setCodec(codec);
-    outStreamCoder.setNumPicturesInGroupOfPictures(10);
-    outStreamCoder.setBitRate(25000);
-    outStreamCoder.setBitRateTolerance(9000);
+
+    outStreamCoder.setCodec(ICodec.ID.CODEC_ID_H264);
+
+    // TODO: Allow a preset file to be specified on the command line.
+    InputStream in = RecordingConverter.class.getResourceAsStream(
+        "/no/ebakke/studycaster/screencasting/libx264.ffpreset");
+    if (in == null)
+      throw new IOException("Could not find bundled ffmpeg preset file.");
+    Properties ffpreset = new Properties();
+    ffpreset.load(in);
+    if (Configuration.configure(ffpreset, outStreamCoder) != 0)
+      throw new IOException("Could not configure ffmpeg from preset file");
+
+    final IPixelFormat.Type pixelFormat = IPixelFormat.Type.YUV420P; /* YUV420P, YUV422P, YUV444P */
     outStreamCoder.setPixelType(pixelFormat);
     outStreamCoder.setWidth(dec.getDimension().width);
     outStreamCoder.setHeight(dec.getDimension().height);
-    outStreamCoder.setFlag(IStreamCoder.Flags.FLAG_QSCALE, true); // false?
-    outStreamCoder.setGlobalQuality(0);
-    outStreamCoder.setFrameRate(frameRate);
-    outStreamCoder.setTimeBase(IRational.make(frameRate.getDenominator(),
-        frameRate.getNumerator()));
+    outStreamCoder.setTimeBase(IRational.make(1, 24));
+
     outStreamCoder.open();
     outContainer.writeHeader();
 

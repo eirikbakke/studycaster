@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<study xmlns="namespace://no.ebakke/studycaster-configuration">
+<study xmlns="namespace://ebakke.no/studycaster-configuration">
   <macrodef id="instructions">
     <instructions>
       <html xmlns="">

@@ -29,7 +29,8 @@ public final class Converter {
       System.err.println("Input file extension should be '.ebc'");
       return;
     }
-    String outputFileName = inputFileName.substring(0, inputFileName.length() - 4) + "_" + speedUpFactor + ".mkv";
+    String outputFileName = inputFileName.substring(0, inputFileName.length() - 4) + "_" +
+        speedUpFactor + "." + RecordingConverter.FILE_EXTENSION;
     File outFile = new File(outputFileName);
     File tmpFile = new File(outFile.getParentFile(), "~" + outFile.getName());
     if (outFile.exists()) {

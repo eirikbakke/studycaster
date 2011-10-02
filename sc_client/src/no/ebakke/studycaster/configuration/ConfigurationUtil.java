@@ -12,7 +12,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 final class ConfigurationUtil {
-  private static final String XMLNS_SC = "namespace://no.ebakke/studycaster-configuration";
+  private static final String XMLNS_SC = "namespace://ebakke.no/studycaster-configuration";
 
   private ConfigurationUtil() { }
 
