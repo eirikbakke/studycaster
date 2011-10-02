@@ -4,7 +4,6 @@
  *  - Replaced local path determination code.
  *  - Added @WebServlet annotation.
  *  - Intercepted MIME type determination.
- *  - Changed package.
  */
 
 /*
@@ -23,7 +22,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with this library.
  * If not, see <http://www.gnu.org/licenses/>.
  */
-package no.ebakke.studycaster.servlets;
+package net.balusc.webapp;
 
 import java.io.Closeable;
 import java.io.File;
@@ -43,6 +42,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import no.ebakke.studycaster.backend.BackendUtil;
+import no.ebakke.studycaster.servlets.BadRequestException;
+import no.ebakke.studycaster.servlets.LifeCycle;
+import no.ebakke.studycaster.servlets.ServletUtil;
 
 /**
  * A file servlet supporting resume of downloads and client-side caching and GZIP of text content.
