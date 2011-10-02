@@ -30,7 +30,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 
 public final class ServletUtil {
-  private static Random random = new Random();
   private ServletUtil() { }
 
   // See http://stackoverflow.com/questions/675730 .
@@ -203,21 +202,19 @@ public final class ServletUtil {
     }
   }
 
-  public static byte[] randomBytes(int length) {
+  public static byte[] randomBytes(Random random, int length) {
     byte[] ret = new byte[length];
     random.nextBytes(ret);
     return ret;
   }
 
-  public static void sendFile(HttpServletResponse resp, File input, boolean attachment)
+  public static void sendFile(HttpServletResponse resp, File input, String mimeType)
       throws IOException, BadRequestException
   {
-    if (attachment) {
-      resp.setContentType("application/octet-stream");
+    resp.setContentType(mimeType);
+    if (mimeType.equals("application/octet-stream")) {
       resp.setHeader("Content-Disposition",
           "attachment; filename=" + input.getName());
-    } else {
-      resp.setContentType("text/plain");
     }
     long length = input.length();
     if (length > Integer.MAX_VALUE)

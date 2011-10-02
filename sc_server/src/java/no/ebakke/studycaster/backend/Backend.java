@@ -13,7 +13,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.SessionFactoryImplementor;
 
 public final class Backend {
-  public  static final Backend INSTANCE = new Backend();
   private static final String HCU_KEY = "hibernate.connection.url";
   private static final String HDA_KEY = "hibernate.hbm2ddl.auto";
   private SessionFactory   sessionFactory;
@@ -29,8 +28,7 @@ public final class Backend {
 
   public Backend(BackendConfiguration config, String createAndSetPassword) {
     try {
-      sessionFactory = buildSessionFactory(config.getDatabaseURL(),
-          createAndSetPassword);
+      sessionFactory = buildSessionFactory(config.getDatabaseURL(), createAndSetPassword);
     } catch (BackendException e) {
       sessionFactoryError = e;
     }
@@ -80,8 +78,7 @@ public final class Backend {
     } else {
       // See http://stackoverflow.com/questions/1571928/retrieve-auto-detected-hibernate-dialect .
       if (sessionFactory instanceof SessionFactoryImplementor) {
-        return "OK, " +
-          ((SessionFactoryImplementor) sessionFactory).getDialect().toString();
+        return "OK, " + ((SessionFactoryImplementor) sessionFactory).getDialect().toString();
       } else {
         return "OK, " + sessionFactory.toString();
       }
@@ -139,10 +136,6 @@ public final class Backend {
       String connectionURL, String createAndSetPassword) throws BackendException
   {
     try {
-      Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
-      Class.forName("org.apache.derby.jdbc.ClientDriver");
-      Class.forName("com.mysql.jdbc.Driver");
-
       Configuration conf = createHibernateConfiguration(connectionURL,
           createAndSetPassword != null);
       /* Try with regular JDBC first, as it gives better error messages for
@@ -164,8 +157,6 @@ public final class Backend {
         }
       }
       return ret;
-    } catch (ClassNotFoundException e) {
-      throw new BackendException(e);
     } catch (SQLException e) {
       throw new BackendException(e);
     } catch (HibernateException e) {
@@ -192,9 +183,15 @@ public final class Backend {
   }
 
   public void close() {
-    if (sessionFactory != null)
+    if (sessionFactory != null) {
       sessionFactory.close();
-    if (lookupService != null)
+      sessionFactory = null;
+    }
+    if (lookupService != null) {
       lookupService.close();
+      lookupService = null;
+    }
+    if (storageDir != null)
+      storageDir = null;
   }
 }

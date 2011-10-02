@@ -7,11 +7,12 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import no.ebakke.studycaster.backend.Backend;
 import no.ebakke.studycaster.backend.BackendUtil;
 
 @WebServlet(name = "DownloadServlet", urlPatterns = {"/download"})
 public class DownloadServlet extends HttpServlet {
+  private static final long serialVersionUID = 1L;
+
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp)
       throws ServletException, IOException
@@ -21,14 +22,23 @@ public class DownloadServlet extends HttpServlet {
       return;
     }
 
-    File storageDir = Backend.INSTANCE.getStorageDirectory();
+    File storageDir = LifeCycle.getBackend(req).getStorageDirectory();
     try {
       File input = ServletUtil.getSaneFile(storageDir,
           ServletUtil.getStringParam(req, "path"), false);
       if (!input.exists()) {
         resp.sendError(HttpServletResponse.SC_NOT_FOUND);
       } else {
-        ServletUtil.sendFile(resp, input, false);
+        String fileName = input.getName();
+        String mimeType;
+        if        (fileName.endsWith(".mp4")) {
+          mimeType = "video/mp4";
+        } else if (fileName.endsWith(".txt")) {
+          mimeType = "text/plain";
+        } else {
+          mimeType = "application/octet-stream";
+        }
+        ServletUtil.sendFile(resp, input, mimeType);
       }
     } catch (BadRequestException e) {
       resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());

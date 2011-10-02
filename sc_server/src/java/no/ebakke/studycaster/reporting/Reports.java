@@ -6,17 +6,18 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import no.ebakke.studycaster.backend.Backend;
 import no.ebakke.studycaster.backend.BackendUtil;
 import no.ebakke.studycaster.backend.Request;
 import no.ebakke.studycaster.servlets.ServletUtil;
 import no.ebakke.studycaster.util.ColUtil;
-import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.hibernate.SessionFactory;
 
 public final class Reports {
   private Reports() { }
 
-  public static List<Subject> getSubjectReport() {
+  public static List<Subject> getSubjectReport(SessionFactory sf) {
     // Each key is a launchTicket.
     Map<String,Date> firstRequest = ColUtil.newOrderedMap();
     Map<String,Date> lastRequest   = ColUtil.newOrderedMap();
@@ -25,7 +26,7 @@ public final class Reports {
 
     Linker<Request> linker = new Linker<Request>();
     // TODO: Only get DISTINCT the fields we care about for correlation.
-    for (Request r : BackendUtil.getRequests()) {
+    for (Request r : BackendUtil.getRequests(sf)) {
       Map<Pair<String,Boolean>,String> links = ColUtil.newOrderedMap();
       links.put(Pair.of("remoteAddrHash", true ), r.getRemoteAddrHash());
       links.put(Pair.of("clientCookie"  , true ), r.getClientCookie());
@@ -72,9 +73,10 @@ public final class Reports {
   }
 
   public static void main(String args[]) {
-    for (Subject s : getSubjectReport()) {
+    Backend backend = new Backend();
+    for (Subject s : getSubjectReport(backend.getSessionFactory()))
       System.out.println(s);
-    }
+    backend.close();
   }
 
   public static class Subject implements Comparable<Subject> {

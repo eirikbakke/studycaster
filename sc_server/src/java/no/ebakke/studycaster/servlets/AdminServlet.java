@@ -8,7 +8,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import no.ebakke.studycaster.backend.Backend;
 import no.ebakke.studycaster.backend.BackendConfiguration;
 import no.ebakke.studycaster.backend.BackendUtil;
 import no.ebakke.studycaster.reporting.Reports;
@@ -58,10 +57,11 @@ public class AdminServlet extends HttpServlet {
       if (pageType == null) {
         req.setAttribute("serverURLproperty" , BackendConfiguration.JDBC_URL_PROPERTY);
         req.setAttribute("storageDirProperty", BackendConfiguration.STORAGE_DIR_PROPERTY);
-        req.setAttribute("backendStatus", Backend.INSTANCE.getStatusMessage());
+        req.setAttribute("backendStatus", LifeCycle.getBackend(req).getStatusMessage());
         req.setAttribute("geoInfo", BackendUtil.getGeoInfo(req));
       } else if (pageType.equals("subjectReport")){
-        req.setAttribute("subjectReport", Reports.getSubjectReport());
+        req.setAttribute("subjectReport",
+            Reports.getSubjectReport(LifeCycle.getSessionFactory(req)));
         long highlightMinutes = 60;
         String highlightS = req.getParameter("highlight");
         if (highlightS != null) {

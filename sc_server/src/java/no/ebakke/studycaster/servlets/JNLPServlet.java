@@ -45,7 +45,7 @@ public class JNLPServlet extends HttpServlet {
     rd.forward(req, resp);
 
     // TODO: Reduce code duplication with APIServlet.
-    BackendUtil.storeRequest(new Request(new Date(), "jws", null,
+    BackendUtil.storeRequest(LifeCycle.getSessionFactory(req), new Request(new Date(), "jws", null,
         ServletUtil.toHex(ServletUtil.sha1("stick " + req.getRemoteAddr()),
         APIServlet.IPHASH_BYTES), BackendUtil.getGeoInfo(req), null, null,
         req.getParameter("ver")));

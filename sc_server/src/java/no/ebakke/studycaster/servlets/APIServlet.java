@@ -1,19 +1,18 @@
 package no.ebakke.studycaster.servlets;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
 import java.util.Map;
+import java.util.Random;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import no.ebakke.studycaster.backend.Backend;
 import no.ebakke.studycaster.backend.BackendUtil;
 import no.ebakke.studycaster.backend.Request;
 import org.apache.commons.fileupload.FileItem;
@@ -29,6 +28,7 @@ public class APIServlet extends HttpServlet {
   private static final int    LAUNCH_TICKET_BYTES = 6;
   public  static final int    IPHASH_BYTES        = 3;
   private static final String UPLOAD_DIR          = "uploads";
+  private Random random                           = new Random();
   // TODO: Figure out a better storage strategy.
 
   @Override
@@ -40,7 +40,7 @@ public class APIServlet extends HttpServlet {
         launchTicket = null;
     Long wroteContent = null;
 
-    File storageDir = Backend.INSTANCE.getStorageDirectory();
+    File storageDir = LifeCycle.getBackend(req).getStorageDirectory();
     File uploadDir = new File(storageDir, UPLOAD_DIR);
     uploadDir.mkdir();
 
@@ -52,7 +52,7 @@ public class APIServlet extends HttpServlet {
         if (!cmd.equals("gsi"))
           throw new BadRequestException("Missing launch ticket");
         launchTicket =
-            ServletUtil.toHex(ServletUtil.randomBytes(LAUNCH_TICKET_BYTES));
+            ServletUtil.toHex(ServletUtil.randomBytes(random, LAUNCH_TICKET_BYTES));
       }
 
       File ticketDir =
@@ -64,7 +64,7 @@ public class APIServlet extends HttpServlet {
         clientCookie = ServletUtil.getMultipartStringParam(multiPart, "arg");
         if (clientCookie.isEmpty()) {
           clientCookie =
-              ServletUtil.toHex(ServletUtil.randomBytes(CLIENT_COOKIE_BYTES));
+              ServletUtil.toHex(ServletUtil.randomBytes(random, CLIENT_COOKIE_BYTES));
         }
         resp.setHeader("X-StudyCaster-LaunchTicket", launchTicket.toString());
         resp.setHeader("X-StudyCaster-ClientCookie", clientCookie.toString());
@@ -144,7 +144,7 @@ public class APIServlet extends HttpServlet {
           resp.sendError(HttpServletResponse.SC_NOT_FOUND);
         } else {
           resp.setHeader("X-StudyCaster-OK", "dnl");
-          ServletUtil.sendFile(resp, input, true);
+          ServletUtil.sendFile(resp, input, "application/octet-stream");
         }
       } else {
         throw new BadRequestException("Invalid command \"" +
@@ -154,7 +154,8 @@ public class APIServlet extends HttpServlet {
       resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
     }
     // TODO: Split off locations into separate table.
-    BackendUtil.storeRequest(new Request(new Date(), cmd, wroteContent,
+    BackendUtil.storeRequest(LifeCycle.getSessionFactory(req),
+        new Request(new Date(), cmd, wroteContent,
         ServletUtil.toHex(ServletUtil.sha1("stick " + req.getRemoteAddr()),
         IPHASH_BYTES), BackendUtil.getGeoInfo(req), launchTicket, clientCookie,
         logEntry));

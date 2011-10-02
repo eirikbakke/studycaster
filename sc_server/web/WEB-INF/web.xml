@@ -6,6 +6,6 @@
          version="3.0">
   <display-name>StudyCaster Server</display-name>
   <listener>
-    <listener-class>no.ebakke.studycaster.servlets.ShutdownHook</listener-class>
+    <listener-class>no.ebakke.studycaster.servlets.LifeCycle</listener-class>
   </listener>
 </web-app>

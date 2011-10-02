@@ -1,6 +1,7 @@
 package no.ebakke.studycaster.backend;
 
 import java.util.Date;
+import org.hibernate.SessionFactory;
 
 public final class DomainTests {
   private DomainTests() { }
@@ -14,16 +15,20 @@ public final class DomainTests {
     System.out.println(r2);
     System.out.println(r3);
 
-    // TODO: Should I rather used "managed" sessions and close them explicitly?
-    BackendUtil.storeRequest(r1);
-    BackendUtil.storeRequest(r2);
-    BackendUtil.storeRequest(r3);
+    Backend backend = new Backend();
+    SessionFactory sf = backend.getSessionFactory();
 
-    System.out.println(BackendUtil.passwordMatches("This is a test."));
-    System.out.println(BackendUtil.passwordMatches("This is a test2."));
+    //BackendUtil.storeRequest(s, r1);
+    //BackendUtil.storeRequest(s, r2);
+    //BackendUtil.storeRequest(s, r3);
+
+    System.out.println(BackendUtil.passwordMatches(sf, "This is a test."));
+    System.out.println(BackendUtil.passwordMatches(sf, "This is a test2."));
 
     System.out.println("Loading requests:");
-    for (Request r : BackendUtil.getRequests())
+    for (Request r : BackendUtil.getRequests(sf))
       System.out.println(r);
+
+    backend.close();
   }
 }

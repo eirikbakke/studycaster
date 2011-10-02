@@ -19,6 +19,7 @@
 </form>
 
 <h2>Subject Report</h2>
+<p>Note: Screencast MP4 files are only available after manual conversion on the server.</p>
 <ol>
   <c:forEach items="${subjectReport}" var="subject">
     <li>
@@ -32,7 +33,9 @@
         <li><ol>
           <c:forEach items="${subject.launches}" var="launch">
             <li class="${launch.isLastRequestAfter(highlightMinutes * 60) ? 'recentLaunch' : 'oldLaunch'}">
-              Launch (<a href="download?path=uploads%2F${fn:escapeXml(launch.launchTicket)}%2Fconsole.txt">retrieve client log</a>)
+              <!-- TODO: Don't hardcode video encoding speedup. -->
+              Launch (<a href="download?path=uploads%2F${fn:escapeXml(launch.launchTicket)}%2Fconsole.txt">client log</a>,
+                      <a href="download?path=uploads%2F${fn:escapeXml(launch.launchTicket)}%2Fscreencast_8.mp4">screencast</a>)
               <ul>
               <li><span class="reportKey">launchTicket</span>  = <c:out value="${launch.launchTicket}"/></li>
               <li><span class="reportKey">firstRequest</span>  = <c:out value="${launch.firstRequest}"/></li>
