@@ -15,6 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.ServletResponse;
@@ -270,6 +271,17 @@ public final class ServletUtil {
       this.plural = plural;
       this.singular = singular;
       this.seconds = seconds;
+    }
+  }
+
+  public static String getMimeType(ServletContext ctx, String file) {
+    String lower = file.toLowerCase();
+    if (lower.endsWith(".mp4")) {
+      return "video/mp4";
+    } else if (lower.endsWith(".txt")) {
+      return "text/plain";
+    } else {
+      return ctx.getMimeType(file);
     }
   }
 

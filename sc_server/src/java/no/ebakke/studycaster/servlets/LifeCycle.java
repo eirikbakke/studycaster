@@ -31,8 +31,7 @@ public class LifeCycle implements ServletContextListener {
 
   @Override
   public void contextInitialized(ServletContextEvent sce) {
-    /* TODO: Don't bundle JDBC drivers; require them to be installed on the server instead.
-             See below as well. */
+    /* TODO: Don't bundle JDBC drivers; require them to be installed on the server instead. */
     try {
       Class.forName("org.apache.derby.jdbc.ClientDriver");
       Class.forName("com.mysql.jdbc.Driver");
