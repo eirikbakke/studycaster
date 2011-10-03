@@ -50,7 +50,7 @@ public class AdminActionsServlet extends HttpServlet {
       }
       resp.getWriter().print(msg);
     } catch (BadRequestException e) {
-      resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+      e.sendError(resp);
     }
   }
 }

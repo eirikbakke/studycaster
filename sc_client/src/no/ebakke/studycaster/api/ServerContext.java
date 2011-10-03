@@ -43,10 +43,8 @@ public class ServerContext {
 
   public ServerContext() throws StudyCasterException {
     String serverScriptURIs = System.getProperty(SERVERURI_PROP_NAME);
-    if (serverScriptURIs == null) {
-      throw new StudyCasterException(
-          "Property " + SERVERURI_PROP_NAME + " not set");
-    }
+    if (serverScriptURIs == null)
+      throw new StudyCasterException("Property " + SERVERURI_PROP_NAME + " not set");
     init(serverScriptURIs);
   }
 
@@ -86,24 +84,28 @@ public class ServerContext {
     long timeBef, timeAft;
     try {
       timeBef = System.currentTimeMillis();
-      ThreadSafeClientConnManager connectionManager =
-          new ThreadSafeClientConnManager();
+      ThreadSafeClientConnManager connectionManager = new ThreadSafeClientConnManager();
       httpClient = new DefaultHttpClient(connectionManager);
       httpClient.setHttpRequestRetryHandler(new HttpRequestRetryHandler() {
         public boolean retryRequest(IOException exception, int executionCount,
             HttpContext context)
         {
-          StudyCaster.log.log(Level.INFO,
-              "Waiting to retry request ({0} times)", executionCount);
-          try {
-            Thread.sleep(10000);
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+          if (exception instanceof NonRetriableException) {
+            StudyCaster.log.log(Level.WARNING,
+                "Non-retriable error encountered in HttpRequestRetryHandler");
+            return false;
+          } else {
+            StudyCaster.log.log(Level.INFO, "Waiting to retry request ({0} times)", executionCount);
+            try {
+              Thread.sleep(10000);
+            } catch (InterruptedException e) {
+              Thread.currentThread().interrupt();
+            }
+            return true;
           }
-          return true;
         }
       });
-      
+
       HttpResponse response = requestHelper(httpClient, "gsi", null,
           clientCookie == null ? "" : clientCookie);
       timeAft = System.currentTimeMillis();
@@ -171,6 +173,8 @@ public class ServerContext {
         ret = requestHelperSingle(httpClient, cmd, content, arg);
       } catch (IOException e) {
         StudyCaster.log.log(Level.WARNING, "Failed request beyond HttpClient", e);
+        if (e instanceof NonRetriableException)
+          throw e;
       }
       if (ret == null) {
         StudyCaster.log.log(Level.INFO, "Waiting to retry request");
@@ -178,6 +182,7 @@ public class ServerContext {
           Thread.sleep(10000);
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
+          throw new IOException("HTTP request retry thread interrupted");
         }
       }
     } while (ret == null);
@@ -203,7 +208,9 @@ public class ServerContext {
     try {
       if (response.getStatusLine().getStatusCode() != 200) {
         if (response.getStatusLine().getStatusCode() == 404)
-          throw new FileNotFoundException();
+          throw new NonRetriableException("Remote file not found");
+        if (response.getStatusLine().getStatusCode() == 403)
+          throw new NonRetriableException("Remote server denied operation");
 
         throw new IOException("Command " + cmd + " got bad status code " +
             response.getStatusLine().getReasonPhrase() + " (" +

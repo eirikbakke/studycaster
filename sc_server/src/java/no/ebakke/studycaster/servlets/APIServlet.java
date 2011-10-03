@@ -24,7 +24,8 @@ import org.apache.commons.lang3.StringEscapeUtils;
 public class APIServlet extends HttpServlet {
   private static final Logger LOG                 = Logger.getLogger("no.ebakke.studycaster");
   private static final long   serialVersionUID    = 1L;
-  private static final int    MAX_FILE_SIZE       = 50000000;
+  // TODO: Make this configurable.
+  private static final int    MAX_FILE_SIZE       = 500000000;
   private static final int    MAX_APPEND_CHUNK    = 1024 * 256;
   private static final int    CLIENT_COOKIE_BYTES = 6;
   private static final int    LAUNCH_TICKET_BYTES = 6;
@@ -117,8 +118,10 @@ public class APIServlet extends HttpServlet {
         logEntry = content.getName();
         File outFile = ServletUtil.getSaneFile(ticketDir, content.getName(), false);
         long existingLength = outFile.length();
-        if (existingLength + content.getSize() > MAX_FILE_SIZE)
-          throw new BadRequestException("File size reached limit");
+        if (existingLength + content.getSize() > MAX_FILE_SIZE) {
+          throw new BadRequestException("File size reached limit",
+              HttpServletResponse.SC_FORBIDDEN);
+        }
         InputStream is = content.getInputStream();
         try {
           // This test ensures idempotency.
@@ -152,7 +155,7 @@ public class APIServlet extends HttpServlet {
             StringEscapeUtils.escapeJava(cmd) + "\"");
       }
     } catch (BadRequestException e) {
-      resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+      e.sendError(resp);
     }
     // TODO: Split off locations into separate table.
     BackendUtil.storeRequest(LifeCycle.getSessionFactory(req),

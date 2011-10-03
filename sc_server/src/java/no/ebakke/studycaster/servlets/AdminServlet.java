@@ -81,7 +81,7 @@ public class AdminServlet extends HttpServlet {
       rd.forward(req, resp);
 
     } catch (BadRequestException e) {
-      resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+      e.sendError(resp);
     }
   }
 }

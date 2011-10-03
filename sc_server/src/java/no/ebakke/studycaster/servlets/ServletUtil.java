@@ -219,7 +219,7 @@ public final class ServletUtil {
     }
     long length = input.length();
     if (length > Integer.MAX_VALUE)
-      throw new BadRequestException("Requested file too large");
+      throw new BadRequestException("Requested file too large", HttpServletResponse.SC_FORBIDDEN);
     resp.setContentLength((int) length);
     // TODO: Check the number of bytes copied.
     InputStream is = new FileInputStream(input);
