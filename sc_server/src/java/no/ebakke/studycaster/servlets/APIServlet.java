@@ -25,7 +25,8 @@ public class APIServlet extends HttpServlet {
   private static final Logger LOG                 = Logger.getLogger("no.ebakke.studycaster");
   private static final long   serialVersionUID    = 1L;
   // TODO: Make this configurable.
-  private static final int    MAX_FILE_SIZE       = 500000000;
+  private static final long   MAX_FILE_SIZE       =  512 * 1024 * 1024;
+  private static final long   MIN_AVAILABLE_SPACE = 1024 * 1024 * 1024;
   private static final int    MAX_APPEND_CHUNK    = 1024 * 256;
   private static final int    CLIENT_COOKIE_BYTES = 6;
   private static final int    LAUNCH_TICKET_BYTES = 6;
@@ -120,6 +121,11 @@ public class APIServlet extends HttpServlet {
         long existingLength = outFile.length();
         if (existingLength + content.getSize() > MAX_FILE_SIZE) {
           throw new BadRequestException("File size reached limit",
+              HttpServletResponse.SC_FORBIDDEN);
+        }
+        if (outFile.getUsableSpace() < MIN_AVAILABLE_SPACE) {
+          LOG.severe("Server low on disk space");
+          throw new BadRequestException("Server low on disk space",
               HttpServletResponse.SC_FORBIDDEN);
         }
         InputStream is = content.getInputStream();
