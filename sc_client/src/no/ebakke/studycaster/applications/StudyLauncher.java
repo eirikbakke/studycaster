@@ -15,9 +15,10 @@ import no.ebakke.studycaster.ui.StudyCasterUI.UIAction;
 import no.ebakke.studycaster.util.Util;
 
 public final class StudyLauncher {
+  private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private StudyLauncher() { }
 
-  public static void main(String args[]) {
+  public static void main(String args[]) throws InterruptedException {
     // TODO: Get rid of this.
     args = new String[] { "5782" };
 
@@ -30,19 +31,19 @@ public final class StudyLauncher {
   }
 
   // TODO: Open the window before anything else, to allow force-quitting.
-  public static void runStudy(String configurationID) {
+  public static void runStudy(String configurationID) throws InterruptedException {
     final Logger log = Logger.getLogger("no.ebakke.studycaster");
     final StudyConfiguration configuration;
     final ServerContext serverContext;
 
-    StudyCaster.log.info("Entering initial log message to promote fail-fast behavior of potential ConsoleTee bugs.");
+    LOG.info("Entering initial log message to promote fail-fast behavior of potential ConsoleTee bugs.");
 
     StudyCasterUI scui;
 
     try {
       scui = new StudyCasterUI();
     } catch (StudyCasterException e) {
-      StudyCaster.log.log(Level.SEVERE, "Unexpected exception during UI initialization", e);
+      LOG.log(Level.SEVERE, "Unexpected exception during UI initialization", e);
       System.exit(0);
       return;
     }
@@ -54,7 +55,7 @@ public final class StudyLauncher {
         sc.enterRemoteLogRecord("User declined at consent dialog");
         sc.concludeStudy();
       } catch (StudyCasterException e) {
-        StudyCaster.log.warning("Failed to send consent-declined log message");
+        LOG.warning("Failed to send consent-declined log message");
       }
       System.exit(0);
     }
@@ -88,11 +89,11 @@ public final class StudyLauncher {
       openedFile = new File(new File(System.getProperty("java.io.tmpdir")),
           configuration.getOpenFileConfiguration().getLocalName());
       if (openedFile.exists()) {
-        StudyCaster.log.info("File to be downloaded already exists in temp directory");
+        LOG.info("File to be downloaded already exists in temp directory");
 
         while (true) {
           download = scui.showDownloadOrExistingDialog(Util.getPathString(openedFile));
-          StudyCaster.log.log(Level.INFO, "User chose to {0}", (download ? "download new file" : "keep existing file"));
+          LOG.log(Level.INFO, "User chose to {0}", (download ? "download new file" : "keep existing file"));
           // TODO: Move this mess out of here.
           if (download) {
             String path = openedFile.getPath();
@@ -140,12 +141,13 @@ public final class StudyLauncher {
       scui.getProgressBarUI().setTaskAppearance("", false);
       scui.getProgressBarUI().setProgress(0);
     } catch (StudyCasterException e) {
-      StudyCaster.log.log(Level.SEVERE, "Can't Load User Study", e);
+      LOG.log(Level.SEVERE, "Can''t Load User Study", e);
       if (sc != null) {
         sc.concludeStudy();
         sc.enterRemoteLogRecord("Failed to load user study");
       }
-      scui.showMessageDialog("Can't Load User Study", e.getLocalizedMessage(), JOptionPane.WARNING_MESSAGE);
+      scui.showMessageDialog("Can't Load User Study", e.getLocalizedMessage(),
+          JOptionPane.WARNING_MESSAGE);
       scui.disposeUI();
       return;
     }
@@ -164,11 +166,11 @@ public final class StudyLauncher {
         try {
           isSameFile = selectedFile.getCanonicalPath().equals(openedFile.getCanonicalPath());
         } catch (IOException e) {
-          StudyCaster.log.log(Level.WARNING, "Failed to check for filename equality", e);
+          LOG.log(Level.WARNING, "Failed to check for filename equality", e);
         }
         if (download && isSameFile && (nowLastModified == lastModified1 || nowLastModified == lastModified2) && !warnedAboutUnchanged) {
           warnedAboutUnchanged = true;
-          StudyCaster.log.log(Level.INFO, "Got upload on unchanged file; exclusive={0}", Util.fileAvailableExclusive(selectedFile));
+          LOG.log(Level.INFO, "Got upload on unchanged file; exclusive={0}", Util.fileAvailableExclusive(selectedFile));
 
           scui.showMessageDialog("Upload",
                   "<html>Please edit, save, and close the file, then try again.<br><br>" +
@@ -176,16 +178,16 @@ public final class StudyLauncher {
                   "</html>"
                   , JOptionPane.WARNING_MESSAGE);
         } else if (!Util.fileAvailableExclusive(selectedFile)) {
-          StudyCaster.log.info("Got upload on changed but still open file");
+          LOG.info("Got upload on changed but still open file");
           scui.showMessageDialog("Upload",
                 "<html>Please close the file, then try again.</html>"
                 , JOptionPane.WARNING_MESSAGE);
         } else {
           sc.enterRemoteLogRecord("Now starting upload");
-          StudyCaster.log.info("Now starting upload");
+          LOG.info("Now starting upload");
           try {
             scui.getProgressBarUI().setTaskAppearance("Uploading file...", true);
-            StudyCaster.log.log(Level.INFO, "Uploading file {0}", selectedFile.getName());
+            LOG.log(Level.INFO, "Uploading file {0}", selectedFile.getName());
             sc.uploadFile(selectedFile, "uploaded_" + Util.sanitizeFileNameComponent(selectedFile.getName()));
             scui.getProgressBarUI().setTaskAppearance("Finishing screencast upload...", true);
             sc.stopRecording();
@@ -199,7 +201,7 @@ public final class StudyLauncher {
             scui.showConfirmationCodeDialog(sc.getServerContext().getLaunchTicket().toString(), true);
             scui.disposeUI();
           } catch (StudyCasterException e) {
-            StudyCaster.log.log(Level.SEVERE, "Failed to upload", e);
+            LOG.log(Level.SEVERE, "Failed to upload", e);
             scui.getProgressBarUI().setTaskAppearance("", false);
             scui.getProgressBarUI().setProgress(0);
             scui.showMessageDialog("Failed to Upload File", e.getLocalizedMessage(), JOptionPane.WARNING_MESSAGE);

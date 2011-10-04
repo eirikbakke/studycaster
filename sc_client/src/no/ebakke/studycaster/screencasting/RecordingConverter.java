@@ -16,9 +16,10 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
-import no.ebakke.studycaster.api.StudyCaster;
+import java.util.logging.Logger;
 
 public final class RecordingConverter {
+  private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   public static final String FILE_EXTENSION = "mp4";
 
   private RecordingConverter() { }
@@ -83,7 +84,7 @@ public final class RecordingConverter {
       if (!(e instanceof EOFException))
         e.printStackTrace();
       hadError = true;
-      StudyCaster.log.warning("Incomplete screencast file");
+      LOG.warning("Incomplete screencast file");
     }
     outContainer.writeTrailer();
     outStreamCoder.close();

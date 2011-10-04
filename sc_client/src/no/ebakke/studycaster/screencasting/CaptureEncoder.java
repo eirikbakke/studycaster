@@ -11,10 +11,11 @@ import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
-import no.ebakke.studycaster.api.StudyCaster;
 
 public class CaptureEncoder extends Codec {
+  private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private DataOutputStream dout;
   private Robot robot;
   private Rectangle screenRect;
@@ -141,6 +142,6 @@ public class CaptureEncoder extends Codec {
   public void finish() throws IOException {
     flushMeta();
     dout.close();
-    StudyCaster.log.info("Closed the encoding stream.");
+    LOG.info("Closed the encoding stream.");
   }
 }

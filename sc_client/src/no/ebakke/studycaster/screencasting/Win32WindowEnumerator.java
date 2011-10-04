@@ -11,10 +11,11 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
-import no.ebakke.studycaster.api.StudyCaster;
+import java.util.logging.Logger;
 
 /** Platform-dependent window detector. */
 final class Win32WindowEnumerator implements WindowEnumerator {
+  private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private static int STR_BUF_SZ = 32768;
 
   private Win32WindowEnumerator() {
@@ -25,12 +26,10 @@ final class Win32WindowEnumerator implements WindowEnumerator {
     try {
       return new Win32WindowEnumerator();
     } catch (UnsatisfiedLinkError e) {
-      StudyCaster.log.log(Level.WARNING,
-          "Screen censor library unavailable", e);
+      LOG.log(Level.WARNING, "Screen censor library unavailable", e);
       return null;
     } catch (Exception e) {
-      StudyCaster.log.log(Level.WARNING,
-          "Unknown screen censor library error", e);
+      LOG.log(Level.WARNING, "Unknown screen censor library error", e);
       return null;
     }
   }

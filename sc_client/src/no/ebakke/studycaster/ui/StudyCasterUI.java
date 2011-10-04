@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.jnlp.ServiceManager;
 import javax.jnlp.SingleInstanceListener;
 import javax.jnlp.SingleInstanceService;
@@ -12,7 +13,6 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 import no.ebakke.studycaster.api.ServerContext;
-import no.ebakke.studycaster.api.StudyCaster;
 import no.ebakke.studycaster.api.StudyCasterException;
 import no.ebakke.studycaster.util.Blocker;
 import no.ebakke.studycaster.util.Util;
@@ -23,6 +23,7 @@ import no.ebakke.studycaster.util.stream.NonBlockingOutputStream.StreamProgressO
 // TODO: Check that this is actually the case.
 /* This class should be thread-safe. */
 public class StudyCasterUI {
+  private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   public enum UIAction {
     NO_ACTION,
     CLOSE,
@@ -85,14 +86,13 @@ public class StudyCasterUI {
                   JOptionPane.INFORMATION_MESSAGE);
             }
           });
-          StudyCaster.log.info("User tried to open a new instance");
+          LOG.info("User tried to open a new instance");
         }
       };
       singleInstanceService.addSingleInstanceListener(singleInstanceListener);
     } catch (UnavailableServiceException e) {
-      StudyCaster.log.log(Level.INFO,
-          "Couldn''t create a SingleInstanceService (normal when run outside of JWS); {0}",
-          e.getMessage());
+      LOG.log(Level.INFO,
+          "Couldn''t create a SingleInstanceService (normal when run outside of JWS)", e);
     }
 
     Util.checkedSwingInvokeAndWait(new Util.CallableExt<Void, StudyCasterException>() {
@@ -115,14 +115,13 @@ public class StudyCasterUI {
                 } catch (InterruptedException e) {
                   Thread.currentThread().interrupt();
                 }
-                StudyCaster.log.warning(
-                    "Forcing exit in three seconds (this may be last log message)");
+                LOG.warning("Forcing exit in three seconds (this may be last log message)");
                 try {
                   Thread.sleep(3000);
                 } catch (InterruptedException e) {
                   Thread.currentThread().interrupt();
                 }
-                StudyCaster.log.warning("Forcing exit ten seconds after window closure");
+                LOG.warning("Forcing exit ten seconds after window closure");
                 System.exit(0);
               }
             }, "window-closure-force-quit").start();
@@ -132,7 +131,7 @@ public class StudyCasterUI {
           public void actionPerformed(ActionEvent e) {
             sf.getUploadButton().setEnabled(false);
             UploadDialog upld = new UploadDialog(sf, uploadFileFilter, defaultFile);
-            StudyCaster.log.info("Now displaying upload dialog");
+            LOG.info("Now displaying upload dialog");
             upld.setVisible(true);
             selectedFile = upld.getSelectedFile();
             if (selectedFile != null) {
@@ -151,7 +150,7 @@ public class StudyCasterUI {
           "Screencasting",
           JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
         if (decision == JOptionPane.CANCEL_OPTION || decision == JOptionPane.CLOSED_OPTION) {
-          StudyCaster.log.log(Level.INFO, "User rejected consent dialog ({0})",
+          LOG.log(Level.INFO, "User rejected consent dialog ({0})",
               ((decision == JOptionPane.CANCEL_OPTION) ? "pressed cancel" : "closed dialog"));
           sf.dispose();
           actionTaken = UIAction.CLOSE;
@@ -214,7 +213,7 @@ public class StudyCasterUI {
         }
       });
     } catch (StudyCasterException e) {
-      StudyCaster.log.log(Level.WARNING, "Got an unexpected exception showing a message dialog", e);
+      LOG.log(Level.WARNING, "Got an unexpected exception showing a message dialog", e);
     }
   }
 
@@ -230,7 +229,7 @@ public class StudyCasterUI {
     });
   }
 
-  public UIAction waitForUserAction() {
+  public UIAction waitForUserAction() throws InterruptedException {
     actionBlocker.blockUntilReleased();
     actionBlocker = new Blocker();
     return actionTaken;

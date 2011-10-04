@@ -1,11 +1,11 @@
 package no.ebakke.studycaster.util;
 
 public class Blocker {
-  private final Object lock = new Object();
+  private final Object lock   = new Object();
   private boolean releasedYet = false;
-  private boolean blockedYet = false;
+  private boolean blockedYet  = false;
 
-  public void blockUntilReleased(long timeOut) {
+  public void blockUntilReleased(long timeOut) throws InterruptedException {
     synchronized (lock) {
       long startTime = System.currentTimeMillis();
       long waitTimeOut;
@@ -20,17 +20,12 @@ public class Blocker {
           if (waitTimeOut < 1)
             break;
         }
-        try {
-          lock.wait(waitTimeOut);
-        } catch (InterruptedException e) {
-          // TODO: Rethrow.
-          Thread.currentThread().interrupt();
-        }
+        lock.wait(waitTimeOut);
       }
     }
   }
 
-  public void blockUntilReleased() {
+  public void blockUntilReleased() throws InterruptedException {
     blockUntilReleased(0);
   }
 

@@ -7,12 +7,13 @@ import java.io.PipedOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
-import no.ebakke.studycaster.api.StudyCaster;
 import no.ebakke.studycaster.util.Util;
 import no.ebakke.studycaster.util.Util.Interruptible;
 
 public class NonBlockingOutputStream extends OutputStream {
+  private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private final Object exceptionLock = new Object();
   private IOException storedException;
   private PipedOutputStream outPipe;
@@ -71,7 +72,7 @@ public class NonBlockingOutputStream extends OutputStream {
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
         for (StreamProgressObserver observer : toNotify) {
-          boolean stillObserving;
+          final boolean stillObserving;
           synchronized (observerLock) {
             stillObserving = observers.contains(observer);
           }
@@ -124,7 +125,6 @@ public class NonBlockingOutputStream extends OutputStream {
     }
   }
 
-
   /** Upon close, out will be closed as well (analogous to a BufferedOutputStream with out as the
   underlying stream). */
   public void connect(final OutputStream out) throws IOException {
@@ -157,7 +157,7 @@ public class NonBlockingOutputStream extends OutputStream {
             out.close();
           }
         } catch (IOException e) {
-          StudyCaster.log.log(Level.WARNING, "Storing an exception from I/O thread", e);
+          LOG.log(Level.WARNING, "Storing an exception from I/O thread", e);
           setStoredException(e);
         }
       }

@@ -3,7 +3,6 @@ package no.ebakke.studycaster.screencasting;
 import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
-import no.ebakke.studycaster.api.StudyCaster;
 
 public final class Quilt {
   // Non-overlapping list of rectangles, each either positive or negative.

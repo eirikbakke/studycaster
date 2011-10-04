@@ -5,11 +5,12 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.io.IOException;
 import java.io.OutputStream;
-import no.ebakke.studycaster.api.StudyCaster;
+import java.util.logging.Logger;
 import no.ebakke.studycaster.screencasting.CaptureScheduler.CaptureTask;
 import no.ebakke.studycaster.util.stream.NonBlockingOutputStream;
 
 public class ScreenRecorder {
+  private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private NonBlockingOutputStream nbos;
   private CaptureEncoder enc;
   private boolean stopped = true;
@@ -94,7 +95,7 @@ public class ScreenRecorder {
 
   public synchronized void start() {
     if (!stopped) {
-      StudyCaster.log.warning("Already started");
+      LOG.warning("Already started");
       return;
     }
     stopped = false;
@@ -106,19 +107,19 @@ public class ScreenRecorder {
   public void stop() {
     /* TODO: Remove these logging messages once we're confident that the deadlock bug has been
     resolved. */
-    StudyCaster.log.info("ScreenRecorder.stop() called");
+    LOG.info("ScreenRecorder.stop() called");
     synchronized (this) {
       if (stopped) {
-        StudyCaster.log.warning("Already stopped");
+        LOG.warning("Already stopped");
         return;
       }
       stopped = true;
     }
-    StudyCaster.log.info("Calling pointerRecorder.finish()");
+    LOG.info("Calling pointerRecorder.finish()");
     pointerRecorder.finish();
-    StudyCaster.log.info("Calling frameRecorder.finish()");
+    LOG.info("Calling frameRecorder.finish()");
     frameRecorder.finish();
-    StudyCaster.log.info("ScreenRecorder.stop() completed");
+    LOG.info("ScreenRecorder.stop() completed");
   }
 
   /** Closes the underlying OutputStream as well. */

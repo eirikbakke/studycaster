@@ -17,7 +17,7 @@ import no.ebakke.studycaster.util.stream.ConsoleTee;
 import org.apache.commons.io.IOUtils;
 
 public class StudyCaster {
-  public static final Logger log = Logger.getLogger("no.ebakke.studycaster");
+  private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private static final int RECORDING_BUFFER_SZ = 4 * 1024 * 1024;
   private ServerContext serverContext;
   private ScreenRecorder recorder;
@@ -26,7 +26,7 @@ public class StudyCaster {
   private ConsoleTee consoleTee;
   private Thread shutdownHook = new Thread(new Runnable() {
     public void run() {
-      log.warning("Study not explicitly concluded; concluding via shutdown hook.");
+      LOG.warning("Study not explicitly concluded; concluding via shutdown hook.");
       concludeStudy();
       }
     }, "shutdown-hook");
@@ -38,11 +38,11 @@ public class StudyCaster {
   private void disconnectConsole() {
     if (consoleTee == null)
       return;
-    log.info("Disconnecting console");
+    LOG.info("Disconnecting console");
     try {
       consoleTee.close();
-    } catch (IOException e2) {
-      log.log(Level.WARNING, "Error while disconnecting console tee", e2);
+    } catch (IOException e) {
+      LOG.log(Level.WARNING, "Error while disconnecting console tee", e);
     } finally {
       consoleTee = null;
     }
@@ -56,7 +56,7 @@ public class StudyCaster {
     try {
       serverContext = new ServerContext();
     } catch (StudyCasterException e) {
-      log.log(Level.SEVERE, "Error initializing StudyCaster", e);
+      LOG.log(Level.SEVERE, "Error initializing StudyCaster", e);
       disconnectConsole();
       throw e;
     }
@@ -65,14 +65,14 @@ public class StudyCaster {
     try {
       consoleStream.connect(serverContext.uploadFile("console.txt"));
     } catch (IOException e) {
-      log.log(Level.WARNING, "Error creating remote log file", e);
+      LOG.log(Level.WARNING, "Error creating remote log file", e);
       disconnectConsole();
     }
     recordingStream = new NonBlockingOutputStream(RECORDING_BUFFER_SZ);
     recordingStream.addObserver(new NonBlockingOutputStream.StreamProgressObserver() {
       public void updateProgress(int bytesWritten, int bytesRemaining) {
         if (bytesRemaining > recordingStream.getBufferLimitBytes() * 0.8) {
-          log.log(Level.WARNING, "Close to overfilled buffer ({0}/{1} bytes)",
+          LOG.log(Level.WARNING, "Close to overfilled buffer ({0}/{1} bytes)",
               new Object[]{bytesRemaining, recordingStream.getBufferLimitBytes()});
         }
       }
@@ -82,9 +82,9 @@ public class StudyCaster {
       recorder = new ScreenRecorder(recordingStream, serverContext.getServerSecondsAhead(),
           ScreenRecorderConfiguration.DEFAULT);
     } catch (IOException e) {
-      log.log(Level.WARNING, "Failed to initialize screen recorder", e);
+      LOG.log(Level.WARNING, "Failed to initialize screen recorder", e);
     } catch (AWTException e) {
-      log.log(Level.WARNING, "Failed to initialize screen recorder", e);
+      LOG.log(Level.WARNING, "Failed to initialize screen recorder", e);
     }
     if (recorder == null) {
       try {
@@ -92,7 +92,7 @@ public class StudyCaster {
       } catch (IOException e) { }
       recordingStream = null;
     }
-    log.info("Constructed StudyCaster");
+    LOG.info("Constructed StudyCaster");
   }
 
   public void concludeStudy() {
@@ -101,7 +101,7 @@ public class StudyCaster {
         return;
       concluded = true;
     }
-    log.info("Concluding study");
+    LOG.info("Concluding study");
     try {
       Runtime.getRuntime().removeShutdownHook(shutdownHook);
     } catch (IllegalStateException e) {
@@ -110,15 +110,10 @@ public class StudyCaster {
     try {
       waitForScreenCastUpload();
     } catch (StudyCasterException e) {
-      log.log(Level.WARNING, "Failed to upload screencast while concluding study", e);
+      LOG.log(Level.WARNING, "Failed to upload screencast while concluding study", e);
     }
-    log.info("Concluded study");
+    LOG.info("Concluded study");
     disconnectConsole();
-  }
-
-  @Override
-  protected void finalize() {
-    concludeStudy();
   }
 
   public void downloadFile(String remoteName, File toFile) throws StudyCasterException {
@@ -169,7 +164,7 @@ public class StudyCaster {
 
   public void waitForScreenCastUpload() throws StudyCasterException {
     if (recorder != null) {
-      log.info("Waiting for screencast upload to complete as much as possible");
+      LOG.info("Waiting for screencast upload to complete as much as possible");
       try {
         recorder.close();
       } catch (IOException e) {

@@ -13,6 +13,7 @@ import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import no.ebakke.studycaster.util.Util;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
@@ -31,6 +32,7 @@ import org.apache.http.util.EntityUtils;
 
 /** Handles protocol details specific to the server-side PHP script. */
 public class ServerContext {
+  private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private static final String SERVERURI_PROP_NAME = "studycaster.server.uri";
   // TODO: Don't expose this.
   public  static final int    DEF_UPLOAD_CHUNK_SZ = 64 * 1024;
@@ -53,7 +55,7 @@ public class ServerContext {
   }
 
   private void init(String serverScriptURIs) throws StudyCasterException {
-    StudyCaster.log.log(Level.INFO, "Using server URI {0}", serverScriptURIs);
+    LOG.log(Level.INFO, "Using server URI {0}", serverScriptURIs);
     try {
       serverScriptURI = new URI(serverScriptURIs + "/api");
     } catch (URISyntaxException e) {
@@ -76,7 +78,7 @@ public class ServerContext {
     } catch (FileNotFoundException e) {
       // Ignore.
     } catch (IOException e) {
-      StudyCaster.log.log(Level.WARNING, "Problem reading ticket store.", e);
+      LOG.log(Level.WARNING, "Problem reading ticket store.", e);
     }
 
     // Get server info.
@@ -91,11 +93,10 @@ public class ServerContext {
             HttpContext context)
         {
           if (exception instanceof NonRetriableException) {
-            StudyCaster.log.log(Level.WARNING,
-                "Non-retriable error encountered in HttpRequestRetryHandler");
+            LOG.log(Level.WARNING, "Non-retriable error encountered in HttpRequestRetryHandler");
             return false;
           } else {
-            StudyCaster.log.log(Level.INFO, "Waiting to retry request ({0} times)", executionCount);
+            LOG.log(Level.INFO, "Waiting to retry request ({0} times)", executionCount);
             try {
               Thread.sleep(10000);
             } catch (InterruptedException e) {
@@ -126,13 +127,12 @@ public class ServerContext {
       // TODO: Do this only for a single successful request.
       serverSecondsAhead = (Long.parseLong(headerSTM.getValue()) -
           (timeBef / 2 + timeAft / 2)) / 1000L;
-      StudyCaster.log.log(Level.INFO, "Server time ahead by {0} seconds.",
-          serverSecondsAhead);
+      LOG.log(Level.INFO, "Server time ahead by {0} seconds.", serverSecondsAhead);
     } catch (NumberFormatException e) {
-      StudyCaster.log.log(Level.WARNING, "Got bad time format from server", e);
+      LOG.log(Level.WARNING, "Got bad time format from server", e);
     }
-    StudyCaster.log.info(String.format("clientCookie = %s, launchTicket = %s",
-        clientCookie, launchTicket));
+    LOG.log(Level.INFO, "clientCookie = {0}, launchTicket = {1}",
+        new Object[] {clientCookie, launchTicket});
     Util.logEnvironmentInfo();
 
     // Write ticket store.
@@ -144,9 +144,9 @@ public class ServerContext {
         } finally {
           fw.close();
         }
-        StudyCaster.log.info("Wrote to ticket store.");
+        LOG.info("Wrote to ticket store.");
       } catch (IOException e) {
-        StudyCaster.log.log(Level.WARNING, "Problem writing ticket file.", e);
+        LOG.log(Level.WARNING, "Problem writing ticket file.", e);
       }
     }
   }
@@ -172,12 +172,12 @@ public class ServerContext {
       try {
         ret = requestHelperSingle(httpClient, cmd, content, arg);
       } catch (IOException e) {
-        StudyCaster.log.log(Level.WARNING, "Failed request beyond HttpClient", e);
+        LOG.log(Level.WARNING, "Failed request beyond HttpClient", e);
         if (e instanceof NonRetriableException)
           throw e;
       }
       if (ret == null) {
-        StudyCaster.log.log(Level.INFO, "Waiting to retry request");
+        LOG.log(Level.INFO, "Waiting to retry request");
         try {
           Thread.sleep(10000);
         } catch (InterruptedException e) {
@@ -232,7 +232,7 @@ public class ServerContext {
   }
 
   public void enterRemoteLogRecord(final String msg) {
-    StudyCaster.log.log(Level.INFO, "Queueing remote log entry \"{0}\"", msg);
+    LOG.log(Level.INFO, "Queueing remote log entry \"{0}\"", msg);
     new Thread(new Runnable() {
       public void run() {
         try {
@@ -240,7 +240,7 @@ public class ServerContext {
               new StringBody(msg), Integer.toString((int) (Math.random() *
               Integer.MAX_VALUE))).getEntity());
         } catch (IOException e) {
-          StudyCaster.log.log(Level.WARNING, "Failed to enter remote log entry \"" + msg + "\"", e);
+          LOG.log(Level.WARNING, "Failed to enter remote log entry", e);
         }
       }
     }, "log-cmd").start();

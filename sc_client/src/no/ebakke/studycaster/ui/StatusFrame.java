@@ -11,14 +11,15 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
-import no.ebakke.studycaster.api.StudyCaster;
 
 public class StatusFrame extends javax.swing.JFrame {
-  private static final long serialVersionUID = -49886778462745844L;
+  private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
+  private static final long serialVersionUID = 1L;
   private ProgressBarUI pbui;
   private JDialog positionDialog;
   
@@ -42,7 +43,7 @@ public class StatusFrame extends javax.swing.JFrame {
     try {
       UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
     } catch (Exception e) {
-      StudyCaster.log.log(Level.WARNING, "Can't set default Look and Feel", e);
+      LOG.log(Level.WARNING, "Can''t set default Look and Feel", e);
     }
   }
 
@@ -59,7 +60,7 @@ public class StatusFrame extends javax.swing.JFrame {
       } catch (NoSuchMethodException e) { }
       if (setIconImagesMethod == null) {
         // Running JRE < 1.6
-        StudyCaster.log.info("Can't find Window.setIconImages(), using Frame.setIconImage() " +
+        LOG.info("Can''t find Window.setIconImages(), using Frame.setIconImage() " +
             "instead (probably on JRE 1.5 or earlier)");
         setIconImage(getIconImage("256"));
       } else {
@@ -76,13 +77,13 @@ public class StatusFrame extends javax.swing.JFrame {
         try {
           setIconImagesMethod.invoke(this, icons);
         } catch (IllegalAccessException e) {
-          StudyCaster.log.log(Level.WARNING, "Unexpected error while invoking Window.setIconImages()", e);
+          LOG.log(Level.WARNING, "Unexpected error while invoking Window.setIconImages()", e);
         } catch (InvocationTargetException e) {
-          StudyCaster.log.log(Level.WARNING, "Got unexpected exception from Window.setIconImages()", e);
+          LOG.log(Level.WARNING, "Got unexpected exception from Window.setIconImages()", e);
         }
       }
     } catch (Exception e) {
-      StudyCaster.log.log(Level.WARNING, "Failed to configure window icon", e);
+      LOG.log(Level.WARNING, "Failed to configure window icon", e);
     }
   }
 
@@ -122,15 +123,15 @@ public class StatusFrame extends javax.swing.JFrame {
     addWindowListener(new WindowAdapter() {
       @Override
       public void windowClosing(WindowEvent e) {
-        StudyCaster.log.info("User tried to close main StudyCaster window");
+        LOG.info("User tried to close main StudyCaster window");
         int decision = JOptionPane.showConfirmDialog(getPositionDialog(),
           "If you exit the StudyCaster client without uploading first, your changes will be lost.",
           "Exit Without Uploading?", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
         if (decision == JOptionPane.OK_OPTION) {
-          StudyCaster.log.info("User confirmed closing of main StudyCaster window");
+          LOG.info("User confirmed closing of main StudyCaster window");
           dispose();
         } else {
-          StudyCaster.log.info("User canceled closing of main StudyCaster window");
+          LOG.info("User canceled closing of main StudyCaster window");
         }
       }
     });

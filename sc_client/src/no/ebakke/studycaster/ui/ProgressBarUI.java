@@ -1,11 +1,12 @@
 package no.ebakke.studycaster.ui;
 
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
-import no.ebakke.studycaster.api.StudyCaster;
 
 public class ProgressBarUI {
+  private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private JProgressBar ui;
 
   public ProgressBarUI(JProgressBar ui) {
@@ -15,7 +16,7 @@ public class ProgressBarUI {
   public void setTaskAppearance(final String text, final boolean indeterminate) {
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
-        StudyCaster.log.log(Level.INFO, "Changing status bar text to \"{0}\"", text);
+        LOG.log(Level.INFO, "Changing status bar text to \"{0}\"", text);
         ui.setString(text);
         ui.setIndeterminate(indeterminate);
         if (indeterminate)

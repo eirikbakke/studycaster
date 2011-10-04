@@ -9,105 +9,113 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 import javax.swing.filechooser.FileFilter;
-import no.ebakke.studycaster.api.StudyCaster;
 import no.ebakke.studycaster.util.Util;
 
 public class UploadDialog extends javax.swing.JDialog {
-    private static final long serialVersionUID = -5929608062465652108L;
-    private JFileChooser fileChooser;
-    private File selectedFile;
+  private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
+  private static final long serialVersionUID = 1L;
+  private JFileChooser fileChooser;
+  private File selectedFile;
 
-    public File getSelectedFile() {
-      return selectedFile;
+  public File getSelectedFile() {
+    return selectedFile;
+  }
+
+  private void setFile(File file) {
+    String text = (file == null) ? "" : Util.getPathString(file);
+    fileNameTextBox.setText(text);
+    fileNameTextBox.setSelectionStart(0);
+    fileNameTextBox.setSelectionEnd(text.length());
+  }
+
+  public UploadDialog(Frame parent, FileFilter filter, File defaultFile) {
+    // TODO: Avoid code duplication between this class and ConfirmationCodeDialog.
+    // TODO: Do I need to remove all these listeners?
+    super(parent);
+    initComponents();
+    getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+        KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "close");
+    getRootPane().getActionMap().put("close", new AbstractAction() {
+
+      private static final long serialVersionUID = 1L;
+
+      public void actionPerformed(ActionEvent e) {
+        dispose();
+      }
+    });
+    getRootPane().setDefaultButton(okButton);
+    okButton.requestFocusInWindow();
+    setFile(defaultFile);
+
+    fileChooser = new JFileChooser();
+    if (filter != null) {
+      fileChooser.setFileFilter(filter);
     }
+    fileChooser.setDialogTitle("Select File to Upload");
 
-    private void setFile(File file) {
-      String text = (file == null) ? "" : Util.getPathString(file);
-      fileNameTextBox.setText(text);
-      fileNameTextBox.setSelectionStart(0);
-      fileNameTextBox.setSelectionEnd(text.length());
-    }
+    browseButton.addActionListener(new ActionListener() {
 
-    public UploadDialog(Frame parent, FileFilter filter, File defaultFile) {
-        // TODO: Avoid code duplication between this class and ConfirmationCodeDialog.
-        // TODO: Do I need to remove all these listeners?
-        super(parent);
-        initComponents();
-        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
-            KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "close");
-        getRootPane().getActionMap().put("close", new AbstractAction() {
-            private static final long serialVersionUID = 1L;
+      public void actionPerformed(ActionEvent e) {
+        LOG.info("User pressed upload dialog's browse button");
+        fileChooser.setSelectedFile(new File(fileNameTextBox.getText()));
+        int res = fileChooser.showOpenDialog(UploadDialog.this);
+        if (res == JFileChooser.APPROVE_OPTION) {
+          setFile(fileChooser.getSelectedFile());
+        }
+      }
+    });
+    okButton.addActionListener(new ActionListener() {
 
-            public void actionPerformed(ActionEvent e) {
-              dispose();
-            }
-          });
-        getRootPane().setDefaultButton(okButton);
-        okButton.requestFocusInWindow();
-        setFile(defaultFile);
+      public void actionPerformed(ActionEvent e) {
+        LOG.info("User pressed upload dialog's OK button");
+        selectedFile = new File(fileNameTextBox.getText());
+        if (!selectedFile.exists()) {
+          LOG.info("User chose a non-existent file");
+          JOptionPane.showMessageDialog(UploadDialog.this,
+              "<html>" + selectedFile.getName() + "<br>File not found.<br>"
+              + "Please try again.</html>",
+              "File Upload",
+              JOptionPane.WARNING_MESSAGE);
+          selectedFile = null;
+        } else {
+          dispose();
+        }
+      }
+    });
+    cancelButton.addActionListener(new ActionListener() {
 
-        fileChooser = new JFileChooser();
-        if (filter != null)
-          fileChooser.setFileFilter(filter);
-        fileChooser.setDialogTitle("Select File to Upload");
+      public void actionPerformed(ActionEvent e) {
+        LOG.info("User pressed upload dialog's cancel button");
+        dispose();
+      }
+    });
+    addWindowListener(new WindowAdapter() {
 
-        browseButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-              StudyCaster.log.info("User pressed upload dialog's browse button");
-              fileChooser.setSelectedFile(new File(fileNameTextBox.getText()));
-              int res = fileChooser.showOpenDialog(UploadDialog.this);
-              if (res == JFileChooser.APPROVE_OPTION)
-                setFile(fileChooser.getSelectedFile());
-            }
-          });
-        okButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-              StudyCaster.log.info("User pressed upload dialog's OK button");
-              selectedFile = new File(fileNameTextBox.getText());
-              if (!selectedFile.exists()) {
-                StudyCaster.log.info("User chose a non-existent file");
-                JOptionPane.showMessageDialog(UploadDialog.this,
-                        "<html>" + selectedFile.getName() + "<br>File not found.<br>" +
-                        "Please try again.</html>",
-                        "File Upload",
-                        JOptionPane.WARNING_MESSAGE);
-                selectedFile = null;
-              } else {
-                dispose();
-              }
-            }
-          });
-        cancelButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-              StudyCaster.log.info("User pressed upload dialog's cancel button");
-              dispose();
-            }
-          });
-        addWindowListener(new WindowAdapter() {
-          @Override
-          public void windowClosing(WindowEvent e) {
-            StudyCaster.log.info("Upload dialog closing");
-            super.windowClosing(e);
-          }
-        });
+      @Override
+      public void windowClosing(WindowEvent e) {
+        LOG.info("Upload dialog closing");
+        super.windowClosing(e);
+      }
+    });
 
-        Dimension sdim = Toolkit.getDefaultToolkit().getScreenSize();
-        Dimension wdim = getSize();
-        setLocation((sdim.width - wdim.width) / 2, (sdim.height - wdim.height) / 2);
-    }
+    Dimension sdim = Toolkit.getDefaultToolkit().getScreenSize();
+    Dimension wdim = getSize();
+    setLocation((sdim.width - wdim.width) / 2, (sdim.height - wdim.height) / 2);
+  }
 
-    /** This method is called from within the constructor to
-     * initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is
-     * always regenerated by the Form Editor.
-     */
-    @SuppressWarnings("unchecked")
+  /** This method is called from within the constructor to
+   * initialize the form.
+   * WARNING: Do NOT modify this code. The content of this method is
+   * always regenerated by the Form Editor.
+   */
+  @SuppressWarnings("unchecked")
   // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
   private void initComponents() {
     java.awt.GridBagConstraints gridBagConstraints;
@@ -208,7 +216,6 @@ public class UploadDialog extends javax.swing.JDialog {
 
     pack();
   }// </editor-fold>//GEN-END:initComponents
-
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JButton browseButton;
   private javax.swing.JButton cancelButton;
@@ -218,5 +225,4 @@ public class UploadDialog extends javax.swing.JDialog {
   private javax.swing.JButton okButton;
   private javax.swing.JPanel okCancelPanel;
   // End of variables declaration//GEN-END:variables
-
 }

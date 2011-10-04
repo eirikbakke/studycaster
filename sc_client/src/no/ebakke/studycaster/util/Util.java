@@ -6,16 +6,16 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
-import no.ebakke.studycaster.api.StudyCaster;
 import no.ebakke.studycaster.api.StudyCasterException;
 
 public final class Util {
+  private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private Util() { }
 
   public static boolean fileAvailableExclusive(File f) {
@@ -34,7 +34,7 @@ public final class Util {
     try {
       return f.getCanonicalPath();
     } catch (IOException e) {
-      StudyCaster.log.log(Level.WARNING, "Couldn't get canonical path.", e);
+      LOG.log(Level.WARNING, "Couldn''t get canonical path.", e);
       return f.getAbsolutePath();
     }
   }
@@ -49,10 +49,10 @@ public final class Util {
       props.append((first ? "" : ", ") + key + "=" + System.getProperty(key));
       first = false;
     }
-    StudyCaster.log.log(Level.INFO, "Environment: {0}", props);
+    LOG.log(Level.INFO, "Environment: {0}", props);
 
     for (GraphicsDevice gd : GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()) {
-      StudyCaster.log.log(Level.INFO, "Found a screen {0}x{1}{2}",
+      LOG.log(Level.INFO, "Found a screen {0}x{1}{2}",
           new Object[]{gd.getDisplayMode().getWidth(), gd.getDisplayMode().getHeight(),
           (gd.equals(GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice())) ?
           " (default)" : ""});
@@ -123,7 +123,7 @@ public final class Util {
         }
       }
     } else {
-      StudyCaster.log.info("Did not find Java Desktop API, using platform-specific " +
+      LOG.info("Did not find Java Desktop API, using platform-specific " +
           "implementation instead (probably on JRE 1.5 or earlier)");
       String osString = System.getProperty("os.name").toLowerCase();
       /* Note: The implementations below should work equally well for opening URLs in the default
@@ -196,7 +196,7 @@ public final class Util {
     } catch (InterruptedException e) {
       throw new StudyCasterException("Interrupted method on EHT", e);
     } catch (InvocationTargetException e) {
-      StudyCaster.log.severe("Unexpected InvocationTargetException");
+      LOG.severe("Unexpected InvocationTargetException");
       throw new StudyCasterException("Unexcpected exception from method on EHT", e);
     }
     if (retE.value != null) {

@@ -10,13 +10,14 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.UIManager;
-import no.ebakke.studycaster.api.StudyCaster;
 import no.ebakke.studycaster.api.StudyCasterException;
 import no.ebakke.studycaster.screencasting.WindowEnumerator.WindowInfo;
 import no.ebakke.studycaster.util.ImageDebugFrame;
 
 public final class ScreenCensor {
+  private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   public static final int MOSAIC_WIDTH = 5;
 
   private List<String> whiteList, blackList;
@@ -46,8 +47,7 @@ public final class ScreenCensor {
       this.whiteList.add("StudyCaster");
     windowEnumerator = Win32WindowEnumerator.create();
     if (windowEnumerator == null) {
-      StudyCaster.log.log(Level.WARNING,
-          "Can't initialize native library; censoring entire screen area");
+      LOG.log(Level.WARNING, "Can''t initialize native library; censoring entire screen area");
       nativeFail = new Quilt();
     }
   }

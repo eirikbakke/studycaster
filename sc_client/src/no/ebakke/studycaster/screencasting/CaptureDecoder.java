@@ -22,11 +22,12 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
-import no.ebakke.studycaster.api.StudyCaster;
 import no.ebakke.studycaster.ui.StatusFrame;
 
 public class CaptureDecoder extends Codec {
+  private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private DataInputStream dis;
   private boolean reachedEOF = false, atFrame = false;
   private Image pointerImage;
@@ -129,7 +130,7 @@ public class CaptureDecoder extends Codec {
       } else if (struct_x != Integer.MIN_VALUE &&
           (struct_x < 0 || struct_y < 0 || struct_x > 30000 || struct_y > 30000)) {
       } else {
-        StudyCaster.log.log(Level.INFO, "Resynced after skipping {0} bytes", curReadLoc);
+        LOG.log(Level.INFO, "Resynced after skipping {0} bytes", curReadLoc);
         return;
       }
 
@@ -223,8 +224,7 @@ public class CaptureDecoder extends Codec {
         }
       }
       if (currentRunLength <= 0 || currentRunLength > newBuf.length - i) {
-        StudyCaster.log.log(Level.WARNING,
-            "Invalid or overflowing run length {0}", currentRunLength);
+        LOG.log(Level.WARNING, "Invalid or overflowing run length {0}", currentRunLength);
         currentRunLength = 0;
         // 23 = light blue, 14 = turquoise
         for (; i < newBuf.length; i++)

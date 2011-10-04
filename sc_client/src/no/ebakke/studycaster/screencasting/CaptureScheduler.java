@@ -1,9 +1,10 @@
 package no.ebakke.studycaster.screencasting;
 
-import no.ebakke.studycaster.api.StudyCaster;
+import java.util.logging.Logger;
 import no.ebakke.studycaster.util.MovingAverage;
 
 public class CaptureScheduler {
+  private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private CaptureTask task;
   private boolean finished = false;
   private MovingAverage avgDuration = new MovingAverage(5000.0);
@@ -43,7 +44,7 @@ public class CaptureScheduler {
 
   public void finish() {
     if (finished) {
-      StudyCaster.log.warning("Already finished");
+      LOG.warning("Already finished");
       return;
     }
     finished = true;
