@@ -30,7 +30,7 @@ public class CaptureScheduler {
         }
       } catch (InterruptedException e) { }
     }
-  });
+  }, "CaptureScheduler-capture");
 
   public CaptureScheduler(CaptureTask task) {
     this.task = task;

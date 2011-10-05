@@ -25,11 +25,11 @@ public class StudyCaster {
   private NonBlockingOutputStream recordingStream;
   private ConsoleTee consoleTee;
   private Thread shutdownHook = new Thread(new Runnable() {
-    public void run() {
-      LOG.warning("Study not explicitly concluded; concluding via shutdown hook.");
-      concludeStudy();
+      public void run() {
+        LOG.warning("Study not explicitly concluded; concluding via shutdown hook.");
+        concludeStudy();
       }
-    }, "shutdown-hook");
+    }, "StudyCaster-shutdownHook");
 
   public ServerContext getServerContext() {
     return serverContext;

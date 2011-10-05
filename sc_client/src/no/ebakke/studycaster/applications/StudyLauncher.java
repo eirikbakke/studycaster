@@ -24,7 +24,7 @@ public final class StudyLauncher {
 
     // TODO: Move even this error into the UI.
     if (args.length != 1) {
-      System.err.println("Usage: ConfigurateStudyCaster <configuration ID>");
+      System.err.println("Usage: StudyLauncher <configuration ID>");
       return;
     }
     runStudy(args[0]);

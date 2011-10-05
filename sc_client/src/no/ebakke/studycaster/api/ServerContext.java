@@ -30,6 +30,7 @@ import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 
+// TODO: Verify thread safety of this class.
 /** Handles protocol details specific to the server-side PHP script. */
 public class ServerContext {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
@@ -151,7 +152,7 @@ public class ServerContext {
     }
   }
 
-  public static String getContentString(HttpResponse resp) throws IOException {
+  private static String getContentString(HttpResponse resp) throws IOException {
     StringWriter ret = new StringWriter();
     InputStream errContent = resp.getEntity().getContent();
     try {
@@ -243,7 +244,7 @@ public class ServerContext {
           LOG.log(Level.WARNING, "Failed to enter remote log entry", e);
         }
       }
-    }, "log-cmd").start();
+    }, "ServerContext-logCommand").start();
   }
 
   public OutputStream uploadFile(final String remoteName) throws IOException {
