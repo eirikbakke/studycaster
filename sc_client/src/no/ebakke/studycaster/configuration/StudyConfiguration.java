@@ -26,6 +26,7 @@ public class StudyConfiguration {
   private OpenFileConfiguration openFileConfiguration;
   private List<String> screenCastWhiteList;
   private List<String> screenCastBlackList;
+  private UIStrings uiStrings;
 
   public static StudyConfiguration parseConfiguration(InputStream xml, String configurationID)
       throws StudyCasterException, IOException
@@ -68,7 +69,7 @@ public class StudyConfiguration {
     return ret.get(0);
   }
 
-  private StudyConfiguration(Element conf) throws StudyCasterException, IOException {
+  private StudyConfiguration(Element conf) throws StudyCasterException {
     name              = ConfigurationUtil.getNonEmptyAttribute(conf, "name");
     pageConfiguration = PageConfiguration.parse(conf);
 
@@ -86,6 +87,8 @@ public class StudyConfiguration {
     Element screencast = ConfigurationUtil.getUniqueElement(conf, "screencast");
     screenCastWhiteList = ConfigurationUtil.getStrings(screencast, "whitelist");
     screenCastBlackList = ConfigurationUtil.getStrings(screencast, "blacklist");
+
+    uiStrings = new UIStrings(ConfigurationUtil.getUniqueElement(conf, "uistrings"));
   }
 
   // TODO: Get rid of this.
@@ -108,10 +111,14 @@ public class StudyConfiguration {
   }
 
   public List<String> getScreenCastWhiteList() {
-    return screenCastWhiteList;
+    return new ArrayList<String>(screenCastWhiteList);
   }
 
   public List<String> getScreenCastBlackList() {
-    return screenCastBlackList;
+    return new ArrayList<String>(screenCastBlackList);
+  }
+
+  public UIStrings getUIStrings() {
+    return uiStrings;
   }
 }

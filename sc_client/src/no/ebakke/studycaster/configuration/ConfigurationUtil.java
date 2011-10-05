@@ -74,10 +74,11 @@ final class ConfigurationUtil {
   }
 
   public static List<String> getStrings(Node parent, String localName) throws StudyCasterException {
-    List<String> ret = new ArrayList<String>();
-    for (Element elm : getElements(parent, localName, false))
-      ret.add(getTextContent(elm));
-    return ret;
+    return parseElements(getElements(parent, localName, false), new ElementParser<String>() {
+      public String parseElement(Element elm) throws StudyCasterException {
+        return getTextContent(elm);
+      }
+    });
   }
 
   public static Element getUniqueElement(Node parent, String localName, boolean optional)
@@ -118,7 +119,7 @@ final class ConfigurationUtil {
     return getTextContent(getUniqueElement(parent, localName, false));
   }
 
-  private static String getSwingCaption(Element elm) throws StudyCasterException {
+  public static String getSwingCaption(Element elm) throws StudyCasterException {
     String  textContent = XMLUtil.getTextContent(elm);
     if (textContent != null)
       return textContent;

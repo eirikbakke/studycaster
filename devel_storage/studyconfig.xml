@@ -1,5 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <study xmlns="namespace://ebakke.no/studycaster-configuration">
+  <macrodef id="uistrings-english">
+    <uistrings>
+      <uistring key="DIALOG_ALREADY_RUNNING_TITLE">Already Running</uistring>
+      <uistring key="DIALOG_ALREADY_RUNNING_MESSAGE">
+        <html xmlns="">The StudyCaster client is already running in a different window.<br/>
+                       Please close it first if you wish to start over.</html>
+      </uistring>
+      <uistring key="MAINFRAME_OPEN_BUTTON"   mnemonic="O">Open Sample Document...</uistring>
+      <uistring key="MAINFRAME_UPLOAD_BUTTON" mnemonic="U">Upload and Retrive Confirmation Code...</uistring>
+      <uistring key="MAINFRAME_BACK_BUTTON"   mnemonic="B">&lt; Back</uistring>
+      <uistring key="MAINFRAME_NEXT_BUTTON"   mnemonic="N">Next &gt;</uistring>
+    </uistrings>
+  </macrodef>
+  <!-- Foreign language example, to test UI string settings. -->
+  <macrodef id="uistrings-norwegian">
+    <uistrings>
+      <uistring key="DIALOG_ALREADY_RUNNING_TITLE">Allerede åpnet</uistring>
+      <uistring key="DIALOG_ALREADY_RUNNING_MESSAGE">
+        <html xmlns="">StudyCaster-klienten kjører allerede i et annet vindu.<br/>
+                       Vennligst lukk det gamle vinduet først dersom du vil begynne på nytt.</html>
+      </uistring>
+      <uistring key="MAINFRAME_OPEN_BUTTON"   mnemonic="Å">Åpne eksempeldokument...</uistring>
+      <uistring key="MAINFRAME_UPLOAD_BUTTON" mnemonic="L">Last opp og motta bekreftelseskode...</uistring>
+      <uistring key="MAINFRAME_BACK_BUTTON"   mnemonic="T">&lt; Tilbake</uistring>
+      <uistring key="MAINFRAME_NEXT_BUTTON"   mnemonic="N">Neste &gt;</uistring>
+    </uistrings>
+  </macrodef>
+
   <macrodef id="instructions">
     <instructions>
       <html xmlns="">
@@ -37,6 +65,7 @@
       <blacklist>Thunderbird</blacklist>
       <blacklist>Outlook</blacklist>
     </screencast>
+    <macro id="uistrings-english"/>
   </macrodef>
 
   <macrodef id="uploadfile-excel">
