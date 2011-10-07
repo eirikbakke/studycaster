@@ -18,7 +18,7 @@ import no.ebakke.studycaster.util.Blocker;
 import no.ebakke.studycaster.util.Util;
 import no.ebakke.studycaster.util.Util.CallableExt;
 import no.ebakke.studycaster.util.stream.NonBlockingOutputStream;
-import no.ebakke.studycaster.util.stream.NonBlockingOutputStream.StreamProgressObserver;
+import no.ebakke.studycaster.util.stream.StreamProgressObserver;
 
 // TODO: Check that this is actually the case.
 /* This class should be thread-safe. */
@@ -38,12 +38,12 @@ public class StudyCasterUI {
   private SingleInstanceService singleInstanceService;
   private SingleInstanceListener singleInstanceListener;
   private StreamProgressObserver spo = new StreamProgressObserver() {
-      public void updateProgress(final int bytesWritten, final int bytesRemaining) {
+      public void updateProgress(final NonBlockingOutputStream nbos) {
         SwingUtilities.invokeLater(new Runnable() {
           public void run() {
             getProgressBarUI().setBounds(streamProgressStart,
-                bytesWritten + bytesRemaining + ServerContext.DEF_UPLOAD_CHUNK_SZ);
-            getProgressBarUI().setProgress(bytesWritten);
+                nbos.getBytesPosted() + ServerContext.DEF_UPLOAD_CHUNK_SZ);
+            getProgressBarUI().setProgress(nbos.getBytesWritten());
           }
         });
       }
@@ -243,7 +243,7 @@ public class StudyCasterUI {
     if (os == null)
       return;
     if (doMonitor) {
-      streamProgressStart = os.getWrittenBytes();
+      streamProgressStart = os.getBytesWritten();
       os.addObserver(spo);
     } else {
       os.removeObserver(spo);

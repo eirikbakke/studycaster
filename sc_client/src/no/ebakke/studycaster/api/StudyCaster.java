@@ -14,6 +14,7 @@ import no.ebakke.studycaster.screencasting.ScreenCensor;
 import no.ebakke.studycaster.screencasting.ScreenRecorder;
 import no.ebakke.studycaster.screencasting.ScreenRecorderConfiguration;
 import no.ebakke.studycaster.util.stream.ConsoleTee;
+import no.ebakke.studycaster.util.stream.StreamProgressObserver;
 import org.apache.commons.io.IOUtils;
 
 public class StudyCaster {
@@ -69,8 +70,9 @@ public class StudyCaster {
       disconnectConsole();
     }
     recordingStream = new NonBlockingOutputStream(RECORDING_BUFFER_SZ);
-    recordingStream.addObserver(new NonBlockingOutputStream.StreamProgressObserver() {
-      public void updateProgress(int bytesWritten, int bytesRemaining) {
+    recordingStream.addObserver(new StreamProgressObserver() {
+      public void updateProgress(NonBlockingOutputStream nbos) {
+        int bytesRemaining = nbos.getBytesPosted() - nbos.getBytesWritten();
         if (bytesRemaining > recordingStream.getBufferLimitBytes() * 0.8) {
           LOG.log(Level.WARNING, "Close to overfilled buffer ({0}/{1} bytes)",
               new Object[]{bytesRemaining, recordingStream.getBufferLimitBytes()});

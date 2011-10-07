@@ -35,6 +35,11 @@ public class CaptureScheduler {
   public CaptureScheduler(CaptureTask task) {
     this.task = task;
     captureThread.setName("capture-" + task.toString());
+  }
+
+  /* This used to happen automatically in the constructor, which is dangerous. See
+  http://www.ibm.com/developerworks/java/library/j-jtp0618/index.html . */
+  public void start() {
     captureThread.start();
   }
 

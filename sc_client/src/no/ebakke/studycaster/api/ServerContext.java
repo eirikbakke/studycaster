@@ -265,6 +265,7 @@ public class ServerContext {
         if (closed)
           throw new IOException("Stream closed");
 
+        // TODO: Deduplicate with chunking logic in WriteOpQueue.
         for (int subOff = 0; subOff < len; ) {
           final int subLen = Math.min(len - subOff, DEF_UPLOAD_CHUNK_SZ);
           byte chunk[] = Util.copyOfRange(b, off + subOff, off + subOff + subLen);

@@ -9,16 +9,17 @@ public class ServerContextPostRequestTester {
   public void testEverything() throws Exception {
     ServerContext sc = new ServerContext();
     String remoteName = "ServerContextPostRequestTester.tmp";
+    RandomHookup hookup = new RandomHookup(0);
     
     OutputStream uploadOS = sc.uploadFile(remoteName);
     RandomInputStream ris = new RandomInputStream(43, 50000, 50000);
-    TestUtil.hookupStreams(ris, uploadOS);
+    hookup.hookupStreams(ris, uploadOS);
     uploadOS.close();
 
     InputStream returnedFile = sc.downloadFile("uploads/" + sc.getLaunchTicket().toString() + "/" + remoteName);
     OutputStream os = new ExpectRandomOutputStream(43, 50000, 50000);
 
-    TestUtil.hookupStreams(returnedFile, os);
+    hookup.hookupStreams(returnedFile, os);
     os.close();
   }
 }

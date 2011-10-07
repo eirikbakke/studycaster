@@ -59,6 +59,10 @@ public final class Util {
     }
   }
 
+  // TODO: Do I ever want this?
+  /** Used to enclose operations which may throw InterruptedException but which are restartable,
+  when the contract of the enclosing method does not permit throwing an InterruptedException but
+  rather requires that the method blocks until completion. */
   public static void ensureInterruptible(Interruptible op) {
     boolean interrupted = false;
     while (true) {

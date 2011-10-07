@@ -23,7 +23,7 @@ public class RandomInputStream extends InputStream {
   }
 
   @Override
-  public synchronized  int read() throws IOException {
+  public synchronized int read() throws IOException {
     if (remainingBytes <= 0)
       return -1;
     remainingBytes--;
@@ -33,7 +33,7 @@ public class RandomInputStream extends InputStream {
   }
 
   @Override
-  public synchronized  void close() throws IOException {
+  public synchronized void close() throws IOException {
     if (remainingBytes > 0)
       throw new IOException("Closed too early.");
     closed = true;

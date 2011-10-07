@@ -10,7 +10,17 @@ import no.ebakke.studycaster.api.ServerContext;
 import no.ebakke.studycaster.api.StudyCasterException;
 import no.ebakke.studycaster.configuration.StudyConfiguration;
 
-// TODO: Rename to StudyCasterUI.
+/*
+  Test cases for this class:
+  * Multiple application launch before or after configuration is loaded.
+  * Close window before or after configuration is loaded.
+  * Failsafe shutdown 10 seconds after window is closed.
+  * Regular shutdown after upload.
+  * Regular shutdown after window closure.
+  * Invoked with wrong command-line arguments.
+*/
+
+// TODO: Rename to StudyCasterUI. Rename threads to reflect change.
 /** Methods in this class must be called from the event-handling thread only. */
 public final class StudyUI {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
@@ -19,7 +29,7 @@ public final class StudyUI {
   final private EnvironmentHooks hooks;
   private ServerContext serverContext = null;
   private StudyConfiguration configuration = null;
-
+  private Thread failsafeCloseThread;
   private StudyUI(EnvironmentHooks hooks) {
     this.hooks = hooks;
     mainFrame = new MainFrame();
@@ -27,8 +37,40 @@ public final class StudyUI {
       @Override
       public void windowClosing(WindowEvent e) {
         // TODO: Implement.
+        System.out.println("windowClosing!");
       }
     });
+  }
+
+  private void closeUI() {
+    mainFrame.setVisible(false);
+    mainFrame.dispose();
+    failsafeCloseThread = new Thread(new Runnable() {
+      public void run() {
+          try {
+            Thread.sleep(7000);
+            LOG.warning("Forcing exit in three seconds (this may be last log message)");
+            Thread.sleep(3000);
+            LOG.warning("Forcing exit ten seconds after window closure");
+            System.exit(0);
+          } catch (InterruptedException e) {
+            // TODO: System.exit() no matter what.
+            LOG.info("Fail safe exit disarmed");
+          }
+        }
+      }, "StudyUI-failsafeCloseThread");
+    failsafeCloseThread.start();
+  }
+
+  private void closeBackend(final Runnable onEnd) {
+    new Thread(new Runnable() {
+      public void run() {
+        serverContext.close();
+        hooks.close();
+        if (onEnd != null)
+          SwingUtilities.invokeLater(onEnd);
+      }
+    }, "StudyUI-closeBackend").start();
   }
 
   // Must be called from the event-handling thread.
@@ -77,7 +119,7 @@ public final class StudyUI {
           }
         });
       }
-    }, "StudyUI-runStudy").start(); // TODO: Rename to reflect new class name.
+    }, "StudyUI-runStudy").start();
   }
 
   public static void main(final String args[]) {

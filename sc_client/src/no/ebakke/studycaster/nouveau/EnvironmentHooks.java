@@ -12,7 +12,6 @@ import no.ebakke.studycaster.util.stream.NonBlockingOutputStream;
 /** Thread-safe singleton. */
 public final class EnvironmentHooks {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
-  private static final int    CONSOLE_BUFFER_SZ = 128 * 1024;
   private static EnvironmentHooks instance = new EnvironmentHooks();
 
   private SingleInstanceHandler   singleInstanceHandler;
@@ -32,9 +31,7 @@ public final class EnvironmentHooks {
       return;
 
     // Connect the ConsoleTee as the very first thing to do.
-    /* TODO: Use an unlimited NonBlockingOutputStream to avoid the theoretical possibility of the
-    console buffer filling up. */
-    consoleStream = new NonBlockingOutputStream(CONSOLE_BUFFER_SZ);
+    consoleStream = new NonBlockingOutputStream();
     ServerTimeLogFormatter logFormatter = new ServerTimeLogFormatter();
     consoleTee = new ConsoleTee(consoleStream, logFormatter);
     // Entering initial log message to promote fail-fast behavior of potential ConsoleTee bugs.

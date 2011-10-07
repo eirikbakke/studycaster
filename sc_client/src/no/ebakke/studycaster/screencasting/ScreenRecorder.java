@@ -52,9 +52,9 @@ public class ScreenRecorder {
       if (nbos == null) {
         return ret;
       } else {
+        double fillLevel = ((double) (nbos.getBytesPosted() - nbos.getBytesWritten())) /
+                           ((double) nbos.getBufferLimitBytes());
         // TODO: Find a less ad-hoc way of doing this.
-        double fillLevel =
-            ((double) nbos.getRemainingBytes()) / ((double) nbos.getBufferLimitBytes());
         if (fillLevel > 0.9) {
           return 0.0;
         } else if (fillLevel > 0.75) {
@@ -100,7 +100,9 @@ public class ScreenRecorder {
     }
     stopped = false;
     pointerRecorder = new CaptureScheduler(pointerRecorderTask);
+    pointerRecorder.start();
     frameRecorder   = new CaptureScheduler(frameRecorderTask);
+    frameRecorder.start();
   }
 
 

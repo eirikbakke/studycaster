@@ -1,163 +1,69 @@
 package no.ebakke.studycaster.util.stream;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.SwingUtilities;
 import no.ebakke.studycaster.util.Util;
-import no.ebakke.studycaster.util.Util.Interruptible;
 
 public class NonBlockingOutputStream extends OutputStream {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
-  private final Object exceptionLock = new Object();
-  private IOException storedException;
-  private PipedOutputStream outPipe;
-  private PipedInputStream inPipe;
+
+  private final AtomicReference<IOException> storedException =
+      new AtomicReference<IOException>(null);
+  private final List<StreamProgressObserver> observers = new ArrayList<StreamProgressObserver>();
+  private final int bufferLimit;
+  /* Don't rely on WriteOpQueue to keep track of remaining bytes, as this may result in a race
+  condition. */
+  private final AtomicInteger bytesWritten = new AtomicInteger(0);
+  private final AtomicInteger bytesPosted  = new AtomicInteger(0);
+  private WriteOpQueue pending;
   private Thread writerThread;
-  private volatile boolean flushDue;
-  private int bytesWritten, bufferLimit;
-  private final Object observerLock = new Object();
-  private List<StreamProgressObserver> observers = new ArrayList<StreamProgressObserver>();
+  /** For error checking only. */
+  private final AtomicBoolean closed = new AtomicBoolean(false);
 
-  /* All of this wackyness exists as a workaround for the fact that a PipedOutputStream will only
-  work reliably with a single owner thread. */
-  private byte[] writeOpB;
-  private int writeOpOff, writeOpLen;
-  private final Object writeOpLock = new Object();
-  private Thread writeOpThread = new Thread(new Runnable() {
-    public void run() {
-      synchronized (writeOpLock) {
-        try {
-          while (!Thread.interrupted()) {
-            while (writeOpB == null)
-              writeOpLock.wait();
-            try {
-              outPipe.write(writeOpB, writeOpOff, writeOpLen);
-            } catch (IOException e) {
-              storedException = e;
-            }
-            writeOpB = null;
-            writeOpLock.notifyAll();
-          }
-        } catch (InterruptedException e) {}
-      }
-    }
-  }, "NonBlockingOutputStream-writeOp");
-
-  public void addObserver(StreamProgressObserver observer) {
-    synchronized (observerLock) {
-      observers.add(observer);
-    }
+  /* ******************************************************************************************** */
+  public NonBlockingOutputStream(int bufferLimit) {
+    this.bufferLimit = bufferLimit;
+    pending = new WriteOpQueue(bufferLimit);
   }
 
-  public void removeObserver(StreamProgressObserver observer) {
-    synchronized (observerLock) {
-      observers.remove(observer);
-    }
-  }
-
-  private void notifyObservers() {
-    final List<StreamProgressObserver> toNotify;
-    synchronized (observerLock) {
-      toNotify = new ArrayList<StreamProgressObserver>(observers);
-    }
-    final int remaining;
-    remaining = getRemainingBytes();
-    // TODO: Don't use SwingUtilities here. Clean up this mess.
-    SwingUtilities.invokeLater(new Runnable() {
-      public void run() {
-        for (StreamProgressObserver observer : toNotify) {
-          final boolean stillObserving;
-          synchronized (observerLock) {
-            stillObserving = observers.contains(observer);
-          }
-          if (stillObserving)
-            observer.updateProgress(getWrittenBytes(), remaining);
-        }
-      }
-    });
-  }
-
-  @Override
-  public void write(int b) throws IOException {
-    write(new byte[] {(byte) b}, 0, 1);
-  }
-
-  @Override
-  public void write(byte[] b, int off, int len) throws IOException {
-    checkStoredException();
-    synchronized (writeOpLock) {
-      writeOpB = b;
-      writeOpOff = off;
-      writeOpLen = len;
-      writeOpLock.notifyAll();
-      while (writeOpB != null) {
-        Util.ensureInterruptible(new Interruptible() {
-          public void run() throws InterruptedException {
-            writeOpLock.wait();
-          }
-        });
-      }
-    }
-    checkStoredException();
-    notifyObservers();
-    checkStoredException();
-  }
-
-  private void checkStoredException() throws IOException {
-    synchronized (exceptionLock) {
-      if (storedException != null) {
-        IOException e = storedException;
-        storedException = null;
-        throw e;
-      }
-    }
-  }
-
-  private void setStoredException(IOException e) {
-    synchronized (exceptionLock) {
-      storedException = (storedException != null) ? storedException : e;
-    }
+  public NonBlockingOutputStream() {
+    this(Integer.MAX_VALUE);
   }
 
   /** Upon close, out will be closed as well (analogous to a BufferedOutputStream with out as the
   underlying stream). */
-  public void connect(final OutputStream out) throws IOException {
+  public final void connect(final OutputStream out) {
     if (writerThread != null)
-      throw new IOException("Already connected");
+      throw new IllegalStateException("Already connected");
     writerThread = new Thread(new Runnable() {
       public void run() {
         try {
-          try {
-            byte buffer[] = new byte[16 * 1024];
+          while (true) {
+            byte buf[] = null;
             try {
-              int got;
-              /* TODO: Fix a bug which caused this call to result in an
-              IOException "Write end dead". */
-              while ((got = inPipe.read(buffer)) >= 0) {
-                out.write(buffer, 0, got);
-                synchronized (observerLock) {
-                  bytesWritten += got;
-                }
-                notifyObservers();
-                if (flushDue && inPipe.available() == 0) {
-                  out.flush();
-                  flushDue = false;
-                }
-              }
-            } finally {
-              inPipe.close();
+              buf = pending.remove();
+            } catch (InterruptedException e) {
+              throw new InterruptedIOException();
             }
-          } finally {
-            out.close();
+            if (buf == null)
+              break;
+            out.write(buf);
+            bytesWritten.addAndGet(buf.length);
+            notifyObservers();
           }
+          /* TODO: Write a unit test that detects the lack of the close or final flush. If the
+          following line is removed, the resulting bug can currently only be seen when the entire
+          StudyCaster system is run. */
+          out.close();
         } catch (IOException e) {
-          LOG.log(Level.WARNING, "Storing an exception from I/O thread", e);
           setStoredException(e);
         }
       }
@@ -165,76 +71,114 @@ public class NonBlockingOutputStream extends OutputStream {
     writerThread.start();
   }
 
-  public int getBufferLimitBytes() {
-    return bufferLimit;
-  }
-
-  public int getRemainingBytes() {
-    try {
-      return inPipe.available();
-    } catch (IOException e) {
-      setStoredException(e);
-      return 0;
+  /* ******************************************************************************************** */
+  public void addObserver(StreamProgressObserver observer) {
+    synchronized (observers) {
+      observers.add(observer);
     }
   }
 
-  public int getWrittenBytes() {
-    synchronized (observerLock) {
-      return bytesWritten;
+  public void removeObserver(StreamProgressObserver observer) {
+    synchronized (observers) {
+      observers.remove(observer);
     }
   }
 
-  public NonBlockingOutputStream(final OutputStream out, int bufferLimit) {
-    this(bufferLimit);
-    try {
-      connect(out);
-    } catch (IOException e) {
-      throw new AssertionError("Unexpected exception: " + e.getMessage());
+  private void notifyObservers() {
+    final List<StreamProgressObserver> toNotify;
+    synchronized (observers) {
+      toNotify = new ArrayList<StreamProgressObserver>(observers);
+    }
+    // TODO: Might consider putting the notifications in a separate thread.
+    for (final StreamProgressObserver observer : toNotify)
+      observer.updateProgress(this);
+  }
+
+  /* ******************************************************************************************** */
+  @Override
+  public void write(int b) throws IOException {
+    write(new byte[] {(byte) b}, 0, 1);
+  }
+
+  @Override
+  public void write(byte b[], int off, int len) throws IOException {
+    errorIfClosed();
+    checkStoredException();
+    pending.push(b, off, len);
+    // Only do this if the push operation succeeds.
+    bytesPosted.addAndGet(len);
+    /* While it might be appropriate to send a notification to observers at this point, keep things
+    simple and just wait until the writer thread gets around to do so instead. */
+  }
+
+  private void checkStoredException() throws IOException {
+    IOException e = storedException.get();
+    if (e != null) {
+      /* The semantics of InterruptedIOException make it inappropriate to throw this kind of
+      exception after the fact. In particular, there is no meaningful way to restart the failed
+      operation. */
+      if (e instanceof InterruptedIOException) {
+        throw new IOException("Write thread interrupted");
+      } else {
+        throw e;
+      }
     }
   }
 
-  public NonBlockingOutputStream(int bufferLimit) {
-    outPipe = new PipedOutputStream();
-    this.bufferLimit = bufferLimit;
-    try {
-      inPipe = new PipedInputStreamExt(outPipe, bufferLimit);
-    } catch (IOException e) {
-      throw new RuntimeException("Unexpected exception", e);
-    }
-    writeOpThread.start();
+  private void setStoredException(IOException e) {
+    LOG.log(Level.WARNING, "Storing an exception from I/O thread", e);
+    /* Will only store the first exception. Swallowed exceptions are part of reality, however. */
+    storedException.compareAndSet(null, e);
   }
 
   @Override
   public void close() throws IOException {
-    writeOpThread.interrupt();
-    Util.ensureInterruptible(new Interruptible() {
+    if (closed.getAndSet(true))
+      return;
+    if (writerThread == null) {
+      if (getBytesPosted() == getBytesWritten()) {
+        return;
+      } else {
+        throw new IOException("Never connected; data never written");
+      }
+    }
+    Util.ensureInterruptible(new Util.Interruptible() {
       public void run() throws InterruptedException {
-        writeOpThread.join();
+        pending.pushEOF();
       }
     });
-    outPipe.close();
-    if (writerThread != null) {
-      Util.ensureInterruptible(new Interruptible() {
-        public void run() throws InterruptedException {
-          writerThread.join();
-        }
-      });
-      writerThread = null;
-    }
+    Util.ensureInterruptible(new Util.Interruptible() {
+      public void run() throws InterruptedException {
+        writerThread.join();
+      }
+    });
     checkStoredException();
+    if (getBytesPosted() != getBytesWritten())
+      throw new IOException("There were unwritten bytes");
   }
 
+  private void errorIfClosed() throws IOException {
+    if (closed.get())
+      throw new IOException("Stream closed");
+  }
+
+  /** This method is a no-op, as a proper implementation would need to block, contrary to the
+  purpose of this class. */
   @Override
   public void flush() throws IOException {
-    /* PipedOutputStream.flush() does not actually seem to block, only notify, so we can use it
-    here. */
-    outPipe.flush();
-    /* Relaxed interpretation of flush; just flush the underlying output stream as soon as we've
-    gotten around to write to it. */
-    flushDue = true;
+    errorIfClosed();
   }
 
-  public interface StreamProgressObserver {
-    public void updateProgress(int bytesWritten, int bytesRemaining);
+  /* ******************************************************************************************** */
+  public int getBufferLimitBytes() {
+    return bufferLimit;
+  }
+
+  public int getBytesWritten() {
+    return bytesWritten.get();
+  }
+
+  public int getBytesPosted() {
+    return bytesPosted.get();
   }
 }
