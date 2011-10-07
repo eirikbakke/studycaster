@@ -20,11 +20,9 @@ public class AdminActionsServlet extends HttpServlet {
   protected void doPost(HttpServletRequest req, HttpServletResponse resp)
       throws ServletException, IOException
   {
-    if (!BackendUtil.isAdminLoggedIn(req, null)) {
-      resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Not logged in.");
-      return;
-    }
     try {
+      if (!BackendUtil.isAdminLoggedIn(req, null))
+        throw new BadRequestException("Not logged in", HttpServletResponse.SC_FORBIDDEN);
       String dbAction      = ServletUtil.getStringParam(req, "dbAction");
       String connectionURL = ServletUtil.getStringParam(req, "connectionURL");
       String createAndSetPassword;

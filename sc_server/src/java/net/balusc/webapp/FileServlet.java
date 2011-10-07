@@ -116,7 +116,7 @@ public class FileServlet extends HttpServlet {
     File file;
     try {
       file = ServletUtil.getSaneFile(LifeCycle.getBackend(request).getStorageDirectory(),
-            URLDecoder.decode(requestedFile, "UTF-8"), false);
+             URLDecoder.decode(requestedFile, "UTF-8"), false);
     } catch (BadRequestException e) {
       e.sendError(response);
       return;

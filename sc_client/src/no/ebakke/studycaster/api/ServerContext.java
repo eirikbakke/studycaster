@@ -208,14 +208,19 @@ public class ServerContext {
       throw new IOException("Failed to get response entity.");
     try {
       if (response.getStatusLine().getStatusCode() != 200) {
-        if (response.getStatusLine().getStatusCode() == 404)
-          throw new NonRetriableException("Remote file not found");
-        if (response.getStatusLine().getStatusCode() == 403)
-          throw new NonRetriableException("Remote server denied operation");
-
-        throw new IOException("Command " + cmd + " got bad status code " +
-            response.getStatusLine().getReasonPhrase() + " (" +
-            getContentString(response) + ")");
+        Header disableRetryHeader = response.getFirstHeader("X-StudyCaster-DisableRetry");
+        Header errorMessageHeader = response.getFirstHeader("X-StudyCaster-ErrorMessage");
+        boolean disableRetry =
+            disableRetryHeader == null ? false : disableRetryHeader.getValue().equals("true");
+        String errorMessage =
+            errorMessageHeader == null ? getContentString(response) : errorMessageHeader.getValue();
+        String exceptionMessage = "Command " + cmd + " got bad status code " +
+            response.getStatusLine().getReasonPhrase() + "; " + errorMessage;
+        if (disableRetry) {
+          throw new NonRetriableException(exceptionMessage);
+        } else {
+          throw new IOException(exceptionMessage);
+        }
       }
       Header okHeader = response.getFirstHeader("X-StudyCaster-OK");
       if (okHeader == null)

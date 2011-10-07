@@ -121,12 +121,12 @@ public class APIServlet extends HttpServlet {
         long existingLength = outFile.length();
         if (existingLength + content.getSize() > MAX_FILE_SIZE) {
           throw new BadRequestException("File size reached limit",
-              HttpServletResponse.SC_FORBIDDEN);
+              HttpServletResponse.SC_FORBIDDEN, true);
         }
         if (outFile.getUsableSpace() < MIN_AVAILABLE_SPACE) {
           LOG.severe("Server low on disk space");
           throw new BadRequestException("Server low on disk space",
-              HttpServletResponse.SC_FORBIDDEN);
+              HttpServletResponse.SC_FORBIDDEN, true);
         }
         InputStream is = content.getInputStream();
         try {
@@ -148,10 +148,11 @@ public class APIServlet extends HttpServlet {
         resp.setHeader("X-StudyCaster-OK", "upa");
       } else if (cmd.equals("dnl")) {
         // Idempotent (read-only).
-        File input = ServletUtil.getSaneFile(storageDir,
-            ServletUtil.getMultipartStringParam(multiPart, "content"), false);
+        String fileName = ServletUtil.getMultipartStringParam(multiPart, "content");
+        File input = ServletUtil.getSaneFile(storageDir, fileName, false);
         if (!input.exists()) {
-          resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+          throw new BadRequestException("File \"" + StringEscapeUtils.escapeJava(fileName) +
+              "\" not found", HttpServletResponse.SC_NOT_FOUND, true);
         } else {
           resp.setHeader("X-StudyCaster-OK", "dnl");
           ServletUtil.sendFile(resp, input, "application/octet-stream");
