@@ -6,7 +6,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,24 +18,24 @@ public class NonBlockingOutputStream extends OutputStream {
   private final AtomicReference<IOException> storedException =
       new AtomicReference<IOException>(null);
   private final List<StreamProgressObserver> observers = new ArrayList<StreamProgressObserver>();
-  private final int bufferLimit;
+  private final long bufferLimit;
   /* Don't rely on WriteOpQueue to keep track of remaining bytes, as this may result in a race
   condition. */
-  private final AtomicInteger bytesWritten = new AtomicInteger(0);
-  private final AtomicInteger bytesPosted  = new AtomicInteger(0);
+  private final AtomicLong bytesWritten = new AtomicLong(0);
+  private final AtomicLong bytesPosted  = new AtomicLong(0);
   private WriteOpQueue pending;
   private Thread writerThread;
   /** For error checking only. */
   private final AtomicBoolean closed = new AtomicBoolean(false);
 
   /* ******************************************************************************************** */
-  public NonBlockingOutputStream(int bufferLimit) {
+  public NonBlockingOutputStream(long bufferLimit) {
     this.bufferLimit = bufferLimit;
     pending = new WriteOpQueue(bufferLimit);
   }
 
   public NonBlockingOutputStream() {
-    this(Integer.MAX_VALUE);
+    this(Long.MAX_VALUE);
   }
 
   /** Upon close, out will be closed as well (analogous to a BufferedOutputStream with out as the
@@ -170,15 +170,15 @@ public class NonBlockingOutputStream extends OutputStream {
   }
 
   /* ******************************************************************************************** */
-  public int getBufferLimitBytes() {
+  public long getBufferLimitBytes() {
     return bufferLimit;
   }
 
-  public int getBytesWritten() {
+  public long getBytesWritten() {
     return bytesWritten.get();
   }
 
-  public int getBytesPosted() {
+  public long getBytesPosted() {
     return bytesPosted.get();
   }
 }

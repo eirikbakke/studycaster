@@ -12,18 +12,18 @@ class WriteOpQueue {
   private final Lock lock          = new ReentrantLock();
   private final Condition notFull  = lock.newCondition();
   private final Condition notEmpty = lock.newCondition();
-  private final int maxBytesInQueue;
+  private final long maxBytesInQueue;
   private Queue<byte[]> ops = new LinkedList<byte[]>();
-  private int bytesInQueue  = 0;
+  private long bytesInQueue  = 0;
 
-  public WriteOpQueue(int maxBytesInQueue) {
+  public WriteOpQueue(long maxBytesInQueue) {
     if (maxBytesInQueue < 1)
       throw new IllegalArgumentException();
     this.maxBytesInQueue = maxBytesInQueue;
   }
 
   public WriteOpQueue() {
-    this(Integer.MAX_VALUE);
+    this(Long.MAX_VALUE);
   }
 
   public void pushEOF() throws InterruptedException {
@@ -32,7 +32,7 @@ class WriteOpQueue {
 
   public void push(byte b[], int off, int len) throws InterruptedIOException {
     for (int subOff = 0; subOff < len; ) {
-      final int subLen = Math.min(len - subOff, maxBytesInQueue);
+      final int subLen = Math.min(len - subOff, (int) Math.min(maxBytesInQueue, Integer.MAX_VALUE));
       try {
         pushOne(Util.copyOfRange(b, off + subOff, off + subOff + subLen));
       } catch (InterruptedException e) {

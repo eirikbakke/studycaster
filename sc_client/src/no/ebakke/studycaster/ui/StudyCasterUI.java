@@ -33,7 +33,7 @@ public class StudyCasterUI {
   private UIAction actionTaken = UIAction.NO_ACTION;
   private Blocker actionBlocker = new Blocker();
   private File defaultFile, selectedFile;
-  private int streamProgressStart;
+  private long streamProgressStart;
   private FileFilter uploadFileFilter;
   private SingleInstanceService singleInstanceService;
   private SingleInstanceListener singleInstanceListener;
@@ -41,9 +41,11 @@ public class StudyCasterUI {
       public void updateProgress(final NonBlockingOutputStream nbos) {
         SwingUtilities.invokeLater(new Runnable() {
           public void run() {
-            getProgressBarUI().setBounds(streamProgressStart,
-                nbos.getBytesPosted() + ServerContext.DEF_UPLOAD_CHUNK_SZ);
-            getProgressBarUI().setProgress(nbos.getBytesWritten());
+            // A small workaround to support the longs returned by nbos methods.
+            double fraction = ((double) nbos.getBytesWritten()) / ((double) nbos.getBytesPosted());
+            final int STEPS = 1000000;
+            getProgressBarUI().setBounds(0, STEPS);
+            getProgressBarUI().setProgress((int) (STEPS * fraction));
           }
         });
       }
