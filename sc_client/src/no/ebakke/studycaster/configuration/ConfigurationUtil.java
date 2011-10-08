@@ -131,7 +131,9 @@ final class ConfigurationUtil {
           "<html xmlns=\"\"> element.");
     } else {
       try {
-        return XMLUtil.getXMLString(htmlContent.get(0), true);
+        /* The regex replace serves mainly to remove newlines, which seem to confuse certain Swing
+        components (at least JOptionPane) when combined with HTML content. */
+        return XMLUtil.getXMLString(htmlContent.get(0), true).replaceAll("\\s+", " ");
       } catch (TransformerException e) {
         throw new StudyCasterException("Unexpected XML transformation error", e);
       }

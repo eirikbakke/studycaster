@@ -6,18 +6,28 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
-import java.util.logging.SimpleFormatter;
 
+/** Thread-safe. For consistency in logging statements throughout the codebase, this class always
+uses MessageFormat for formatting, regardless of whether the log record includes a parameter or any
+parameter references in the message string. */
 public class ServerTimeLogFormatter extends Formatter {
-  private static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-  private Long serverSecondsAhead;
+  private volatile Long serverSecondsAhead;
+  /* SimpleDateFormat is not thread-safe. The following is the standard way of dealing with it.
+  See http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4264153 . */
+  private static final ThreadLocal<DateFormat> dateFormat = 
+    new ThreadLocal<DateFormat>() {
+      @Override
+      public DateFormat initialValue() {
+        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+      }
+    };
 
   public void setServerSecondsAhead(long serverSecondsAhead) {
     this.serverSecondsAhead = serverSecondsAhead;
   }
 
   private static String formatTime(long millis) {
-    return dateFormat.format(new Date(millis));
+    return dateFormat.get().format(new Date(millis));
   }
 
   private static void formatThrowable(StringBuffer buf, Throwable e) {
@@ -45,7 +55,6 @@ public class ServerTimeLogFormatter extends Formatter {
       ret.append("  exception was ");
       formatThrowable(ret, r.getThrown());
     }
-    SimpleFormatter foo;
     return ret.toString();
   }
 }

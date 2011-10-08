@@ -12,7 +12,6 @@ import javax.jnlp.UnavailableServiceException;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
-import no.ebakke.studycaster.api.ServerContext;
 import no.ebakke.studycaster.api.StudyCasterException;
 import no.ebakke.studycaster.util.Blocker;
 import no.ebakke.studycaster.util.Util;
@@ -33,7 +32,6 @@ public class StudyCasterUI {
   private UIAction actionTaken = UIAction.NO_ACTION;
   private Blocker actionBlocker = new Blocker();
   private File defaultFile, selectedFile;
-  private long streamProgressStart;
   private FileFilter uploadFileFilter;
   private SingleInstanceService singleInstanceService;
   private SingleInstanceListener singleInstanceListener;
@@ -41,7 +39,7 @@ public class StudyCasterUI {
       public void updateProgress(final NonBlockingOutputStream nbos) {
         SwingUtilities.invokeLater(new Runnable() {
           public void run() {
-            // A small workaround to support the longs returned by nbos methods.
+            // A workaround to support the longs returned by nbos methods.
             double fraction = ((double) nbos.getBytesWritten()) / ((double) nbos.getBytesPosted());
             final int STEPS = 1000000;
             getProgressBarUI().setBounds(0, STEPS);
@@ -245,7 +243,6 @@ public class StudyCasterUI {
     if (os == null)
       return;
     if (doMonitor) {
-      streamProgressStart = os.getBytesWritten();
       os.addObserver(spo);
     } else {
       os.removeObserver(spo);

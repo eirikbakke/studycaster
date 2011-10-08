@@ -61,8 +61,9 @@ public final class Reports {
         launch.firstRequest = firstRequest.get(launchTicket);
         launch.lastRequest  = lastRequest.get(launchTicket);
         // TODO: Get rid of the KB presentation detail.
+        // Round contentSize up to avoid showing zero kilobytes for non-zero values.
         if (contentSize.get(launchTicket) != null)
-          launch.contentSize  = contentSize.get(launchTicket) / 1024;
+          launch.contentSize  = (int) Math.ceil(((double) contentSize.get(launchTicket)) / 1024.0);
         subject.launches.add(launch);
       }
       Collections.sort(subject.launches);

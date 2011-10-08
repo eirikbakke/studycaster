@@ -8,7 +8,6 @@ import no.ebakke.studycaster.api.ServerTimeLogFormatter;
 import no.ebakke.studycaster.util.stream.ConsoleTee;
 import no.ebakke.studycaster.util.stream.NonBlockingOutputStream;
 
-// TODO: Does this actually need to be thread-safe?
 /** Thread-safe singleton. */
 public final class EnvironmentHooks {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
@@ -17,13 +16,22 @@ public final class EnvironmentHooks {
   private SingleInstanceHandler   singleInstanceHandler;
   private ConsoleTee              consoleTee;
   private NonBlockingOutputStream consoleStream;
+  private ServerTimeLogFormatter  logFormatter;
   private boolean                 open = false;
 
   private EnvironmentHooks() {
   }
 
-  public NonBlockingOutputStream getConsoleStream() {
+  public synchronized NonBlockingOutputStream getConsoleStream() {
     return consoleStream;
+  }
+
+  public synchronized ServerTimeLogFormatter getLogFormatter() {
+    return logFormatter;
+  }
+
+  public synchronized SingleInstanceHandler getSingleInstanceHandler() {
+    return singleInstanceHandler;
   }
 
   private synchronized void init() {
@@ -32,9 +40,9 @@ public final class EnvironmentHooks {
 
     // Connect the ConsoleTee as the very first thing to do.
     consoleStream = new NonBlockingOutputStream();
-    ServerTimeLogFormatter logFormatter = new ServerTimeLogFormatter();
-    consoleTee = new ConsoleTee(consoleStream, logFormatter);
-    // Entering initial log message to promote fail-fast behavior of potential ConsoleTee bugs.
+    logFormatter  = new ServerTimeLogFormatter();
+    consoleTee    = new ConsoleTee(consoleStream, logFormatter);
+    // Enter initial log message to promote fail-fast behavior of potential ConsoleTee bugs.
     LOG.info("Connected console");
 
     // TODO: Test this feature.
@@ -51,7 +59,7 @@ public final class EnvironmentHooks {
     open = true;
   }
 
-  public static EnvironmentHooks createStudyCaster() {
+  public static EnvironmentHooks create() {
     instance.init();
     return instance;
   }

@@ -1,31 +1,35 @@
 package no.ebakke.studycaster.nouveau;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
 import javax.jnlp.ServiceManager;
 import javax.jnlp.SingleInstanceListener;
 import javax.jnlp.SingleInstanceService;
 import javax.jnlp.UnavailableServiceException;
 
 public class SingleInstanceHandler {
-  private boolean                messagePending;
+  private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
+  private List<String[]>         pending = new ArrayList<String[]>();
   private SingleInstanceListener clientListener;
   private SingleInstanceService  service;
 
   private final SingleInstanceListener proxyListener = new SingleInstanceListener() {
     public void newActivation(String[] strings) {
-      callIfPendingAndReady(true);
+      LOG.info("User attempted to open an additional instance of the client");
+      synchronized (SingleInstanceHandler.this) {
+        pending.add(strings);
+        callPendingWhenReady();
+      }
     }
   };
 
-  private synchronized void callIfPendingAndReady(boolean forcePending) {
-    final SingleInstanceListener listener;
-    synchronized (this) {
-      messagePending |= forcePending;
-      listener = messagePending ? clientListener : null;
-      if (listener != null)
-        messagePending = false;
+  private synchronized void callPendingWhenReady() {
+    if (clientListener != null) {
+      for (String[] args : pending)
+        clientListener.newActivation(args);
+      pending.clear();
     }
-    if (listener != null)
-      listener.newActivation(null);
   }
 
   public void setListener(SingleInstanceListener listener) {
@@ -34,7 +38,7 @@ public class SingleInstanceHandler {
         throw new IllegalStateException("Already set the SingleInstanceListener");
       clientListener = listener;
     }
-    callIfPendingAndReady(false);
+    callPendingWhenReady();
   }
 
   public SingleInstanceHandler() throws UnavailableServiceException {

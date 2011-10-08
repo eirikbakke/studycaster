@@ -2,9 +2,11 @@ package no.ebakke.studycaster.nouveau;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.jnlp.SingleInstanceListener;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import no.ebakke.studycaster.api.ServerContext;
@@ -29,25 +31,25 @@ public final class StudyUI {
   accessed from the event-handling thread only. */
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   final private MainFrame mainFrame;
-  // TODO: Implement the dialog for multiple launches.
   final private EnvironmentHooks hooks;
   private ServerContext serverContext = null;
   private StudyConfiguration configuration = null;
   private Thread initializerThread, failsafeCloseThread, backendCloseThread;
+  private final WindowListener windowClosingListener;
 
   private StudyUI(EnvironmentHooks hooks) {
     this.hooks = hooks;
     mainFrame = new MainFrame();
-    mainFrame.addWindowListener(new WindowAdapter() {
+    windowClosingListener = new WindowAdapter() {
       @Override
       public void windowClosing(WindowEvent e) {
         boolean doClose;
         if (configuration != null) {
           LOG.info("User tried to close main StudyCaster window");
           doClose = JOptionPane.showConfirmDialog(mainFrame.getPositionDialog(),
-            getUIString(UIStringKey.DIALOG_CLOSE_MESSAGE),
-            getUIString(UIStringKey.DIALOG_CLOSE_TITLE),
-            JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) == JOptionPane.OK_OPTION;
+              getUIString(UIStringKey.DIALOG_CLOSE_MESSAGE),
+              getUIString(UIStringKey.DIALOG_CLOSE_TITLE),
+              JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) == JOptionPane.OK_OPTION;
           if (doClose) {
             LOG.info("User confirmed closing of main StudyCaster window");
           } else {
@@ -57,22 +59,27 @@ public final class StudyUI {
           doClose = true;
           LOG.info("User closed main StudyCaster window before configuration was loaded; exiting");
         }
-        if (doClose) {
-          mainFrame.removeWindowListener(this);
-          closeUI();
-          closeBackend(null);
-        }
+        if (doClose)
+          closeUIandBackend();
       }
-    });
+    };
+    mainFrame.addWindowListener(windowClosingListener);
   }
 
   private String getUIString(UIStringKey key) {
     return configuration.getUIStrings().getString(key);
   }
 
+  // TODO: Rename or refactor.
+  private void closeUIandBackend() {
+    closeUI();
+    closeBackend(null);
+  }
+
   private void closeUI() {
     if (failsafeCloseThread != null)
       throw new IllegalStateException("UI already closed");
+    mainFrame.removeWindowListener(windowClosingListener);
     mainFrame.setVisible(false);
     mainFrame.dispose();
     failsafeCloseThread = new Thread(new Runnable() {
@@ -106,7 +113,9 @@ public final class StudyUI {
           });
         }
         hooks.close();
-        serverContext.close();
+        // In the case of an error, serverContext may still not be defined.
+        if (serverContext != null)
+          serverContext.close();
         if (onEndEHT != null)
           SwingUtilities.invokeLater(onEndEHT);
       }
@@ -121,16 +130,34 @@ public final class StudyUI {
         throw storedException;
       mainFrame.setButtonCaptions(configuration.getUIStrings());
       mainFrame.setButtonsVisible(true, true, true);
+
+      /* Do this after properly setting up the main window, in case there are enqueued messages. */
+      SingleInstanceHandler sih = hooks.getSingleInstanceHandler();
+      if (sih != null) {
+        sih.setListener(new SingleInstanceListener() {
+          public void newActivation(String[] strings) {
+            LOG.info("Showing already running dialog");
+            JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
+                getUIString(UIStringKey.DIALOG_ALREADY_RUNNING_MESSAGE),
+                getUIString(UIStringKey.DIALOG_ALREADY_RUNNING_TITLE),
+                JOptionPane.INFORMATION_MESSAGE);
+          }
+        });
+      }
     } catch (StudyCasterException e) {
-      // TODO: Do something.
-      e.printStackTrace();
+      /* Note: Due to the exception, configuration and serverContext may not be defined. */
+      LOG.log(Level.SEVERE, "Showing fatal error dialog", e);
+      mainFrame.setProgressBarStatus("", false);
+      JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
+          "There was an unexpected error:\n" + e.getMessage(), "Error",
+          JOptionPane.ERROR_MESSAGE);
+      closeUIandBackend();
     }
   }
 
   public void runStudy(final String args[]) {
     if (initializerThread != null)
       throw new IllegalStateException("Already started");
-    // TODO: Consider including a copy of the SwingWorker class from JDK 1.6 and using that instead.
     initializerThread = new Thread(new Runnable() {
       private ServerContext      serverContextT;
       private StudyConfiguration configurationT;
@@ -138,13 +165,14 @@ public final class StudyUI {
       public void run() {
         StudyCasterException exception = null;
         try {
-          if (args.length != 1) {
-            throw new StudyCasterException(
-                "Invoked with incorrect command-line arguments (missing configuration ID)");
-          }
           serverContextT = new ServerContext();
+          hooks.getLogFormatter().setServerSecondsAhead(serverContextT.getServerSecondsAhead());
           try {
             hooks.getConsoleStream().connect(serverContextT.uploadFile("console.txt"));
+            if (args.length != 1) {
+              throw new StudyCasterException(
+                  "Invoked with incorrect command-line arguments (missing configuration ID)");
+            }
             configurationT = StudyConfiguration.parseConfiguration(
               serverContextT.downloadFile("studyconfig.xml"), args[0]);
           } catch (IOException e) {
@@ -176,7 +204,7 @@ public final class StudyUI {
   }
 
   public static void main(final String args[]) {
-    final EnvironmentHooks api = EnvironmentHooks.createStudyCaster();
+    final EnvironmentHooks hooks = EnvironmentHooks.create();
 
     // Must be called before any UI components are rendered.
     try {
@@ -187,7 +215,7 @@ public final class StudyUI {
 
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
-        new StudyUI(api).runStudy(args);
+        new StudyUI(hooks).runStudy(args);
       }
     });
   }

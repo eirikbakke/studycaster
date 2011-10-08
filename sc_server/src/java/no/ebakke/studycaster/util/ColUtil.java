@@ -69,6 +69,6 @@ public final class ColUtil {
     if (val == null)
       return;
     Long existing = map.get(key);
-    map.put(key, (existing == null) ? 0L : val + existing.longValue());
+    map.put(key, val + ((existing == null) ? 0L : existing.longValue()));
   }
 }
