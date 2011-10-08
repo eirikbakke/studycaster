@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import no.ebakke.studycaster.util.Util;
+import org.apache.commons.io.IOExceptionWithCause;
 
 public class NonBlockingOutputStream extends OutputStream {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
@@ -63,6 +64,8 @@ public class NonBlockingOutputStream extends OutputStream {
           following line is removed, the resulting bug can currently only be seen when the entire
           StudyCaster system is run. */
           out.close();
+        } catch (IllegalStateException e) {
+          setStoredException(new IOExceptionWithCause(e));
         } catch (IOException e) {
           setStoredException(e);
         }
@@ -113,16 +116,8 @@ public class NonBlockingOutputStream extends OutputStream {
 
   private void checkStoredException() throws IOException {
     IOException e = storedException.get();
-    if (e != null) {
-      /* The semantics of InterruptedIOException make it inappropriate to throw this kind of
-      exception after the fact. In particular, there is no meaningful way to restart the failed
-      operation. */
-      if (e instanceof InterruptedIOException) {
-        throw new IOException("Write thread interrupted");
-      } else {
-        throw e;
-      }
-    }
+    if (e != null)
+      throw new IOExceptionWithCause("Error in write thread", e);
   }
 
   private void setStoredException(IOException e) {

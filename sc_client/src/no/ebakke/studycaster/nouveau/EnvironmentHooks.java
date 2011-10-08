@@ -42,8 +42,10 @@ public final class EnvironmentHooks {
     try {
       singleInstanceHandler = new SingleInstanceHandler();
     } catch (UnavailableServiceException e) {
+      // Happens normally all the time during development, so don't include a full stack trace.
       LOG.log(Level.INFO,
-          "Couldn''t create a SingleInstanceService (normal when run outside of JWS)", e);
+          "Couldn''t create a SingleInstanceService (normal when run outside of JWS); {0}",
+          e.getMessage());
     }
 
     open = true;

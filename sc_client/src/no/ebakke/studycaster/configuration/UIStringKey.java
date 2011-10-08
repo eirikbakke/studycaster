@@ -6,13 +6,15 @@ public enum UIStringKey {
   MAINFRAME_OPEN_BUTTON(true, true),
   MAINFRAME_UPLOAD_BUTTON(true, true),
   MAINFRAME_BACK_BUTTON(true, true),
-  MAINFRAME_NEXT_BUTTON(true, true);
+  MAINFRAME_NEXT_BUTTON(true, true),
+  DIALOG_CLOSE_TITLE(false, false),
+  DIALOG_CLOSE_MESSAGE(false, true);
 
   private boolean hasMnemonic, htmlAllowed;
 
-  private UIStringKey(boolean mnemonicRequired, boolean htmlAllowed) {
-    this.hasMnemonic = mnemonicRequired;
-    this.htmlAllowed      = htmlAllowed;
+  private UIStringKey(boolean hasMnemonic, boolean htmlAllowed) {
+    this.hasMnemonic = hasMnemonic;
+    this.htmlAllowed = htmlAllowed;
   }
 
   public boolean hasMnemonic() {

@@ -11,6 +11,10 @@
       <uistring key="MAINFRAME_UPLOAD_BUTTON" mnemonic="U">Upload and Retrive Confirmation Code...</uistring>
       <uistring key="MAINFRAME_BACK_BUTTON"   mnemonic="B">&lt; Back</uistring>
       <uistring key="MAINFRAME_NEXT_BUTTON"   mnemonic="N">Next &gt;</uistring>
+      <uistring key="DIALOG_CLOSE_TITLE"  >Exit Without Uploading?</uistring>
+      <uistring key="DIALOG_CLOSE_MESSAGE">
+        If you exit the StudyCaster client without uploading first, your changes will be lost.
+      </uistring>
     </uistrings>
   </macrodef>
   <!-- Foreign language example, to test UI string settings. -->
@@ -25,6 +29,10 @@
       <uistring key="MAINFRAME_UPLOAD_BUTTON" mnemonic="L">Last opp og motta bekreftelseskode...</uistring>
       <uistring key="MAINFRAME_BACK_BUTTON"   mnemonic="T">&lt; Tilbake</uistring>
       <uistring key="MAINFRAME_NEXT_BUTTON"   mnemonic="N">Neste &gt;</uistring>
+      <uistring key="DIALOG_CLOSE_TITLE"  >Avslutt uten å laste opp?</uistring>
+      <uistring key="DIALOG_CLOSE_MESSAGE">
+        Hvis du avslutter StudyCaster uten å laste opp først, går dine endringer tapt.
+      </uistring>
     </uistrings>
   </macrodef>
 
