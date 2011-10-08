@@ -25,7 +25,8 @@ import no.ebakke.studycaster.util.Util;
 
 // TODO: Rename to StudyCasterUI. Rename threads to reflect change.
 public final class StudyUI {
-  // Methods in this class must be called from the event-handling thread only.
+  /* Methods in this class must be called from the event-handling thread only, and members must be
+  accessed from the event-handling thread only. */
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   final private MainFrame mainFrame;
   // TODO: Implement the dialog for multiple launches.
@@ -59,11 +60,7 @@ public final class StudyUI {
         if (doClose) {
           mainFrame.removeWindowListener(this);
           closeUI();
-          closeBackend(new Runnable() {
-            public void run() {
-              failsafeCloseThread.interrupt();
-            }
-          });
+          closeBackend(null);
         }
       }
     });
@@ -85,14 +82,14 @@ public final class StudyUI {
             LOG.warning("Forcing exit in three seconds (this may be last log message)");
             Thread.sleep(3000);
             LOG.warning("Forcing exit ten seconds after window closure");
-            System.exit(-1);
           } catch (InterruptedException e) {
-            // Fall through.
+            LOG.warning("Failsafe exit thread interrupted; exiting immediately");
           }
-          // TODO: System.exit() no matter what.
-          LOG.info("Fail safe exit disarmed");
+          System.exit(1);
         }
       }, "StudyUI-failsafeClose");
+    // Don't keep the VM running just because of the failsafe thread.
+    failsafeCloseThread.setDaemon(true);
     failsafeCloseThread.start();
   }
 
@@ -135,6 +132,9 @@ public final class StudyUI {
       throw new IllegalStateException("Already started");
     // TODO: Consider including a copy of the SwingWorker class from JDK 1.6 and using that instead.
     initializerThread = new Thread(new Runnable() {
+      private ServerContext      serverContextT;
+      private StudyConfiguration configurationT;
+
       public void run() {
         StudyCasterException exception = null;
         try {
@@ -142,11 +142,11 @@ public final class StudyUI {
             throw new StudyCasterException(
                 "Invoked with incorrect command-line arguments (missing configuration ID)");
           }
-          serverContext = new ServerContext();
+          serverContextT = new ServerContext();
           try {
-            hooks.getConsoleStream().connect(serverContext.uploadFile("console.txt"));
-            configuration = StudyConfiguration.parseConfiguration(
-              serverContext.downloadFile("studyconfig.xml"), args[0]);
+            hooks.getConsoleStream().connect(serverContextT.uploadFile("console.txt"));
+            configurationT = StudyConfiguration.parseConfiguration(
+              serverContextT.downloadFile("studyconfig.xml"), args[0]);
           } catch (IOException e) {
             throw new StudyCasterException("Unexpected I/O error", e);
           }
@@ -156,19 +156,23 @@ public final class StudyUI {
         final StudyCasterException exceptionF = exception;
         SwingUtilities.invokeLater(new Runnable() {
           public void run() {
+            /* Change member variables of the outer class only once we're back in the EHT. Seemed
+            cleaner than declaring them volatile. */
+            serverContext = serverContextT;
+            configuration = configurationT;
             initUI(exceptionF);
           }
         });
       }
     }, "StudyUI-runStudy");
-    initializerThread.start();
 
-    /* To avoid a race condition in closeBackend(), initializerThread must be started before the UI
-    can be displayed. */
+    /* To avoid a race condition in closeBackend(), initializerThread must be initialized before the
+    UI can be displayed, and started after the UI has been displayed. */
     mainFrame.setProgressBarStatus("", true);
     mainFrame.setInstructions("");
     mainFrame.setButtonsVisible(false, false, false);
     mainFrame.setVisible(true);
+    initializerThread.start();
   }
 
   public static void main(final String args[]) {

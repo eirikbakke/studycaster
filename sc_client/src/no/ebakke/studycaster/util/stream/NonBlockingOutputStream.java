@@ -24,8 +24,9 @@ public class NonBlockingOutputStream extends OutputStream {
   condition. */
   private final AtomicLong bytesWritten = new AtomicLong(0);
   private final AtomicLong bytesPosted  = new AtomicLong(0);
-  private WriteOpQueue pending;
-  private Thread writerThread;
+  private final WriteOpQueue pending;
+  // Make writerThread volatile in case connect() and close() is called by separate threads.
+  private volatile Thread writerThread;
   /** For error checking only. */
   private final AtomicBoolean closed = new AtomicBoolean(false);
 
