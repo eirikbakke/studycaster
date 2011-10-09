@@ -41,6 +41,7 @@
               <li><span class="reportKey">firstRequest</span>  = <c:out value="${launch.firstRequest}"/></li>
               <li><span class="reportKey">lastRequest</span>   = <c:out value="${launch.lastRequest}"/>
                 (<c:out value="${launch.timeSinceLastRequest}"/> ago)</li>
+              <li><span class="reportKey">numRequests</span>   = <c:out value="${launch.numRequests}"/></li>
               <li><span class="reportKey">totalDuration</span> = <c:out value="${launch.totalDuration}"/></li>
               <li><span class="reportKey">contentSize</span>   = <c:out value="${launch.contentSize}"/> KB</li>
               </ul>

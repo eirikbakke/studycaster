@@ -20,6 +20,10 @@ public class AdminActionsServlet extends HttpServlet {
   protected void doPost(HttpServletRequest req, HttpServletResponse resp)
       throws ServletException, IOException
   {
+    resp.setHeader("Cache-Control", "no-cache");
+    resp.setHeader("Pragma"       , "no-cache");
+    resp.setCharacterEncoding("UTF-8");
+
     try {
       if (!BackendUtil.isAdminLoggedIn(req, null))
         throw new BadRequestException("Not logged in", HttpServletResponse.SC_FORBIDDEN);

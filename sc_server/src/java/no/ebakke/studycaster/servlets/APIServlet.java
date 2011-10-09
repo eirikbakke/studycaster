@@ -39,6 +39,10 @@ public class APIServlet extends HttpServlet {
   protected void doPost(HttpServletRequest req, HttpServletResponse resp)
       throws ServletException, IOException
   {
+    resp.setHeader("Cache-Control", "no-cache");
+    resp.setHeader("Pragma"       , "no-cache");
+    resp.setCharacterEncoding("UTF-8");
+
     Map<String,FileItem[]> multiPart = null;
     String cmd = null, logEntry = null, clientCookie = null,
         launchTicket = null;
@@ -72,8 +76,7 @@ public class APIServlet extends HttpServlet {
         }
         resp.setHeader("X-StudyCaster-LaunchTicket", launchTicket.toString());
         resp.setHeader("X-StudyCaster-ClientCookie", clientCookie.toString());
-        resp.setHeader("X-StudyCaster-ServerTime"  ,
-                Long.toString(new Date().getTime()));
+        resp.setHeader("X-StudyCaster-ServerTime"  , Long.toString(new Date().getTime()));
         resp.setHeader("X-StudyCaster-OK", "gsi");
       } else if (cmd.equals("log")) {
         // TODO: Make this properly idempotent.
@@ -85,6 +88,7 @@ public class APIServlet extends HttpServlet {
       } else if (cmd.equals("upc")) {
         // Idempotent.
         String base = ServletUtil.getMultipartStringParam(multiPart, "content");
+        logEntry = base;
         File outFile = ServletUtil.getSaneFile(ticketDir, base, false);
 
         /* Rename old files with the same name until we can create a new one
@@ -149,6 +153,7 @@ public class APIServlet extends HttpServlet {
       } else if (cmd.equals("dnl")) {
         // Idempotent (read-only).
         String fileName = ServletUtil.getMultipartStringParam(multiPart, "content");
+        logEntry = fileName;
         File input = ServletUtil.getSaneFile(storageDir, fileName, false);
         if (!input.exists()) {
           throw new BadRequestException("File \"" + StringEscapeUtils.escapeJava(fileName) +

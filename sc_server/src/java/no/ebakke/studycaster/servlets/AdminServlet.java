@@ -23,6 +23,8 @@ public class AdminServlet extends HttpServlet {
   {
     resp.setHeader("Cache-Control", "no-cache");
     resp.setHeader("Pragma"       , "no-cache");
+    resp.setCharacterEncoding("UTF-8");
+
     if (req.getParameter("logout") != null) {
       BackendUtil.setAdminLoggedIn(req, false);
       // Do a redirect to get rid of the ?logout at the end of the URL.

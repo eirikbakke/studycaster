@@ -4,6 +4,7 @@
  *  - Replaced local path determination code.
  *  - Added @WebServlet annotation.
  *  - Intercepted MIME type determination.
+ *  - Added sending of disable cache headers.
  */
 
 /*
@@ -98,6 +99,8 @@ public class FileServlet extends HttpServlet {
       response.sendError(HttpServletResponse.SC_FORBIDDEN, "Not logged in.");
       return;
     }
+    response.setHeader("Cache-Control", "no-cache");
+    response.setHeader("Pragma"       , "no-cache");
 
     // Validate the requested file ------------------------------------------------------------
 

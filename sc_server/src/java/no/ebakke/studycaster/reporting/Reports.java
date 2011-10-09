@@ -20,8 +20,9 @@ public final class Reports {
   public static List<Subject> getSubjectReport(SessionFactory sf) {
     // Each key is a launchTicket.
     Map<String,Date> firstRequest = ColUtil.newOrderedMap();
-    Map<String,Date> lastRequest   = ColUtil.newOrderedMap();
-    Map<String,Long> contentSize = ColUtil.newOrderedMap();
+    Map<String,Date> lastRequest  = ColUtil.newOrderedMap();
+    Map<String,Long> numRequests  = ColUtil.newOrderedMap();
+    Map<String,Long> contentSize  = ColUtil.newOrderedMap();
     Map<String,Date> firstAddrRequest = ColUtil.newOrderedMap();
 
     Linker<Request> linker = new Linker<Request>();
@@ -37,6 +38,7 @@ public final class Reports {
       linker.addLink(links, r);
       ColUtil.putExtreme(firstRequest, r.getLaunchTicket(), r.getTime(), false);
       ColUtil.putExtreme(lastRequest , r.getLaunchTicket(), r.getTime(), true );
+      ColUtil.putSum(numRequests, r.getLaunchTicket(), 1L);
       ColUtil.putSum(contentSize, r.getLaunchTicket(), r.getContentSize());
       ColUtil.putExtreme(firstAddrRequest, r.getRemoteAddrHash(), r.getTime(), false);
     }
@@ -60,6 +62,7 @@ public final class Reports {
         launch.launchTicket = launchTicket;
         launch.firstRequest = firstRequest.get(launchTicket);
         launch.lastRequest  = lastRequest.get(launchTicket);
+        launch.numRequests  = numRequests.get(launchTicket);
         // TODO: Get rid of the KB presentation detail.
         // Round contentSize up to avoid showing zero kilobytes for non-zero values.
         if (contentSize.get(launchTicket) != null)
@@ -137,6 +140,7 @@ public final class Reports {
     private String launchTicket;
     private Date   firstRequest;
     private Date   lastRequest;
+    private long   numRequests;
     private long   contentSize;
 
     public String getLaunchTicket() {
@@ -144,11 +148,15 @@ public final class Reports {
     }
 
     public Date getFirstRequest() {
-      return firstRequest;
+      return new Date(firstRequest.getTime());
     }
 
     public Date getLastRequest() {
-      return lastRequest;
+      return new Date(lastRequest.getTime());
+    }
+
+    public long getNumRequests() {
+      return numRequests;
     }
 
     public long getContentSize() {
