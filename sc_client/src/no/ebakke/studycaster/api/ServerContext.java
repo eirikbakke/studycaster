@@ -12,6 +12,8 @@ import java.io.OutputStream;
 import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import no.ebakke.studycaster.util.Util;
@@ -30,32 +32,33 @@ import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 
-// TODO: Verify thread safety of this class.
 /** Handles protocol details specific to the server-side PHP script. */
 public class ServerContext {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private static final String SERVERURI_PROP_NAME = "studycaster.server.uri";
-  // TODO: Don't expose this.
-  public  static final int    DEF_UPLOAD_CHUNK_SZ = 64 * 1024;
+  private static final int    DEF_UPLOAD_CHUNK_SZ = 64 * 1024;
+  // TODO: Rename this (legacy from earlier experiments).
   private static final String TICKET_STORE_FILENAME = "sc_7403204709139484951.tmp";
-  private URI    serverScriptURI;
-  private String launchTicket;
-  private long   serverSecondsAhead;
-  /* Keep the HttpClient in common for all requests to preserve the session cookie. */
-  private DefaultHttpClient httpClient;
+  private final URI    serverScriptURI;
+  private final String launchTicket;
+  private final long   serverSecondsAhead;
+  /* Keep the HttpClient in common for all requests, as is standard for this interface. This would
+  also preserve any session cookies involved, though the API currently does not use any. */
+  private final DefaultHttpClient httpClient;
+  private final AtomicBoolean closed = new AtomicBoolean(false);
 
-  public ServerContext() throws StudyCasterException {
+  private static String getServerScriptURIfromProperty() throws StudyCasterException {
     String serverScriptURIs = System.getProperty(SERVERURI_PROP_NAME);
     if (serverScriptURIs == null)
       throw new StudyCasterException("Property " + SERVERURI_PROP_NAME + " not set");
-    init(serverScriptURIs);
+    return serverScriptURIs;
+  }
+
+  public ServerContext() throws StudyCasterException {
+    this(getServerScriptURIfromProperty());
   }
 
   public ServerContext(String serverScriptURIs) throws StudyCasterException {
-    init(serverScriptURIs);
-  }
-
-  private void init(String serverScriptURIs) throws StudyCasterException {
     LOG.log(Level.INFO, "Using server URI {0}", serverScriptURIs);
     try {
       serverScriptURI = new URI(serverScriptURIs + "/api");
@@ -130,7 +133,7 @@ public class ServerContext {
           (timeBef / 2 + timeAft / 2)) / 1000L;
       LOG.log(Level.INFO, "Server time ahead by {0} seconds.", serverSecondsAhead);
     } catch (NumberFormatException e) {
-      LOG.log(Level.WARNING, "Got bad time format from server", e);
+      throw new StudyCasterException("Got bad time format from server", e);
     }
     LOG.log(Level.INFO, "clientCookie = {0}, launchTicket = {1}",
         new Object[] {clientCookie, launchTicket});
@@ -182,7 +185,6 @@ public class ServerContext {
         try {
           Thread.sleep(10000);
         } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
           throw new IOException("HTTP request retry thread interrupted");
         }
       }
@@ -237,28 +239,14 @@ public class ServerContext {
     }
   }
 
-  public void enterRemoteLogRecord(final String msg) {
-    LOG.log(Level.INFO, "Queueing remote log entry \"{0}\"", msg);
-    new Thread(new Runnable() {
-      public void run() {
-        try {
-          EntityUtils.consume(requestHelper(httpClient, "log",
-              new StringBody(msg), Integer.toString((int) (Math.random() *
-              Integer.MAX_VALUE))).getEntity());
-        } catch (IOException e) {
-          LOG.log(Level.WARNING, "Failed to enter remote log entry", e);
-        }
-      }
-    }, "ServerContext-logCommand").start();
-  }
-
   public OutputStream uploadFile(final String remoteName) throws IOException {
+    Util.checkClosed(closed);
     EntityUtils.consume(requestHelper(httpClient, "upc",
         new StringBody(remoteName), null).getEntity());
 
     return new BufferedOutputStream(new OutputStream() {
-      private boolean closed;
-      private long written = 0;
+      private final AtomicBoolean closed  = new AtomicBoolean(false);
+      private final AtomicLong    written = new AtomicLong(0);
 
       @Override
       public void write(int b) throws IOException {
@@ -267,8 +255,7 @@ public class ServerContext {
 
       @Override
       public void write(byte[] b, int off, final int len) throws IOException {
-        if (closed)
-          throw new IOException("Stream closed");
+        Util.checkClosed(closed);
 
         // TODO: Deduplicate with chunking logic in WriteOpQueue.
         for (int subOff = 0; subOff < len; ) {
@@ -278,17 +265,15 @@ public class ServerContext {
           request needs to be repeated. */
           ByteArrayBody bab = new ByteArrayBody(chunk, remoteName);
           EntityUtils.consume(requestHelper(httpClient, "upa", bab,
-              Long.toString(written)).getEntity());
+              Long.toString(written.get())).getEntity());
           subOff += subLen;
-          written += subLen;
+          written.addAndGet(subLen);
         }
       }
 
       @Override
       public void close() throws IOException {
-        if (closed)
-          return;
-        closed = true;
+        closed.set(true);
       }
     }, DEF_UPLOAD_CHUNK_SZ);
   }
@@ -297,21 +282,24 @@ public class ServerContext {
     final InputStream ret = requestHelper(httpClient, "dnl",
         new StringBody(remoteName), null).getEntity().getContent();
     return new InputStream() {
-      private boolean closed;
+      private final AtomicBoolean closed = new AtomicBoolean(false);
 
       @Override
       public int read() throws IOException {
+        Util.checkClosed(closed);
         return ret.read();
       }
+
       @Override
       public int read(byte[] b, int off, int len) throws IOException {
+        Util.checkClosed(closed);
         return ret.read(b, off, len);
       }
+
       @Override
       public void close() throws IOException {
-        if (closed)
+        if (closed.getAndSet(true))
           return;
-        closed = true;
         ret.close();
       }
     };
@@ -325,8 +313,9 @@ public class ServerContext {
     return serverSecondsAhead;
   }
 
-  // TODO: Finish the implementation of this, and have clients call it.
   public void close() {
+    if (closed.getAndSet(true))
+      return;
     httpClient.getConnectionManager().shutdown();
   }
 }

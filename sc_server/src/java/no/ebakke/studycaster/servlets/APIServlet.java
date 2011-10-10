@@ -78,13 +78,6 @@ public class APIServlet extends HttpServlet {
         resp.setHeader("X-StudyCaster-ClientCookie", clientCookie.toString());
         resp.setHeader("X-StudyCaster-ServerTime"  , Long.toString(new Date().getTime()));
         resp.setHeader("X-StudyCaster-OK", "gsi");
-      } else if (cmd.equals("log")) {
-        // TODO: Make this properly idempotent.
-        String content =
-            ServletUtil.getMultipartStringParam(multiPart, "content");
-        String argS = ServletUtil.getMultipartStringParam(multiPart, "arg");
-        logEntry = content + " (nonce=" + argS + ")";
-        resp.setHeader("X-StudyCaster-OK", "log");
       } else if (cmd.equals("upc")) {
         // Idempotent.
         String base = ServletUtil.getMultipartStringParam(multiPart, "content");

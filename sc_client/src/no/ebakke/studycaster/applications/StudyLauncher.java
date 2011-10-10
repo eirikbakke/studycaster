@@ -52,7 +52,7 @@ public final class StudyLauncher {
     if (scui.wasClosed()) {
       try {
         StudyCaster sc = new StudyCaster();
-        sc.enterRemoteLogRecord("User declined at consent dialog");
+        LOG.info("User declined at consent dialog.");
         sc.concludeStudy();
       } catch (StudyCasterException e) {
         LOG.warning("Failed to send consent-declined log message");
@@ -65,10 +65,10 @@ public final class StudyLauncher {
     boolean download = true;
     File openedFile;
     try {
-      serverContext = new ServerContext();
+      sc = new StudyCaster();
       try {
         configuration = StudyConfiguration.parseConfiguration(
-            serverContext.downloadFile("studyconfig.xml"), configurationID);
+            sc.getServerContext().downloadFile("studyconfig.xml"), configurationID);
       } catch (IOException e) {
         throw new StudyCasterException("Error retrieving configuration file", e);
       }
@@ -77,7 +77,6 @@ public final class StudyLauncher {
 
       scui.getProgressBarUI().setProgress(25);
       scui.getProgressBarUI().setTaskAppearance("Initializing user study app...", false);
-      sc = new StudyCaster();
       // TODO: Parameterize this.
       sc.startRecording(new ScreenCensor(
           configuration.getScreenCastWhiteList(),
@@ -142,16 +141,14 @@ public final class StudyLauncher {
       scui.getProgressBarUI().setProgress(0);
     } catch (StudyCasterException e) {
       LOG.log(Level.SEVERE, "Can''t Load User Study", e);
-      if (sc != null) {
+      if (sc != null)
         sc.concludeStudy();
-        sc.enterRemoteLogRecord("Failed to load user study");
-      }
       scui.showMessageDialog("Can't Load User Study", e.getLocalizedMessage(),
           JOptionPane.WARNING_MESSAGE);
       scui.disposeUI();
       return;
     }
-    sc.enterRemoteLogRecord("User study loaded OK; experiment " + configuration.getName());
+    LOG.log(Level.INFO, "User study loaded OK; experiment {0}", configuration.getName());
 
     UIAction action;
     boolean warnedAboutUnchanged = false;
@@ -183,7 +180,6 @@ public final class StudyLauncher {
                 "<html>Please close the file, then try again.</html>"
                 , JOptionPane.WARNING_MESSAGE);
         } else {
-          sc.enterRemoteLogRecord("Now starting upload");
           LOG.info("Now starting upload");
           try {
             scui.getProgressBarUI().setTaskAppearance("Uploading file...", true);
@@ -195,7 +191,7 @@ public final class StudyLauncher {
             sc.waitForScreenCastUpload();
             scui.setMonitorStreamProgress(sc.getRecordingStream(), false);
             scui.getProgressBarUI().setTaskAppearance("Uploading log...", true);
-            sc.enterRemoteLogRecord("Concluding after successful upload");
+            LOG.info("Concluding after successful upload");
             sc.concludeStudy();
             scui.getProgressBarUI().setTaskAppearance("", false);
             scui.showConfirmationCodeDialog(sc.getServerContext().getLaunchTicket().toString(), true);
@@ -208,7 +204,7 @@ public final class StudyLauncher {
           }
         }
       } else if (action == UIAction.CLOSE) {
-        sc.enterRemoteLogRecord("Got a close action");
+        LOG.info("Got a close action");
       }
       scui.setUploadEnabled(true);
     } while (action != UIAction.CLOSE);

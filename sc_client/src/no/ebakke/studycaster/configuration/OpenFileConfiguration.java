@@ -4,9 +4,9 @@ import no.ebakke.studycaster.api.StudyCasterException;
 import org.w3c.dom.Element;
 
 public class OpenFileConfiguration {
-  private String remoteName;
-  private String localName;
-  private String errorMessage;
+  private final String remoteName;
+  private final String localName;
+  private final String errorMessage;
 
   public OpenFileConfiguration(Element elm) throws StudyCasterException {
     remoteName   = ConfigurationUtil.getTextContent(elm, "remotename"  );

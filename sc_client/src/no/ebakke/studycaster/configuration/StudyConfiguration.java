@@ -20,13 +20,12 @@ import org.w3c.dom.Element;
 sections as well. */
 public class StudyConfiguration {
   private static final boolean DEBUG_MACROS = false;
-  private String name;
-  private FileFilter uploadFileFilter;
-  private List<PageConfiguration> pageConfiguration;
-  private OpenFileConfiguration openFileConfiguration;
-  private List<String> screenCastWhiteList;
-  private List<String> screenCastBlackList;
-  private UIStrings uiStrings;
+  private final String name;
+  private final FileFilter uploadFileFilter;
+  private final List<PageConfiguration> pageConfiguration;
+  private final List<String> screenCastWhiteList;
+  private final List<String> screenCastBlackList;
+  private final UIStrings uiStrings;
 
   public static StudyConfiguration parseConfiguration(InputStream xml, String configurationID)
       throws StudyCasterException, IOException
@@ -82,8 +81,6 @@ public class StudyConfiguration {
         ConfigurationUtil.getTextContent(
         ConfigurationUtil.getUniqueElement(fileFilter, "description")));
 
-    openFileConfiguration = new OpenFileConfiguration(ConfigurationUtil.getUniqueElement(conf, "openfile"));
-
     Element screencast = ConfigurationUtil.getUniqueElement(conf, "screencast");
     screenCastWhiteList = ConfigurationUtil.getStrings(screencast, "whitelist");
     screenCastBlackList = ConfigurationUtil.getStrings(screencast, "blacklist");
@@ -98,16 +95,22 @@ public class StudyConfiguration {
     return pageConfiguration.get(0).getInstructions();
   }
 
+  // TODO: Get rid of this.
+  public OpenFileConfiguration getOpenFileConfiguration() {
+    if (pageConfiguration.size() != 1)
+      throw new UnsupportedOperationException();
+    OpenFileConfiguration ret = pageConfiguration.get(0).getOpenFileConfiguration();
+    if (ret == null)
+      throw new UnsupportedOperationException();
+    return ret;
+  }
+
   public String getName() {
     return name;
   }
 
   public FileFilter getUploadFileFilter() {
     return uploadFileFilter;
-  }
-
-  public OpenFileConfiguration getOpenFileConfiguration() {
-    return openFileConfiguration;
   }
 
   public List<String> getScreenCastWhiteList() {

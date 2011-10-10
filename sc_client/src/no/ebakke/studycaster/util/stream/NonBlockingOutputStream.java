@@ -22,13 +22,13 @@ public class NonBlockingOutputStream extends OutputStream {
   private final long bufferLimit;
   /* Don't rely on WriteOpQueue to keep track of remaining bytes, as this may result in a race
   condition. */
-  private final AtomicLong bytesWritten = new AtomicLong(0);
-  private final AtomicLong bytesPosted  = new AtomicLong(0);
+  private final AtomicLong bytesWritten    = new AtomicLong(0);
+  private final AtomicLong bytesPosted     = new AtomicLong(0);
+  private final AtomicBoolean flushPending = new AtomicBoolean(false);
   private final WriteOpQueue pending;
+  private final AtomicBoolean closed = new AtomicBoolean(false);
   // Make writerThread volatile in case connect() and close() is called by separate threads.
   private volatile Thread writerThread;
-  /** For error checking only. */
-  private final AtomicBoolean closed = new AtomicBoolean(false);
 
   /* ******************************************************************************************** */
   public NonBlockingOutputStream(long bufferLimit) {
@@ -59,6 +59,8 @@ public class NonBlockingOutputStream extends OutputStream {
               break;
             out.write(buf);
             bytesWritten.addAndGet(buf.length);
+            if (bytesWritten.get() == bytesPosted.get() && flushPending.getAndSet(false))
+              out.flush();
             notifyObservers();
           }
           /* TODO: Write a unit test that detects the lack of the close or final flush. If the
@@ -106,7 +108,7 @@ public class NonBlockingOutputStream extends OutputStream {
 
   @Override
   public void write(byte b[], int off, int len) throws IOException {
-    errorIfClosed();
+    Util.checkClosed(closed);
     checkStoredException();
     pending.push(b, off, len);
     // Only do this if the push operation succeeds.
@@ -153,16 +155,12 @@ public class NonBlockingOutputStream extends OutputStream {
       throw new IOException("There were unwritten bytes");
   }
 
-  private void errorIfClosed() throws IOException {
-    if (closed.get())
-      throw new IOException("Stream closed");
-  }
-
-  /** This method is a no-op, as a proper implementation would need to block, contrary to the
-  purpose of this class. */
+  /** This method uses a relaxed definition of flush, where the writer thread flushes the underlying
+  buffer as soon as it can get around to it. */
   @Override
   public void flush() throws IOException {
-    errorIfClosed();
+    Util.checkClosed(closed);
+    flushPending.set(true);
   }
 
   /* ******************************************************************************************** */

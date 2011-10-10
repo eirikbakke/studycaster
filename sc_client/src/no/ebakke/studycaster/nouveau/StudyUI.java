@@ -11,31 +11,38 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import no.ebakke.studycaster.api.ServerContext;
 import no.ebakke.studycaster.api.StudyCasterException;
+import no.ebakke.studycaster.configuration.OpenFileConfiguration;
+import no.ebakke.studycaster.configuration.PageConfiguration;
 import no.ebakke.studycaster.configuration.StudyConfiguration;
 import no.ebakke.studycaster.configuration.UIStringKey;
 import no.ebakke.studycaster.util.Util;
 
 /*
   Test cases for this class:
-  * Multiple application launch before or after configuration is loaded.
+  * Multiple application launches before and after configuration is loaded.
   * Close window before or after configuration is loaded.
   * Failsafe shutdown 10 seconds after window is closed.
   * Regular shutdown after upload.
   * Regular shutdown after window closure.
   * Invoked with wrong command-line arguments.
+  * Configuration file error.
+  * Window closed when usage or configuration error dialog is due to appear (in this case, they
+    should not).
 */
 
 // TODO: Rename to StudyCasterUI. Rename threads to reflect change.
 public final class StudyUI {
-  /* Methods in this class must be called from the event-handling thread only, and members must be
-  accessed from the event-handling thread only. */
+  /* Methods in this class, including private ones, must be called from the event-handling thread
+  (EHT) only. Similarly, all non-final member variables must be accessed from the EHT. While a
+  little cumbersome, this avoids declaring members volatile, and makes it easier to reason about
+  concurrency in this class. */
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
-  final private MainFrame mainFrame;
-  final private EnvironmentHooks hooks;
-  private ServerContext serverContext = null;
-  private StudyConfiguration configuration = null;
-  private Thread initializerThread, failsafeCloseThread, backendCloseThread;
+  private final MainFrame mainFrame;
+  private final EnvironmentHooks hooks;
   private final WindowListener windowClosingListener;
+  private ServerContext serverContext;
+  private StudyConfiguration configuration;
+  private Thread initializerThread, failsafeCloseThread, backendCloseThread;
 
   private StudyUI(EnvironmentHooks hooks) {
     this.hooks = hooks;
@@ -70,7 +77,8 @@ public final class StudyUI {
     return configuration.getUIStrings().getString(key);
   }
 
-  // TODO: Rename or refactor.
+  // TODO: Rename, refactor, or combine closeUI() and closeBackend().
+  // Before calling this function, consider whether the user may already have closed the window.
   private void closeUIandBackend() {
     closeUI();
     closeBackend(null);
@@ -84,17 +92,17 @@ public final class StudyUI {
     mainFrame.dispose();
     failsafeCloseThread = new Thread(new Runnable() {
       public void run() {
-          try {
-            Thread.sleep(7000);
-            LOG.warning("Forcing exit in three seconds (this may be last log message)");
-            Thread.sleep(3000);
-            LOG.warning("Forcing exit ten seconds after window closure");
-          } catch (InterruptedException e) {
-            LOG.warning("Failsafe exit thread interrupted; exiting immediately");
-          }
-          System.exit(1);
+        try {
+          Thread.sleep(7000);
+          LOG.warning("Forcing exit in three seconds (this may be last log message)");
+          Thread.sleep(3000);
+          LOG.warning("Forcing exit ten seconds after window closure");
+        } catch (InterruptedException e) {
+          LOG.warning("Failsafe exit thread interrupted; exiting immediately");
         }
-      }, "StudyUI-failsafeClose");
+        System.exit(1);
+      }
+    }, "StudyUI-failsafeClose");
     // Don't keep the VM running just because of the failsafe thread.
     failsafeCloseThread.setDaemon(true);
     failsafeCloseThread.start();
@@ -103,16 +111,18 @@ public final class StudyUI {
   private void closeBackend(final Runnable onEndEHT) {
     if (backendCloseThread != null)
       throw new IllegalStateException("Backend already closed");
+    // Only access members from EHT.
+    final Thread initializerThreadT = initializerThread;
     backendCloseThread = new Thread(new Runnable() {
       public void run() {
-        if (initializerThread != null) {
+        if (initializerThreadT != null) {
           Util.ensureInterruptible(new Util.Interruptible() {
             public void run() throws InterruptedException {
-              initializerThread.join();
+              initializerThreadT.join();
             }
           });
         }
-        hooks.close();
+        EnvironmentHooks.shutdown();
         // In the case of an error, serverContext may still not be defined.
         if (serverContext != null)
           serverContext.close();
@@ -123,7 +133,11 @@ public final class StudyUI {
     backendCloseThread.start();
   }
 
-  // Must be called from the event-handling thread.
+  private void displayPage(PageConfiguration page) {
+    mainFrame.setInstructions(page.getInstructions());
+    OpenFileConfiguration openFileConfiguration = page.getOpenFileConfiguration();
+  }
+
   private void initUI(StudyCasterException storedException) {
     try {
       if (storedException != null)
@@ -131,27 +145,39 @@ public final class StudyUI {
       mainFrame.setButtonCaptions(configuration.getUIStrings());
       mainFrame.setButtonsVisible(true, true, true);
 
-      /* Do this after properly setting up the main window, in case there are enqueued messages. */
+      // Do this after properly setting up the main window, in case there are enqueued messages.
       SingleInstanceHandler sih = hooks.getSingleInstanceHandler();
       if (sih != null) {
         sih.setListener(new SingleInstanceListener() {
           public void newActivation(String[] strings) {
-            LOG.info("Showing already running dialog");
-            JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
-                getUIString(UIStringKey.DIALOG_ALREADY_RUNNING_MESSAGE),
-                getUIString(UIStringKey.DIALOG_ALREADY_RUNNING_TITLE),
-                JOptionPane.INFORMATION_MESSAGE);
+            SwingUtilities.invokeLater(new Runnable() {
+              public void run() {
+                if (failsafeCloseThread != null) {
+                  LOG.info("Already running, suppressing dialog due to earlier close action");
+                } else {
+                  LOG.info("Already running, showing dialog");
+                  JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
+                      getUIString(UIStringKey.DIALOG_ALREADY_RUNNING_MESSAGE),
+                      getUIString(UIStringKey.DIALOG_ALREADY_RUNNING_TITLE),
+                      JOptionPane.INFORMATION_MESSAGE);
+                }
+              }
+            });
           }
         });
       }
     } catch (StudyCasterException e) {
-      /* Note: Due to the exception, configuration and serverContext may not be defined. */
-      LOG.log(Level.SEVERE, "Showing fatal error dialog", e);
-      mainFrame.setProgressBarStatus("", false);
-      JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
-          "There was an unexpected error:\n" + e.getMessage(), "Error",
-          JOptionPane.ERROR_MESSAGE);
-      closeUIandBackend();
+      // Note: Due to the exception, configuration and serverContext may not be defined.
+      if (failsafeCloseThread != null) {
+        LOG.log(Level.SEVERE, "Fatal error, suppressing dialog due to earlier close action", e);
+      } else {
+        LOG.log(Level.SEVERE, "Fatal error, showing dialog", e);
+        mainFrame.setProgressBarStatus("", false);
+        JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
+            "There was an unexpected error:\n" + e.getMessage(), "Error",
+            JOptionPane.ERROR_MESSAGE);
+        closeUIandBackend();
+      }
     }
   }
 
@@ -175,6 +201,7 @@ public final class StudyUI {
             }
             configurationT = StudyConfiguration.parseConfiguration(
               serverContextT.downloadFile("studyconfig.xml"), args[0]);
+            LOG.log(Level.INFO, "Loaded configuration with name \"{0}\"", configurationT.getName());
           } catch (IOException e) {
             throw new StudyCasterException("Unexpected I/O error", e);
           }
@@ -184,8 +211,7 @@ public final class StudyUI {
         final StudyCasterException exceptionF = exception;
         SwingUtilities.invokeLater(new Runnable() {
           public void run() {
-            /* Change member variables of the outer class only once we're back in the EHT. Seemed
-            cleaner than declaring them volatile. */
+            // Only access members from EHT.
             serverContext = serverContextT;
             configuration = configurationT;
             initUI(exceptionF);
@@ -194,10 +220,12 @@ public final class StudyUI {
       }
     }, "StudyUI-runStudy");
 
-    /* To avoid a race condition in closeBackend(), initializerThread must be initialized before the
-    UI can be displayed, and started after the UI has been displayed. */
-    mainFrame.setProgressBarStatus("", true);
-    mainFrame.setInstructions("");
+    /* To avoid a race condition with closeBackend(), initializerThread must be initialized before
+    the UI can be displayed, and started after the UI has been displayed. */
+    /* TODO: If configuration files ever get parsed on the server side, consider including the
+    initial few UI strings as parameters in the JNLP file. */
+    mainFrame.setProgressBarStatus("Loading instructions...", true);
+    mainFrame.setInstructions("Please wait...");
     mainFrame.setButtonsVisible(false, false, false);
     mainFrame.setVisible(true);
     initializerThread.start();

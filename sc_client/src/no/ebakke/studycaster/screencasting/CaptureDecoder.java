@@ -106,10 +106,11 @@ public class CaptureDecoder extends Codec {
   /** Skip forward, one byte at a time, until a valid MARKER_META structure has been read. Used to
   recover data in corrupted streams. */
   private void resync() throws IOException {
-    // TODO: Avoid loosing the metadata read to sync.
+    // TODO: Avoid losing the metadata read to sync.
     // TODO: Consider removing all of this once we have found the bug that led us to write it.
     final int MARKER_META_STRUCT_SZ = 18;
-    byte buf[] = new byte[1024 * 1024];
+    final int MAX_SKIP = 1024 * 1024;
+    byte buf[] = new byte[MAX_SKIP];
     int curReadLoc = 0;
     while (curReadLoc < MARKER_META_STRUCT_SZ)
       buf[curReadLoc++] = dis.readByte();

@@ -5,14 +5,13 @@ import no.ebakke.studycaster.api.StudyCasterException;
 import org.w3c.dom.Element;
 
 public class PageConfiguration {
-  private String                instructions;
-  private OpenFileConfiguration openFileConfiguration;
+  private final String                instructions;
+  private final OpenFileConfiguration openFileConfiguration;
 
   public PageConfiguration(Element elm) throws StudyCasterException {
     instructions = ConfigurationUtil.getSwingCaption(elm, "instructions");
-    Element openFileElm = ConfigurationUtil.getUniqueElement(elm, "openFile", true);
-    if (openFileElm != null)
-      openFileConfiguration = new OpenFileConfiguration(openFileElm);
+    Element openFileElm = ConfigurationUtil.getUniqueElement(elm, "openfile", true);
+    openFileConfiguration = (openFileElm == null) ? null : new OpenFileConfiguration(openFileElm);
   }
 
   public static List<PageConfiguration> parse(Element parent) throws StudyCasterException {

@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
@@ -59,7 +60,6 @@ public final class Util {
     }
   }
 
-  // TODO: Do I ever want this?
   /** Used to enclose operations which may throw InterruptedException but which are restartable,
   when the contract of the enclosing method does not permit throwing an InterruptedException but
   rather requires that the method blocks until completion. */
@@ -227,5 +227,20 @@ public final class Util {
     System.arraycopy(original, from, copy, 0,
                      Math.min(original.length - from, newLength));
     return copy;
+  }
+
+  public static void delayAtLeast(long millis) throws InterruptedException {
+    final long startTime = System.currentTimeMillis();
+    while (true) {
+      final long remainingMillis = Math.round(millis - (System.currentTimeMillis() - startTime));
+      if (remainingMillis <= 0)
+        break;
+      Thread.sleep(remainingMillis);
+    }
+  }
+
+  public static void checkClosed(AtomicBoolean closed) throws IllegalStateException {
+    if (closed.get())
+      throw new IllegalStateException("Closed");
   }
 }

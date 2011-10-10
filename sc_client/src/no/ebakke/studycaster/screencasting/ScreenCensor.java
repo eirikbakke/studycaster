@@ -18,6 +18,7 @@ import no.ebakke.studycaster.util.ImageDebugFrame;
 
 public final class ScreenCensor {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
+  // TODO: Make this configurable.
   public static final int MOSAIC_WIDTH = 5;
 
   private List<String> whiteList, blackList;

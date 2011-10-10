@@ -18,7 +18,9 @@ import no.ebakke.studycaster.util.stream.StreamProgressObserver;
 import org.apache.commons.io.IOUtils;
 
 public class StudyCaster {
+  // TODO: Figure out which members can be final or need to be volatile. Or just delete this class.
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
+  // TODO: Make this configurable.
   private static final int RECORDING_BUFFER_SZ = 4 * 1024 * 1024;
   private ServerContext serverContext;
   private ScreenRecorder recorder;
@@ -26,11 +28,11 @@ public class StudyCaster {
   private NonBlockingOutputStream recordingStream;
   private ConsoleTee consoleTee;
   private Thread shutdownHook = new Thread(new Runnable() {
-      public void run() {
-        LOG.warning("Study not explicitly concluded; concluding via shutdown hook.");
-        concludeStudy();
-      }
-    }, "StudyCaster-shutdownHook");
+    public void run() {
+      LOG.warning("Study not explicitly concluded; concluding via shutdown hook.");
+      concludeStudy();
+    }
+  }, "StudyCaster-shutdownHook");
 
   public ServerContext getServerContext() {
     return serverContext;
@@ -158,9 +160,13 @@ public class StudyCaster {
     }
   }
 
-  public void stopRecording() {
+  public void stopRecording() throws StudyCasterException {
     if (recorder != null) {
-      recorder.stop();
+      try {
+        recorder.stop();
+      } catch (IOException e) {
+        throw new StudyCasterException("Problem during screen recording", e);
+      }
     }
   }
 
@@ -180,9 +186,5 @@ public class StudyCaster {
   // TODO: Don't expose this.
   public NonBlockingOutputStream getRecordingStream() {
     return recordingStream;
-  }
-
-  public void enterRemoteLogRecord(String msg) {
-    serverContext.enterRemoteLogRecord(msg);
   }
 }

@@ -10,9 +10,9 @@ import javax.jnlp.UnavailableServiceException;
 
 public class SingleInstanceHandler {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
-  private List<String[]>         pending = new ArrayList<String[]>();
-  private SingleInstanceListener clientListener;
-  private SingleInstanceService  service;
+  private final List<String[]>        pending = new ArrayList<String[]>();
+  private final SingleInstanceService service;
+  private SingleInstanceListener      clientListener;
 
   private final SingleInstanceListener proxyListener = new SingleInstanceListener() {
     public void newActivation(String[] strings) {
@@ -32,12 +32,10 @@ public class SingleInstanceHandler {
     }
   }
 
-  public void setListener(SingleInstanceListener listener) {
-    synchronized (this) {
-      if (clientListener != null)
-        throw new IllegalStateException("Already set the SingleInstanceListener");
-      clientListener = listener;
-    }
+  public synchronized void setListener(SingleInstanceListener listener) {
+    if (clientListener != null)
+      throw new IllegalStateException("Already set the SingleInstanceListener");
+    clientListener = listener;
     callPendingWhenReady();
   }
 
@@ -49,10 +47,8 @@ public class SingleInstanceHandler {
     this.service.addSingleInstanceListener(proxyListener);
   }
 
-  public void close() {
-    if (service != null) {
-      service.removeSingleInstanceListener(proxyListener);
-      service = null;
-    }
+  public synchronized void close() {
+    service.removeSingleInstanceListener(proxyListener);
+    pending.clear();
   }
 }

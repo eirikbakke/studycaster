@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+// TODO: Use composition instead of inheritance to share the functionality in this class.
 public abstract class Codec {
   protected enum FrameType { PERIODIC, BEFORE_CAPTURE, AFTER_CAPTURE; };
   protected static final String MAGIC_STRING = "StudyCaster Screencast";
@@ -17,8 +18,8 @@ public abstract class Codec {
   protected static final byte MARKER_META  = 2;
   protected static final byte INDEX_NO_DIFF = (byte) -1;
   protected static final byte INDEX_REPEAT  = (byte) -2;
-  private ScreenCastImage currentFrame, previousFrame;
   protected final Queue<MetaStamp> metaStamps = new ConcurrentLinkedQueue<MetaStamp>();
+  private volatile ScreenCastImage currentFrame, previousFrame;
 
   protected static class MetaStamp {
     private long timeMillis;
@@ -65,7 +66,7 @@ public abstract class Codec {
   }
 
   protected void init(Dimension dim) {
-    this.currentFrame = new ScreenCastImage(dim);
+    this.currentFrame  = new ScreenCastImage(dim);
     this.previousFrame = new ScreenCastImage(dim);
   }
 
@@ -76,10 +77,12 @@ public abstract class Codec {
   }
 
   public Dimension getDimension() {
-    return new Dimension(currentFrame.getWidth(), currentFrame.getHeight());
+    // TODO: Get rid of this and make the class properly thread-safe.
+    final ScreenCastImage cf = currentFrame;
+    return new Dimension(cf.getWidth(), cf.getHeight());
   }
 
-  protected void copyImage(BufferedImage from, BufferedImage to) {
+  protected static void copyImage(BufferedImage from, BufferedImage to) {
     Graphics2D g = to.createGraphics();
     // Sadly, turning dithering off this way doesn't actually work.
     // g.setRenderingHint(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_DISABLE);

@@ -11,14 +11,16 @@ import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.logging.Logger;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.GZIPOutputStream;
+import no.ebakke.studycaster.util.Util;
 
+/** Thread-safe. */
 public class CaptureEncoder extends Codec {
-  private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
-  private DataOutputStream dout;
-  private Robot robot;
-  private Rectangle screenRect;
+  private final AtomicBoolean closed = new AtomicBoolean(false);
+  private final DataOutputStream dout;
+  private final Rectangle screenRect;
+  private final Robot robot;
   private ScreenCensor censor;
   private long serverSecondsAhead;
 
@@ -41,10 +43,12 @@ public class CaptureEncoder extends Codec {
     this.serverSecondsAhead = serverSecondsAhead;
   }
 
+  /** No external synchronization is needed to invoke this method. */
   private void addMeta(FrameType type) {
     long time = System.currentTimeMillis() + serverSecondsAhead * 1000L;
     PointerInfo pi = MouseInfo.getPointerInfo();
     Point mouseLoc = (pi == null) ? null : pi.getLocation();
+    // The metaStamps queue is thread-safe; see the superclass.
     metaStamps.add(new MetaStamp(time, mouseLoc, type));
   }
 
@@ -70,10 +74,15 @@ public class CaptureEncoder extends Codec {
   }
 
   public void capturePointer() {
+    /* No explicit synchronization is used or needed in this method. If the synchronized keyword had
+    been used, the method would frequently block for a long period while waiting for captureFrame()
+    to complete in a different thread. */
+    Util.checkClosed(closed);
     addMeta(FrameType.PERIODIC);
   }
 
   public synchronized void captureFrame() throws IOException {
+    Util.checkClosed(closed);
     addMeta(FrameType.BEFORE_CAPTURE);
     BufferedImage image = robot.createScreenCapture(screenRect);
     Quilt permittedArea = (censor == null) ?
@@ -139,9 +148,10 @@ public class CaptureEncoder extends Codec {
   }
 
   /** Closes the underlying OutputStream as well. */
-  public void finish() throws IOException {
+  public synchronized void close() throws IOException {
+    if (closed.getAndSet(true))
+      return;
     flushMeta();
     dout.close();
-    LOG.info("Closed the encoding stream.");
   }
 }

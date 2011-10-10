@@ -31,7 +31,7 @@
       <uistring key="MAINFRAME_NEXT_BUTTON"   mnemonic="N">Neste &gt;</uistring>
       <uistring key="DIALOG_CLOSE_TITLE"  >Avslutt uten å laste opp?</uistring>
       <uistring key="DIALOG_CLOSE_MESSAGE">
-        Hvis du avslutter StudyCaster uten å laste opp først, går dine endringer tapt.
+        Hvis du avslutter StudyCaster uten å laste opp først, går endringene dine tapt.
       </uistring>
     </uistrings>
   </macrodef>
@@ -105,39 +105,39 @@
   <configuration id="5782" name="Recruiting">
     <macro id="configuration-common"/>
     <macro id="uploadfile-excel"/>
-    <openfile>
-      <remotename>currencies.xls</remotename>
-      <localname>userstudyHIT_currencies.xls</localname>
-      <errormessage><macro id="openfile-error-excel"/></errormessage>
-    </openfile>
     <page>
       <macro id="instructions"/>
+      <openfile>
+        <remotename>currencies.xls</remotename>
+        <localname>userstudyHIT_currencies.xls</localname>
+        <errormessage><macro id="openfile-error-excel"/></errormessage>
+      </openfile>
     </page>
   </configuration>
 
   <configuration id="6728" name="Main Excel">
     <macro id="configuration-common"/>
     <macro id="uploadfile-excel"/>
-    <openfile>
-      <remotename>exflat.xls</remotename>
-      <localname>userstudyHIT_coursecatalog.xls</localname>
-      <errormessage><macro id="openfile-error-excel"/></errormessage>
-    </openfile>
     <page>
       <macro id="instructions"/>
+      <openfile>
+        <remotename>exflat.xls</remotename>
+        <localname>userstudyHIT_coursecatalog.xls</localname>
+        <errormessage><macro id="openfile-error-excel"/></errormessage>
+      </openfile>
     </page>
   </configuration>
 
   <configuration id="1093" name="Main Related Worksheets">
     <macro id="configuration-common"/>
     <macro id="uploadfile-relspread"/>
-    <openfile>
-      <remotename>rsnest.rzw</remotename>
-      <localname>userstudyHIT_coursecatalog.rzw</localname>
-      <errormessage>Unexpected error.</errormessage>
-    </openfile>
     <page>
       <macro id="instructions"/>
+      <openfile>
+        <remotename>rsnest.rzw</remotename>
+        <localname>userstudyHIT_coursecatalog.rzw</localname>
+        <errormessage>Unexpected error.</errormessage>
+      </openfile>
     </page>
   </configuration>
 </study>

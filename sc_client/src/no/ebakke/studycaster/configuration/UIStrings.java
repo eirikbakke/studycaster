@@ -6,8 +6,8 @@ import no.ebakke.studycaster.api.StudyCasterException;
 import org.w3c.dom.Element;
 
 public class UIStrings {
-  private Map<UIStringKey,String>    strings;
-  private Map<UIStringKey,Character> mnemonics;
+  private final Map<UIStringKey,String>    strings;
+  private final Map<UIStringKey,Character> mnemonics;
 
   public UIStrings(Element elm) throws StudyCasterException {
     strings   = new EnumMap<UIStringKey,String>(UIStringKey.class);

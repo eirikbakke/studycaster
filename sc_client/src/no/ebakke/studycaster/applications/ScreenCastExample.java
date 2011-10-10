@@ -22,6 +22,8 @@ public final class ScreenCastExample {
     // Alternatively, can set studycaster.server.uri and call empty constructor.
     ServerContext serverContext = new ServerContext("http://localhost:8084/sc_server/client");
     NonBlockingOutputStream recordingStream = new NonBlockingOutputStream(RECORDING_BUFFER_SZ);
+    /* Alternatively, a new ScreenRecorderConfiguration object can be created to set frame/pointer
+    sampling rates and maximum CPU usage. */
     ScreenRecorder recorder = new ScreenRecorder(recordingStream,
         serverContext.getServerSecondsAhead(), ScreenRecorderConfiguration.DEFAULT);
 

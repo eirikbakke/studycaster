@@ -2,6 +2,7 @@ package no.ebakke.studycaster.screencasting;
 
 // TODO: Get the ScreenCensor in here, too.
 public class ScreenRecorderConfiguration {
+  // TODO: Make this configurable.
   public static final ScreenRecorderConfiguration DEFAULT =
       new ScreenRecorderConfiguration(15.0, 0.1, 5.0, 0.7);
 
