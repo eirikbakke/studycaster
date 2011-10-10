@@ -13,24 +13,27 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.GZIPOutputStream;
+import no.ebakke.studycaster.screencasting.MetaStamp.FrameType;
 import no.ebakke.studycaster.util.Util;
 
 /** Thread-safe. */
-public class CaptureEncoder extends Codec {
+public class CaptureEncoder {
   private final AtomicBoolean closed = new AtomicBoolean(false);
   private final DataOutputStream dout;
   private final Rectangle screenRect;
   private final Robot robot;
+  private final CodecState state;
+  // Used in the unsynchronized addMeta(), so must be declared volatile.
+  private volatile long serverSecondsAhead;
   private ScreenCensor censor;
-  private long serverSecondsAhead;
 
   public CaptureEncoder(OutputStream out, Rectangle screenRect) throws IOException, AWTException {
     this.screenRect = screenRect;
     Dimension dim = screenRect.getSize();
-    init(dim);
+    state = new CodecState(dim);
     robot = new Robot();
     dout = new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(out)));
-    dout.writeUTF(MAGIC_STRING);
+    dout.writeUTF(CodecConstants.MAGIC_STRING);
     dout.writeInt(dim.width);
     dout.writeInt(dim.height);
   }
@@ -48,27 +51,26 @@ public class CaptureEncoder extends Codec {
     long time = System.currentTimeMillis() + serverSecondsAhead * 1000L;
     PointerInfo pi = MouseInfo.getPointerInfo();
     Point mouseLoc = (pi == null) ? null : pi.getLocation();
-    // The metaStamps queue is thread-safe; see the superclass.
-    metaStamps.add(new MetaStamp(time, mouseLoc, type));
+    state.addMetaStamp(new MetaStamp(time, mouseLoc, type));
   }
 
   private void flushMeta() throws IOException {
     MetaStamp ms;
-    while ((ms = metaStamps.poll()) != null) {
-      dout.write(MARKER_META);
+    while ((ms = state.pollMetaStamp()) != null) {
+      dout.write(CodecConstants.MARKER_META);
       ms.writeToStream(dout);
     }
   }
 
   private void encodeRun(byte code, int runLength) throws IOException {
-    if (code == INDEX_REPEAT || runLength < 0)
+    if (code == CodecConstants.INDEX_REPEAT || runLength < 0)
       throw new AssertionError();
     if (runLength <= 6) {
       for (int i = 0; i < runLength; i++)
         dout.write(code);
     } else {
       dout.write(code);
-      dout.write(INDEX_REPEAT);
+      dout.write(CodecConstants.INDEX_REPEAT);
       dout.writeInt(runLength - 1);
     }
   }
@@ -100,23 +102,23 @@ public class CaptureEncoder extends Codec {
   private void compressAndOutputFrame(BufferedImage frame, Quilt permittedArea)
       throws IOException
   {
-    swapOldNew();
-    copyImage(frame, getCurrentFrame());
-    final byte oldBuf[] = getPreviousFrame().getBuffer();
-    final byte newBuf[] = getCurrentFrame().getBuffer();
-    final int width  = getDimension().width;
-    final int height = getDimension().height;
+    state.swapFrames();
+    CodecUtil.copyImage(frame, state.getCurrentFrame());
+    final byte oldBuf[] = state.getPreviousFrame().getBuffer();
+    final byte newBuf[] = state.getCurrentFrame().getBuffer();
+    final int width  = state.getDimension().width;
+    final int height = state.getDimension().height;
     int  currentRunLength = 0;
-    byte currentRunCode   = INDEX_NO_DIFF;
+    byte currentRunCode   = CodecConstants.INDEX_NO_DIFF;
     byte code;
 
-    dout.write(MARKER_FRAME);
+    dout.write(CodecConstants.MARKER_FRAME);
     for (int y = 0, i = 0; y < height; y++) {
       boolean censorRunPermitted = false;
       int     censorRunRemaining  = 0;
       for (int x = 0; x < width; x++, i++) {
         // Workaround for bug in Java 1.5. See comment in ScreenCastImage.
-        if (newBuf[i] == INDEX_NO_DIFF || newBuf[i] == INDEX_REPEAT)
+        if (newBuf[i] == CodecConstants.INDEX_NO_DIFF || newBuf[i] == CodecConstants.INDEX_REPEAT)
           newBuf[i] = 0;
 
         // Screen censoring related.
@@ -132,7 +134,7 @@ public class CaptureEncoder extends Codec {
         // Apply differential between old and new frames.
         final byte oldCol = oldBuf[i];
         final byte newCol = newBuf[i];
-        code = (newCol == oldCol) ? INDEX_NO_DIFF : newCol;
+        code = (newCol == oldCol) ? CodecConstants.INDEX_NO_DIFF : newCol;
 
         // Perform run-length encoding.
         if (code == currentRunCode) {

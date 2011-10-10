@@ -24,34 +24,36 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
+import no.ebakke.studycaster.screencasting.MetaStamp.FrameType;
 import no.ebakke.studycaster.ui.StatusFrame;
 
-public class CaptureDecoder extends Codec {
-  private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
-  private DataInputStream dis;
+/** Not thread-safe. */
+public class CaptureDecoder {
+  private static final Logger     LOG = Logger.getLogger("no.ebakke.studycaster");
+  private static final String     POINTER_IMAGE_PATH =
+      "no/ebakke/studycaster/resources/pointer_shine_weaker.png";
+  private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+  private final CodecState state;
+  private final DataInputStream dis;
+  private final Image pointerImage;
+  private final Point pointerImageHotSpot;
   private boolean reachedEOF = false, atFrame = false;
-  private Image pointerImage;
-  private Point pointerImageHotSpot;
   private long currentMetaTime = -1, currentFrameTime = 0, firstMetaTime = -1;
   private long nextCaptureTime = -1, lastBeforeCaptureTime = -1;
   private boolean firstFrameRead = false;
-  private static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
   private int frameNo = 0;
-  private static final String POINTER_IMAGE_PATH =
-      "no/ebakke/studycaster/resources/pointer_shine_weaker.png";
 
   public CaptureDecoder(InputStream is) throws IOException {
     dis = new DataInputStream(new BufferedInputStream(new GZIPInputStream(is)));
-    if (!dis.readUTF().equals(MAGIC_STRING))
+    if (!dis.readUTF().equals(CodecConstants.MAGIC_STRING))
       throw new IOException("Screencast not in StudyCaster format");
     int width  = dis.readInt();
     int height = dis.readInt();
-    init(new Dimension(width, height));
+    state = new CodecState(new Dimension(width, height));
 
     /* Do this to properly catch an error which may otherwise cause waitForAll()
     below to hang with an "Uncaught error fetching image" output. */
-    InputStream testIS = StatusFrame.class.getClassLoader().getResourceAsStream(
-        POINTER_IMAGE_PATH);
+    InputStream testIS = StatusFrame.class.getClassLoader().getResourceAsStream(POINTER_IMAGE_PATH);
     if (testIS == null) {
       throw new IOException("Cannot load pointer image; check classpath.");
     } else {
@@ -69,6 +71,10 @@ public class CaptureDecoder extends Codec {
     } catch (InterruptedException e) {
       throw new InterruptedIOException();
     }
+  }
+
+  public Dimension getDimension() {
+    return state.getDimension();
   }
 
   public long getCurrentTimeMillis() {
@@ -108,6 +114,9 @@ public class CaptureDecoder extends Codec {
   private void resync() throws IOException {
     // TODO: Avoid losing the metadata read to sync.
     // TODO: Consider removing all of this once we have found the bug that led us to write it.
+    /* TODO: At the next opportunity for changing the file format, include an explicit magic word at
+             at the beginning of each MetaStamp, so that resync can be implemented in two lines of
+             code instead of the madness below. */
     final int MARKER_META_STRUCT_SZ = 18;
     final int MAX_SKIP = 1024 * 1024;
     byte buf[] = new byte[MAX_SKIP];
@@ -123,7 +132,7 @@ public class CaptureDecoder extends Codec {
       int  struct_x    = din.readInt();
       int  struct_y    = din.readInt();
 
-      if (struct_head != Codec.MARKER_META) {
+      if (struct_head != CodecConstants.MARKER_META) {
       } else if (struct_type < 0 || struct_type >= FrameType.values().length) {
         // Two years before this code was written/January 1st 2050.
       } else if (struct_time < 1250816790841L || struct_time > 2524608000000L) {
@@ -150,9 +159,9 @@ public class CaptureDecoder extends Codec {
       } catch (EOFException e) {
         return false;
       }
-      if        (headerMarker == MARKER_FRAME) {
+      if        (headerMarker == CodecConstants.MARKER_FRAME) {
         return true;
-      } else if (headerMarker == MARKER_META) {
+      } else if (headerMarker == CodecConstants.MARKER_META) {
         ms = MetaStamp.readFromStream(dis);
         switch (ms.getType()) {
           case        BEFORE_CAPTURE:
@@ -165,7 +174,7 @@ public class CaptureDecoder extends Codec {
             lastBeforeCaptureTime = -1;
           break; case PERIODIC:
         }
-        metaStamps.add(ms);
+        state.addMetaStamp(ms);
       } else {
         throw new IOException("Invalid header marker.");
       }
@@ -175,7 +184,7 @@ public class CaptureDecoder extends Codec {
   public BufferedImage nextFrame() throws IOException {
     MetaStamp ms;
     while (true) {
-      ms = metaStamps.peek();
+      ms = state.peekMetaStamp();
       if (ms == null || ms.getTimeMillis() >= nextCaptureTime) {
         if (reachedEOF) {
           return null;
@@ -190,14 +199,15 @@ public class CaptureDecoder extends Codec {
           continue;
         }
       }
-      metaStamps.remove();
+      if (state.pollMetaStamp() == null)
+        throw new AssertionError();
       if (firstFrameRead && ms.getType() == FrameType.PERIODIC) {
         currentFrameTime +=
             (currentMetaTime < 0) ? 0 : Math.max(1L, ms.getTimeMillis() - currentMetaTime);
         currentMetaTime = ms.getTimeMillis();
         firstMetaTime = (firstMetaTime >= 0) ? firstMetaTime : currentMetaTime;
-        BufferedImage ret = new ScreenCastImage(getDimension());
-        copyImage(getCurrentFrame(), ret);
+        BufferedImage ret = new ScreenCastImage(state.getDimension());
+        CodecUtil.copyImage(state.getCurrentFrame(), ret);
         if (ms.getMouseLocation() != null)
           drawMousePointer(ret, ms.getMouseLocation());
         drawTimeStamp(ret);
@@ -207,17 +217,17 @@ public class CaptureDecoder extends Codec {
   }
 
   private void readFrame() throws IOException {
-    swapOldNew();
-    final byte oldBuf[] = getPreviousFrame().getBuffer();
-    final byte newBuf[] = getCurrentFrame().getBuffer();
+    state.swapFrames();
+    final byte oldBuf[] = state.getPreviousFrame().getBuffer();
+    final byte newBuf[] = state.getCurrentFrame().getBuffer();
     int  currentRunLength = 0;
-    byte currentRunCode   = INDEX_NO_DIFF;
+    byte currentRunCode   = CodecConstants.INDEX_NO_DIFF;
     byte code;
 
     for (int i = 0; i < newBuf.length; i++) {
       if (currentRunLength == 0) {
         code = dis.readByte();
-        if (code == INDEX_REPEAT) {
+        if (code == CodecConstants.INDEX_REPEAT) {
           currentRunLength = dis.readInt();
         } else {
           currentRunLength = 1;
@@ -230,12 +240,12 @@ public class CaptureDecoder extends Codec {
         // 23 = light blue, 14 = turquoise
         for (; i < newBuf.length; i++)
           newBuf[i] = 23;
-        drawString(getCurrentFrame(), "Encoder warning: invalid run length", 50,
-            getDimension().height - 100);
+        drawString(state.getCurrentFrame(), "Encoder warning: invalid run length", 50,
+            state.getDimension().height - 100);
         resync();
         break;
       }
-      newBuf[i] = (currentRunCode == INDEX_NO_DIFF) ? oldBuf[i] : currentRunCode;
+      newBuf[i] = (currentRunCode == CodecConstants.INDEX_NO_DIFF) ? oldBuf[i] : currentRunCode;
       currentRunLength--;
     }
     if (currentRunLength > 0) {
