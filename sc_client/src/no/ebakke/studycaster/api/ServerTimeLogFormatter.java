@@ -14,7 +14,7 @@ public class ServerTimeLogFormatter extends Formatter {
   private volatile Long serverSecondsAhead;
   /* SimpleDateFormat is not thread-safe. The following is the standard way of dealing with it.
   See http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4264153 . */
-  private static final ThreadLocal<DateFormat> dateFormat = 
+  private static final ThreadLocal<DateFormat> DATE_FORMAT = 
     new ThreadLocal<DateFormat>() {
       @Override
       public DateFormat initialValue() {
@@ -27,7 +27,7 @@ public class ServerTimeLogFormatter extends Formatter {
   }
 
   private static String formatTime(long millis) {
-    return dateFormat.get().format(new Date(millis));
+    return DATE_FORMAT.get().format(new Date(millis));
   }
 
   private static void formatThrowable(StringBuffer buf, Throwable e) {

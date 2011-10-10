@@ -8,6 +8,7 @@ import javax.jnlp.SingleInstanceListener;
 import javax.jnlp.SingleInstanceService;
 import javax.jnlp.UnavailableServiceException;
 
+/** Thread-safe. */
 public class SingleInstanceHandler {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private final List<String[]>        pending = new ArrayList<String[]>();

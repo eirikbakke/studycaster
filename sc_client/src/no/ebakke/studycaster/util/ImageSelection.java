@@ -10,7 +10,7 @@ import javax.swing.TransferHandler;
 http://java.sun.com/developer/technicalArticles/releases/data/ */
 public class ImageSelection extends TransferHandler implements Transferable {
   private static final long serialVersionUID = 1L;
-  private static final DataFlavor flavors[] = {DataFlavor.imageFlavor};
+  private static final DataFlavor FLAVOR = DataFlavor.imageFlavor;
   private Image image;
 
   public static void copyImageToClipBoard(Image image) {
@@ -33,10 +33,10 @@ public class ImageSelection extends TransferHandler implements Transferable {
   }
 
   public DataFlavor[] getTransferDataFlavors() {
-    return flavors;
+    return new DataFlavor[] {FLAVOR};
   }
 
   public boolean isDataFlavorSupported(DataFlavor flavor) {
-    return flavor.equals(flavors[0]);
+    return flavor.equals(FLAVOR);
   }
 }

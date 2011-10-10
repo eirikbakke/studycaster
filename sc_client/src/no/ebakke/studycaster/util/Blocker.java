@@ -1,5 +1,6 @@
 package no.ebakke.studycaster.util;
 
+// TODO: Get rid of this class.
 public class Blocker {
   private final Object lock   = new Object();
   private boolean releasedYet = false;

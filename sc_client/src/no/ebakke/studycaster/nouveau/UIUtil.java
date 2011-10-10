@@ -3,7 +3,7 @@ package no.ebakke.studycaster.nouveau;
 import javax.swing.UIManager;
 import no.ebakke.studycaster.api.StudyCasterException;
 
-public final class UIUtil {
+final class UIUtil {
   private UIUtil() { }
 
   public static void setSystemLookAndFeel() throws StudyCasterException {

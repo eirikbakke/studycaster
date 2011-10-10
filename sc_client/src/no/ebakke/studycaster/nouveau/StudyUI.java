@@ -181,6 +181,7 @@ public final class StudyUI {
     }
   }
 
+  /** This method may only be called once during the lifetime of a StudyUI object. */
   public void runStudy(final String args[]) {
     if (initializerThread != null)
       throw new IllegalStateException("Already started");

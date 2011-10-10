@@ -16,14 +16,15 @@ import no.ebakke.studycaster.api.StudyCasterException;
 import no.ebakke.studycaster.screencasting.WindowEnumerator.WindowInfo;
 import no.ebakke.studycaster.util.ImageDebugFrame;
 
+/** Not thread-safe. */
 public final class ScreenCensor {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   // TODO: Make this configurable.
   public static final int MOSAIC_WIDTH = 5;
 
-  private List<String> whiteList, blackList;
-  private Quilt nativeFail;
-  private WindowEnumerator windowEnumerator;
+  private final List<String> whiteList, blackList;
+  private final Quilt nativeFail;
+  private final WindowEnumerator windowEnumerator;
 
   public ScreenCensor(List<String> whiteList, List<String> blackList, boolean blacklistFileDialogs,
       boolean whiteListStudyCasterDialogs)
@@ -50,6 +51,8 @@ public final class ScreenCensor {
     if (windowEnumerator == null) {
       LOG.log(Level.WARNING, "Can''t initialize native library; censoring entire screen area");
       nativeFail = new Quilt();
+    } else {
+      nativeFail = null;
     }
   }
 

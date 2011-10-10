@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import no.ebakke.studycaster.util.MovingAverage;
 import no.ebakke.studycaster.util.Util;
 
+/** Thread-safe. */
 public class CaptureScheduler {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private final MovingAverage avgDuration;

@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 import no.ebakke.studycaster.screencasting.CaptureScheduler.CaptureTask;
 import no.ebakke.studycaster.util.stream.NonBlockingOutputStream;
 
+/** Thread-safe. */
 public class ScreenRecorder {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private final NonBlockingOutputStream nbos;
@@ -37,6 +38,7 @@ public class ScreenRecorder {
       return "pointerRecorderTask";
     }
   };
+
   private final CaptureTask frameRecorderTask = new CaptureTask() {
     public void capture() throws IOException {
       enc.captureFrame();

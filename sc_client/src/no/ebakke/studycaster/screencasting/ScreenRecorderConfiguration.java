@@ -6,18 +6,18 @@ public class ScreenRecorderConfiguration {
   public static final ScreenRecorderConfiguration DEFAULT =
       new ScreenRecorderConfiguration(15.0, 0.1, 5.0, 0.7);
 
-  private double maxFrameSamplingFrequency;
-  private double maxFrameDutyCycle;
-  private double maxPointerSamplingFrequency;
-  private double maxPointerDutyCycle;
+  private final double maxFrameSamplingFrequency;
+  private final double maxFrameDutyCycle;
+  private final double maxPointerSamplingFrequency;
+  private final double maxPointerDutyCycle;
 
   public ScreenRecorderConfiguration(double maxPointerSamplingFrequency,
       double maxPointerDutyCycle, double maxFrameSamplingFrequency, double maxFrameDutyCycle)
   {
     this.maxPointerSamplingFrequency = maxPointerSamplingFrequency;
-    this.maxPointerDutyCycle = maxPointerDutyCycle;
-    this.maxFrameSamplingFrequency = maxFrameSamplingFrequency;
-    this.maxFrameDutyCycle = maxFrameDutyCycle;
+    this.maxPointerDutyCycle         = maxPointerDutyCycle;
+    this.maxFrameSamplingFrequency   = maxFrameSamplingFrequency;
+    this.maxFrameDutyCycle           = maxFrameDutyCycle;
   }
 
   public double getMaxFrameDutyCycle() {

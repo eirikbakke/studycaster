@@ -1,6 +1,7 @@
 package no.ebakke.studycaster.util;
 
-/** See http://en.wikipedia.org/wiki/Moving_average#Application_to_measuring_computer_performance .
+/** Thread-safe. See
+http://en.wikipedia.org/wiki/Moving_average#Application_to_measuring_computer_performance .
 Units in milliseconds. */
 public class MovingAverage {
   private final double period;

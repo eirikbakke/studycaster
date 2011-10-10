@@ -10,9 +10,14 @@ import no.ebakke.studycaster.screencasting.ScreenRecorder;
 import no.ebakke.studycaster.screencasting.ScreenRecorderConfiguration;
 import no.ebakke.studycaster.util.stream.NonBlockingOutputStream;
 
+/** Example command-line application that establishes a connection to the StudyCaster server,
+records a 30 second screencast, and then exits gracefully. */
 public final class ScreenCastExample {
+  private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
+  /** The maximum number of bytes of screencast data that can be stored in memory waiting to be
+  written to the output stream. Once this limit is reached, the framerate will drop according to the
+  maximum upload speed (if uploading to the server) or file I/O speed. */
   private static final int RECORDING_BUFFER_SZ = 4 * 1024 * 1024;
-  private static final Logger log = Logger.getLogger("no.ebakke.studycaster");
 
   private ScreenCastExample() { }
 
@@ -28,14 +33,16 @@ public final class ScreenCastExample {
         serverContext.getServerSecondsAhead(), ScreenRecorderConfiguration.DEFAULT);
 
     /* If you just want to record to a local file instead, don't bother with the ServerContext
-    stuff; just provide a FileOutputStream here. */
+    stuff, instead provide a FileOutputStream here. It's still probably a good idea to use the
+    NonBlockingOutputStream, as this way the frame rate will be unaffected by the occational slow
+    file I/O operation. */
     recordingStream.connect(serverContext.uploadFile("screencast.ebc"));
 
     recorder.start();
-    log.log(Level.INFO, "Now recording for 30 seconds...");
+    LOG.log(Level.INFO, "Now recording for 30 seconds...");
     Thread.sleep(30000);
 
-    log.log(Level.INFO, "Finished recording. The confirmation code (launchTicket) is {0}",
+    LOG.log(Level.INFO, "Finished recording. The confirmation code (launchTicket) is {0}",
         serverContext.getLaunchTicket());
     /* If the recorder isn't stopped, it will keep on running in its own thread even if main()
     returns. So don't let that happen. */

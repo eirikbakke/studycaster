@@ -4,6 +4,7 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Not thread-safe. */
 public final class Quilt {
   // Non-overlapping list of rectangles, each either positive or negative.
   private List<Patch> patches = new ArrayList<Patch>();
@@ -41,6 +42,7 @@ public final class Quilt {
     addIntersection(res, original, sM.x + sM.width,             sM.y, MAXVAL,    sM.y + sM.height);
   }
 
+  // TODO: Instead of positive/negative, allow an arbitrary value.
   public void addPatch(Rectangle rect, boolean positive) {
     Patch newPatch = new Patch(rect, positive);
     List<Patch> oldPatches = patches;

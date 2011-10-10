@@ -95,7 +95,7 @@ public final class RecordingConverter {
   }
 
   private static BufferedImage convertToType(BufferedImage sourceImage, int targetType) {
-    // From xuggler documentation.
+    // This method is from http://wiki.xuggle.com/Encoding_Video_from_a_sequence_of_Images .
     if (sourceImage.getType() == targetType) {
       return sourceImage;
     } else {

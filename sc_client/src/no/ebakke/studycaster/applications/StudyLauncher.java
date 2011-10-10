@@ -14,6 +14,7 @@ import no.ebakke.studycaster.ui.StudyCasterUI;
 import no.ebakke.studycaster.ui.StudyCasterUI.UIAction;
 import no.ebakke.studycaster.util.Util;
 
+/** This class will go away in a future version. */
 public final class StudyLauncher {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private StudyLauncher() { }

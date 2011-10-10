@@ -77,6 +77,10 @@ public final class Util {
       Thread.currentThread().interrupt();
   }
 
+  public interface Interruptible {
+    public void run() throws InterruptedException;
+  }
+
   public static void executeShellCommand(String command[]) throws StudyCasterException {
     try {
       Process proc = Runtime.getRuntime().exec(command);
@@ -87,10 +91,6 @@ public final class Util {
     } catch (InterruptedException e) {
       throw new StudyCasterException("Interrupted while executing shell command", e);
     }
-  }
-
-  public interface Interruptible {
-    public void run() throws InterruptedException;
   }
 
   public static void desktopOpenFile(File fileToOpen, String errorMessage)
@@ -181,6 +181,8 @@ public final class Util {
     return ret.toString();
   }
 
+  /* TODO: Get rid of this method and the Wrapper class, as well as other unused methods in this
+  class. */
   @SuppressWarnings("unchecked")
   public static <V,E extends Exception> V checkedSwingInvokeAndWait(final CallableExt<V,E> r)
       throws StudyCasterException, E

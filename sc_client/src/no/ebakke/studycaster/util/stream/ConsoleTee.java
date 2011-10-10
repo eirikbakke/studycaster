@@ -3,30 +3,33 @@ package no.ebakke.studycaster.util.stream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Logger;
 
 public class ConsoleTee {
-  private OutputStream out;
-  private PrintStream oldStdOut, oldStdErr;
-  private boolean disconnected = false;
-  private TeePrintStream teeStdOut, teeStdErr;
-  private ConsoleHandler oldLogHandler, newLogHandler;
+  private final OutputStream out;
+  private final PrintStream oldStdOut, oldStdErr;
+  private final TeePrintStream teeStdOut, teeStdErr;
+  private final ConsoleHandler oldLogHandler, newLogHandler;
+  private final AtomicBoolean closed = new AtomicBoolean(false);
 
   public ConsoleTee(OutputStream out, Formatter logFormatter) {
     this.out = out;
     oldStdOut = System.out;
     oldStdErr = System.err;
     Logger globalLogger = Logger.getLogger("");
+    ConsoleHandler oldLogHandlerFound = null;
     for (Handler h : globalLogger.getHandlers()) {
       if (h instanceof ConsoleHandler) {
-        globalLogger.removeHandler(h);
-        oldLogHandler = (ConsoleHandler) h;
+        oldLogHandlerFound = (ConsoleHandler) h;
+        globalLogger.removeHandler(oldLogHandlerFound);
         break;
       }
     }
+    oldLogHandler = oldLogHandlerFound;
     teeStdOut = new TeePrintStream(out, System.out);
     teeStdErr = new TeePrintStream(out, System.err);
     System.setOut(teeStdOut);
@@ -37,14 +40,14 @@ public class ConsoleTee {
   }
 
   public void close() throws IOException {
-    if (disconnected)
+    if (closed.getAndSet(true))
       return;
-    disconnected = true;
     Logger globalLogger = Logger.getLogger("");
     globalLogger.removeHandler(newLogHandler);
     System.setOut(oldStdOut);
     System.setErr(oldStdErr);
-    globalLogger.addHandler(oldLogHandler);
+    if (oldLogHandler != null)
+      globalLogger.addHandler(oldLogHandler);
     out.close();
   }
 }

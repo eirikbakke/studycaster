@@ -13,6 +13,8 @@ import java.util.logging.Logger;
 import no.ebakke.studycaster.util.Util;
 import org.apache.commons.io.IOExceptionWithCause;
 
+/** An output stream for which calls to flush() and write() return immediately, queueing the
+operations for completion in a separate I/O thread. Thread-safe. */
 public class NonBlockingOutputStream extends OutputStream {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
 
@@ -125,10 +127,12 @@ public class NonBlockingOutputStream extends OutputStream {
 
   private void setStoredException(IOException e) {
     LOG.log(Level.WARNING, "Storing an exception from I/O thread", e);
-    /* Will only store the first exception. Swallowed exceptions are part of reality, however. */
+    // Will only store the first exception. Swallowed exceptions are part of reality, however.
     storedException.compareAndSet(null, e);
   }
 
+  /** Wait for all pending write operations to complete, then close the underlying output stream.
+  This method may block. */
   @Override
   public void close() throws IOException {
     if (closed.getAndSet(true))
@@ -155,8 +159,9 @@ public class NonBlockingOutputStream extends OutputStream {
       throw new IOException("There were unwritten bytes");
   }
 
-  /** This method uses a relaxed definition of flush, where the writer thread flushes the underlying
-  buffer as soon as it can get around to it. */
+  /** Schedule a flush() to happen on the underlying output stream as soon as the I/O thread becomes
+  idle. This method intentionally never blocks, which is contrary to the traditional contract for
+  flush. */
   @Override
   public void flush() throws IOException {
     Util.checkClosed(closed);

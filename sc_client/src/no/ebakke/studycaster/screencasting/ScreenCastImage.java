@@ -7,7 +7,7 @@ import java.awt.image.DataBufferByte;
 import java.awt.image.IndexColorModel;
 
 public class ScreenCastImage extends BufferedImage {
-  private static final int RESERVED_INDICES = 2;
+  private static final int             RESERVED_INDICES = 2;
   private static final IndexColorModel SCREENCAST_COLOR_MODEL = createColorModel();
 
   public ScreenCastImage(Dimension dim) {

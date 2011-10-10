@@ -32,7 +32,8 @@ import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 
-/** Handles protocol details specific to the server-side PHP script. */
+/** Represents a connection to the StudyCaster server, and handles all details of the server API.
+Thread-safe. */
 public class ServerContext {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private static final String SERVERURI_PROP_NAME = "studycaster.server.uri";

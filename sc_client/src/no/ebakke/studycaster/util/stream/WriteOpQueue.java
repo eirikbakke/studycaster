@@ -3,18 +3,22 @@ package no.ebakke.studycaster.util.stream;
 import java.io.InterruptedIOException;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import no.ebakke.studycaster.util.Util;
 
+/** Thread-safe. */
 class WriteOpQueue {
   private final Lock lock          = new ReentrantLock();
   private final Condition notFull  = lock.newCondition();
   private final Condition notEmpty = lock.newCondition();
   private final long maxBytesInQueue;
-  private Queue<byte[]> ops = new LinkedList<byte[]>();
-  private long bytesInQueue  = 0;
+  private final AtomicLong bytesInQueue  = new AtomicLong(0);
+  /* The queue will be externally synchronized by the lock. This has equivalent memory
+  synchronization behavior as using the synchronized statement; see the Javadoc for Lock. */
+  private final Queue<byte[]> ops = new LinkedList<byte[]>();
 
   public WriteOpQueue(long maxBytesInQueue) {
     if (maxBytesInQueue < 1)
@@ -31,6 +35,8 @@ class WriteOpQueue {
   }
 
   public void push(byte b[], int off, int len) throws InterruptedIOException {
+    if (b == null)
+      throw new NullPointerException();
     for (int subOff = 0; subOff < len; ) {
       final int subLen = Math.min(len - subOff, (int) Math.min(maxBytesInQueue, Integer.MAX_VALUE));
       try {
@@ -48,9 +54,9 @@ class WriteOpQueue {
     lock.lockInterruptibly();
     try {
       if (op != null) {
-        while (bytesInQueue + op.length > maxBytesInQueue)
+        while (bytesInQueue.get() + op.length > maxBytesInQueue)
           notFull.await();
-        bytesInQueue += op.length;
+        bytesInQueue.addAndGet(op.length);
       }
       ops.add(op);
       notEmpty.signal();
@@ -67,7 +73,7 @@ class WriteOpQueue {
         notEmpty.await();
       byte[] ret = ops.remove();
       if (ret != null)
-        bytesInQueue -= ret.length;
+        bytesInQueue.addAndGet(-ret.length);
       /* Leave it to the condition loop in the waiting thread to determine if the condition is
       actually satisfied. */
       notFull.signal();

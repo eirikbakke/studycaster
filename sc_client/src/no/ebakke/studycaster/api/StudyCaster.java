@@ -17,6 +17,7 @@ import no.ebakke.studycaster.util.stream.ConsoleTee;
 import no.ebakke.studycaster.util.stream.StreamProgressObserver;
 import org.apache.commons.io.IOUtils;
 
+/** This class will go away in a future version. */
 public class StudyCaster {
   // TODO: Figure out which members can be final or need to be volatile. Or just delete this class.
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");

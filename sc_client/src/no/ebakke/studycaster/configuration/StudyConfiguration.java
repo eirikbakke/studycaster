@@ -16,8 +16,7 @@ import org.xml.sax.SAXException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-/* TODO: Have a way for the server to test-parse the configuration, and read all configuration
-sections as well. */
+// TODO: Have a way for the server to test-parse the configuration.
 public class StudyConfiguration {
   private static final boolean DEBUG_MACROS = false;
   private final String name;
