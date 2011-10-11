@@ -62,6 +62,20 @@ final class ConfigurationUtil {
     return ret;
   }
 
+  public static boolean getBooleanAttribute(Element elm, String attrName)
+      throws StudyCasterException
+  {
+    String ret = getNonEmptyAttribute(elm, attrName);
+    if        (ret.equals("true" )) {
+      return true;
+    } else if (ret.equals("false")) {
+      return false;
+    } else {
+      throw new StudyCasterException(
+          "Expected either \"true\" or \"false\" for attribute " + attrName);
+    }
+  }
+
   public static List<Element> getElements(Node parent, String localName, boolean required)
       throws StudyCasterException
   {

@@ -106,7 +106,7 @@
     <macro id="configuration-common"/>
     <page>
       <macro id="instructions"/>
-      <openfile auto="false">
+      <openfile auto="true">
         <remotename>currencies.xls</remotename>
         <localname>userstudyHIT_currencies.xls</localname>
         <errormessage><macro id="openfile-error-excel"/></errormessage>
@@ -121,7 +121,7 @@
     <macro id="configuration-common"/>
     <page>
       <macro id="instructions"/>
-      <openfile auto="false">
+      <openfile auto="true">
         <remotename>exflat.xls</remotename>
         <localname>userstudyHIT_coursecatalog.xls</localname>
         <errormessage><macro id="openfile-error-excel"/></errormessage>
@@ -136,7 +136,7 @@
     <macro id="configuration-common"/>
     <page>
       <macro id="instructions"/>
-      <openfile auto="false">
+      <openfile auto="true">
         <remotename>rsnest.rzw</remotename>
         <localname>userstudyHIT_coursecatalog.rzw</localname>
         <errormessage>Unexpected error.</errormessage>
