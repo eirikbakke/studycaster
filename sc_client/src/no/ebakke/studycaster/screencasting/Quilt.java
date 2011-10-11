@@ -4,39 +4,34 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Not thread-safe. */
-public final class Quilt {
+/** Collection that assigns values to areas on a plane. Not thread-safe. */
+public final class Quilt<V> {
+  // TODO: See if there's a better way to do this.
+  // To avoid overflow errors, don't go all the way to the boundaries.
+  private static final int MAXVAL = Integer.MAX_VALUE / 8;
+  private static final int MINVAL = Integer.MIN_VALUE / 8;
   // Non-overlapping list of rectangles, each either positive or negative.
-  private List<Patch> patches = new ArrayList<Patch>();
+  private List<Patch<V>> patches = new ArrayList<Patch<V>>();
 
-  public Quilt() {
+  public Quilt(V background) {
+    addPatch(newRectangle(MINVAL, MINVAL, MAXVAL, MAXVAL), background);
   }
 
-  public Quilt(Rectangle rect) {
-    this();
-    addPatch(rect, true);
+  /** Create a new rectangle using end coordinates. */
+  private static Rectangle newRectangle(int x1, int y1, int x2, int y2) {
+    return new Rectangle(x1, y1, x2 - x1, y2 - y1);
   }
 
-  private static void addIntersection(List<Patch> result, Patch original,
+  private static <V> void addIntersection(List<Patch<V>> result, Patch<V> original,
       int x1, int y1, int x2, int y2)
   {
-    Rectangle rect = new Rectangle(x1, y1, x2-x1, y2-y1).intersection(original.rect);
+    Rectangle rect = newRectangle(x1, y1, x2, y2).intersection(original.rect);
     if (!rect.isEmpty())
-      result.add(new Patch(rect, original.positive));
+      result.add(new Patch<V>(rect, original.value));
   }
 
-  /** Return an integer larger than any coordinate touched by the specified rectangle. */
-  private static int getMaxVal(Rectangle rect) {
-    return Math.max(
-        Math.abs(rect.x) + Math.abs(rect.width ),
-        Math.abs(rect.y) + Math.abs(rect.height)) + 2;
-  }
-
-  private static void subtractPatch(Patch original, Patch subtractMe, List<Patch> res) {
-    /* Could use Integer.MAX_VALUE/MIN_VALUE, but would then have to think hard about overflow. */
-    final int MAXVAL = Math.max(getMaxVal(original.rect), getMaxVal(subtractMe.rect));
-    final int MINVAL = -MAXVAL;
-
+  private static <V> void subtractPatch(Patch<V> original, Patch<V> subtractMe, List<Patch<V>> res)
+  {
     final Rectangle sM = subtractMe.rect;
     // original - subtractMe = original * (1 - subtractMe)
     addIntersection(res, original,          MINVAL,           MINVAL, MAXVAL,                sM.y);
@@ -45,45 +40,53 @@ public final class Quilt {
     addIntersection(res, original, sM.x + sM.width,             sM.y, MAXVAL,    sM.y + sM.height);
   }
 
-  // TODO: Instead of positive/negative, allow an arbitrary value.
-  public void addPatch(Rectangle rect, boolean positive) {
-    Patch newPatch = new Patch(rect, positive);
-    List<Patch> oldPatches = patches;
-    patches = new ArrayList<Patch>(oldPatches.size() + 5);
+  public void addPatch(Rectangle rect, V value) {
+    if (rect.isEmpty())
+      return;
+    Patch<V> newPatch = new Patch<V>(new Rectangle(rect), value);
+    List<Patch<V>> oldPatches = patches;
+    patches = new ArrayList<Patch<V>>(oldPatches.size() + 5);
     // Subtract from all existing patches first to avoid overlapping.
-    for (Patch oldPatch : oldPatches)
+    for (Patch<V> oldPatch : oldPatches)
       subtractPatch(oldPatch, newPatch, patches);
     patches.add(newPatch);
   }
 
-  public boolean contains(int x, int y) {
-    for (Patch patch : patches) {
+  /** Return the value and run length associated with the given coordinate. The run length is at
+  least 1. */
+  public ValueRun<V> getPatchRun(int x, int y) {
+    for (Patch<V> patch : patches) {
       if (patch.rect.contains(x, y))
-        return patch.positive;
+        return new ValueRun<V>(patch.value, patch.rect.x + patch.rect.width - x);
     }
-    return false;
+    throw new IndexOutOfBoundsException();
   }
 
-  /** Returns positive or negative non-zero integer. */
-  public int getHorizontalRunLength(int x, int y) {
-    for (Patch patch : patches) {
-      if (patch.rect.contains(x, y)) {
-        return (patch.rect.x + patch.rect.width - x) *
-            (patch.positive ? 1 : -1);
-      }
+  public static final class ValueRun<V> {
+    private V   value;
+    private int runLength;
+
+    public ValueRun(V value, int runLength) {
+      this.value     = value;
+      this.runLength = runLength;
     }
-    // TODO: Avoid using these extremes.
-    // Add 1 to make sure the value can be negated without overflow.
-    return Integer.MIN_VALUE + 1;
+
+    public V getValue() {
+      return value;
+    }
+
+    public int getRunLength() {
+      return runLength;
+    }
   }
 
-  private static final class Patch {
+  private static final class Patch<V> {
     Rectangle rect;
-    boolean   positive;
+    V         value;
 
-    public Patch(Rectangle rect, boolean positive) {
-      this.rect     = rect;
-      this.positive = positive;
+    public Patch(Rectangle rect, V value) {
+      this.rect  = rect;
+      this.value = value;
     }
   }
 }

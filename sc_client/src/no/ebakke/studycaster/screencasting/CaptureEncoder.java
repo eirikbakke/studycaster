@@ -14,6 +14,8 @@ import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.GZIPOutputStream;
 import no.ebakke.studycaster.screencasting.MetaStamp.FrameType;
+import no.ebakke.studycaster.screencasting.Quilt.ValueRun;
+import no.ebakke.studycaster.screencasting.ScreenCensor.CensorType;
 import no.ebakke.studycaster.util.Util;
 
 /** Thread-safe. */
@@ -55,8 +57,10 @@ public class CaptureEncoder {
   }
 
   private void flushMeta() throws IOException {
-    MetaStamp ms;
-    while ((ms = state.pollMetaStamp()) != null) {
+    while (true) {
+      final MetaStamp ms = state.pollMetaStamp();
+      if (ms == null)
+        break;
       dout.write(CodecConstants.MARKER_META);
       ms.writeToStream(dout);
     }
@@ -87,19 +91,19 @@ public class CaptureEncoder {
     Util.checkClosed(closed);
     addMeta(FrameType.BEFORE_CAPTURE);
     BufferedImage image = robot.createScreenCapture(screenRect);
-    Quilt permittedArea = (censor == null) ?
-        new Quilt(screenRect) : censor.getPermittedRecordingArea();
+    Quilt<CensorType> permittedArea = (censor == null) ?
+        new Quilt<CensorType>(CensorType.NONE) : censor.getPermittedRecordingArea();
     addMeta(FrameType.AFTER_CAPTURE);
     flushMeta();
     compressAndOutputFrame(image, permittedArea);
   }
 
-  private static byte blurredPixel(byte buf[], int width, int x, int y) {
+  private static byte mosaicPixel(byte buf[], int width, int x, int y) {
     // TODO: What if the "color" is INDEX_NO_DIFF?
     return buf[y * width + (x / ScreenCensor.MOSAIC_WIDTH) * ScreenCensor.MOSAIC_WIDTH];
   }
 
-  private void compressAndOutputFrame(BufferedImage frame, Quilt permittedArea)
+  private void compressAndOutputFrame(BufferedImage frame, Quilt<CensorType> permittedArea)
       throws IOException
   {
     state.swapFrames();
@@ -114,8 +118,8 @@ public class CaptureEncoder {
 
     dout.write(CodecConstants.MARKER_FRAME);
     for (int y = 0, i = 0; y < height; y++) {
-      boolean censorRunPermitted = false;
-      int     censorRunRemaining  = 0;
+      CensorType censorType = null;
+      int        censorRunRemaining  = 0;
       for (int x = 0; x < width; x++, i++) {
         // Workaround for bug in Java 1.5. See comment in ScreenCastImage.
         if (newBuf[i] == CodecConstants.INDEX_NO_DIFF || newBuf[i] == CodecConstants.INDEX_REPEAT)
@@ -123,12 +127,15 @@ public class CaptureEncoder {
 
         // Screen censoring related.
         if (censorRunRemaining == 0) {
-          censorRunRemaining = permittedArea.getHorizontalRunLength(x, y);
-          censorRunPermitted = (censorRunRemaining > 0);
-          censorRunRemaining = Math.abs(censorRunRemaining);
+          final ValueRun<CensorType> censorRun = permittedArea.getPatchRun(x, y);
+          censorRunRemaining = censorRun.getRunLength();
+          censorType         = censorRun.getValue();
         }
-        if (!censorRunPermitted)
-          newBuf[i] = blurredPixel(newBuf, width, x, y);
+        if        (censorType == CensorType.MOSAIC  ) {
+          newBuf[i] = mosaicPixel(newBuf, width, x, y);
+        } else if (censorType == CensorType.BLACKOUT) {
+          newBuf[i] = 0;
+        }
         censorRunRemaining--;
 
         // Apply differential between old and new frames.

@@ -13,6 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.UIManager;
 import no.ebakke.studycaster.api.StudyCasterException;
+import no.ebakke.studycaster.screencasting.Quilt.ValueRun;
 import no.ebakke.studycaster.screencasting.WindowEnumerator.WindowInfo;
 import no.ebakke.studycaster.util.ImageDebugFrame;
 
@@ -23,7 +24,7 @@ public final class ScreenCensor {
   public static final int MOSAIC_WIDTH = 5;
 
   private final List<String> whiteList, blackList;
-  private final Quilt nativeFail;
+  private final Quilt<CensorType> nativeFail;
   private final WindowEnumerator windowEnumerator;
 
   public ScreenCensor(List<String> whiteList, List<String> blackList, boolean blacklistFileDialogs,
@@ -49,14 +50,14 @@ public final class ScreenCensor {
       this.whiteList.add("StudyCaster");
     windowEnumerator = Win32WindowEnumerator.create();
     if (windowEnumerator == null) {
-      LOG.log(Level.WARNING, "Can''t initialize native library; censoring entire screen area");
-      nativeFail = new Quilt();
+      LOG.log(Level.WARNING, "Can''t initialize native library; applying mosaic to entire screen");
+      nativeFail = new Quilt<CensorType>(CensorType.MOSAIC);
     } else {
       nativeFail = null;
     }
   }
 
-  public Quilt getPermittedRecordingArea() {
+  public Quilt<CensorType> getPermittedRecordingArea() {
     if (nativeFail != null)
       return nativeFail;
 
@@ -68,7 +69,8 @@ public final class ScreenCensor {
           pidWhiteList.add(wi.getPID());
       }
     }
-    Quilt ret = new Quilt();
+    // TODO: Blackout desktop.
+    Quilt<CensorType> ret = new Quilt<CensorType>(CensorType.BLACKOUT);
     for (WindowInfo wi : windows) {
       boolean ok = pidWhiteList.contains(wi.getPID());
       if (ok) {
@@ -79,7 +81,7 @@ public final class ScreenCensor {
           }
         }
       }
-      ret.addPatch(wi.getBounds(), ok);
+      ret.addPatch(wi.getBounds(), ok ? CensorType.NONE : CensorType.MOSAIC);
     }
     return ret;
   }
@@ -91,7 +93,7 @@ public final class ScreenCensor {
       true, true);
     Rectangle screenRect = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
     BufferedImage image = new Robot().createScreenCapture(screenRect);
-    Quilt permitted = censor.getPermittedRecordingArea();
+    Quilt<CensorType> permitted = censor.getPermittedRecordingArea();
     
     /*
     permitted = new Quilt();
@@ -104,30 +106,35 @@ public final class ScreenCensor {
     for (int i = 0; i < 10; i++) {
       System.out.println(i);
       for (int y = 0; y < image.getHeight(); y++) {
-        int     censorRun        = 0;
-        boolean censorRunAllowed = false;
+        int        censorRunLength = 0;
+        CensorType censorRunType   = null;
         for (int x = 0; x < image.getWidth(); x++) {
-          if (censorRun == 0) {
-            censorRun = permitted.getHorizontalRunLength(x, y);
-            if (censorRun > 0) {
-              censorRunAllowed = true;
-            } else {
-              censorRunAllowed = false;
-              censorRun        = -censorRun;
-            }
+          if (censorRunLength == 0) {
+            ValueRun<CensorType> censorRun = permitted.getPatchRun(x, y);
+            censorRunType   = censorRun.getValue();
+            censorRunLength = censorRun.getRunLength();
           }
           //permitted.contains(x, y);
           //screenRect.contains(x, y);
-          if (!censorRunAllowed)
+          if        (censorRunType == CensorType.MOSAIC) {
             image.setRGB(x, y, image.getRGB(x, y) & 0xE0E00000);
+          } else if (censorRunType == CensorType.BLACKOUT) {
+            image.setRGB(x, y, image.getRGB(x, y) & 0x0000E000);
+          }
           /*
           if (!permitted.contains(x, y))
             image.setRGB(x, y, image.getRGB(x, y) & 0xE0E00000);
           */
-          censorRun--;
+          censorRunLength--;
         }
       }
     }
     ImageDebugFrame.showImage(image);
+  }
+
+  public static enum CensorType {
+    NONE,
+    MOSAIC,
+    BLACKOUT
   }
 }
