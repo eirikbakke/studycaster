@@ -22,7 +22,7 @@ final class ConfigurationUtil {
     for (Element macroElm : getElements(parent, "macro", false)) {
       String macroID = macroElm.getAttribute("id");
       Element macroDef = macroDefs.get(macroID);
-      // TODO: Escape error message.
+      // TODO: Escape error messages.
       if (macroDef == null)
         throw new StudyCasterException("Unknown configuration macro \"" + macroID + "\"");
       NodeList nl = macroDef.getChildNodes();
@@ -102,7 +102,6 @@ final class ConfigurationUtil {
     if (optional && ret.isEmpty())
       return null;
     if (ret.size() != 1) {
-      // TODO: Escape.
       throw new StudyCasterException(
           "Expected a single <" + localName + " xmlns=\"" + XMLNS_SC + "\"> element, got " +
           ret.size());

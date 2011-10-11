@@ -5,6 +5,7 @@
  *  - Added @WebServlet annotation.
  *  - Intercepted MIME type determination.
  *  - Added sending of disable cache headers.
+ *  - Added serialVersionUID
  */
 
 /*
@@ -59,6 +60,7 @@ import no.ebakke.studycaster.servlets.ServletUtil;
 public class FileServlet extends HttpServlet {
 
   // Constants ----------------------------------------------------------------------------------
+  private static final long serialVersionUID = 1L;
   private static final int DEFAULT_BUFFER_SIZE = 10240; // ..bytes = 10KB.
   private static final long DEFAULT_EXPIRE_TIME = 604800000L; // ..ms = 1 week.
   private static final String MULTIPART_BOUNDARY = "MULTIPART_BYTERANGES";

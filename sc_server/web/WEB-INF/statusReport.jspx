@@ -10,9 +10,8 @@
 
     <h2>Backend Status</h2>
     <p>The current time on the server is <c:out value="${currentTime}"/>.</p>
-    <p>
-      Backend status at application deployment:<br/>
-    <pre class="quote"><c:out value="${backendStatus}"/></pre></p>
+    <p>Backend status at application deployment:</p>
+    <pre class="quote"><c:out value="${backendStatus}"/></pre>
     <p>
       You can configure the production JDBC connection URL by setting the
       <code><c:out value="${serverURLproperty}"/></code> system property on the
