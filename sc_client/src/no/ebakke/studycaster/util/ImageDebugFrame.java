@@ -26,7 +26,9 @@ public class ImageDebugFrame extends JFrame {
       SwingUtilities.invokeAndWait(new Runnable() {
         public void run() {
           ImageSelection.copyImageToClipBoard(image);
-          new ImageDebugFrame(image).setVisible(true);
+          JFrame frame = new ImageDebugFrame(image);
+          frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+          frame.setVisible(true);
         }
       });
     } catch (InterruptedException e) {
