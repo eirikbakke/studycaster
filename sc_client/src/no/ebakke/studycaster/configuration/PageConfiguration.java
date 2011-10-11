@@ -7,11 +7,14 @@ import org.w3c.dom.Element;
 public class PageConfiguration {
   private final String                instructions;
   private final OpenFileConfiguration openFileConfiguration;
+  private final ConcludeConfiguration concludeConfiguration;
 
   public PageConfiguration(Element elm) throws StudyCasterException {
     instructions = ConfigurationUtil.getSwingCaption(elm, "instructions");
     Element openFileElm = ConfigurationUtil.getUniqueElement(elm, "openfile", true);
     openFileConfiguration = (openFileElm == null) ? null : new OpenFileConfiguration(openFileElm);
+    Element concludeElm = ConfigurationUtil.getUniqueElement(elm, "conclude", true);
+    concludeConfiguration = (concludeElm == null) ? null : new ConcludeConfiguration(concludeElm);
   }
 
   public static List<PageConfiguration> parse(Element parent) throws StudyCasterException {
@@ -30,5 +33,9 @@ public class PageConfiguration {
 
   public OpenFileConfiguration getOpenFileConfiguration() {
     return openFileConfiguration;
+  }
+
+  public ConcludeConfiguration getConcludeConfiguration() {
+    return concludeConfiguration;
   }
 }

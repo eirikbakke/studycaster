@@ -10,7 +10,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import no.ebakke.studycaster.api.StudyCasterException;
-import no.ebakke.studycaster.util.MyFileNameExtensionFilter;
 import no.ebakke.studycaster.util.XMLUtil;
 import org.xml.sax.SAXException;
 import org.w3c.dom.Document;
@@ -20,7 +19,6 @@ import org.w3c.dom.Element;
 public class StudyConfiguration {
   private static final boolean DEBUG_MACROS = false;
   private final String name;
-  private final FileFilter uploadFileFilter;
   private final List<PageConfiguration> pageConfiguration;
   private final List<String> screenCastWhiteList;
   private final List<String> screenCastBlackList;
@@ -71,15 +69,6 @@ public class StudyConfiguration {
     name              = ConfigurationUtil.getNonEmptyAttribute(conf, "name");
     pageConfiguration = PageConfiguration.parse(conf);
 
-    Element uploadFile = ConfigurationUtil.getUniqueElement(conf, "uploadfile");
-    Element fileFilter = ConfigurationUtil.getUniqueElement(uploadFile, "filefilter");
-
-    // TODO: Use Apache Commons file filter classes instead.
-    uploadFileFilter = new MyFileNameExtensionFilter(
-        ConfigurationUtil.getStrings(fileFilter, "extension"),
-        ConfigurationUtil.getTextContent(
-        ConfigurationUtil.getUniqueElement(fileFilter, "description")));
-
     Element screencast = ConfigurationUtil.getUniqueElement(conf, "screencast");
     screenCastWhiteList = ConfigurationUtil.getStrings(screencast, "whitelist");
     screenCastBlackList = ConfigurationUtil.getStrings(screencast, "blacklist");
@@ -88,17 +77,31 @@ public class StudyConfiguration {
   }
 
   // TODO: Get rid of this.
-  public String getInstructions() {
+  private PageConfiguration getLonePageConfiguration() {
     if (pageConfiguration.size() != 1)
       throw new UnsupportedOperationException();
-    return pageConfiguration.get(0).getInstructions();
+    return pageConfiguration.get(0);
+  }
+
+  // TODO: Get rid of this.
+  public String getInstructions() {
+    return getLonePageConfiguration().getInstructions();
   }
 
   // TODO: Get rid of this.
   public OpenFileConfiguration getOpenFileConfiguration() {
-    if (pageConfiguration.size() != 1)
+    OpenFileConfiguration ret = getLonePageConfiguration().getOpenFileConfiguration();
+    if (ret == null)
       throw new UnsupportedOperationException();
-    OpenFileConfiguration ret = pageConfiguration.get(0).getOpenFileConfiguration();
+    return ret;
+  }
+
+  // TODO: Get rid of this.
+  public FileFilter getUploadFileFilter() {
+    ConcludeConfiguration conclude = getLonePageConfiguration().getConcludeConfiguration();
+    if (conclude == null)
+      throw new UnsupportedOperationException();
+    FileFilter ret = conclude.getUploadFileFilter();
     if (ret == null)
       throw new UnsupportedOperationException();
     return ret;
@@ -106,10 +109,6 @@ public class StudyConfiguration {
 
   public String getName() {
     return name;
-  }
-
-  public FileFilter getUploadFileFilter() {
-    return uploadFileFilter;
   }
 
   public List<String> getScreenCastWhiteList() {

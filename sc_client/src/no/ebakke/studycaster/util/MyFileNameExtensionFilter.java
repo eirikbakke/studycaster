@@ -6,13 +6,12 @@ import java.util.List;
 import java.util.Locale;
 import javax.swing.filechooser.FileFilter;
 
-/* Modeled after the FileNameExtensionFilter class in Java 1.6 (we're targeting for 1.5). */
+/** Modeled after the FileNameExtensionFilter class in Java 1.6 (we're targeting for 1.5). */
 public class MyFileNameExtensionFilter extends FileFilter {
-  private List<String> extensions;
-  private String description;
+  private final List<String> extensions = new ArrayList<String>();
+  private final String       description;
 
   public MyFileNameExtensionFilter(List<String> extensions, String description) {
-    this.extensions = new ArrayList<String>();
     for (String e : extensions)
       this.extensions.add(e.toLowerCase(Locale.ENGLISH));
     this.description = description;
