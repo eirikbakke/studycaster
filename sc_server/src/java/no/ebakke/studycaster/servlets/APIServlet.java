@@ -14,8 +14,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import no.ebakke.studycaster.backend.BackendUtil;
-import no.ebakke.studycaster.backend.Request;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -30,7 +28,7 @@ public class APIServlet extends HttpServlet {
   private static final int    MAX_APPEND_CHUNK    = 1024 * 256;
   private static final int    CLIENT_COOKIE_BYTES = 6;
   private static final int    LAUNCH_TICKET_BYTES = 6;
-  public  static final int    IPHASH_BYTES        = 3;
+  public  static final int    IPHASH_SZ           = 3;
   private static final String UPLOAD_DIR          = "uploads";
   private Random random                           = new Random();
   // TODO: Figure out a better storage strategy.
@@ -163,10 +161,6 @@ public class APIServlet extends HttpServlet {
       e.sendError(resp);
     }
     // TODO: Split off locations into separate table.
-    BackendUtil.storeRequest(LifeCycle.getSessionFactory(req),
-        new Request(new Date(), cmd, wroteContent,
-        ServletUtil.toHex(ServletUtil.sha1("stick " + req.getRemoteAddr()),
-        IPHASH_BYTES), BackendUtil.getGeoInfo(req), launchTicket, clientCookie,
-        logEntry));
+    ServletUtil.logRequest(req, cmd, wroteContent, launchTicket, clientCookie, logEntry);
   }
 }

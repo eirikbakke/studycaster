@@ -45,11 +45,9 @@ public class JNLPServlet extends HttpServlet {
     req.setAttribute("jnlpFile", JNLPServlet.JNLP_FILE);
     getServletContext().getRequestDispatcher("/WEB-INF/generatedJNLP.jspx").forward(req, resp);
 
-    // TODO: Reduce code duplication with APIServlet.
     // TODO: Redesign request schema to avoid fields with either compound values or mostly nulls.
-    BackendUtil.storeRequest(LifeCycle.getSessionFactory(req), new Request(new Date(), "jws", null,
-        ServletUtil.toHex(ServletUtil.sha1("stick " + req.getRemoteAddr()),
-        APIServlet.IPHASH_BYTES), BackendUtil.getGeoInfo(req), null, null,
-        req.getParameter("ver") + ";" + configurationID));
+    // TODO: Avoid having to log two separate requests here, or rename "jws".
+    ServletUtil.logRequest(req, "jws", null, null, null, req.getParameter("ver"));
+    ServletUtil.logRequest(req, "cid", null, null, null, configurationID);
   }
 }

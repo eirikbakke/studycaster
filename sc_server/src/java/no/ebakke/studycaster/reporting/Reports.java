@@ -34,7 +34,9 @@ public final class Reports {
       links.put(Pair.of("launchTicket"  , true ), r.getLaunchTicket());
       links.put(Pair.of("geoLocation"   , false), r.getGeoLocation());
       if ("jws".equals(r.getType()))
-        links.put(Pair.of("versionString", false), r.getLogEntry());
+        links.put(Pair.of("versionString"  , false), r.getLogEntry());
+      if ("cid".equals(r.getType()))
+        links.put(Pair.of("configurationID", false), r.getLogEntry());
       linker.addLink(links, r);
       ColUtil.putExtreme(firstRequest, r.getLaunchTicket(), r.getTime(), false);
       ColUtil.putExtreme(lastRequest , r.getLaunchTicket(), r.getTime(), true );
@@ -51,12 +53,14 @@ public final class Reports {
         if (firstOverall == null || (time != null && time.before(firstOverall)))
           firstOverall = time;
       }
-      subject.firstRequest   = firstOverall;
-      subject.clientCookie   = node.getLinks("clientCookie");
-      subject.remoteAddrHash = node.getLinks("remoteAddrHash");
-      subject.geoLocation    = node.getLinks("geoLocation");
-      subject.versionString  = node.getLinks("versionString");
-      subject.launches       = ColUtil.newList();
+      subject.firstRequest    = firstOverall;
+      subject.clientCookie    = node.getLinks("clientCookie");
+      subject.remoteAddrHash  = node.getLinks("remoteAddrHash");
+      subject.geoLocation     = node.getLinks("geoLocation");
+      subject.versionString   = node.getLinks("versionString");
+      // TODO: Associate this with launches instead.
+      subject.configurationID = node.getLinks("configurationID");
+      subject.launches        = ColUtil.newList();
       for (String launchTicket : node.getLinks("launchTicket")) {
         Launch launch = new Launch();
         launch.launchTicket = launchTicket;
@@ -89,6 +93,7 @@ public final class Reports {
     private Set<String>  remoteAddrHash;
     private Set<String>  geoLocation;
     private Set<String>  versionString;
+    private Set<String>  configurationID;
     private List<Launch> launches;
 
     public Date getFirstRequest() {
@@ -109,6 +114,10 @@ public final class Reports {
 
     public Set<String> getVersionString() {
       return versionString;
+    }
+
+    public Set<String> getConfigurationID() {
+      return configurationID;
     }
 
     public List<Launch> getLaunches() {

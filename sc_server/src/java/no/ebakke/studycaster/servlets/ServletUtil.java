@@ -11,6 +11,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
+import no.ebakke.studycaster.backend.BackendUtil;
+import no.ebakke.studycaster.backend.Request;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
@@ -283,6 +286,16 @@ public final class ServletUtil {
     } else {
       return ctx.getMimeType(file);
     }
+  }
+
+  public static void logRequest(
+      HttpServletRequest req, String type, Long contentSize,
+      String launchTicket, String clientCookie, String logEntry)
+  {
+    BackendUtil.storeRequest(LifeCycle.getSessionFactory(req),
+        new Request(new Date(), type, contentSize,
+        ServletUtil.toHex(ServletUtil.sha1("stick " + req.getRemoteAddr()), APIServlet.IPHASH_SZ),
+        BackendUtil.getGeoInfo(req), launchTicket, clientCookie, logEntry));
   }
 
   public static void main(String args[]) {
