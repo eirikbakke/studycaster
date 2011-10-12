@@ -5,12 +5,12 @@
   xmlns:fn="http://java.sun.com/jsp/jstl/functions"
   version="2.0">
 
-<script type="text/javascript" src="${fn:escapeXml(urlDeployScript)}">${""}</script>
+<script type="text/javascript" src="${fn:escapeXml(serverURL)}/deployJava.min.js">${""}</script>
 <!-- Hack to get a newline: -->${""}
 <script type="text/javascript">
   var version_arg = encodeURIComponent(String(deployJava.getBrowser()) + ";" + String(deployJava.getJREs()));
-  deployJava.launchButtonPNG = "${urlButtonImage}";
-  deployJava.createWebStartLaunchButton("${urlJNLP}" + "?ver=" + version_arg, "${minJavaVer}");
+  deployJava.launchButtonPNG = "${fn:escapeXml(serverURL)}/webstart_button.png";
+  deployJava.createWebStartLaunchButton("${fn:escapeXml(urlJNLP)}" + version_arg, "${minJavaVer}");
 </script>
 
 </jsp:root>

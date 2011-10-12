@@ -33,8 +33,8 @@ public class AdminServlet extends HttpServlet {
     }
 
     try {
-      String serverURL = ServletUtil.getApplicationBase(req);
-      String password = req.getParameter("pwd");
+      final String serverURL = ServletUtil.getApplicationBase(req);
+      final String password = req.getParameter("pwd");
       String pageType = req.getParameter("page");
       if (!BackendUtil.isAdminLoggedIn(req, password))
         pageType = "loggedOut";
@@ -44,14 +44,12 @@ public class AdminServlet extends HttpServlet {
         resp.sendRedirect(ServletUtil.getApplicationBase(req));
         return;
       }
-      req.setAttribute("serverURL", serverURL);
-      req.setAttribute("urlDeployScript", serverURL + "/deployJava.min.js");
-      /* Don't allow strings with characters that would need escaping, since
-      deployJava.js doesn't support them. */
-      req.setAttribute("urlButtonImage", ServletUtil.ensureSafeString(
-          serverURL + "/webstart_button.png"));
+      /* Don't allow strings with characters that would need escaping, since deployJava.js doesn't
+      support them. */
+      req.setAttribute("serverURL", ServletUtil.ensureSafeString(serverURL));
       req.setAttribute("urlJNLP", ServletUtil.ensureSafeString(
-          serverURL + JNLPServlet.JNLP_PATH));
+          serverURL + JNLPServlet.JNLP_PATH + "?ci=" +
+          JNLPServlet.DEFAULT_CONFIGURATION_ID + "&ver="));
       // TODO: Synchronize with JNLP file.
       req.setAttribute("minJavaVer", ServletUtil.ensureSafeString("1.5"));
       req.setAttribute("currentTime", new Date());
@@ -75,12 +73,9 @@ public class AdminServlet extends HttpServlet {
       }
 
       // TODO: Consider if there's a better way to do this.
-      String scriptCode = ServletUtil.renderServletToString(
-          "/WEB-INF/jwsButton.jspx", req, resp);
+      String scriptCode = ServletUtil.renderServletToString("/WEB-INF/jwsButton.jspx", req, resp);
       req.setAttribute("scriptCode", scriptCode);
-      RequestDispatcher rd =
-          getServletContext().getRequestDispatcher("/WEB-INF/adminPage.jspx");
-      rd.forward(req, resp);
+      getServletContext().getRequestDispatcher("/WEB-INF/adminPage.jspx").forward(req, resp);
 
     } catch (BadRequestException e) {
       e.sendError(resp);

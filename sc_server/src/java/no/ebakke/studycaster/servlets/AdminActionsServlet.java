@@ -27,9 +27,9 @@ public class AdminActionsServlet extends HttpServlet {
     try {
       if (!BackendUtil.isAdminLoggedIn(req, null))
         throw new BadRequestException("Not logged in", HttpServletResponse.SC_FORBIDDEN);
-      String dbAction      = ServletUtil.getStringParam(req, "dbAction");
-      String connectionURL = ServletUtil.getStringParam(req, "connectionURL");
-      String createAndSetPassword;
+      final String dbAction      = ServletUtil.getStringParam(req, "dbAction");
+      final String connectionURL = ServletUtil.getStringParam(req, "connectionURL");
+      final String createAndSetPassword;
       if        (dbAction.equals("validate")) {
         createAndSetPassword = null;
       } else if (dbAction.equals("create")) {
@@ -38,15 +38,15 @@ public class AdminActionsServlet extends HttpServlet {
         throw new BadRequestException("Invalid action \"" +
             StringEscapeUtils.escapeJava(dbAction) + "\"");
       }
-      String msg;
-      Backend testBackend = new Backend(
+      final String msg;
+      final Backend testBackend = new Backend(
           new BackendConfiguration(connectionURL, null), createAndSetPassword);
       try {
         msg = testBackend.getDatabaseStatusMessage();
       } finally {
         try {
           testBackend.close();
-        } catch (HibernateException e){
+        } catch (HibernateException e) {
           // Take no action.
         }
       }

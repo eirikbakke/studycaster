@@ -24,7 +24,7 @@ import no.ebakke.studycaster.util.Util;
   * Failsafe shutdown 10 seconds after window is closed.
   * Regular shutdown after upload.
   * Regular shutdown after window closure.
-  * Invoked with wrong command-line arguments.
+  * Invoked with missing configuration ID property.
   * Configuration file error.
   * Window closed when usage or configuration error dialog is due to appear (in this case, they
     should not).
@@ -37,6 +37,7 @@ public final class StudyUI {
   little cumbersome, this avoids declaring members volatile, and makes it easier to reason about
   concurrency in this class. */
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
+  private static final String CONFIGID_PROP_NAME = "studycaster.config.id";
   private final MainFrame mainFrame;
   private final EnvironmentHooks hooks;
   private final WindowListener windowClosingListener;
@@ -196,12 +197,11 @@ public final class StudyUI {
           hooks.getLogFormatter().setServerSecondsAhead(serverContextT.getServerSecondsAhead());
           try {
             hooks.getConsoleStream().connect(serverContextT.uploadFile("console.txt"));
-            if (args.length != 1) {
-              throw new StudyCasterException(
-                  "Invoked with incorrect command-line arguments (missing configuration ID)");
-            }
+            final String configurationID = System.getProperty(CONFIGID_PROP_NAME);
+            if (configurationID == null)
+              throw new StudyCasterException("Unspecified configuration ID");
             configurationT = StudyConfiguration.parseConfiguration(
-              serverContextT.downloadFile("studyconfig.xml"), args[0]);
+              serverContextT.downloadFile("studyconfig.xml"), configurationID);
             LOG.log(Level.INFO, "Loaded configuration with name \"{0}\"", configurationT.getName());
           } catch (IOException e) {
             throw new StudyCasterException("Unexpected I/O error", e);

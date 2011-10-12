@@ -20,15 +20,13 @@ public final class StudyLauncher {
   private StudyLauncher() { }
 
   public static void main(String args[]) throws InterruptedException {
-    // TODO: Get rid of this.
-    args = new String[] { "5782" };
-
     // TODO: Move even this error into the UI.
-    if (args.length != 1) {
-      System.err.println("Usage: StudyLauncher <configuration ID>");
+    final String configurationID = System.getProperty("studycaster.config.id");
+    if (configurationID == null) {
+      System.err.println("Property studycaster.config.id not set.");
       return;
     }
-    runStudy(args[0]);
+    runStudy(configurationID);
   }
 
   // TODO: Open the window before anything else, to allow force-quitting.

@@ -102,7 +102,7 @@
     Do you have Excel or a compatible spreadsheet application installed?
   </macrodef>
 
-  <configuration id="5782" name="Recruiting">
+  <configuration id="default" name="Recruiting">
     <macro id="configuration-common"/>
     <page>
       <macro id="instructions"/>

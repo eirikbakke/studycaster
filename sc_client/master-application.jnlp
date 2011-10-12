@@ -30,7 +30,8 @@
     <!--${JNLP.RESOURCES.MAIN.JAR}-->
     <!--${JNLP.RESOURCES.JARS}-->
     <!--${JNLP.RESOURCES.EXTENSIONS}-->
-    <property name="studycaster.server.uri" value="${fn:escapeXml(codebaseURL)}"/>
+    <property name="studycaster.config.id"  value="${fn:escapeXml(configurationID)}"/>
+    <property name="studycaster.server.uri" value="${fn:escapeXml(codebaseURL)}"    />
   </resources>
   <application-desc main-class="${jnlp.main.class}">
     <!--${JNLP.APPLICATION.ARGS}-->

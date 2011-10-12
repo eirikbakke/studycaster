@@ -4,7 +4,9 @@ import javax.swing.filechooser.FileFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -18,7 +20,7 @@ import org.w3c.dom.Element;
 // TODO: Have a way for the server to test-parse the configuration.
 public class StudyConfiguration {
   private static final boolean DEBUG_MACROS = false;
-  private final String name;
+  private final String name, id;
   private final List<PageConfiguration> pageConfiguration;
   private final List<String> screenCastWhiteList;
   private final List<String> screenCastBlackList;
@@ -54,19 +56,25 @@ public class StudyConfiguration {
       System.err.println("========================================================");
     }
     // While we're only interested in one configuration here, parse all of them to detect errors.
-    List<StudyConfiguration> ret = new ArrayList<StudyConfiguration>();
+    StudyConfiguration ret = null;
+    final Set<String> ids = new LinkedHashSet<String>();
     for (Element elm : ConfigurationUtil.getElements(root, "configuration", true)) {
       StudyConfiguration conf = new StudyConfiguration(elm);
-      if (elm.getAttribute("id").equals(configurationID))
-        ret.add(conf);
+      if (!ids.add(conf.getID()))
+        throw new StudyCasterException("Repeated configuration ID \"" + conf.getID() + "\"");
+      if (conf.getID().equals(configurationID))
+        ret = conf;
     }
-    if (ret.size() != 1)
-      throw new StudyCasterException("Expected exactly one matching study configuration.");
-    return ret.get(0);
+    if (ret == null) {
+      throw new StudyCasterException(
+          "Could not find configuration with ID \"" + configurationID + "\"");
+    }
+    return ret;
   }
 
   private StudyConfiguration(Element conf) throws StudyCasterException {
     name              = ConfigurationUtil.getNonEmptyAttribute(conf, "name");
+    id                = ConfigurationUtil.getNonEmptyAttribute(conf, "id"  );
     pageConfiguration = PageConfiguration.parse(conf);
 
     Element screencast = ConfigurationUtil.getUniqueElement(conf, "screencast");
@@ -109,6 +117,10 @@ public class StudyConfiguration {
 
   public String getName() {
     return name;
+  }
+
+  public String getID() {
+    return id;
   }
 
   public List<String> getScreenCastWhiteList() {
