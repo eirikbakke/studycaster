@@ -91,11 +91,11 @@ public class CaptureEncoder {
     Util.checkClosed(closed);
     addMeta(FrameType.BEFORE_CAPTURE);
     BufferedImage image = robot.createScreenCapture(screenRect);
-    Quilt<CensorType> permittedArea = (censor == null) ?
+    Quilt<CensorType> censorQuilt = (censor == null) ?
         new Quilt<CensorType>(CensorType.NONE) : censor.getPermittedRecordingArea();
     addMeta(FrameType.AFTER_CAPTURE);
     flushMeta();
-    compressAndOutputFrame(image, permittedArea);
+    compressAndOutputFrame(image, censorQuilt);
   }
 
   private static byte mosaicPixel(byte buf[], int width, int x, int y) {
@@ -103,7 +103,7 @@ public class CaptureEncoder {
     return buf[y * width + (x / ScreenCensor.MOSAIC_WIDTH) * ScreenCensor.MOSAIC_WIDTH];
   }
 
-  private void compressAndOutputFrame(BufferedImage frame, Quilt<CensorType> permittedArea)
+  private void compressAndOutputFrame(BufferedImage frame, Quilt<CensorType> censorQuilt)
       throws IOException
   {
     state.swapFrames();
@@ -127,7 +127,7 @@ public class CaptureEncoder {
 
         // Screen censoring related.
         if (censorRunRemaining == 0) {
-          final ValueRun<CensorType> censorRun = permittedArea.getPatchRun(x, y);
+          final ValueRun<CensorType> censorRun = censorQuilt.getPatchRun(x, y);
           censorRunRemaining = censorRun.getRunLength();
           censorType         = censorRun.getValue();
         }

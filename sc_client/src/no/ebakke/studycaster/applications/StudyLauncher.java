@@ -82,7 +82,7 @@ public final class StudyLauncher {
       sc.startRecording(new ScreenCensor(
           configuration.getScreenCastWhiteList(),
           configuration.getScreenCastBlackList(),
-          true, true));
+          true, true, true));
       scui.getProgressBarUI().setProgress(50);
       scui.getProgressBarUI().setTaskAppearance("Downloading sample file...", false);
 

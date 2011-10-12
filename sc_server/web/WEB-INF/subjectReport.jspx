@@ -35,7 +35,7 @@
             <li class="${launch.isLastRequestAfter(highlightMinutes * 60) ? 'recentLaunch' : 'oldLaunch'}">
               <!-- TODO: Don't hardcode video encoding speedup. -->
               Launch (<a href="download/uploads/${fn:escapeXml(launch.launchTicket)}/console.txt">client log</a>,
-                      <a href="download/uploads/${fn:escapeXml(launch.launchTicket)}/screencast_8.mp4">screencast</a>)
+                      <a href="download/uploads/${fn:escapeXml(launch.launchTicket)}/screencast_8x.mp4">screencast</a>)
               <ul>
               <li><span class="reportKey">launchTicket</span>  = <c:out value="${launch.launchTicket}"/></li>
               <li><span class="reportKey">firstRequest</span>  = <c:out value="${launch.firstRequest}"/></li>

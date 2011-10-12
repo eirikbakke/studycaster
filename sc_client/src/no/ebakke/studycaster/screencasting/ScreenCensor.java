@@ -26,13 +26,15 @@ public final class ScreenCensor {
   private final List<String> whiteList, blackList;
   private final Quilt<CensorType> nativeFail;
   private final WindowEnumerator windowEnumerator;
+  private final boolean blackoutDesktop;
 
   public ScreenCensor(List<String> whiteList, List<String> blackList, boolean blacklistFileDialogs,
-      boolean whiteListStudyCasterDialogs)
+      boolean whiteListStudyCasterDialogs, boolean blackoutDesktop)
       throws StudyCasterException
   {
-    this.whiteList = new ArrayList<String>(whiteList);
-    this.blackList = new ArrayList<String>(blackList);
+    this.whiteList       = new ArrayList<String>(whiteList);
+    this.blackList       = new ArrayList<String>(blackList);
+    this.blackoutDesktop = blackoutDesktop;
     if (blacklistFileDialogs) {
       // TODO: Take these strings from a common place (below, too).
       this.blackList.add("Select File to Upload");
@@ -69,8 +71,8 @@ public final class ScreenCensor {
           pidWhiteList.add(wi.getPID());
       }
     }
-    // TODO: Blackout desktop.
-    Quilt<CensorType> ret = new Quilt<CensorType>(CensorType.BLACKOUT);
+    Quilt<CensorType> ret = new Quilt<CensorType>(
+        blackoutDesktop ? CensorType.BLACKOUT : CensorType.MOSAIC);
     for (WindowInfo wi : windows) {
       boolean ok = pidWhiteList.contains(wi.getPID());
       if (ok) {
@@ -90,7 +92,7 @@ public final class ScreenCensor {
     ScreenCensor censor = new ScreenCensor(
       Arrays.asList(new String[] {"Excel", "Calc", "Numbers", "Gnumeric", "KSpread", "Quattro", "Mesa"}),
       Arrays.asList(new String[] {"Firefox", "Internet Explorer", "Outlook", "Chrome", "Safari"}),
-      true, true);
+      true, true, true);
     Rectangle screenRect = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
     BufferedImage image = new Robot().createScreenCapture(screenRect);
     Quilt<CensorType> permitted = censor.getPermittedRecordingArea();

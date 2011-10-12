@@ -34,7 +34,7 @@ public final class Converter {
       return;
     }
     String outputFileName = inputFileName.substring(0, inputFileName.length() - 4) + "_" +
-        speedUpFactor + "." + RecordingConverter.FILE_EXTENSION;
+        speedUpFactor + "x." + RecordingConverter.FILE_EXTENSION;
     File outFile = new File(outputFileName);
     File tmpFile = new File(outFile.getParentFile(), "~" + outFile.getName());
     if (outFile.exists()) {
@@ -49,6 +49,7 @@ public final class Converter {
       return;
     }
     try {
+      System.err.format("Converting to %s at %dx speedup: \n", outFile.toString(), speedUpFactor);
       RecordingConverter.convert(fis, tmpFile.toString(), speedUpFactor);
       tmpFile.renameTo(outFile);
     } catch (IOException e) {

@@ -42,11 +42,15 @@ final class Win32WindowEnumerator implements WindowEnumerator {
         if (!User32.INSTANCE.IsWindowVisible(hWnd))
           return true;
         // Add in reverse order.
-        ret.add(0, new WindowInfo(
-            getWindowBounds(hWnd), getWindowTitle(hWnd), getWindowPID(hWnd)));
+        ret.add(0, new WindowInfo(getWindowBounds(hWnd), getWindowTitle(hWnd), getWindowPID(hWnd)));
         return true;
       }
     }, null);
+
+    // Don't include the desktop window.
+    // TODO: Verify that "Program Manager" is the right name in other Windows versions than XP.
+    if (!ret.isEmpty() && ret.get(0).getTitle().equals("Program Manager"))
+      ret.remove(0);
     return ret;
   }
 

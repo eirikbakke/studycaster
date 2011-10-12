@@ -4,9 +4,9 @@ import java.awt.Rectangle;
 import java.util.List;
 
 public interface WindowEnumerator {
-  /** Return a list of visible windows on the screen, ordered rear-to-front. (Windows that are
+  /** Return a list of visible windows on the screen, ordered rear-to-front. Windows that are
   partially or completely obscured by other windows may be included despite not being literally
-  visible.) */
+  visible. Do not include the bottom desktop "window", if any. */
   public List<WindowInfo> getWindowList();
 
   public static final class WindowInfo {
