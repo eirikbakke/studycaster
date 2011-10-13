@@ -22,6 +22,10 @@ import no.ebakke.studycaster.screencasting.MetaStamp.FrameType;
 public class CaptureDecoder {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+  /** Put some extra space at the bottom to make it easier to work with video players that obscure
+  this area with play controls during pausing and when the mouse pointer happens to be on the bottom
+  of the screen (e.g. Chrome's built-in video player). */
+  private static final double EXTRA_BOTTOM = 0.04;
   private final CodecState state;
   private final DataInputStream dis;
   private final ScreenCastOverlay overlay;
@@ -40,8 +44,8 @@ public class CaptureDecoder {
     int height = dis.readInt();
     state = new CodecState(new Dimension(width, height));
     overlay = new ScreenCastOverlay(new Dimension(width, height));
-    outputDimension = CodecUtil.makeEven(
-        new Dimension(width, height + overlay.getStatusAreaHeight()));
+    outputDimension = CodecUtil.makeEven(new Dimension(width,
+        (int) ((height + overlay.getStatusAreaHeight()) * (1 + EXTRA_BOTTOM))));
   }
 
   public Dimension getDimension() {
