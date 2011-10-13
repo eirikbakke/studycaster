@@ -91,9 +91,10 @@
         JSPX file. -->
         <copyfiles files="${project.sc_client}/dist/lib" todir="${build.web.dir}/client/lib"/>
         <copy file="${project.sc_client}/dist/launch.jnlp" tofile="${build.web.dir}/WEB-INF/generatedJNLP.jspx"/>
-        <unzip src="${libs.StudyCasterIcons.classpath}" dest="${build.web.dir}/client/icons">
+        <unzip src="${libs.sc-resources.classpath}" dest="${build.web.dir}/client/icons">
             <patternset>
-                <include name="no/ebakke/studycaster/resources/icon*.png"/>
+                <include name="/no/ebakke/studycaster/resources/icon*.png"/>
+                <include name="/no/ebakke/studycaster/resources/icon.svg"/>
             </patternset>
             <mapper type="flatten"/>
         </unzip>

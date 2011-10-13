@@ -10,7 +10,7 @@ import no.ebakke.studycaster.screencasting.RecordingConverter;
 # Example usage from Cygwin terminal:
 SCC_SCTOP=z:/studycaster2
 SCC_JOPTS=""
-SCC_CP="$SCC_SCTOP/lib/sc_icons/icons.jar;$SCC_SCTOP/lib/liberation-fonts/liberation-fonts.jar;$SCC_SCTOP/sc_client/build/classes;$SCC_SCTOP/lib/xuggler/xuggle-xuggler.jar"
+SCC_CP="$SCC_SCTOP/lib/sc-resources/resources.jar;$SCC_SCTOP/lib/xuggler/xuggle-xuggler.jar;$SCC_SCTOP/sc_client/build/classes"
 find -name *.ebc -exec java $SCC_JOPTS -cp $SCC_CP no.ebakke.studycaster.applications.Converter {} 8 \;
 */
 

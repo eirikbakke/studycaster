@@ -27,14 +27,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import no.ebakke.studycaster.screencasting.MetaStamp.FrameType;
-import no.ebakke.studycaster.ui.StatusFrame;
 
 /** Not thread-safe. */
 public class CaptureDecoder {
   private static final Logger     LOG = Logger.getLogger("no.ebakke.studycaster");
   private static final String     POINTER_IMAGE_PATH =
-      "no/ebakke/studycaster/resources/pointer_shine_weaker.png";
-  private static final String     FONT_PATH = "/LiberationMono-Bold.ttf";
+      "/no/ebakke/studycaster/resources/pointer_shine_weaker.png";
+  private static final String     FONT_PATH =
+      "/no/ebakke/studycaster/resources/LiberationMono-Bold.ttf";
   private static final float      FONT_SIZE = 30.0f;
   private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
   private final CodecState state;
@@ -58,17 +58,15 @@ public class CaptureDecoder {
 
     /* Do this to properly catch an error which may otherwise cause waitForAll()
     below to hang with an "Uncaught error fetching image" output. */
-    InputStream testIS = StatusFrame.class.getClassLoader().getResourceAsStream(POINTER_IMAGE_PATH);
-    if (testIS == null) {
-      throw new IOException("Cannot load pointer image; check classpath.");
+    InputStream pointerInputStream = CaptureDecoder.class.getResourceAsStream(POINTER_IMAGE_PATH);
+    if (pointerInputStream == null) {
+      throw new IOException("Cannot load pointer image; check classpath");
     } else {
-      testIS.close();
+      pointerInputStream.close();
     }
-    URL pointerImageURL = StatusFrame.class.getClassLoader().getResource(
-       POINTER_IMAGE_PATH);
-    
+    URL pointerImageURL = CaptureDecoder.class.getResource(POINTER_IMAGE_PATH);
     pointerImage = Toolkit.getDefaultToolkit().getImage(pointerImageURL);
-    pointerImageHotSpot = new Point(41,40);
+    pointerImageHotSpot = new Point(41, 40);
     MediaTracker mt = new MediaTracker(new Canvas());
     mt.addImage(pointerImage, 0);
     try {
@@ -108,7 +106,8 @@ public class CaptureDecoder {
         String.format("%6d / ", frameNo) +
         dateFormat.format(new Date(currentMetaTime)) +
         String.format(" / %6d", (currentMetaTime - firstMetaTime) / 1000L);
-    drawString(image, formatted, 440, 5 + (int) FONT_SIZE);
+    // TODO: Put the timestamp outside of the main screen area, left-aligned.
+    drawString(image, formatted, 100, 5 + (int) FONT_SIZE);
   }
 
   private void drawString(BufferedImage image, String str, int x, int y) {
