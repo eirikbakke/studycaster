@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 import javax.swing.JDialog;
 import no.ebakke.studycaster.configuration.UIStringKey;
 import no.ebakke.studycaster.configuration.UIStrings;
+import no.ebakke.studycaster.ui.ResourceUtil;
 
 public class MainFrame extends javax.swing.JFrame {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
@@ -27,11 +28,6 @@ public class MainFrame extends javax.swing.JFrame {
     return positionDialog;
   }
 
-  private static Image getIconImage(String postFix) {
-    return Toolkit.getDefaultToolkit().getImage(MainFrame.class.getClassLoader().getResource(
-        "no/ebakke/studycaster/resources/icon" + postFix + ".png"));
-  }
-
   private void initIcon() {
     try {
       Method setIconImagesMethod = null;
@@ -42,18 +38,18 @@ public class MainFrame extends javax.swing.JFrame {
         // Running JRE < 1.6
         LOG.info("Can''t find Window.setIconImages(), using Frame.setIconImage() " +
             "instead (probably on JRE 1.5 or earlier)");
-        setIconImage(getIconImage("256"));
+        setIconImage(ResourceUtil.loadImage("icon256.png", false));
       } else {
         // Running JRE >= 1.6
         List<Image> icons = new ArrayList<Image>();
-        icons.add(getIconImage("16"));
-        icons.add(getIconImage("22"));
-        icons.add(getIconImage("24"));
-        icons.add(getIconImage("32"));
-        icons.add(getIconImage("48"));
-        icons.add(getIconImage("64"));
-        icons.add(getIconImage("128"));
-        icons.add(getIconImage("256"));
+        icons.add(ResourceUtil.loadImage("icon16.png", false));
+        icons.add(ResourceUtil.loadImage("icon22.png", false));
+        icons.add(ResourceUtil.loadImage("icon24.png", false));
+        icons.add(ResourceUtil.loadImage("icon32.png", false));
+        icons.add(ResourceUtil.loadImage("icon48.png", false));
+        icons.add(ResourceUtil.loadImage("icon64.png", false));
+        icons.add(ResourceUtil.loadImage("icon128.png", false));
+        icons.add(ResourceUtil.loadImage("icon256.png", false));
         try {
           setIconImagesMethod.invoke(this, icons);
         } catch (IllegalAccessException e) {
