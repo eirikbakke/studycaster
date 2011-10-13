@@ -8,8 +8,10 @@ import no.ebakke.studycaster.screencasting.RecordingConverter;
 
 /*
 # Example usage from Cygwin terminal:
-SCTOP=z:/studycaster2/
-find -name *.ebc -exec java -cp "$SCTOP/lib/sc_icons/icons.jar;$SCTOP/sc_client/build/classes;$SCTOP/lib/xuggler/xuggle-xuggler.jar" no.ebakke.studycaster.applications.Converter {} 8 \;
+SCC_SCTOP=z:/studycaster2
+SCC_JOPTS=""
+SCC_CP="$SCC_SCTOP/lib/sc_icons/icons.jar;$SCC_SCTOP/lib/liberation-fonts/liberation-fonts.jar;$SCC_SCTOP/sc_client/build/classes;$SCC_SCTOP/lib/xuggler/xuggle-xuggler.jar"
+find -name *.ebc -exec java $SCC_JOPTS -cp $SCC_CP no.ebakke.studycaster.applications.Converter {} 8 \;
 */
 
 public final class Converter {

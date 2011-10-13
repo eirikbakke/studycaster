@@ -4,6 +4,7 @@ import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.FontFormatException;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.MediaTracker;
@@ -14,6 +15,7 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.EOFException;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
@@ -32,6 +34,8 @@ public class CaptureDecoder {
   private static final Logger     LOG = Logger.getLogger("no.ebakke.studycaster");
   private static final String     POINTER_IMAGE_PATH =
       "no/ebakke/studycaster/resources/pointer_shine_weaker.png";
+  private static final String     FONT_PATH = "/LiberationMono-Bold.ttf";
+  private static final float      FONT_SIZE = 30.0f;
   private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
   private final CodecState state;
   private final DataInputStream dis;
@@ -42,6 +46,7 @@ public class CaptureDecoder {
   private long nextCaptureTime = -1, lastBeforeCaptureTime = -1;
   private boolean firstFrameRead = false;
   private int frameNo = 0;
+  private final Font font;
 
   public CaptureDecoder(InputStream is) throws IOException {
     dis = new DataInputStream(new BufferedInputStream(new GZIPInputStream(is)));
@@ -71,6 +76,14 @@ public class CaptureDecoder {
     } catch (InterruptedException e) {
       throw new InterruptedIOException();
     }
+    InputStream fontInputStream = CaptureDecoder.class.getResourceAsStream(FONT_PATH);
+    if (fontInputStream == null)
+      throw new FileNotFoundException("Could not extract font file " + FONT_PATH);
+    try {
+      font = Font.createFont(Font.TRUETYPE_FONT, fontInputStream).deriveFont(FONT_SIZE);
+    } catch (FontFormatException e) {
+      throw new IOException("Could not load font; " + e.getMessage());
+    }
   }
 
   public Dimension getDimension() {
@@ -95,12 +108,12 @@ public class CaptureDecoder {
         String.format("%6d / ", frameNo) +
         dateFormat.format(new Date(currentMetaTime)) +
         String.format(" / %6d", (currentMetaTime - firstMetaTime) / 1000L);
-    drawString(image, formatted, 440, 13);
+    drawString(image, formatted, 440, 5 + (int) FONT_SIZE);
   }
 
   private void drawString(BufferedImage image, String str, int x, int y) {
     Graphics2D g = image.createGraphics();
-    g.setFont(new Font("Monospaced", Font.PLAIN, 14));
+    g.setFont(font);
     g.setColor(Color.WHITE);
     g.drawString(str, x - 1, y - 1);
     g.drawString(str, x + 1, y + 1);
