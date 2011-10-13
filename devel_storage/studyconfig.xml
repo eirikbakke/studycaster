@@ -76,43 +76,47 @@
     <macro id="uistrings-english"/>
   </macrodef>
 
-  <macrodef id="uploadfile-excel">
-    <uploadfile>
-      <filefilter>
-        <description>Microsoft Excel Workbook</description>
-        <extension>xls</extension>
-        <extension>xml</extension>
-        <extension>xlsx</extension>
-        <extension>xlsm</extension>
-        <extension>xlsb</extension>
-      </filefilter>
-    </uploadfile>
+  <macrodef id="filefilter-excel">
+    <filefilter>
+      <description>Microsoft Excel Workbook</description>
+      <extension>xls</extension>
+      <extension>xml</extension>
+      <extension>xlsx</extension>
+      <extension>xlsm</extension>
+      <extension>xlsb</extension>
+    </filefilter>
   </macrodef>
 
-  <macrodef id="uploadfile-relspread">
-    <uploadfile>
-      <filefilter>
-        <description>Spreadsheet Study Application files</description>
-        <extension>rzw</extension>
-      </filefilter>
-    </uploadfile>
+  <macrodef id="filefilter-relspread">
+    <filefilter>
+      <description>Spreadsheet Study Application files</description>
+      <extension>rzw</extension>
+    </filefilter>
   </macrodef>
 
   <macrodef id="openfile-error-excel">
     Do you have Excel or a compatible spreadsheet application installed?
+  </macrodef>
+  <macrodef id="upload-unchanged">
+    <html xmlns="">Please edit, save, and close the file, then try again.<br/><br/>
+                   (The file should have opened in a new window, possibly in the background.)</html>
   </macrodef>
 
   <configuration id="default" name="Recruiting">
     <macro id="configuration-common"/>
     <page>
       <macro id="instructions"/>
-      <openfile auto="true">
+      <openfile auto="true"> <!-- Optional -->
         <remotename>currencies.xls</remotename>
         <localname>userstudyHIT_currencies.xls</localname>
         <errormessage><macro id="openfile-error-excel"/></errormessage>
       </openfile>
-      <conclude>
-        <macro id="uploadfile-excel"/>
+      <conclude> <!-- Optional -->
+        <uploadfile> <!-- Optional -->
+          <macro id="filefilter-excel"/>
+          <defaultname>userstudyHIT_currencies.xls</defaultname> <!-- Optional -->
+          <unchangedwarning><macro id="upload-unchanged"/></unchangedwarning> <!-- Optional -->
+        </uploadfile>
       </conclude>
     </page>
   </configuration>
@@ -127,7 +131,11 @@
         <errormessage><macro id="openfile-error-excel"/></errormessage>
       </openfile>
       <conclude>
-        <macro id="uploadfile-excel"/>
+        <uploadfile>
+          <macro id="filefilter-excel"/>
+          <defaultname>userstudyHIT_coursecatalog.xls</defaultname>
+          <unchangedwarning><macro id="upload-unchanged"/></unchangedwarning>
+        </uploadfile>
       </conclude>
     </page>
   </configuration>
@@ -142,7 +150,11 @@
         <errormessage>Unexpected error.</errormessage>
       </openfile>
       <conclude>
-        <macro id="uploadfile-relspread"/>
+        <uploadfile>
+          <macro id="filefilter-relspread"/>
+          <defaultname>userstudyHIT_coursecatalog.rzw</defaultname>
+          <unchangedwarning><macro id="upload-unchanged"/></unchangedwarning>
+        </uploadfile>
       </conclude>
     </page>
   </configuration>

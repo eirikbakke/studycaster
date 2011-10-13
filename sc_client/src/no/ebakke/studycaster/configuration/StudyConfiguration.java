@@ -21,7 +21,7 @@ import org.w3c.dom.Element;
 public class StudyConfiguration {
   private static final boolean DEBUG_MACROS = false;
   private final String name, id;
-  private final List<PageConfiguration> pageConfiguration;
+  private final List<PageConfiguration> pageConfigurations;
   private final List<String> screenCastWhiteList;
   private final List<String> screenCastBlackList;
   private final UIStrings uiStrings;
@@ -73,11 +73,10 @@ public class StudyConfiguration {
   }
 
   private StudyConfiguration(Element conf) throws StudyCasterException {
-    name              = ConfigurationUtil.getNonEmptyAttribute(conf, "name");
-    id                = ConfigurationUtil.getNonEmptyAttribute(conf, "id"  );
-    pageConfiguration = PageConfiguration.parse(conf);
-
-    Element screencast = ConfigurationUtil.getUniqueElement(conf, "screencast");
+    final Element screencast = ConfigurationUtil.getUniqueElement(conf, "screencast");
+    name                = ConfigurationUtil.getNonEmptyAttribute(conf, "name");
+    id                  = ConfigurationUtil.getNonEmptyAttribute(conf, "id"  );
+    pageConfigurations  = PageConfiguration.parse(conf);
     screenCastWhiteList = ConfigurationUtil.getStrings(screencast, "whitelist");
     screenCastBlackList = ConfigurationUtil.getStrings(screencast, "blacklist");
 
@@ -86,9 +85,9 @@ public class StudyConfiguration {
 
   // TODO: Get rid of this.
   private PageConfiguration getLonePageConfiguration() {
-    if (pageConfiguration.size() != 1)
+    if (pageConfigurations.size() != 1)
       throw new UnsupportedOperationException();
-    return pageConfiguration.get(0);
+    return pageConfigurations.get(0);
   }
 
   // TODO: Get rid of this.
@@ -109,10 +108,10 @@ public class StudyConfiguration {
     ConcludeConfiguration conclude = getLonePageConfiguration().getConcludeConfiguration();
     if (conclude == null)
       throw new UnsupportedOperationException();
-    FileFilter ret = conclude.getUploadFileFilter();
+    UploadConfiguration ret = conclude.getUploadConfiguration();
     if (ret == null)
       throw new UnsupportedOperationException();
-    return ret;
+    return ret.getFileFilter();
   }
 
   public String getName() {
@@ -133,5 +132,9 @@ public class StudyConfiguration {
 
   public UIStrings getUIStrings() {
     return uiStrings;
+  }
+
+  public List<PageConfiguration> getPageConfigurations() {
+    return new ArrayList<PageConfiguration>(pageConfigurations);
   }
 }

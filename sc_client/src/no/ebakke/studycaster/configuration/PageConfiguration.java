@@ -31,10 +31,12 @@ public class PageConfiguration {
     return instructions;
   }
 
+  /** May be null. */
   public OpenFileConfiguration getOpenFileConfiguration() {
     return openFileConfiguration;
   }
 
+  /** May be null. */
   public ConcludeConfiguration getConcludeConfiguration() {
     return concludeConfiguration;
   }

@@ -11,6 +11,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import no.ebakke.studycaster.api.ServerContext;
 import no.ebakke.studycaster.api.StudyCasterException;
+import no.ebakke.studycaster.configuration.ConcludeConfiguration;
 import no.ebakke.studycaster.configuration.OpenFileConfiguration;
 import no.ebakke.studycaster.configuration.PageConfiguration;
 import no.ebakke.studycaster.configuration.StudyConfiguration;
@@ -44,6 +45,7 @@ public final class StudyUI {
   private ServerContext serverContext;
   private StudyConfiguration configuration;
   private Thread initializerThread, failsafeCloseThread, backendCloseThread;
+  private int pageIndex = 0;
 
   private StudyUI(EnvironmentHooks hooks) {
     this.hooks = hooks;
@@ -51,7 +53,7 @@ public final class StudyUI {
     windowClosingListener = new WindowAdapter() {
       @Override
       public void windowClosing(WindowEvent e) {
-        boolean doClose;
+        final boolean doClose;
         if (configuration != null) {
           LOG.info("User tried to close main StudyCaster window");
           doClose = JOptionPane.showConfirmDialog(mainFrame.getPositionDialog(),
@@ -134,9 +136,20 @@ public final class StudyUI {
     backendCloseThread.start();
   }
 
-  private void displayPage(PageConfiguration page) {
-    mainFrame.setInstructions(page.getInstructions());
+  private void setPageIndex(int pageIndex) throws StudyCasterException {
+    final int pcsz = configuration.getPageConfigurations().size();
+    if (pcsz < 1)
+      throw new StudyCasterException("At least one page configuration required");
+    this.pageIndex = Math.min(Math.max(0, pageIndex), pcsz - 1);
+
+    PageConfiguration page = configuration.getPageConfigurations().get(this.pageIndex);
     OpenFileConfiguration openFileConfiguration = page.getOpenFileConfiguration();
+    ConcludeConfiguration concludeConfiguration = page.getConcludeConfiguration();
+    mainFrame.setInstructions(page.getInstructions());
+    mainFrame.setButtonsVisible(
+        concludeConfiguration.getUploadConfiguration() != null,
+        openFileConfiguration != null,
+        pcsz > 0);
   }
 
   private void initUI(StudyCasterException storedException) {
