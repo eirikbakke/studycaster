@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import no.ebakke.studycaster.util.stream.NonBlockingOutputStream;
@@ -74,12 +75,19 @@ public class StudyCaster {
     }
     recordingStream = new NonBlockingOutputStream(RECORDING_BUFFER_SZ);
     recordingStream.addObserver(new StreamProgressObserver() {
+      private final AtomicBoolean warnedYet = new AtomicBoolean(false);
+
       public void updateProgress(NonBlockingOutputStream nbos) {
         long bytesRemaining = nbos.getBytesPosted() - nbos.getBytesWritten();
-        if (bytesRemaining > recordingStream.getBufferLimitBytes() * 0.8) {
+        // Hysteresis is applied to avoid flooding the console with warnings.
+        if (bytesRemaining > recordingStream.getBufferLimitBytes() * 0.8 &&
+            warnedYet.getAndSet(true))
+        {
           LOG.log(Level.WARNING, "Close to overfilled buffer ({0}/{1} bytes)",
               new Object[]{bytesRemaining, recordingStream.getBufferLimitBytes()});
         }
+        if (bytesRemaining < recordingStream.getBufferLimitBytes() * 0.2)
+          warnedYet.set(false);
       }
     });
     try {

@@ -20,7 +20,8 @@ import java.util.logging.Logger;
 
 public final class RecordingConverter {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
-  public static final String FILE_EXTENSION = "mp4";
+  private static final int   FRAMERATE_LIMIT = 15;
+  public static final String FILE_EXTENSION  = "mp4";
 
   private RecordingConverter() { }
 
@@ -52,31 +53,33 @@ public final class RecordingConverter {
     outStreamCoder.setPixelType(pixelFormat);
     outStreamCoder.setWidth(dec.getDimension().width);
     outStreamCoder.setHeight(dec.getDimension().height);
-    outStreamCoder.setTimeBase(IRational.make(1, 192));
+    outStreamCoder.setTimeBase(IRational.make(1, FRAMERATE_LIMIT));
 
     outStreamCoder.open();
     outContainer.writeHeader();
 
-    BufferedImage image;
-    int index = 0;
+    long previousTimeStamp = -1;
+    final BufferedImage image = new BufferedImage(
+        dec.getDimension().width, dec.getDimension().height, BufferedImage.TYPE_3BYTE_BGR);
     try {
-      while ((image = dec.nextFrame()) != null) {
-        //ImageDebugDialog.showImage(image);
-        index++;
-        //if (index % speedUpFactor != 0)
-        //  continue;
+      while (dec.nextFrame(image)) {
+        final long currentTimeStamp = (dec.getCurrentTimeMillis() * 1000L) / speedUpFactor;
+        if (speedUpFactor > 1 && previousTimeStamp >= 0 &&
+            currentTimeStamp - previousTimeStamp < 1000000L / FRAMERATE_LIMIT)
+        {
+          System.out.print(" ");
+          continue;
+        } else {
+          System.err.print(".");
+        }
 
-        BufferedImage converted = convertToType(image, BufferedImage.TYPE_3BYTE_BGR);
-        IPacket packet = IPacket.make();
-        IConverter converter = ConverterFactory.createConverter(converted, pixelFormat);
-        IVideoPicture outFrame =
-            converter.toPicture(converted, (dec.getCurrentTimeMillis() * 1000L) / speedUpFactor);
-        outFrame.setQuality(0);
-        outStreamCoder.encodeVideo(packet, outFrame, 0);
+        final IPacket packet = IPacket.make();
+        final IConverter converter = ConverterFactory.createConverter(image, pixelFormat);
+        final IVideoPicture outFrame = converter.toPicture(image, currentTimeStamp);
+        outStreamCoder.encodeVideo(packet, outFrame, -1);
         if (packet.isComplete())
           outContainer.writePacket(packet);
-
-        System.err.print(".");
+        previousTimeStamp = currentTimeStamp;
       }
     } catch (IOException e) {
       System.err.println("ops");
@@ -91,17 +94,5 @@ public final class RecordingConverter {
     input.close();
     if (!hadError)
       System.err.println("ok");
-  }
-
-  private static BufferedImage convertToType(BufferedImage sourceImage, int targetType) {
-    // This method is from http://wiki.xuggle.com/Encoding_Video_from_a_sequence_of_Images .
-    if (sourceImage.getType() == targetType) {
-      return sourceImage;
-    } else {
-      BufferedImage ret =
-          new BufferedImage(sourceImage.getWidth(), sourceImage.getHeight(), targetType);
-      ret.getGraphics().drawImage(sourceImage, 0, 0, null);
-      return ret;
-    }
   }
 }

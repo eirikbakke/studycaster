@@ -85,6 +85,9 @@ public class ScreenCastOverlay {
   }
 
   public void drawStatus(Graphics2D g, String formattedTimestamp) {
+    g.setColor(Color.BLACK);
+    g.fillRect(0, outputDimension.height - getStatusAreaHeight(),
+        outputDimension.width, getStatusAreaHeight());
     final int baseLine = outputDimension.height - STATUS_MARGIN;
     drawString(g, formattedTimestamp, Color.WHITE, fontMono, -1, STATUS_MARGIN, baseLine);
     Rectangle2D titleBounds = drawString(g, "StudyCaster", Color.WHITE, fontSans, 1,

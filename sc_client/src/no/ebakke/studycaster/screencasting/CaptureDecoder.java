@@ -35,7 +35,7 @@ public class CaptureDecoder {
   private int frameNo = 0;
 
   public CaptureDecoder(InputStream is) throws IOException {
-    dis = new DataInputStream(new BufferedInputStream(new GZIPInputStream(is)));
+    dis = new DataInputStream(new BufferedInputStream(new GZIPInputStream(is), 4* 1024 * 1024));
     if (!dis.readUTF().equals(CodecConstants.MAGIC_STRING))
       throw new IOException("File not in StudyCaster screencast format");
     int width  = dis.readInt();
@@ -128,13 +128,13 @@ public class CaptureDecoder {
     }
   }
 
-  public BufferedImage nextFrame() throws IOException {
+  public boolean nextFrame(BufferedImage output) throws IOException {
     MetaStamp ms;
     while (true) {
       ms = state.peekMetaStamp();
       if (ms == null || ms.getTimeMillis() >= nextCaptureTime) {
         if (reachedEOF) {
-          return null;
+          return false;
         } else if (atFrame) {
           readFrame();
           atFrame = false;
@@ -153,9 +153,8 @@ public class CaptureDecoder {
             (currentMetaTime < 0) ? 0 : Math.max(1L, ms.getTimeMillis() - currentMetaTime);
         currentMetaTime = ms.getTimeMillis();
         firstMetaTime = (firstMetaTime >= 0) ? firstMetaTime : currentMetaTime;
-        BufferedImage ret = new ScreenCastImage(outputDimension);
-        CodecUtil.copyImage(state.getCurrentFrame(), ret);
-        Graphics2D g = ret.createGraphics();
+        CodecUtil.copyImage(state.getCurrentFrame(), output);
+        Graphics2D g = output.createGraphics();
         if (ms.getMouseLocation() != null) {
           final Point p = ms.getMouseLocation();
           overlay.drawPointer(g, p.x, p.y);
@@ -166,7 +165,7 @@ public class CaptureDecoder {
             String.format(" / %6d", (currentMetaTime - firstMetaTime) / 1000L);
         overlay.drawStatus(g, formattedTimestamp);
         g.dispose();
-        return ret;
+        return true;
       }
     }
   }
@@ -178,11 +177,10 @@ public class CaptureDecoder {
     final byte newBuf[] = state.getCurrentFrame().getBuffer();
     int  currentRunLength = 0;
     byte currentRunCode   = CodecConstants.INDEX_NO_DIFF;
-    byte code;
 
     for (int i = 0; i < newBuf.length; i++) {
       if (currentRunLength == 0) {
-        code = dis.readByte();
+        final byte code = dis.readByte();
         if (code == CodecConstants.INDEX_REPEAT) {
           currentRunLength = dis.readInt();
         } else {
