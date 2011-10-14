@@ -96,8 +96,8 @@ public final class Reports {
     private Set<String>  configurationID;
     private List<Launch> launches;
 
-    public Date getFirstRequest() {
-      return firstRequest;
+    public String getFirstRequest() {
+      return ServletUtil.getServerDateFormat().format(firstRequest);
     }
 
     public Set<String> getClientCookie() {
@@ -145,6 +145,7 @@ public final class Reports {
     }
   }
 
+  // TODO: Move presentation details out of here.
   public static class Launch implements Comparable<Launch> {
     private String launchTicket;
     private Date   firstRequest;
@@ -156,12 +157,12 @@ public final class Reports {
       return launchTicket;
     }
 
-    public Date getFirstRequest() {
-      return new Date(firstRequest.getTime());
+    public String getFirstRequest() {
+      return ServletUtil.getServerDateFormat().format(firstRequest);
     }
 
-    public Date getLastRequest() {
-      return new Date(lastRequest.getTime());
+    public String getLastRequest() {
+      return ServletUtil.getServerDateFormat().format(lastRequest);
     }
 
     public long getNumRequests() {
@@ -178,7 +179,6 @@ public final class Reports {
     }
 
     public String getTimeSinceLastRequest() {
-      // TODO: Move presentation details out of here (and below).
       return ServletUtil.humanReadableInterval(
           new Date(new Date().getTime() - lastRequest.getTime()).getTime() / 1000);
     }

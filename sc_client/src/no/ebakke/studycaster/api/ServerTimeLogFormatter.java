@@ -4,6 +4,7 @@ import java.text.DateFormat;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 
@@ -14,26 +15,38 @@ public class ServerTimeLogFormatter extends Formatter {
   private volatile Long serverSecondsAhead;
   /* SimpleDateFormat is not thread-safe. The following is the standard way of dealing with it.
   See http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4264153 . */
-  private static final ThreadLocal<DateFormat> DATE_FORMAT = 
+  private static final ThreadLocal<DateFormat> SERVER_DATE_FORMAT =
     new ThreadLocal<DateFormat>() {
       @Override
       public DateFormat initialValue() {
-        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        // If changing this, also change the corresponding server implementation in ServletUtil.
+        DateFormat ret = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss 'UTC'");
+        ret.setTimeZone(TimeZone.getTimeZone("GMT"));
+        return ret;
       }
     };
+  private static final ThreadLocal<DateFormat> CLIENT_DATE_FORMAT =
+    new ThreadLocal<DateFormat>() {
+      @Override
+      public DateFormat initialValue() {
+        DateFormat ret = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ");
+        return ret;
+      }
+    };
+
+  /** The returned DateFormat must only be used in the current thread. */
+  public static DateFormat getServerDateFormat() {
+    return SERVER_DATE_FORMAT.get();
+  }
 
   public void setServerSecondsAhead(long serverSecondsAhead) {
     this.serverSecondsAhead = serverSecondsAhead;
   }
 
-  private static String formatTime(long millis) {
-    return DATE_FORMAT.get().format(new Date(millis));
-  }
-
   private static void formatThrowable(StringBuffer buf, Throwable e) {
-    buf.append(e.getClass().getName() + ": " + e.getMessage() + "\n");
+    buf.append(e.getClass().getName()).append(": ").append(e.getMessage()).append("\n");
     for (StackTraceElement ste : e.getStackTrace())
-      buf.append("    at " + ste.toString() + "\n");
+      buf.append("    at ").append(ste.toString()).append("\n");
     if (e.getCause() != null) {
       buf.append("  caused by ");
       formatThrowable(buf, e.getCause());
@@ -43,14 +56,20 @@ public class ServerTimeLogFormatter extends Formatter {
   @Override
   public String format(LogRecord r) {
     StringBuffer ret = new StringBuffer();
-    ret.append(formatTime(r.getMillis()) + " (client)");
-    if (serverSecondsAhead != null)
-      ret.append(" / " + formatTime(r.getMillis() + serverSecondsAhead * 1000L) + " (server)");
-    ret.append(" " + r.getSourceClassName() + " " + r.getSourceMethodName() + "\n");
+    ret.append(CLIENT_DATE_FORMAT.get().format(new Date(r.getMillis())));
+    ret.append(" (client)");
+    if (serverSecondsAhead != null) {
+      ret.append(" / ");
+      ret.append(SERVER_DATE_FORMAT.get().format(
+          new Date(r.getMillis() + serverSecondsAhead * 1000L)));
+      ret.append(" (server)");
+    }
+    ret.append(" ");
+    ret.append(r.getSourceClassName()).append(" ");
+    ret.append(r.getSourceMethodName()).append("\n");
     ret.append(r.getLevel());
     ret.append(": ");
-    ret.append(new MessageFormat(r.getMessage()).format(r.getParameters()));
-    ret.append("\n");
+    ret.append(new MessageFormat(r.getMessage()).format(r.getParameters())).append("\n");
     if (r.getThrown() != null) {
       ret.append("  exception was ");
       formatThrowable(ret, r.getThrown());

@@ -10,12 +10,15 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.TimeZone;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
@@ -296,6 +299,24 @@ public final class ServletUtil {
         new Request(new Date(), type, contentSize,
         ServletUtil.toHex(ServletUtil.sha1("stick " + req.getRemoteAddr()), APIServlet.IPHASH_SZ),
         BackendUtil.getGeoInfo(req), launchTicket, clientCookie, logEntry));
+  }
+
+  /* TODO: If we ever create a set of libraries common to the client and the server, deduplicate the
+  following with ServerTimeLogFormatter on the client (but beware that we don't say "UTC" explicitly
+  in the format string here). */
+  private static final ThreadLocal<DateFormat> SERVER_DATE_FORMAT =
+    new ThreadLocal<DateFormat>() {
+      @Override
+      public DateFormat initialValue() {
+        DateFormat ret = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        ret.setTimeZone(TimeZone.getTimeZone("GMT"));
+        return ret;
+      }
+    };
+
+  /** The returned DateFormat must only be used in the current thread. */
+  public static DateFormat getServerDateFormat() {
+    return SERVER_DATE_FORMAT.get();
   }
 
   public static void main(String args[]) {

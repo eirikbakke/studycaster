@@ -19,7 +19,8 @@
 </form>
 
 <h2>Subject Report</h2>
-<p>Note: Screencast MP4 files are only available after manual conversion on the server.</p>
+<p>Note: Screencast MP4 files are only available after manual conversion on the server.
+   All timestamps are in UTC.</p>
 <ol>
   <c:forEach items="${subjectReport}" var="subject">
     <li>

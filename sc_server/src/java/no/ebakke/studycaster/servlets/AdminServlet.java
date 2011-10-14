@@ -2,7 +2,6 @@ package no.ebakke.studycaster.servlets;
 
 import java.io.IOException;
 import java.util.Date;
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -52,7 +51,7 @@ public class AdminServlet extends HttpServlet {
           JNLPServlet.DEFAULT_CONFIGURATION_ID + "&ver="));
       // TODO: Synchronize with JNLP file.
       req.setAttribute("minJavaVer", ServletUtil.ensureSafeString("1.5"));
-      req.setAttribute("currentTime", new Date());
+      req.setAttribute("currentTime", ServletUtil.getServerDateFormat().format(new Date()));
 
       if (pageType == null) {
         req.setAttribute("serverURLproperty" , BackendConfiguration.JDBC_URL_PROPERTY);

@@ -10,18 +10,16 @@ import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
+import no.ebakke.studycaster.api.ServerTimeLogFormatter;
 import no.ebakke.studycaster.screencasting.MetaStamp.FrameType;
 
 /** Not thread-safe. */
 public class CaptureDecoder {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
-  private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
   /** Put some extra space at the bottom to make it easier to work with video players that obscure
   this area with play controls during pausing and when the mouse pointer happens to be on the bottom
   of the screen (e.g. Chrome's built-in video player). */
@@ -163,9 +161,9 @@ public class CaptureDecoder {
           overlay.drawPointer(g, p.x, p.y);
         }
         final String formattedTimestamp =
-          String.format("%6d / ", frameNo) +
-          DATE_FORMAT.format(new Date(currentMetaTime)) +
-          String.format(" / %6d", (currentMetaTime - firstMetaTime) / 1000L);
+            String.format("%6d / ", frameNo) +
+            ServerTimeLogFormatter.getServerDateFormat().format(new Date(currentMetaTime)) +
+            String.format(" / %6d", (currentMetaTime - firstMetaTime) / 1000L);
         overlay.drawStatus(g, formattedTimestamp);
         g.dispose();
         return ret;
