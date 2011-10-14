@@ -84,15 +84,19 @@ public final class BackendUtil {
     HttpSession hs = req.getSession(false);
     if (hs == null)
       return false;
-    Object attr = hs.getAttribute("adminLoggedIn");
-    if ((attr instanceof Boolean) && ((Boolean) attr))
-      return true;
-    return false;
+    synchronized (hs) {
+      Object attr = hs.getAttribute("adminLoggedIn");
+      if ((attr instanceof Boolean) && ((Boolean) attr))
+        return true;
+      return false;
+    }
   }
 
   public static void setAdminLoggedIn(HttpServletRequest req, boolean loggedIn) {
     HttpSession hs = req.getSession(loggedIn);
-    if (hs != null) {
+    if (hs == null)
+      return;
+    synchronized (hs) {
       if (loggedIn) {
         hs.setAttribute("adminLoggedIn", loggedIn);
       } else {

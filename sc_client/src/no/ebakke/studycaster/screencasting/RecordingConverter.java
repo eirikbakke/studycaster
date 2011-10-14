@@ -52,7 +52,7 @@ public final class RecordingConverter {
     outStreamCoder.setPixelType(pixelFormat);
     outStreamCoder.setWidth(dec.getDimension().width);
     outStreamCoder.setHeight(dec.getDimension().height);
-    outStreamCoder.setTimeBase(IRational.make(1, 24));
+    outStreamCoder.setTimeBase(IRational.make(1, 192));
 
     outStreamCoder.open();
     outContainer.writeHeader();
@@ -63,8 +63,8 @@ public final class RecordingConverter {
       while ((image = dec.nextFrame()) != null) {
         //ImageDebugDialog.showImage(image);
         index++;
-        if (index % speedUpFactor != 0)
-          continue;
+        //if (index % speedUpFactor != 0)
+        //  continue;
 
         BufferedImage converted = convertToType(image, BufferedImage.TYPE_3BYTE_BGR);
         IPacket packet = IPacket.make();

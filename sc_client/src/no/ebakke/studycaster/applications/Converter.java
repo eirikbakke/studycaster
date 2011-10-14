@@ -24,7 +24,7 @@ public final class Converter {
       return;
     }
     String inputFileName = args[0];
-    int speedUpFactor;
+    final int speedUpFactor;
     try {
       speedUpFactor = Integer.parseInt(args[1]);
     } catch (NumberFormatException e) {
