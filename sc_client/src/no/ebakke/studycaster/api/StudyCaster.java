@@ -81,7 +81,7 @@ public class StudyCaster {
         long bytesRemaining = nbos.getBytesPosted() - nbos.getBytesWritten();
         // Hysteresis is applied to avoid flooding the console with warnings.
         if (bytesRemaining > recordingStream.getBufferLimitBytes() * 0.8 &&
-            warnedYet.getAndSet(true))
+            !warnedYet.getAndSet(true))
         {
           LOG.log(Level.WARNING, "Close to overfilled buffer ({0}/{1} bytes)",
               new Object[]{bytesRemaining, recordingStream.getBufferLimitBytes()});
