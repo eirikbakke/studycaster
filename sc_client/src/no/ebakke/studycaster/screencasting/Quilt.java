@@ -84,7 +84,7 @@ public final class Quilt<V> {
     Rectangle rect;
     V         value;
 
-    public Patch(Rectangle rect, V value) {
+    Patch(Rectangle rect, V value) {
       this.rect  = rect;
       this.value = value;
     }

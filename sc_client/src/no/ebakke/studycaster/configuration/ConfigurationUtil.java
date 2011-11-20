@@ -55,7 +55,7 @@ final class ConfigurationUtil {
       throws StudyCasterException
   {
     String ret = elm.getAttribute(attrName);
-    if (ret.equals("")) {
+    if (ret.length() == 0) {
       throw new StudyCasterException(
           "Expected an attribute " + attrName + " in element <" + elm.getTagName() + ">");
     }
@@ -143,6 +143,8 @@ final class ConfigurationUtil {
           "UI caption values must be specified as text nodes/CDATA sections or a single" +
           "<html xmlns=\"\"> element.");
     } else {
+      /* TODO: Consider always including a <base> tag that points to a set of image resources
+               configured to be automatically downloaded. */
       try {
         /* The regex replace serves mainly to remove newlines, which seem to confuse certain Swing
         components (at least JOptionPane) when combined with HTML content. */

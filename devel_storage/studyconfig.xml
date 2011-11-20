@@ -105,6 +105,42 @@
   <configuration id="default" name="Recruiting">
     <macro id="configuration-common"/>
     <page>
+      <instructions>
+        <html xmlns="">
+          This is the first page.
+        </html>
+      </instructions>
+    </page>
+
+    <page>
+      <instructions>
+        <html xmlns="">
+          This is the second page. It has an open file thingie.
+        </html>
+      </instructions>
+      <openfile auto="true"> <!-- Optional -->
+        <remotename>currencies.xls</remotename>
+        <localname>userstudyHIT_currencies.xls</localname>
+        <errormessage><macro id="openfile-error-excel"/></errormessage>
+      </openfile>
+    </page>
+
+    <page>
+      <instructions>
+        <html xmlns="">
+          <base href="http://www.mit.edu/~ebakke/" />
+          This is the third page. It has a conclude study thingie, with no upload.<br/>
+          <br/>
+          <center>
+          <img src="meet/limecat.jpg" alt="limecat" border="1" />
+          </center>
+        </html>
+      </instructions>
+      <conclude> <!-- Optional -->
+      </conclude>
+    </page>
+
+    <page>
       <macro id="instructions"/>
       <openfile auto="true"> <!-- Optional -->
         <remotename>currencies.xls</remotename>

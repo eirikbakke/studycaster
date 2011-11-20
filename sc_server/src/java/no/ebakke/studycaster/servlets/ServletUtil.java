@@ -273,7 +273,7 @@ public final class ServletUtil {
     String plural, singular;
     long   seconds;
 
-    public TimeUnit(String plural, String singular, long seconds) {
+    TimeUnit(String plural, String singular, long seconds) {
       this.plural = plural;
       this.singular = singular;
       this.seconds = seconds;

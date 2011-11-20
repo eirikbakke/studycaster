@@ -77,6 +77,8 @@ public class StudyConfiguration {
     name                = ConfigurationUtil.getNonEmptyAttribute(conf, "name");
     id                  = ConfigurationUtil.getNonEmptyAttribute(conf, "id"  );
     pageConfigurations  = PageConfiguration.parse(conf);
+    if (pageConfigurations.size() < 1)
+      throw new StudyCasterException("At least one page configuration required");
     screenCastWhiteList = ConfigurationUtil.getStrings(screencast, "whitelist");
     screenCastBlackList = ConfigurationUtil.getStrings(screencast, "blacklist");
 

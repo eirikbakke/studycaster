@@ -8,6 +8,7 @@ import java.util.TimeZone;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 
+// TODO: Reverse the MessageFormat design decision below.
 /** Thread-safe. For consistency in logging statements throughout the codebase, this class always
 uses MessageFormat for formatting, regardless of whether the log record includes a parameter or any
 parameter references in the message string. */

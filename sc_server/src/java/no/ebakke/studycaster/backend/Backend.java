@@ -7,6 +7,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 import javax.servlet.ServletException;
+import no.ebakke.studycaster.servlets.ServletUtil;
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -102,7 +103,8 @@ public final class Backend {
     if (lookupServiceError != null) {
       ret += lookupServiceError.getMessage();
     } else {
-      ret += "OK, updated " + lookupService.getDatabaseInfo().getDate();
+      ret += "OK, dated " +
+          ServletUtil.getServerDateFormat().format(lookupService.getDatabaseInfo().getDate());
     }
     return ret;
   }

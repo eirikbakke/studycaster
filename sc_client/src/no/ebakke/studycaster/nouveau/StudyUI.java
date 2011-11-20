@@ -11,9 +11,6 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import no.ebakke.studycaster.api.ServerContext;
 import no.ebakke.studycaster.api.StudyCasterException;
-import no.ebakke.studycaster.configuration.ConcludeConfiguration;
-import no.ebakke.studycaster.configuration.OpenFileConfiguration;
-import no.ebakke.studycaster.configuration.PageConfiguration;
 import no.ebakke.studycaster.configuration.StudyConfiguration;
 import no.ebakke.studycaster.configuration.UIStringKey;
 import no.ebakke.studycaster.util.Util;
@@ -29,6 +26,7 @@ import no.ebakke.studycaster.util.Util;
   * Configuration file error.
   * Window closed when usage or configuration error dialog is due to appear (in this case, they
     should not).
+  * 1, 2, or 3 pages in the study configuration.
 */
 
 // TODO: Rename to StudyCasterUI. Rename threads to reflect change.
@@ -45,7 +43,6 @@ public final class StudyUI {
   private ServerContext serverContext;
   private StudyConfiguration configuration;
   private Thread initializerThread, failsafeCloseThread, backendCloseThread;
-  private int pageIndex = 0;
 
   private StudyUI(EnvironmentHooks hooks) {
     this.hooks = hooks;
@@ -136,28 +133,12 @@ public final class StudyUI {
     backendCloseThread.start();
   }
 
-  private void setPageIndex(int pageIndex) throws StudyCasterException {
-    final int pcsz = configuration.getPageConfigurations().size();
-    if (pcsz < 1)
-      throw new StudyCasterException("At least one page configuration required");
-    this.pageIndex = Math.min(Math.max(0, pageIndex), pcsz - 1);
-
-    PageConfiguration page = configuration.getPageConfigurations().get(this.pageIndex);
-    OpenFileConfiguration openFileConfiguration = page.getOpenFileConfiguration();
-    ConcludeConfiguration concludeConfiguration = page.getConcludeConfiguration();
-    mainFrame.setInstructions(page.getInstructions());
-    mainFrame.setButtonsVisible(
-        concludeConfiguration.getUploadConfiguration() != null,
-        openFileConfiguration != null,
-        pcsz > 0);
-  }
-
   private void initUI(StudyCasterException storedException) {
     try {
       if (storedException != null)
         throw storedException;
-      mainFrame.setButtonCaptions(configuration.getUIStrings());
-      mainFrame.setButtonsVisible(true, true, true);
+      mainFrame.setConfiguration(configuration);
+      mainFrame.setProgressBarStatus("", false);
 
       // Do this after properly setting up the main window, in case there are enqueued messages.
       SingleInstanceHandler sih = hooks.getSingleInstanceHandler();
@@ -239,8 +220,6 @@ public final class StudyUI {
     /* TODO: If configuration files ever get parsed on the server side, consider including the
     initial few UI strings as parameters in the JNLP file. */
     mainFrame.setProgressBarStatus("Loading instructions...", true);
-    mainFrame.setInstructions("Please wait...");
-    mainFrame.setButtonsVisible(false, false, false);
     mainFrame.setVisible(true);
     initializerThread.start();
   }

@@ -12,6 +12,10 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JDialog;
+import no.ebakke.studycaster.configuration.ConcludeConfiguration;
+import no.ebakke.studycaster.configuration.OpenFileConfiguration;
+import no.ebakke.studycaster.configuration.PageConfiguration;
+import no.ebakke.studycaster.configuration.StudyConfiguration;
 import no.ebakke.studycaster.configuration.UIStringKey;
 import no.ebakke.studycaster.configuration.UIStrings;
 import no.ebakke.studycaster.ui.ResourceUtil;
@@ -20,10 +24,11 @@ public class MainFrame extends javax.swing.JFrame {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private static final long serialVersionUID = 1L;
   private final JDialog positionDialog;
-  private Dimension constantSize;
+  private StudyConfiguration configuration;
+  private Integer pageIndex = null;
 
   /** Returns a hidden child dialog that can be used as a parent of dialogs that need to be centered
-  on the screen while still being ancestors of the normally off-center MainFrame dialog. */
+  on the screen while still being descendants of the normally off-center MainFrame dialog. */
   public JDialog getPositionDialog() {
     return positionDialog;
   }
@@ -36,9 +41,9 @@ public class MainFrame extends javax.swing.JFrame {
       } catch (NoSuchMethodException e) { }
       if (setIconImagesMethod == null) {
         // Running JRE < 1.6
-        LOG.info("Can''t find Window.setIconImages(), using Frame.setIconImage() " +
-            "instead (probably on JRE 1.5 or earlier)");
-        setIconImage(ResourceUtil.loadImage("icon256.png", false));
+        LOG.info("Can''t find Window.setIconImages(), probably on JRE 1.5 or earlier");
+        // Custom icons on JRE 1.5 or earlier look crummy, so don't use them at all.
+        // setIconImage(ResourceUtil.loadImage("icon256.png", false));
       } else {
         // Running JRE >= 1.6
         List<Image> icons = new ArrayList<Image>();
@@ -63,44 +68,114 @@ public class MainFrame extends javax.swing.JFrame {
     }
   }
 
-  public void addUploadButtonAction(ActionListener l) {
-    uploadButton.addActionListener(l);
+  public void addConcludeButtonAction(ActionListener l) {
+    concludeButton.addActionListener(l);
   }
   
   public void addOpenButtonAction(ActionListener l) {
     openButton.addActionListener(l);
   }
 
-  public void setButtonCaptions(UIStrings strings) {
-    uploadButton.setText(strings.getString(UIStringKey.MAINFRAME_UPLOAD_BUTTON));
-    uploadButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_UPLOAD_BUTTON));
-    openButton.setText(strings.getString(UIStringKey.MAINFRAME_OPEN_BUTTON));
-    openButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_OPEN_BUTTON));
-    backButton.setText(strings.getString(UIStringKey.MAINFRAME_BACK_BUTTON));
-    backButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_BACK_BUTTON));
-    nextButton.setText(strings.getString(UIStringKey.MAINFRAME_NEXT_BUTTON));
-    nextButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_NEXT_BUTTON));
+  @SuppressWarnings("FinalMethod")
+  public final void setConfiguration(StudyConfiguration configuration) {
+    this.configuration = configuration;
+    final boolean visible = isVisible();
+    setVisible(false);
+    try {
+      if (configuration != null) {
+        final UIStrings strings = configuration.getUIStrings();
+        concludeButton.setText(strings.getString(UIStringKey.MAINFRAME_UPLOAD_BUTTON));
+        concludeButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_UPLOAD_BUTTON));
+        openButton.setText(strings.getString(UIStringKey.MAINFRAME_OPEN_BUTTON));
+        openButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_OPEN_BUTTON));
+        backButton.setText(strings.getString(UIStringKey.MAINFRAME_BACK_BUTTON));
+        backButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_BACK_BUTTON));
+        nextButton.setText(strings.getString(UIStringKey.MAINFRAME_NEXT_BUTTON));
+        nextButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_NEXT_BUTTON));
+
+        int maxWidth = 0, maxHeight = 0;
+        for (int i = 0; i < configuration.getPageConfigurations().size(); i++) {
+          setPageIndex(i);
+          pack();
+          maxWidth  = Math.max(maxWidth , getSize().width);
+          maxHeight = Math.max(maxHeight, getSize().height);
+        }
+        setPageIndex(0);
+        setSize(new Dimension(maxWidth, maxHeight));
+        validate();
+
+        updateLocation();
+      } else {
+        setPageIndex(null);
+        pack();
+      }
+      updateLocation();
+    } finally {
+      setVisible(visible);
+    }
   }
 
-  public void setButtonsVisible(
-      boolean uploadButtonVisible, boolean openButtonVisible, boolean navigationButtonsVisible)
-  {
-    uploadButton.setVisible(uploadButtonVisible);
-    openButton.setVisible(openButtonVisible);
-    backButton.setVisible(navigationButtonsVisible);
-    nextButton.setVisible(navigationButtonsVisible);
+  public Integer getPageIndex() {
+    return pageIndex;
   }
 
-  public void setInstructions(String instructions) {
+  private void setPageIndex(Integer pageIndex) {
+    final String instructions;
+    final boolean navigationButtonsVisible;
+    final boolean concludeButtonVisible;
+    final boolean openButtonVisible;
+    this.pageIndex = pageIndex;
+    if (this.pageIndex == null) {
+      instructions = "Please wait...";
+      concludeButtonVisible      = false;
+      openButtonVisible        = false;
+      navigationButtonsVisible = false;
+    } else {
+      if (configuration == null)
+        throw new IllegalStateException("Can't set page index before pages have been configured");
+      PageConfiguration page = configuration.getPageConfigurations().get(pageIndex);
+      OpenFileConfiguration openFileConfiguration = page.getOpenFileConfiguration();
+      ConcludeConfiguration concludeConfiguration = page.getConcludeConfiguration();
+
+      instructions             = page.getInstructions();
+      concludeButtonVisible    = concludeConfiguration != null;
+      openButtonVisible        = openFileConfiguration != null;
+      navigationButtonsVisible = configuration.getPageConfigurations().size() > 1;
+      backButton.setEnabled(pageIndex > 0);
+      nextButton.setEnabled(pageIndex < configuration.getPageConfigurations().size() - 1);
+    }
     instructionLabel.setText(instructions);
+    concludeButton.setEnabled(concludeButtonVisible);
+    openButton.setEnabled(openButtonVisible);
+
+    actionButtonPanel.setMinimumSize(new Dimension(800, 600));
+    concludeButton.setVisible(concludeButtonVisible);
+    openButton.setVisible(openButtonVisible);
+
+    navigationPanel.setVisible(navigationButtonsVisible);
+
+    // Disable buttons during ongoing background tasks.
+    if (progressBar.getString().length() != 0 ||
+        progressBar.isIndeterminate() ||
+        progressBar.getValue() != 0)
+    {
+      concludeButton.setEnabled(false);
+      openButton.setEnabled(false);
+      backButton.setEnabled(false);
+      nextButton.setEnabled(false);
+    }
+    // TODO: Remove.
+    validate();
   }
 
   public void setProgressBarStatus(final String text, final boolean indeterminate) {
     LOG.log(Level.INFO, "Changing status bar text to \"{0}\"", text);
     progressBar.setString(text);
     progressBar.setIndeterminate(indeterminate);
-    if (indeterminate)
+    if (indeterminate || text.length() == 0)
       setProgressBarValue(0);
+    // Enable or disable buttons as appropriate.
+    setPageIndex(getPageIndex());
   }
 
   public void setProgressBarBounds(final int minimum, final int maximum) {
@@ -113,23 +188,8 @@ public class MainFrame extends javax.swing.JFrame {
     progressBar.setValue(progress);
   }
 
-  /*
-  public final void updateLayout() {
-    pack();
-    setSize(constantSize);
-  }
-
-  public final void measureSize(boolean enlargeOnly) {
-    pack();
-    if (enlargeOnly) {
-      Dimension oldSize = constantSize;
-      Dimension newSize = getSize();
-      setSize(Math.max(oldSize.width, newSize.width), Math.max(oldSize.height, newSize.height));
-    }
-  }*/
-
   /** Relocate the window to a suitable position in the lower right-hand corner of the screen. */
-  public final void updateLocation() {
+  private void updateLocation() {
     /* The following incantations were carefully derived through experimentation to work well with
     a variety of screen resultions and window sizes. */
     Dimension sdim = Toolkit.getDefaultToolkit().getScreenSize();
@@ -147,9 +207,7 @@ public class MainFrame extends javax.swing.JFrame {
     positionDialog = new JDialog(this);
     initComponents();
     initIcon();
-    setButtonsVisible(false, false, false);
-    // TODO: Remove.
-    updateLocation();
+    setConfiguration(null);
   }
 
   /** This method is called from within the constructor to
@@ -165,7 +223,10 @@ public class MainFrame extends javax.swing.JFrame {
         instructionLabel = new javax.swing.JLabel();
         actionButtonPanel = new javax.swing.JPanel();
         openButton = new javax.swing.JButton();
-        uploadButton = new javax.swing.JButton();
+        concludeButton = new javax.swing.JButton();
+        actionButtonStrutHorz = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 32767));
+        actionButtonStrutVert = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
+        actionButtonPadding = new javax.swing.Box.Filler(new java.awt.Dimension(0, 15), new java.awt.Dimension(0, 15), new java.awt.Dimension(0, 15));
         navigationPanel = new javax.swing.JPanel();
         backButton = new javax.swing.JButton();
         nextButton = new javax.swing.JButton();
@@ -178,11 +239,9 @@ public class MainFrame extends javax.swing.JFrame {
         setResizable(false);
         getContentPane().setLayout(new java.awt.GridBagLayout());
 
-        instructionLabel.setText("Please wait...");
+        instructionLabel.setText("Instructions go here.");
         instructionLabel.setVerticalAlignment(javax.swing.SwingConstants.TOP);
         gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
         gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTH;
@@ -191,53 +250,81 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.insets = new java.awt.Insets(15, 15, 15, 15);
         getContentPane().add(instructionLabel, gridBagConstraints);
 
-        actionButtonPanel.setLayout(new java.awt.GridLayout(2, 1));
+        actionButtonPanel.setLayout(new java.awt.GridBagLayout());
 
         openButton.setMnemonic('O');
         openButton.setText("Open Sample Document...");
-        openButton.setEnabled(false);
-        actionButtonPanel.add(openButton);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        actionButtonPanel.add(openButton, gridBagConstraints);
 
-        uploadButton.setMnemonic('U');
-        uploadButton.setText("Upload and Retrieve Confirmation Code...");
-        uploadButton.setEnabled(false);
-        actionButtonPanel.add(uploadButton);
-
+        concludeButton.setMnemonic('U');
+        concludeButton.setText("Upload and Retrieve Confirmation Code...");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        actionButtonPanel.add(concludeButton, gridBagConstraints);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        actionButtonPanel.add(actionButtonStrutHorz, gridBagConstraints);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+        gridBagConstraints.gridheight = java.awt.GridBagConstraints.REMAINDER;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        actionButtonPanel.add(actionButtonStrutVert, gridBagConstraints);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
         gridBagConstraints.fill = java.awt.GridBagConstraints.VERTICAL;
         gridBagConstraints.insets = new java.awt.Insets(0, 15, 0, 15);
         getContentPane().add(actionButtonPanel, gridBagConstraints);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        getContentPane().add(actionButtonPadding, gridBagConstraints);
 
-        navigationPanel.setLayout(new java.awt.GridLayout(1, 0));
+        navigationPanel.setLayout(new java.awt.GridBagLayout());
 
         backButton.setMnemonic('B');
         backButton.setText("< Back");
-        backButton.setEnabled(false);
-        navigationPanel.add(backButton);
+        backButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                backButtonActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.insets = new java.awt.Insets(0, 0, 15, 0);
+        navigationPanel.add(backButton, gridBagConstraints);
 
         nextButton.setMnemonic('N');
         nextButton.setText("Next >");
-        nextButton.setEnabled(false);
-        navigationPanel.add(nextButton);
+        nextButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                nextButtonActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.insets = new java.awt.Insets(0, 0, 15, 0);
+        navigationPanel.add(nextButton, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 2;
         gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
         gridBagConstraints.fill = java.awt.GridBagConstraints.VERTICAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.SOUTHEAST;
-        gridBagConstraints.insets = new java.awt.Insets(15, 15, 15, 15);
+        gridBagConstraints.insets = new java.awt.Insets(0, 15, 0, 15);
         getContentPane().add(navigationPanel, gridBagConstraints);
 
         progressBar.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         progressBar.setString("");
         progressBar.setStringPainted(true);
         gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 3;
         gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
         gridBagConstraints.gridheight = java.awt.GridBagConstraints.REMAINDER;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
@@ -247,14 +334,25 @@ public class MainFrame extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+  private void nextButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nextButtonActionPerformed
+    setPageIndex(getPageIndex() + 1);
+  }//GEN-LAST:event_nextButtonActionPerformed
+
+  private void backButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backButtonActionPerformed
+    setPageIndex(getPageIndex() - 1);
+  }//GEN-LAST:event_backButtonActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.Box.Filler actionButtonPadding;
     private javax.swing.JPanel actionButtonPanel;
+    private javax.swing.Box.Filler actionButtonStrutHorz;
+    private javax.swing.Box.Filler actionButtonStrutVert;
     private javax.swing.JButton backButton;
+    private javax.swing.JButton concludeButton;
     private javax.swing.JLabel instructionLabel;
     private javax.swing.JPanel navigationPanel;
     private javax.swing.JButton nextButton;
     private javax.swing.JButton openButton;
     private javax.swing.JProgressBar progressBar;
-    private javax.swing.JButton uploadButton;
     // End of variables declaration//GEN-END:variables
 }
