@@ -18,7 +18,8 @@ import no.ebakke.studycaster.util.Util;
 /*
   Test cases for this class:
   * Multiple application launches before and after configuration is loaded.
-  * Close window before or after configuration is loaded.
+  * Close window before or after configuration is loaded, including right before the configuration
+    is loaded such that the closing confirmation dialog still appears.
   * Failsafe shutdown 10 seconds after window is closed.
   * Regular shutdown after upload.
   * Regular shutdown after window closure.
@@ -90,7 +91,6 @@ public final class StudyUI {
       throw new IllegalStateException("UI already closed");
     mainFrame.removeWindowListener(windowClosingListener);
     mainFrame.setVisible(false);
-    mainFrame.dispose();
     failsafeCloseThread = new Thread(new Runnable() {
       public void run() {
         try {
@@ -107,6 +107,13 @@ public final class StudyUI {
     // Don't keep the VM running just because of the failsafe thread.
     failsafeCloseThread.setDaemon(true);
     failsafeCloseThread.start();
+    /* Attempt to avoid race conditions that might make the window displayable again after the
+    call to dispose() by putting the call at the end of the event queue. */
+    SwingUtilities.invokeLater(new Runnable() {
+      public void run() {
+        mainFrame.dispose();
+      }
+    });
   }
 
   private void closeBackend(final Runnable onEndEHT) {
@@ -138,6 +145,12 @@ public final class StudyUI {
     try {
       if (storedException != null)
         throw storedException;
+      if (failsafeCloseThread != null) {
+        LOG.info("Window closed before UI was configured");
+        /* Explicitly return here as the operations below may make the window displayable again,
+        neutralizing an earlier dispose(). */
+        return;
+      }
       mainFrame.setConfiguration(configuration);
       mainFrame.setProgressBarStatus("", false);
 

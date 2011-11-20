@@ -169,6 +169,7 @@ public class ServerContext {
     return ret.toString();
   }
 
+  @SuppressWarnings("SleepWhileInLoop")
   private HttpResponse requestHelper(HttpClient httpClient, String cmd,
       ContentBody content, String arg) throws IOException
   {

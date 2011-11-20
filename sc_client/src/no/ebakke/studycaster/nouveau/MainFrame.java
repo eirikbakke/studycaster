@@ -26,6 +26,7 @@ public class MainFrame extends javax.swing.JFrame {
   private final JDialog positionDialog;
   private StudyConfiguration configuration;
   private Integer pageIndex = null;
+  private boolean disposed = false;
 
   /** Returns a hidden child dialog that can be used as a parent of dialogs that need to be centered
   on the screen while still being descendants of the normally off-center MainFrame dialog. */
@@ -115,9 +116,6 @@ public class MainFrame extends javax.swing.JFrame {
         }
         setPageIndex(0);
         setSize(frameDim);
-        validate();
-
-        updateLocation();
       } else {
         // Enforce a minimum window width; might as well use the actionButtonPanel to do this.
         actionButtonPanel.setPreferredSize(new Dimension(200, 0));
@@ -136,6 +134,7 @@ public class MainFrame extends javax.swing.JFrame {
     return pageIndex;
   }
 
+  // TODO: Log page changes.
   private void setPageIndex(Integer pageIndex) {
     final String instructions;
     final boolean navigationButtonsVisible;
@@ -181,8 +180,6 @@ public class MainFrame extends javax.swing.JFrame {
       backButton.setEnabled(false);
       nextButton.setEnabled(false);
     }
-    // TODO: Remove.
-    validate();
   }
 
   public void setProgressBarStatus(final String text, final boolean indeterminate) {
