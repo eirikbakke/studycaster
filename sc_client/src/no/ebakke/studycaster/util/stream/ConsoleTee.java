@@ -48,6 +48,12 @@ public class ConsoleTee {
     System.setErr(oldStdErr);
     if (oldLogHandler != null)
       globalLogger.addHandler(oldLogHandler);
+    /* A rare bug was once seen where a logger would flush the underlying stream after it had been
+    closed; the flushes below attempt to avoid this condition, and should probably be there in any
+    case. */
+    teeStdOut.flush();
+    teeStdErr.flush();
+    newLogHandler.flush();
     out.close();
   }
 }
