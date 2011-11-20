@@ -24,9 +24,10 @@ import no.ebakke.studycaster.util.Util;
   * Regular shutdown after window closure.
   * Invoked with missing configuration ID property.
   * Configuration file error.
-  * Window closed when usage or configuration error dialog is due to appear (in this case, they
-    should not).
+  * Window closed when error dialog is due to appear.
   * 1, 2, or 3 pages in the study configuration.
+  * A study configuration with or without two action buttons on a single page in the study
+    configuration.
 */
 
 // TODO: Rename to StudyCasterUI. Rename threads to reflect change.

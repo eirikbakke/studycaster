@@ -126,6 +126,8 @@ public class MainFrame extends javax.swing.JFrame {
       }
       updateLocation();
     } finally {
+      /* Make sure window never remains hidden due to an unexpected error, as the user should always
+      be able to quit the application by closing the window. */
       setVisible(visible);
     }
   }
@@ -240,6 +242,7 @@ public class MainFrame extends javax.swing.JFrame {
         openButton = new javax.swing.JButton();
         concludeButton = new javax.swing.JButton();
         navigationPanel = new javax.swing.JPanel();
+        navigationPanelInner = new javax.swing.JPanel();
         backButton = new javax.swing.JButton();
         nextButton = new javax.swing.JButton();
         progressBar = new javax.swing.JProgressBar();
@@ -262,6 +265,7 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.insets = new java.awt.Insets(15, 15, 15, 15);
         getContentPane().add(instructionLabel, gridBagConstraints);
 
+        actionButtonPanel.setOpaque(false);
         actionButtonPanel.setLayout(new java.awt.GridBagLayout());
 
         openButton.setMnemonic('O');
@@ -289,7 +293,11 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.insets = new java.awt.Insets(0, 15, 15, 15);
         getContentPane().add(actionButtonPanel, gridBagConstraints);
 
+        navigationPanel.setOpaque(false);
         navigationPanel.setLayout(new java.awt.GridBagLayout());
+
+        navigationPanelInner.setOpaque(false);
+        navigationPanelInner.setLayout(new java.awt.GridLayout(1, 2));
 
         backButton.setMnemonic('B');
         backButton.setText("< Back");
@@ -298,9 +306,7 @@ public class MainFrame extends javax.swing.JFrame {
                 backButtonActionPerformed(evt);
             }
         });
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.insets = new java.awt.Insets(0, 0, 15, 0);
-        navigationPanel.add(backButton, gridBagConstraints);
+        navigationPanelInner.add(backButton);
 
         nextButton.setMnemonic('N');
         nextButton.setText("Next >");
@@ -309,9 +315,11 @@ public class MainFrame extends javax.swing.JFrame {
                 nextButtonActionPerformed(evt);
             }
         });
+        navigationPanelInner.add(nextButton);
+
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.insets = new java.awt.Insets(0, 0, 15, 0);
-        navigationPanel.add(nextButton, gridBagConstraints);
+        navigationPanel.add(navigationPanelInner, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
@@ -347,6 +355,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JButton concludeButton;
     private javax.swing.JLabel instructionLabel;
     private javax.swing.JPanel navigationPanel;
+    private javax.swing.JPanel navigationPanelInner;
     private javax.swing.JButton nextButton;
     private javax.swing.JButton openButton;
     private javax.swing.JProgressBar progressBar;
