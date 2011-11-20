@@ -59,6 +59,9 @@ public final class XMLUtil {
   }
 
   public static String getXMLString(Element elm, boolean htmlMode) throws TransformerException {
+    /* TODO: Certain HTML entities, like "&#8658;", currently seem impossible to represent, as the
+             HTML mode will output them in a named form unsupported by the Swing HTML parser
+             (e.g. "&lArr;"). */
     Transformer t;
     t = TransformerFactory.newInstance().newTransformer();
     t.setOutputProperty(OutputKeys.METHOD              , htmlMode ? "html" : "xml");

@@ -76,6 +76,10 @@ public class MainFrame extends javax.swing.JFrame {
     openButton.addActionListener(l);
   }
 
+  private static Dimension max(Dimension dim1, Dimension dim2) {
+    return new Dimension(Math.max(dim1.width, dim2.width), Math.max(dim1.height, dim2.height));
+  }
+
   @SuppressWarnings("FinalMethod")
   public final void setConfiguration(StudyConfiguration configuration) {
     this.configuration = configuration;
@@ -93,19 +97,30 @@ public class MainFrame extends javax.swing.JFrame {
         nextButton.setText(strings.getString(UIStringKey.MAINFRAME_NEXT_BUTTON));
         nextButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_NEXT_BUTTON));
 
-        int maxWidth = 0, maxHeight = 0;
+        /* Both the action button panel and the frame itself should remain the same size across
+        different pages. */
+        actionButtonPanel.setPreferredSize(null);
+        Dimension actionButtonPanelDim = new Dimension(0, 0);
+        for (int i = 0; i < configuration.getPageConfigurations().size(); i++) {
+          setPageIndex(i);
+          actionButtonPanelDim = max(actionButtonPanelDim, actionButtonPanel.getPreferredSize());
+        }
+        actionButtonPanel.setPreferredSize(actionButtonPanelDim);
+
+        Dimension frameDim = new Dimension(0, 0);
         for (int i = 0; i < configuration.getPageConfigurations().size(); i++) {
           setPageIndex(i);
           pack();
-          maxWidth  = Math.max(maxWidth , getSize().width);
-          maxHeight = Math.max(maxHeight, getSize().height);
+          frameDim = max(frameDim, getSize());
         }
         setPageIndex(0);
-        setSize(new Dimension(maxWidth, maxHeight));
+        setSize(frameDim);
         validate();
 
         updateLocation();
       } else {
+        // Enforce a minimum window width; might as well use the actionButtonPanel to do this.
+        actionButtonPanel.setPreferredSize(new Dimension(200, 0));
         setPageIndex(null);
         pack();
       }
@@ -127,7 +142,7 @@ public class MainFrame extends javax.swing.JFrame {
     this.pageIndex = pageIndex;
     if (this.pageIndex == null) {
       instructions = "Please wait...";
-      concludeButtonVisible      = false;
+      concludeButtonVisible    = false;
       openButtonVisible        = false;
       navigationButtonsVisible = false;
     } else {
@@ -224,9 +239,6 @@ public class MainFrame extends javax.swing.JFrame {
         actionButtonPanel = new javax.swing.JPanel();
         openButton = new javax.swing.JButton();
         concludeButton = new javax.swing.JButton();
-        actionButtonStrutHorz = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 32767));
-        actionButtonStrutVert = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
-        actionButtonPadding = new javax.swing.Box.Filler(new java.awt.Dimension(0, 15), new java.awt.Dimension(0, 15), new java.awt.Dimension(0, 15));
         navigationPanel = new javax.swing.JPanel();
         backButton = new javax.swing.JButton();
         nextButton = new javax.swing.JButton();
@@ -256,39 +268,26 @@ public class MainFrame extends javax.swing.JFrame {
         openButton.setText("Open Sample Document...");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.weightx = 1.0;
         actionButtonPanel.add(openButton, gridBagConstraints);
 
         concludeButton.setMnemonic('U');
         concludeButton.setText("Upload and Retrieve Confirmation Code...");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 1;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-        actionButtonPanel.add(concludeButton, gridBagConstraints);
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 2;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        actionButtonPanel.add(actionButtonStrutHorz, gridBagConstraints);
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 0;
         gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
         gridBagConstraints.gridheight = java.awt.GridBagConstraints.REMAINDER;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        actionButtonPanel.add(actionButtonStrutVert, gridBagConstraints);
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.weightx = 1.0;
+        actionButtonPanel.add(concludeButton, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
         gridBagConstraints.fill = java.awt.GridBagConstraints.VERTICAL;
-        gridBagConstraints.insets = new java.awt.Insets(0, 15, 0, 15);
+        gridBagConstraints.insets = new java.awt.Insets(0, 15, 15, 15);
         getContentPane().add(actionButtonPanel, gridBagConstraints);
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        getContentPane().add(actionButtonPadding, gridBagConstraints);
 
         navigationPanel.setLayout(new java.awt.GridBagLayout());
 
@@ -343,10 +342,7 @@ public class MainFrame extends javax.swing.JFrame {
   }//GEN-LAST:event_backButtonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.Box.Filler actionButtonPadding;
     private javax.swing.JPanel actionButtonPanel;
-    private javax.swing.Box.Filler actionButtonStrutHorz;
-    private javax.swing.Box.Filler actionButtonStrutVert;
     private javax.swing.JButton backButton;
     private javax.swing.JButton concludeButton;
     private javax.swing.JLabel instructionLabel;
