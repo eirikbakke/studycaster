@@ -4,7 +4,6 @@ import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.Window;
-import java.awt.event.ActionListener;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -24,9 +23,9 @@ public class MainFrame extends javax.swing.JFrame {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private static final long serialVersionUID = 1L;
   private final JDialog positionDialog;
+  private ActionState actionState;
   private StudyConfiguration configuration;
-  private Integer pageIndex = null;
-  private boolean disposed = false;
+  private Integer pageIndex;
 
   /** Returns a hidden child dialog that can be used as a parent of dialogs that need to be centered
   on the screen while still being descendants of the normally off-center MainFrame dialog. */
@@ -43,7 +42,8 @@ public class MainFrame extends javax.swing.JFrame {
       if (setIconImagesMethod == null) {
         // Running JRE < 1.6
         LOG.info("Can''t find Window.setIconImages(), probably on JRE 1.5 or earlier");
-        // Custom icons on JRE 1.5 or earlier look crummy, so don't use them at all.
+        /* Custom icons on JRE 1.5 or earlier look crummy due to inevitable low-quality scaling, so
+        don't bother in this case. */
         // setIconImage(ResourceUtil.loadImage("icon256.png", false));
       } else {
         // Running JRE >= 1.6
@@ -67,14 +67,6 @@ public class MainFrame extends javax.swing.JFrame {
     } catch (Exception e) {
       LOG.log(Level.WARNING, "Failed to configure window icon", e);
     }
-  }
-
-  public void addConcludeButtonAction(ActionListener l) {
-    concludeButton.addActionListener(l);
-  }
-  
-  public void addOpenButtonAction(ActionListener l) {
-    openButton.addActionListener(l);
   }
 
   private static Dimension max(Dimension dim1, Dimension dim2) {
@@ -115,11 +107,13 @@ public class MainFrame extends javax.swing.JFrame {
           frameDim = max(frameDim, getSize());
         }
         setPageIndex(0);
+        actionState = new ActionState(getPositionDialog(), configuration.getUIStrings());
         setSize(frameDim);
       } else {
         // Enforce a minimum window width; might as well use the actionButtonPanel to do this.
         actionButtonPanel.setPreferredSize(new Dimension(200, 0));
         setPageIndex(null);
+        actionState = null;
         pack();
       }
       updateLocation();
@@ -267,6 +261,11 @@ public class MainFrame extends javax.swing.JFrame {
 
         openButton.setMnemonic('O');
         openButton.setText("Open Sample Document...");
+        openButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                openButtonActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
@@ -276,6 +275,11 @@ public class MainFrame extends javax.swing.JFrame {
 
         concludeButton.setMnemonic('U');
         concludeButton.setText("Upload and Retrieve Confirmation Code...");
+        concludeButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                concludeButtonActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
@@ -345,6 +349,15 @@ public class MainFrame extends javax.swing.JFrame {
   private void backButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backButtonActionPerformed
     setPageIndex(getPageIndex() - 1);
   }//GEN-LAST:event_backButtonActionPerformed
+
+  private void openButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openButtonActionPerformed
+    LOG.info("User pressed open button");
+    actionState.openFile(configuration.getOpenFileConfiguration());
+  }//GEN-LAST:event_openButtonActionPerformed
+
+  private void concludeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_concludeButtonActionPerformed
+    LOG.info("User pressed conclude button");
+  }//GEN-LAST:event_concludeButtonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel actionButtonPanel;

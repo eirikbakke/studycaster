@@ -7,14 +7,12 @@ public class OpenFileConfiguration {
   private final String  remoteName;
   private final String  localName;
   private final String  errorMessage;
-  private final boolean automatic;
 
   public OpenFileConfiguration(Element elm) throws StudyCasterException {
     remoteName   = ConfigurationUtil.getTextContent(elm, "remotename"  );
     localName    = ConfigurationUtil.getTextContent(elm, "localname"   );
     // TODO: Change to getSwingCaption once entire message is used.
     errorMessage = ConfigurationUtil.getTextContent(elm, "errormessage");
-    automatic    = ConfigurationUtil.getBooleanAttribute(elm, "auto");
   }
 
   public String getRemoteName() {
@@ -27,9 +25,5 @@ public class OpenFileConfiguration {
 
   public String getErrorMessage() {
     return errorMessage;
-  }
-
-  public boolean isAutomatic() {
-    return automatic;
   }
 }

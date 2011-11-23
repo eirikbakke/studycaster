@@ -2,16 +2,23 @@ package no.ebakke.studycaster.util;
 
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.naming.OperationNotSupportedException;
 import javax.swing.SwingUtilities;
 import no.ebakke.studycaster.api.StudyCasterException;
 
@@ -47,7 +54,7 @@ public final class Util {
     StringBuffer props = new StringBuffer();
     boolean first = true;
     for (String key : propkeys) {
-      props.append((first ? "" : ", ") + key + "=" + System.getProperty(key));
+      props.append(first ? "" : ", ").append(key).append("=").append(System.getProperty(key));
       first = false;
     }
     LOG.log(Level.INFO, "Environment: {0}", props);
@@ -231,6 +238,7 @@ public final class Util {
     return copy;
   }
 
+  @SuppressWarnings("SleepWhileInLoop")
   public static void delayAtLeast(long millis) throws InterruptedException {
     final long startTime = System.currentTimeMillis();
     while (true) {
@@ -244,5 +252,29 @@ public final class Util {
   public static void checkClosed(AtomicBoolean closed) throws IllegalStateException {
     if (closed.get())
       throw new IllegalStateException("Closed");
+  }
+
+  @SuppressWarnings("NestedAssignment")
+  public byte[] computeSHA1(InputStream is) throws IOException {
+    final byte[] buf = new byte[128 * 1024];
+    final MessageDigest md;
+    try {
+      md = MessageDigest.getInstance("SHA1");
+    } catch (NoSuchAlgorithmException e) {
+      throw new UnsupportedOperationException(e);
+    }
+    int n;
+    while ((n = is.read(buf)) > 0)
+      md.update(buf, 0, n);
+    return md.digest();
+  }
+
+  public byte[] computeSHA1(File file) throws IOException {
+    InputStream fis = new FileInputStream(file);
+    try {
+      return computeSHA1(fis);
+    } finally {
+      fis.close();
+    }
   }
 }

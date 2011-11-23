@@ -33,7 +33,15 @@ public final class Quilt<V> {
   private static <V> void subtractPatch(Patch<V> original, Patch<V> subtractMe, List<Patch<V>> res)
   {
     final Rectangle sM = subtractMe.rect;
-    // original - subtractMe = original * (1 - subtractMe)
+    /* To get original minus subtractMe, intersect original with the entire plane minus subtractMe.
+    The entire plane minus subtractMe can be represented by four rectangles, one on each of the four
+    sides. To encourage longer runs, make the horizontal sides (rectangleAbove/rectangleBelow in the
+    pseudo-formula below) the longer ones.
+
+        original - subtractMe
+      = original * (1 - subtractMe)
+      = original * (rectangleAbove + rectangleBelow + rectangleLeft + rectangleRight)
+    */
     addIntersection(res, original,          MINVAL,           MINVAL, MAXVAL,                sM.y);
     addIntersection(res, original,          MINVAL, sM.y + sM.height, MAXVAL,              MAXVAL);
     addIntersection(res, original,          MINVAL,             sM.y,   sM.x,    sM.y + sM.height);

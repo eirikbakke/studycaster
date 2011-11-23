@@ -95,7 +95,7 @@ public final class StudyLauncher {
           // TODO: Move this mess out of here.
           if (download) {
             String path = openedFile.getPath();
-            int dot = path.lastIndexOf(".");
+            int dot = path.lastIndexOf('.');
             String basename = (dot < 0) ? path : path.substring(0, dot);
             String extension = (dot < 0) ? "" : path.substring(dot);
             File newName;

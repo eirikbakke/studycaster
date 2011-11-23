@@ -115,10 +115,17 @@
     <page>
       <instructions>
         <html xmlns="">
-          This is the second page. It has an open file thingie.
+          This is the second page. It has an open file thingie, and a form for
+          testing purposes.<br/><br/>
+
+          <form name="input" action="http://www.google.com" method="post">
+            <input type="text" name="q" />&#160;
+            <input type="submit" value="Submit" />
+          </form>
+
         </html>
       </instructions>
-      <openfile auto="true"> <!-- Optional -->
+      <openfile> <!-- Optional -->
         <remotename>currencies.xls</remotename>
         <localname>userstudyHIT_currencies.xls</localname>
         <errormessage><macro id="openfile-error-excel"/></errormessage>
@@ -142,7 +149,7 @@
 
     <page>
       <macro id="instructions"/>
-      <openfile auto="true"> <!-- Optional -->
+      <openfile> <!-- Optional -->
         <remotename>currencies.xls</remotename>
         <localname>userstudyHIT_currencies.xls</localname>
         <errormessage><macro id="openfile-error-excel"/></errormessage>
@@ -161,7 +168,7 @@
     <macro id="configuration-common"/>
     <page>
       <macro id="instructions"/>
-      <openfile auto="true">
+      <openfile>
         <remotename>exflat.xls</remotename>
         <localname>userstudyHIT_coursecatalog.xls</localname>
         <errormessage><macro id="openfile-error-excel"/></errormessage>
@@ -180,7 +187,7 @@
     <macro id="configuration-common"/>
     <page>
       <macro id="instructions"/>
-      <openfile auto="true">
+      <openfile>
         <remotename>rsnest.rzw</remotename>
         <localname>userstudyHIT_coursecatalog.rzw</localname>
         <errormessage>Unexpected error.</errormessage>
