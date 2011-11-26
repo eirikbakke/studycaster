@@ -3,16 +3,24 @@ package no.ebakke.studycaster.nouveau;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.jnlp.SingleInstanceListener;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import no.ebakke.studycaster.api.ServerContext;
+import no.ebakke.studycaster.api.ServerContextUtil;
 import no.ebakke.studycaster.api.StudyCasterException;
+import no.ebakke.studycaster.configuration.ConcludeConfiguration;
+import no.ebakke.studycaster.configuration.OpenFileConfiguration;
 import no.ebakke.studycaster.configuration.StudyConfiguration;
 import no.ebakke.studycaster.configuration.UIStringKey;
+import no.ebakke.studycaster.nouveau.MainFrame.UserActionListener;
 import no.ebakke.studycaster.util.Util;
 
 /*
@@ -48,7 +56,7 @@ public final class StudyUI {
 
   private StudyUI(EnvironmentHooks hooks) {
     this.hooks = hooks;
-    mainFrame = new MainFrame();
+    mainFrame = new MainFrame(new PrivateUserActionListener());
     windowClosingListener = new WindowAdapter() {
       @Override
       public void windowClosing(WindowEvent e) {
@@ -151,8 +159,8 @@ public final class StudyUI {
         neutralizing an earlier dispose(). */
         return;
       }
-      mainFrame.setConfiguration(configuration);
-      mainFrame.setProgressBarStatus("", false);
+      mainFrame.endTask();
+      mainFrame.configure(configuration, serverContext);
 
       // Do this after properly setting up the main window, in case there are enqueued messages.
       SingleInstanceHandler sih = hooks.getSingleInstanceHandler();
@@ -181,7 +189,7 @@ public final class StudyUI {
         LOG.log(Level.SEVERE, "Fatal error, suppressing dialog due to earlier close action", e);
       } else {
         LOG.log(Level.SEVERE, "Fatal error, showing dialog", e);
-        mainFrame.setProgressBarStatus("", false);
+        mainFrame.endTask();
         JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
             "There was an unexpected error:\n" + e.getMessage(), "Error",
             JOptionPane.ERROR_MESSAGE);
@@ -233,7 +241,7 @@ public final class StudyUI {
     the UI can be displayed, and started after the UI has been displayed. */
     /* TODO: If configuration files ever get parsed on the server side, consider including the
     initial few UI strings as parameters in the JNLP file. */
-    mainFrame.setProgressBarStatus("Loading instructions...", true);
+    mainFrame.startTask("Loading instructions...", true);
     mainFrame.setVisible(true);
     initializerThread.start();
   }
@@ -253,5 +261,70 @@ public final class StudyUI {
         new StudyUI(hooks).runStudy(args);
       }
     });
+  }
+
+  private class PrivateUserActionListener implements UserActionListener {
+    private final Map<String,DownloadedFile> downloadedFiles
+        = new LinkedHashMap<String,DownloadedFile>();
+
+    public void openAction(final OpenFileConfiguration openFileConfiguration) {
+      mainFrame.startTask(getUIString(UIStringKey.OPENFILE_PROGRESS), true);
+      new Thread(new Runnable() {
+        public void run() {
+          try {
+            final File tempDir    = new File(System.getProperty("java.io.tmpdir"));
+            final File tempFile   = File.createTempFile("sc_", ".tmp", tempDir);
+            final File clientFile = new File(tempDir, openFileConfiguration.getClientName());
+            try {
+              // TODO: Optimize away in one case.
+              ServerContextUtil.downloadFile(serverContext, openFileConfiguration.getServerName(), tempFile);
+              final byte downloadedHash[] = Util.computeSHA1(tempFile);
+              if (clientFile.exists()) {
+                final byte localHash[] = Util.computeSHA1(clientFile);
+                if (!Arrays.equals(downloadedHash, localHash)) {
+                  // TODO: Ask user what to do here.
+                }
+              } else {
+                tempFile.renameTo(clientFile);
+              }
+            } finally {
+              // OK for file to not exist in some cases.
+              tempFile.delete();
+            }
+
+          } catch (IOException e) {
+            // TODO: Show dialog here.
+            e.printStackTrace();
+          }
+          SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+              mainFrame.endTask();
+            }
+          });
+        }
+      }).start();
+    }
+
+    public void concludeAction(ConcludeConfiguration concludeConfiguration) {
+
+    }
+
+    private class DownloadedFile {
+      private File   path;
+      private byte[] hashCode;
+
+      DownloadedFile(File path, byte[] hashCode) throws IOException {
+        this.path     = path;
+        this.hashCode = hashCode;
+      }
+
+      byte[] getHash() {
+        return Util.copyOfRange(hashCode, 0, hashCode.length);
+      }
+
+      public File getPath() {
+        return path;
+      }
+    }
   }
 }

@@ -15,7 +15,7 @@ public class UploadConfiguration {
     fileFilter = new MyFileNameExtensionFilter(
         ConfigurationUtil.getStrings(fileFilterElm, "extension"), ConfigurationUtil.getTextContent(
         ConfigurationUtil.getUniqueElement(fileFilterElm, "description")));
-    Element defaultNameElm = ConfigurationUtil.getUniqueElement(elm, "defaultname", true);
+    Element defaultNameElm = ConfigurationUtil.getUniqueElement(elm, "default", true);
     defaultName = defaultNameElm == null ? null : ConfigurationUtil.getTextContent(defaultNameElm);
     Element unchangedWarningElm = ConfigurationUtil.getUniqueElement(elm, "unchangedwarning", true);
     unchangedWarning = unchangedWarningElm == null ? null :

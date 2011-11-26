@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JDialog;
+import no.ebakke.studycaster.api.ServerContext;
 import no.ebakke.studycaster.configuration.ConcludeConfiguration;
 import no.ebakke.studycaster.configuration.OpenFileConfiguration;
 import no.ebakke.studycaster.configuration.PageConfiguration;
@@ -20,12 +21,26 @@ import no.ebakke.studycaster.configuration.UIStrings;
 import no.ebakke.studycaster.ui.ResourceUtil;
 
 public class MainFrame extends javax.swing.JFrame {
+  public static interface UserActionListener {
+    public void openAction(OpenFileConfiguration openFileConfiguration);
+    public void concludeAction(ConcludeConfiguration concludeConfiguration);
+  }
+
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private static final long serialVersionUID = 1L;
+  private final UserActionListener userActionListener;
   private final JDialog positionDialog;
-  private ActionState actionState;
   private StudyConfiguration configuration;
   private Integer pageIndex;
+  private boolean taskInProgress;
+
+  public MainFrame(UserActionListener userActionListener) {
+    this.userActionListener = userActionListener;
+    positionDialog = new JDialog(this);
+    initComponents();
+    initIcon();
+    configure(null, null);
+  }
 
   /** Returns a hidden child dialog that can be used as a parent of dialogs that need to be centered
   on the screen while still being descendants of the normally off-center MainFrame dialog. */
@@ -74,7 +89,7 @@ public class MainFrame extends javax.swing.JFrame {
   }
 
   @SuppressWarnings("FinalMethod")
-  public final void setConfiguration(StudyConfiguration configuration) {
+  public final void configure(StudyConfiguration configuration, ServerContext sc) {
     this.configuration = configuration;
     final boolean visible = isVisible();
     setVisible(false);
@@ -107,13 +122,11 @@ public class MainFrame extends javax.swing.JFrame {
           frameDim = max(frameDim, getSize());
         }
         setPageIndex(0);
-        actionState = new ActionState(getPositionDialog(), configuration.getUIStrings());
         setSize(frameDim);
       } else {
         // Enforce a minimum window width; might as well use the actionButtonPanel to do this.
         actionButtonPanel.setPreferredSize(new Dimension(200, 0));
         setPageIndex(null);
-        actionState = null;
         pack();
       }
       updateLocation();
@@ -126,6 +139,10 @@ public class MainFrame extends javax.swing.JFrame {
 
   public Integer getPageIndex() {
     return pageIndex;
+  }
+
+  private PageConfiguration getPageConfiguration() {
+    return configuration.getPageConfigurations().get(getPageIndex());
   }
 
   // TODO: Log page changes.
@@ -143,7 +160,7 @@ public class MainFrame extends javax.swing.JFrame {
     } else {
       if (configuration == null)
         throw new IllegalStateException("Can't set page index before pages have been configured");
-      PageConfiguration page = configuration.getPageConfigurations().get(pageIndex);
+      PageConfiguration page = getPageConfiguration();
       OpenFileConfiguration openFileConfiguration = page.getOpenFileConfiguration();
       ConcludeConfiguration concludeConfiguration = page.getConcludeConfiguration();
 
@@ -165,10 +182,7 @@ public class MainFrame extends javax.swing.JFrame {
     navigationPanel.setVisible(navigationButtonsVisible);
 
     // Disable buttons during ongoing background tasks.
-    if (progressBar.getString().length() != 0 ||
-        progressBar.isIndeterminate() ||
-        progressBar.getValue() != 0)
-    {
+    if (taskInProgress) {
       concludeButton.setEnabled(false);
       openButton.setEnabled(false);
       backButton.setEnabled(false);
@@ -176,23 +190,37 @@ public class MainFrame extends javax.swing.JFrame {
     }
   }
 
-  public void setProgressBarStatus(final String text, final boolean indeterminate) {
-    LOG.log(Level.INFO, "Changing status bar text to \"{0}\"", text);
-    progressBar.setString(text);
+  public void startTask(String progressBarMessage, boolean indeterminate) {
+    LOG.log(Level.INFO, "Setting status bar text to \"{0}\"", progressBarMessage);
+    taskInProgress = true;
+    progressBar.setString(progressBarMessage);
+    progressBar.setValue(0);
+    setProgressBarBounds(0, 100);
     progressBar.setIndeterminate(indeterminate);
-    if (indeterminate || text.length() == 0)
-      setProgressBarValue(0);
-    // Enable or disable buttons as appropriate.
+    // Update button enabled status.
     setPageIndex(getPageIndex());
   }
 
-  public void setProgressBarBounds(final int minimum, final int maximum) {
+  public void endTask() {
+    LOG.log(Level.INFO, "Clearing status bar");
+    taskInProgress = false;
+    progressBar.setString("");
+    progressBar.setIndeterminate(false);
+    progressBar.setValue(0);
+    // Update button enabled status.
+    setPageIndex(getPageIndex());
+  }
+
+  private void setProgressBarBounds(final int minimum, final int maximum) {
+    if (!taskInProgress)
+      throw new IllegalStateException("Task not started");
     progressBar.setMinimum(minimum);
     progressBar.setMaximum(maximum);
-    progressBar.setIndeterminate(false);
   }
 
   public void setProgressBarValue(final int progress) {
+    if (!taskInProgress)
+      throw new IllegalStateException("Task not started");
     progressBar.setValue(progress);
   }
 
@@ -209,13 +237,6 @@ public class MainFrame extends javax.swing.JFrame {
     xmargin = Math.max(XMARGIN_MIN, xmargin);
     ymargin = Math.max(YMARGIN_MIN, ymargin);
     setLocation(sdim.width - wdim.width - xmargin, sdim.height - wdim.height - ymargin);
-  }
-
-  public MainFrame() {
-    positionDialog = new JDialog(this);
-    initComponents();
-    initIcon();
-    setConfiguration(null);
   }
 
   /** This method is called from within the constructor to
@@ -352,11 +373,12 @@ public class MainFrame extends javax.swing.JFrame {
 
   private void openButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openButtonActionPerformed
     LOG.info("User pressed open button");
-    actionState.openFile(configuration.getOpenFileConfiguration());
+    userActionListener.openAction(getPageConfiguration().getOpenFileConfiguration());
   }//GEN-LAST:event_openButtonActionPerformed
 
   private void concludeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_concludeButtonActionPerformed
     LOG.info("User pressed conclude button");
+    userActionListener.concludeAction(getPageConfiguration().getConcludeConfiguration());
   }//GEN-LAST:event_concludeButtonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

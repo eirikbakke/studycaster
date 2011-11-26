@@ -85,7 +85,7 @@ public final class StudyLauncher {
       scui.getProgressBarUI().setTaskAppearance("Downloading sample file...", false);
 
       openedFile = new File(new File(System.getProperty("java.io.tmpdir")),
-          configuration.getOpenFileConfiguration().getLocalName());
+          configuration.getOpenFileConfiguration().getClientName());
       if (openedFile.exists()) {
         LOG.info("File to be downloaded already exists in temp directory");
 
@@ -122,7 +122,7 @@ public final class StudyLauncher {
         }
       }
       if (download)
-        sc.downloadFile(configuration.getOpenFileConfiguration().getRemoteName(), openedFile);
+        sc.downloadFile(configuration.getOpenFileConfiguration().getServerName(), openedFile);
       scui.setDefaultFile(openedFile);
       lastModified1 = openedFile.lastModified();
       scui.getProgressBarUI().setProgress(75);

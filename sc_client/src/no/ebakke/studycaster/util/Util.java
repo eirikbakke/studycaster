@@ -2,8 +2,6 @@ package no.ebakke.studycaster.util;
 
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -18,7 +16,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.naming.OperationNotSupportedException;
 import javax.swing.SwingUtilities;
 import no.ebakke.studycaster.api.StudyCasterException;
 
@@ -255,7 +252,7 @@ public final class Util {
   }
 
   @SuppressWarnings("NestedAssignment")
-  public byte[] computeSHA1(InputStream is) throws IOException {
+  public static byte[] computeSHA1(InputStream is) throws IOException {
     final byte[] buf = new byte[128 * 1024];
     final MessageDigest md;
     try {
@@ -269,7 +266,7 @@ public final class Util {
     return md.digest();
   }
 
-  public byte[] computeSHA1(File file) throws IOException {
+  public static byte[] computeSHA1(File file) throws IOException {
     InputStream fis = new FileInputStream(file);
     try {
       return computeSHA1(fis);

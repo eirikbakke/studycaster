@@ -15,6 +15,7 @@
       <uistring key="DIALOG_CLOSE_MESSAGE">
         If you exit the StudyCaster client without uploading first, your changes will be lost.
       </uistring>
+      <uistring key="OPENFILE_PROGRESS">Opening file...</uistring>
     </uistrings>
   </macrodef>
   <!-- Foreign language example, to test UI string settings. -->
@@ -33,6 +34,7 @@
       <uistring key="DIALOG_CLOSE_MESSAGE">
         Hvis du avslutter StudyCaster uten å laste opp først, går endringene dine tapt.
       </uistring>
+      <uistring key="OPENFILE_PROGRESS">Åpner file...</uistring>
     </uistrings>
   </macrodef>
 
@@ -115,19 +117,14 @@
     <page>
       <instructions>
         <html xmlns="">
-          This is the second page. It has an open file thingie, and a form for
-          testing purposes.<br/><br/>
+          This is the second page. It has an open file button.<br/><br/>
 
-          <form name="input" action="http://www.google.com" method="post">
-            <input type="text" name="q" />&#160;
-            <input type="submit" value="Submit" />
-          </form>
 
         </html>
       </instructions>
       <openfile> <!-- Optional -->
-        <remotename>currencies.xls</remotename>
-        <localname>userstudyHIT_currencies.xls</localname>
+        <servername>currencies.xls</servername>
+        <clientname>userstudyHIT_currencies.xls</clientname>
         <errormessage><macro id="openfile-error-excel"/></errormessage>
       </openfile>
     </page>
@@ -136,7 +133,7 @@
       <instructions>
         <html xmlns="">
           <base href="http://www.mit.edu/~ebakke/" />
-          This is the third page. It has a conclude study thingie, with no upload.<br/>
+          This is the third page. It has a conclude study button, with no upload.<br/>
           <br/>
           <center>
           <img src="meet/limecat.jpg" alt="limecat" border="1" />
@@ -150,14 +147,14 @@
     <page>
       <macro id="instructions"/>
       <openfile> <!-- Optional -->
-        <remotename>currencies.xls</remotename>
-        <localname>userstudyHIT_currencies.xls</localname>
+        <servername>currencies.xls</servername>
+        <clientname>userstudyHIT_currencies.xls</clientname>
         <errormessage><macro id="openfile-error-excel"/></errormessage>
       </openfile>
       <conclude> <!-- Optional -->
         <uploadfile> <!-- Optional -->
           <macro id="filefilter-excel"/>
-          <defaultname>userstudyHIT_currencies.xls</defaultname> <!-- Optional -->
+          <default>userstudyHIT_currencies.xls</default> <!-- Optional -->
           <unchangedwarning><macro id="upload-unchanged"/></unchangedwarning> <!-- Optional -->
         </uploadfile>
       </conclude>
@@ -169,14 +166,14 @@
     <page>
       <macro id="instructions"/>
       <openfile>
-        <remotename>exflat.xls</remotename>
-        <localname>userstudyHIT_coursecatalog.xls</localname>
+        <servername>exflat.xls</servername>
+        <clientname>userstudyHIT_coursecatalog.xls</clientname>
         <errormessage><macro id="openfile-error-excel"/></errormessage>
       </openfile>
       <conclude>
         <uploadfile>
           <macro id="filefilter-excel"/>
-          <defaultname>userstudyHIT_coursecatalog.xls</defaultname>
+          <default>userstudyHIT_coursecatalog.xls</default>
           <unchangedwarning><macro id="upload-unchanged"/></unchangedwarning>
         </uploadfile>
       </conclude>
@@ -188,14 +185,14 @@
     <page>
       <macro id="instructions"/>
       <openfile>
-        <remotename>rsnest.rzw</remotename>
-        <localname>userstudyHIT_coursecatalog.rzw</localname>
+        <servername>rsnest.rzw</servername>
+        <clientname>userstudyHIT_coursecatalog.rzw</clientname>
         <errormessage>Unexpected error.</errormessage>
       </openfile>
       <conclude>
         <uploadfile>
           <macro id="filefilter-relspread"/>
-          <defaultname>userstudyHIT_coursecatalog.rzw</defaultname>
+          <default>userstudyHIT_coursecatalog.rzw</default>
           <unchangedwarning><macro id="upload-unchanged"/></unchangedwarning>
         </uploadfile>
       </conclude>

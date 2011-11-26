@@ -8,7 +8,8 @@ public enum UIStringKey {
   MAINFRAME_BACK_BUTTON(true, true),
   MAINFRAME_NEXT_BUTTON(true, true),
   DIALOG_CLOSE_TITLE(false, false),
-  DIALOG_CLOSE_MESSAGE(false, true);
+  DIALOG_CLOSE_MESSAGE(false, true),
+  OPENFILE_PROGRESS(false, false);
 
   private boolean hasMnemonic, htmlAllowed;
 
