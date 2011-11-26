@@ -5,6 +5,7 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.File;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -85,6 +86,10 @@ public final class StudyUI {
 
   private String getUIString(UIStringKey key) {
     return configuration.getUIStrings().getString(key);
+  }
+
+  private String getUIString(UIStringKey key, Object parameters[]) {
+    return configuration.getUIStrings().getString(key, parameters);
   }
 
   // TODO: Rename, refactor, or combine closeUI() and closeBackend().
@@ -282,7 +287,20 @@ public final class StudyUI {
               if (clientFile.exists()) {
                 final byte localHash[] = Util.computeSHA1(clientFile);
                 if (!Arrays.equals(downloadedHash, localHash)) {
-                  // TODO: Ask user what to do here.
+                  boolean useDownloaded = Util.checkedSwingInvokeAndWait(new Util.CallableExt<Boolean,RuntimeException>() {
+                    public Boolean call() {
+                      final String downloadOption = "Download New File";
+                      final String existingOption = "Keep Existing File";
+                      int res = JOptionPane.showOptionDialog(mainFrame.getPositionDialog(),
+                          "<html>The StudyCaster client found a file from an old session:<br>" + Util.getPathString(clientFile) +
+                          "<br><br>" +
+                          "Would you like to keep working on the existing file, or download a new one?</html>",
+                          "Open Sample File",
+                          JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
+                          null, new String[] {downloadOption, existingOption}, existingOption);
+                      return res == JOptionPane.YES_OPTION;
+                    }
+                  });
                 }
               } else {
                 tempFile.renameTo(clientFile);
@@ -293,6 +311,9 @@ public final class StudyUI {
             }
 
           } catch (IOException e) {
+            // TODO: Show dialog here.
+            e.printStackTrace();
+          } catch (StudyCasterException e) {
             // TODO: Show dialog here.
             e.printStackTrace();
           }

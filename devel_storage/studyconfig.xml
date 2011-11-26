@@ -16,6 +16,10 @@
         If you exit the StudyCaster client without uploading first, your changes will be lost.
       </uistring>
       <uistring key="OPENFILE_PROGRESS">Opening file...</uistring>
+      <!--
+      <uistring key="DIALOG_OPEN_EXISTING_TITLE">Open Sample Document</uistring>
+      <uistring key="DIALOG_OPEN_EXISTING_MESSAGE">Open Sample Document</uistring>
+      -->
     </uistrings>
   </macrodef>
   <!-- Foreign language example, to test UI string settings. -->
@@ -34,7 +38,7 @@
       <uistring key="DIALOG_CLOSE_MESSAGE">
         Hvis du avslutter StudyCaster uten å laste opp først, går endringene dine tapt.
       </uistring>
-      <uistring key="OPENFILE_PROGRESS">Åpner file...</uistring>
+      <uistring key="OPENFILE_PROGRESS">Åpner fil...</uistring>
     </uistrings>
   </macrodef>
 

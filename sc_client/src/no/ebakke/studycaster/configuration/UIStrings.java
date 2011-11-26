@@ -1,9 +1,11 @@
 package no.ebakke.studycaster.configuration;
 
+import java.text.MessageFormat;
 import java.util.EnumMap;
 import java.util.Map;
 import no.ebakke.studycaster.api.StudyCasterException;
 import org.w3c.dom.Element;
+import sun.misc.UCDecoder;
 
 public class UIStrings {
   private final Map<UIStringKey,String>    strings;
@@ -24,13 +26,13 @@ public class UIStrings {
           ConfigurationUtil.getTextContent(uiStringElm);
       strings.put(key, value);
       String mnemonic = uiStringElm.getAttribute("mnemonic");
-      if        ( key.hasMnemonic() && mnemonic.length() != 1) {
+      if        ( key.usesMnemonic() && mnemonic.length() != 1) {
         throw new StudyCasterException("UI string with key " + key.name() +
             " requires a single-character mnemonic");
-      } else if (!key.hasMnemonic() && mnemonic.length() >  0) {
+      } else if (!key.usesMnemonic() && mnemonic.length() >  0) {
         throw new StudyCasterException("Unnecessary mnemonic for UI string with key " + key.name());
       }
-      if (key.hasMnemonic()) {
+      if (key.usesMnemonic()) {
         if (mnemonic.length() != 1) {
           throw new StudyCasterException("UI string with key " + key.name() +
                       " requires a single-character mnemonic");
@@ -48,13 +50,20 @@ public class UIStrings {
   }
 
   public String getString(UIStringKey key) {
+    if (key.takesParameters())
+      throw new IllegalArgumentException("UI string with key " + key + " takes parameters");
     return strings.get(key);
   }
 
+  public String getString(UIStringKey key, Object parameters[]) {
+    if (!key.takesParameters())
+      throw new IllegalArgumentException("UI string with key " + key + " does not take parameters");
+    return new MessageFormat(strings.get(key)).format(parameters);
+  }
+
   public char getMnemonic(UIStringKey key) {
-    Character ret = mnemonics.get(key);
-    if (ret == null)
+    if (!key.usesMnemonic())
       throw new IllegalArgumentException("UI string with key " + key + "does not use a mnemonic");
-    return ret;
+    return mnemonics.get(key);
   }
 }
