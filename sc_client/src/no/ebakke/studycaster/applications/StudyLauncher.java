@@ -130,8 +130,10 @@ public final class StudyLauncher {
       // TODO: Allow opening with a downloaded application.
       // TODO: When would this ever be the case?
       if (Util.fileAvailableExclusive(openedFile)) {
-        Util.desktopOpenFile(openedFile,
-            configuration.getOpenFileConfiguration().getErrorMessage());
+        if (!Util.desktopOpenFile(openedFile)) {
+          throw new StudyCasterException("Failed to open the file " + openedFile.getName() + "; " +
+              configuration.getOpenFileConfiguration().getErrorMessage());
+        }
       }
       lastModified2 = openedFile.lastModified();
       scui.getProgressBarUI().setProgress(100);

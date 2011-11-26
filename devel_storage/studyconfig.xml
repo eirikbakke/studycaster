@@ -15,11 +15,23 @@
       <uistring key="DIALOG_CLOSE_MESSAGE">
         If you exit the StudyCaster client without uploading first, your changes will be lost.
       </uistring>
-      <uistring key="OPENFILE_PROGRESS">Opening file...</uistring>
-      <!--
-      <uistring key="DIALOG_OPEN_EXISTING_TITLE">Open Sample Document</uistring>
-      <uistring key="DIALOG_OPEN_EXISTING_MESSAGE">Open Sample Document</uistring>
-      -->
+      <uistring key="PROGRESS_OPEN">Opening file...</uistring>
+
+      <uistring key="DIALOG_OPEN_TITLE">Open Sample Document</uistring>
+      <uistring key="DIALOG_OPEN_EXISTING_MESSAGE">
+        <html xmlns="">The StudyCaster client found a file from an old session:<br/>
+                       {0}<br/><br/>
+                       Would you like to keep working on the existing file, or download a new one?</html>
+      </uistring>
+      <uistring key="DIALOG_OPEN_MODIFIED_MESSAGE">
+        <html xmlns="">The file<br/>
+                       {0}<br/><br/>
+                       was opened previously. Would you like to keep working on the existing file,
+                       or download a new one?</html>
+      </uistring>
+      <uistring key="DIALOG_OPEN_NEW_BUTTON">Download New File</uistring>
+      <uistring key="DIALOG_OPEN_KEEP_BUTTON">Keep Existing File</uistring>
+
     </uistrings>
   </macrodef>
   <!-- Foreign language example, to test UI string settings. -->
@@ -38,7 +50,8 @@
       <uistring key="DIALOG_CLOSE_MESSAGE">
         Hvis du avslutter StudyCaster uten å laste opp først, går endringene dine tapt.
       </uistring>
-      <uistring key="OPENFILE_PROGRESS">Åpner fil...</uistring>
+      <uistring key="PROGRESS_OPEN">Åpner fil...</uistring>
+      <!-- TODO: Translate remaining strings. -->
     </uistrings>
   </macrodef>
 

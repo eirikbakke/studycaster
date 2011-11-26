@@ -9,7 +9,12 @@ public enum UIStringKey {
   MAINFRAME_NEXT_BUTTON(true, true, false),
   DIALOG_CLOSE_TITLE(false, false, false),
   DIALOG_CLOSE_MESSAGE(false, true, false),
-  OPENFILE_PROGRESS(false, false, false);
+  PROGRESS_OPEN(false, false, false),
+  DIALOG_OPEN_TITLE(false, false, false),
+  DIALOG_OPEN_EXISTING_MESSAGE(false, true, true),
+  DIALOG_OPEN_MODIFIED_MESSAGE(false, true, true),
+  DIALOG_OPEN_NEW_BUTTON(false, true, false),
+  DIALOG_OPEN_KEEP_BUTTON(false, true, false);
 
   private boolean usesMnemonic, htmlAllowed, usesMessageFormat;
 

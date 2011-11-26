@@ -97,7 +97,7 @@ public final class Util {
     }
   }
 
-  public static void desktopOpenFile(File fileToOpen, String errorMessage)
+  public static boolean desktopOpenFile(File fileToOpen)
       throws StudyCasterException
   {
     Class<?> desktopClass = null;
@@ -114,7 +114,6 @@ public final class Util {
         }
         Method openMethod = desktopClass.getMethod("open", File.class);
         openMethod.invoke(desktopObject, fileToOpen);
-        return;
       } catch (NoSuchMethodException e) {
         throw new StudyCasterException("Failed to locate an expected library method", e);
       } catch (IllegalAccessException e) {
@@ -125,12 +124,12 @@ public final class Util {
         if (e.getCause() instanceof Error)
           throw (Error) e.getCause();
         if (e.getCause() instanceof IOException) {
-          // TODO: Take whole string (with pattern for file name) from configuration.
-          throw new StudyCasterException("Failed to open the file " + fileToOpen.getName() + "; " +
-              errorMessage, e);
+          LOG.log(Level.SEVERE, "Failed to open file with association", e);
+          return false;
         }
       }
     } else {
+      // TODO: Make unassociated file errors propagate in these implementations as well.
       LOG.info("Did not find Java Desktop API, using platform-specific " +
           "implementation instead (probably on JRE 1.5 or earlier)");
       String osString = System.getProperty("os.name").toLowerCase();
@@ -173,6 +172,7 @@ public final class Util {
             "Can't open file; problem while executing shell command", e);
       }
     }
+    return true;
   }
 
   public static String sanitizeFileNameComponent(String s) {

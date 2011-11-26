@@ -5,7 +5,6 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.File;
 import java.io.IOException;
-import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -273,7 +272,7 @@ public final class StudyUI {
         = new LinkedHashMap<String,DownloadedFile>();
 
     public void openAction(final OpenFileConfiguration openFileConfiguration) {
-      mainFrame.startTask(getUIString(UIStringKey.OPENFILE_PROGRESS), true);
+      mainFrame.startTask(getUIString(UIStringKey.PROGRESS_OPEN), true);
       new Thread(new Runnable() {
         public void run() {
           try {
@@ -289,27 +288,33 @@ public final class StudyUI {
                 if (!Arrays.equals(downloadedHash, localHash)) {
                   boolean useDownloaded = Util.checkedSwingInvokeAndWait(new Util.CallableExt<Boolean,RuntimeException>() {
                     public Boolean call() {
-                      final String downloadOption = "Download New File";
-                      final String existingOption = "Keep Existing File";
+                      final String downloadOption = getUIString(UIStringKey.DIALOG_OPEN_NEW_BUTTON);
+                      final String existingOption = getUIString(UIStringKey.DIALOG_OPEN_KEEP_BUTTON);
                       int res = JOptionPane.showOptionDialog(mainFrame.getPositionDialog(),
-                          "<html>The StudyCaster client found a file from an old session:<br>" + Util.getPathString(clientFile) +
-                          "<br><br>" +
-                          "Would you like to keep working on the existing file, or download a new one?</html>",
-                          "Open Sample File",
+                          getUIString(UIStringKey.DIALOG_OPEN_EXISTING_MESSAGE,
+                            new Object[] { Util.getPathString(clientFile) }),
+                          getUIString(UIStringKey.DIALOG_OPEN_TITLE),
                           JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
-                          null, new String[] {downloadOption, existingOption}, existingOption);
+                          null, new Object[] {downloadOption, existingOption}, existingOption);
                       return res == JOptionPane.YES_OPTION;
                     }
                   });
                 }
               } else {
-                tempFile.renameTo(clientFile);
+                if (!tempFile.renameTo(clientFile)) {
+                  System.err.println("Implement error handling (rename failed).");
+                }
               }
+              downloadedFiles.put(openFileConfiguration.getClientName(),
+                  new DownloadedFile(clientFile, downloadedHash));
             } finally {
               // OK for file to not exist in some cases.
               tempFile.delete();
             }
-
+            if (!Util.desktopOpenFile(clientFile)) {
+              // TODO: Do something.
+              System.err.println("Implement error handling (desktop open).");
+            }
           } catch (IOException e) {
             // TODO: Show dialog here.
             e.printStackTrace();
