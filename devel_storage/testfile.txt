@@ -1,0 +1,3 @@
+This is another example of a file that can be opened from within the StudyCaster client
+given the appropriate settings in studyconfig.xml . It is useful for testing the logic
+associated with the "Open Sample Document" button.
