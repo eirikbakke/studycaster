@@ -201,7 +201,9 @@ public class MainFrame extends javax.swing.JFrame {
     setPageIndex(getPageIndex());
   }
 
-  public void endTask() {
+  public void stopTask() {
+    if (!taskInProgress)
+      return;
     LOG.log(Level.INFO, "Clearing status bar");
     taskInProgress = false;
     progressBar.setString("");

@@ -37,6 +37,7 @@ import no.ebakke.studycaster.util.Util;
   * 1, 2, or 3 pages in the study configuration.
   * A study configuration with or without two action buttons on a single page in the study
     configuration.
+  * Opening an example document in JRE 1.5 and in a JRE 1.6 or above.
   * Opening an example document that already exists in the temporary folder, either modified or not,
     and either as the first time for a particular launch or not. When a file already exists in
     modified form, different messages should appear depending on whether it is the first time that
@@ -54,11 +55,12 @@ import no.ebakke.studycaster.util.Util;
 */
 
 // TODO: Rename to StudyCasterUI. Rename threads to reflect change.
+// TODO: Pay attention to button focus.
 public final class StudyUI {
-  /* Methods in this class, including private ones, must be called from the event-handling thread
-  (EHT) only. Similarly, all non-final member variables must be accessed from the EHT. While a
-  little cumbersome, this avoids declaring members volatile, and makes it easier to reason about
-  concurrency in this class. */
+  /* Except where noted, methods in this class, including private ones, must be called from the
+  event-handling thread (EHT) only. Similarly, all non-final member variables must be accessed from
+  the EHT. This avoids declaring members volatile, and makes it easier to reason about concurrency.
+  */
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private static final String CONFIGID_PROP_NAME = "studycaster.config.id";
   private final MainFrame mainFrame;
@@ -173,13 +175,29 @@ public final class StudyUI {
       LOG.log(Level.SEVERE, TYPE + ", suppressing error dialog due to earlier close action", e);
     } else {
       LOG.log(Level.SEVERE, TYPE + ", showing error dialog", e);
-      mainFrame.endTask();
+      mainFrame.stopTask();
       JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
           "There was an unexpected error:\n" + e.getMessage(), "Error",
           JOptionPane.ERROR_MESSAGE);
       if (fatal)
         closeUIandBackend();
     }
+  }
+
+  /** Convenience method for showing a parameterized message dialog. The MainFrame taskbar will be
+  reset prior to showing the dialog. This method may be called from any thread. */
+  private void showMessageDialog(final UIStringKey messageKey,
+      final Object messageParameters[], final UIStringKey titleKey, final int messageType)
+  {
+    SwingUtilities.invokeLater(new Runnable() {
+      public void run() {
+        mainFrame.stopTask();
+        String message = (messageParameters != null) ?
+            getUIString(messageKey, messageParameters) : getUIString(messageKey);
+        JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
+            message, getUIString(titleKey), messageType);
+      }
+    });
   }
 
   private void initUI(StudyCasterException storedException) {
@@ -192,7 +210,7 @@ public final class StudyUI {
         neutralizing an earlier dispose(). */
         return;
       }
-      mainFrame.endTask();
+      mainFrame.stopTask();
       mainFrame.configure(configuration, serverContext);
 
       // Do this after properly setting up the main window, in case there are enqueued messages.
@@ -206,10 +224,8 @@ public final class StudyUI {
                   LOG.info("Already running, suppressing dialog due to earlier close action");
                 } else {
                   LOG.info("Already running, showing dialog");
-                  JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
-                      getUIString(UIStringKey.DIALOG_ALREADY_RUNNING_MESSAGE),
-                      getUIString(UIStringKey.DIALOG_ALREADY_RUNNING_TITLE),
-                      JOptionPane.INFORMATION_MESSAGE);
+                  showMessageDialog(UIStringKey.DIALOG_ALREADY_RUNNING_MESSAGE, null,
+                      UIStringKey.DIALOG_ALREADY_RUNNING_TITLE, JOptionPane.INFORMATION_MESSAGE);
                 }
               }
             });
@@ -310,6 +326,13 @@ public final class StudyUI {
         LOG.log(Level.INFO, "Open action for file {0}", openFileConfiguration.getClientName());
         final File tempDir    = new File(System.getProperty("java.io.tmpdir"));
         final File clientFile = new File(tempDir, openFileConfiguration.getClientName());
+        if (!Util.fileAvailableExclusive(clientFile)) {
+          LOG.severe("File already open on desktop, showing dialog");
+          showMessageDialog(UIStringKey.DIALOG_OPEN_ALREADY_MESSAGE,
+              new Object[] { Util.getPathString(clientFile) }, UIStringKey.DIALOG_OPEN_TITLE,
+              JOptionPane.INFORMATION_MESSAGE);
+          return;
+        }
         final byte downloadedHash[];
         final OpenedFile openedFile = openedFiles.get(openFileConfiguration.getClientName());
         if (openedFile == null) {
@@ -322,9 +345,10 @@ public final class StudyUI {
           modified version. */
           downloadedHash = openedFile.getHashBeforeOpen();
         }
-        final boolean useDownloaded;
+        final boolean modified, useDownloaded;
         if (!clientFile.exists()) {
           useDownloaded = true;
+          modified      = false;
         } else {
           final byte existingHash[] = Util.computeSHA1(clientFile);
           if (Arrays.equals(existingHash, downloadedHash) ||
@@ -333,6 +357,7 @@ public final class StudyUI {
             LOG.info("File already exists in identical form");
             // The existing file is identical to the downloaded one; so use the existing one.
             useDownloaded = false;
+            modified      = false;
           } else {
             LOG.info("File already exists in modified form, showing option dialog");
             // The existing file is different from the downloaded one; ask the user what to do.
@@ -351,6 +376,7 @@ public final class StudyUI {
                 return res == JOptionPane.YES_OPTION;
               }
             });
+            modified = !useDownloaded;
             if (useDownloaded) {
               // Move the old file out of place without deleting it.
               String path = clientFile.getPath();
@@ -365,18 +391,14 @@ public final class StudyUI {
               } while (newName.exists());
               if (clientFile.renameTo(newName)) {
                 LOG.info("User chose to move existing file; succeeded, showing dialog");
-                JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
-                    getUIString(UIStringKey.DIALOG_OPEN_RENAMED_MESSAGE, new Object[] {
-                      Util.getPathString(clientFile), Util.getPathString(newName) }),
-                    getUIString(UIStringKey.DIALOG_OPEN_TITLE),
-                    JOptionPane.INFORMATION_MESSAGE);
+                showMessageDialog(UIStringKey.DIALOG_OPEN_RENAMED_MESSAGE,
+                    new Object[] {Util.getPathString(clientFile), Util.getPathString(newName) },
+                    UIStringKey.DIALOG_OPEN_TITLE, JOptionPane.INFORMATION_MESSAGE);
               } else {
                 LOG.info("User chose to move existing file; failed, showing dialog");
-                JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
-                    getUIString(UIStringKey.DIALOG_OPEN_RENAME_FAILED_MESSAGE, new Object[] {
-                      Util.getPathString(clientFile) }),
-                    getUIString(UIStringKey.DIALOG_OPEN_TITLE),
-                    JOptionPane.WARNING_MESSAGE);
+                showMessageDialog(UIStringKey.DIALOG_OPEN_RENAME_FAILED_MESSAGE,
+                    new Object[] { Util.getPathString(clientFile) },
+                    UIStringKey.DIALOG_OPEN_TITLE, JOptionPane.WARNING_MESSAGE);
                 // Leave it up to the user to try again.
                 return;
               }
@@ -391,39 +413,33 @@ public final class StudyUI {
           if (!downloadedFile.renameTo(clientFile))
             throw new IOException("Failed to rename");
         }
-        if (Util.fileAvailableExclusive(clientFile)) {
-          if (!Util.desktopOpenFile(clientFile)) {
-            LOG.severe("File open by association failed, showing dialog");
-            JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
-                getUIString(UIStringKey.DIALOG_OPEN_ASSOCIATION_FAILED_MESSAGE, new Object[] {
-                  Util.getPathString(clientFile), openFileConfiguration.getErrorMessage() }),
-                getUIString(UIStringKey.DIALOG_OPEN_TITLE),
-                JOptionPane.WARNING_MESSAGE);
-            return;
-          }
-        } else {
-          LOG.severe("File already open on desktop, showing dialog");
-          JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
-              getUIString(UIStringKey.DIALOG_OPEN_ALREADY_MESSAGE, new Object[] {
-                Util.getPathString(clientFile) }),
-              getUIString(UIStringKey.DIALOG_OPEN_TITLE),
-              JOptionPane.INFORMATION_MESSAGE);
+        if (!Util.desktopOpenFile(clientFile)) {
+          LOG.severe("File open by association failed, showing dialog");
+          showMessageDialog(UIStringKey.DIALOG_OPEN_ASSOCIATION_FAILED_MESSAGE,
+              new Object[] { Util.getPathString(clientFile), openFileConfiguration.getErrorMessage() },
+              UIStringKey.DIALOG_OPEN_TITLE, JOptionPane.WARNING_MESSAGE);
+          return;
         }
-        if (openedFile == null) {
-          /* Certain applications, such as Microsoft Excel, will modify a file immediately upon
-          opening it. For the purposes of advising the user about the status of opened files,
-          consider a file to be unmodified if it matches either the originally downloaded file or
-          the file in the state it was a short moment after it was opened (presumably before the
-          user would have had time to change it. */
+        /* Certain applications, such as Microsoft Excel, will modify a file immediately upon
+        opening it, possibly in a new way every time. For the purposes of advising the user about
+        the status of opened files, consider a file to be unmodified if it matches either the
+        originally downloaded file or the file in the state it was a short moment after it was
+        opened in an unmodified state (presumably before the user would have had time to change
+        it.) */
+        final byte hashAfterOpen[];
+        if (modified) {
+          // Once the file is considered modified, don't use hashAfterOpen for matching anymore.
+          hashAfterOpen = new byte[0];
+        } else {
           try {
             Thread.sleep(500);
           } catch (InterruptedException e) {
             throw new StudyCasterException(e);
           }
-          final byte hashAfterOpen[] = Util.computeSHA1(clientFile);
-          openedFiles.put(openFileConfiguration.getClientName(),
-              new OpenedFile(clientFile, downloadedHash, hashAfterOpen));
+          hashAfterOpen = Util.computeSHA1(clientFile);
         }
+        openedFiles.put(openFileConfiguration.getClientName(),
+            new OpenedFile(clientFile, downloadedHash, hashAfterOpen));
       } catch (IOException e) {
         throw new StudyCasterException(e);
       } finally {
@@ -441,7 +457,7 @@ public final class StudyUI {
             openActionHelper(openFileConfiguration);
             SwingUtilities.invokeLater(new Runnable() {
               public void run() {
-                mainFrame.endTask();
+                mainFrame.stopTask();
               }
             });
           } catch (final StudyCasterException e) {

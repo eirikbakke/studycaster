@@ -25,7 +25,7 @@
         Would you like to keep working on the existing file, or download a new one?</html>
       </uistring>
       <uistring key="DIALOG_OPEN_MODIFIED_MESSAGE"><html xmlns="">
-        The file was opened and modified previously:<br/>
+        The file was previously opened and modified:<br/>
         {0}<br/><br/>
         Would you like to keep working on the existing file, or download a new one?</html>
       </uistring>
