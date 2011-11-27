@@ -37,6 +37,11 @@ import no.ebakke.studycaster.util.Util;
   * 1, 2, or 3 pages in the study configuration.
   * A study configuration with or without two action buttons on a single page in the study
     configuration.
+  * Opening an example document that already exists in the temporary folder, either modified or not,
+    and either as the first time for a particular launch or not.
+  * Opening an example document of an association that cannot be resolved.
+  * Opening an example document requiring renaming of a locked already existing file.
+  * Opening an example document that does not already exist in the temporary folder.
 */
 
 // TODO: Rename to StudyCasterUI. Rename threads to reflect change.
@@ -153,6 +158,21 @@ public final class StudyUI {
     backendCloseThread.start();
   }
 
+  private void reportGenericError(Exception e, boolean fatal) {
+    final String TYPE = "Generic error (" + (fatal ? "fatal" : "non-fatal") + ")";
+    if (failsafeCloseThread != null) {
+      LOG.log(Level.SEVERE, TYPE + ", suppressing error dialog due to earlier close action", e);
+    } else {
+      LOG.log(Level.SEVERE, TYPE + ", showing error dialog", e);
+      mainFrame.endTask();
+      JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
+          "There was an unexpected error:\n" + e.getMessage(), "Error",
+          JOptionPane.ERROR_MESSAGE);
+      if (fatal)
+        closeUIandBackend();
+    }
+  }
+
   private void initUI(StudyCasterException storedException) {
     try {
       if (storedException != null)
@@ -189,16 +209,7 @@ public final class StudyUI {
       }
     } catch (StudyCasterException e) {
       // Note: Due to the exception, configuration and serverContext may not be defined.
-      if (failsafeCloseThread != null) {
-        LOG.log(Level.SEVERE, "Fatal error, suppressing dialog due to earlier close action", e);
-      } else {
-        LOG.log(Level.SEVERE, "Fatal error, showing dialog", e);
-        mainFrame.endTask();
-        JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
-            "There was an unexpected error:\n" + e.getMessage(), "Error",
-            JOptionPane.ERROR_MESSAGE);
-        closeUIandBackend();
-      }
+      reportGenericError(e, true);
     }
   }
 
@@ -268,65 +279,138 @@ public final class StudyUI {
   }
 
   private class PrivateUserActionListener implements UserActionListener {
-    private final Map<String,DownloadedFile> downloadedFiles
-        = new LinkedHashMap<String,DownloadedFile>();
+    private final Map<String,OpenedFile> openedFiles
+        = new LinkedHashMap<String,OpenedFile>();
+
+    private File downloadFile(OpenFileConfiguration config, File dir) throws IOException {
+      File ret = File.createTempFile("sc_", ".tmp", dir);
+      try {
+        ServerContextUtil.downloadFile(serverContext, config.getServerName(), ret);
+      } catch (IOException e) {
+        ret.delete();
+        throw e;
+      }
+      return ret;
+    }
+
+    private void openActionHelper(OpenFileConfiguration openFileConfiguration)
+        throws StudyCasterException
+    {
+      File downloadedFile = null;
+      try {
+        final File tempDir    = new File(System.getProperty("java.io.tmpdir"));
+        final File clientFile = new File(tempDir, openFileConfiguration.getClientName());
+        final byte downloadedHash[];
+        final OpenedFile openedFile = openedFiles.get(openFileConfiguration.getClientName());
+        if (openedFile == null) {
+          downloadedFile = downloadFile(openFileConfiguration, tempDir);
+          downloadedHash = Util.computeSHA1(downloadedFile);
+        } else {
+          /* Small optimization: If the file was downloaded before, it might not be necessary to
+          download it again, provided it has not been modified or the user chooses to keep a
+          modified version. */
+          downloadedHash = openedFile.getHash();
+        }
+        final boolean useDownloaded;
+        if (!clientFile.exists()) {
+          useDownloaded = true;
+        } else {
+          if (Arrays.equals(downloadedHash, Util.computeSHA1(clientFile))) {
+            // The existing file is identical to the downloaded one; so use the existing one.
+            useDownloaded = false;
+          } else {
+            // The existing file is different from the downloaded one; ask the user what to do.
+            useDownloaded = Util.checkedSwingInvokeAndWait(new Util.CallableExt<Boolean,RuntimeException>() {
+              public Boolean call() {
+                final String downloadOption = getUIString(UIStringKey.DIALOG_OPEN_NEW_BUTTON);
+                final String existingOption = getUIString(UIStringKey.DIALOG_OPEN_KEEP_BUTTON);
+                int res = JOptionPane.showOptionDialog(mainFrame.getPositionDialog(),
+                    getUIString(
+                      openedFile == null ? UIStringKey.DIALOG_OPEN_EXISTING_MESSAGE
+                                         : UIStringKey.DIALOG_OPEN_MODIFIED_MESSAGE,
+                      new Object[] { Util.getPathString(clientFile) }),
+                    getUIString(UIStringKey.DIALOG_OPEN_TITLE),
+                    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
+                    null, new Object[] {downloadOption, existingOption}, existingOption);
+                return res == JOptionPane.YES_OPTION;
+              }
+            });
+            if (useDownloaded) {
+              // Move the old file out of place without deleting it.
+              String path = clientFile.getPath();
+              int dot = path.lastIndexOf('.');
+              String basename = (dot < 0) ? path : path.substring(0, dot);
+              String extension = (dot < 0) ? "" : path.substring(dot);
+              File newName;
+              int index = 1;
+              do {
+                newName = new File(basename + " (" + index + ")" + extension);
+                index++;
+              } while (newName.exists());
+              if (clientFile.renameTo(newName)) {
+                JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
+                    getUIString(UIStringKey.DIALOG_OPEN_RENAMED_MESSAGE, new Object[] {
+                      Util.getPathString(clientFile), Util.getPathString(newName) }),
+                    getUIString(UIStringKey.DIALOG_OPEN_TITLE),
+                    JOptionPane.INFORMATION_MESSAGE);
+              } else {
+                JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
+                    getUIString(UIStringKey.DIALOG_OPEN_RENAME_FAILED_MESSAGE, new Object[] {
+                      Util.getPathString(clientFile) }),
+                    getUIString(UIStringKey.DIALOG_OPEN_TITLE),
+                    JOptionPane.WARNING_MESSAGE);
+                // Leave it up to the user to try again.
+                return;
+              }
+            }
+          }
+        }
+        if (useDownloaded) {
+          if (downloadedFile == null)
+            downloadedFile = downloadFile(openFileConfiguration, tempDir);
+          /* An error here is unexpected, as any existing file should already have been moved out of
+          the way at this point. */
+          if (!downloadedFile.renameTo(clientFile))
+            throw new IOException("Failed to rename");
+        }
+
+        if (!Util.desktopOpenFile(clientFile)) {
+          JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
+              getUIString(UIStringKey.DIALOG_OPEN_ASSOCIATION_FAILED_MESSAGE, new Object[] {
+                Util.getPathString(clientFile), openFileConfiguration.getErrorMessage() }),
+              getUIString(UIStringKey.DIALOG_OPEN_TITLE),
+              JOptionPane.WARNING_MESSAGE);
+          return;
+        }
+        openedFiles.put(openFileConfiguration.getClientName(),
+            new OpenedFile(clientFile, downloadedHash));
+      } catch (IOException e) {
+        throw new StudyCasterException(e);
+      } finally {
+        // This file won't exist in all cases, even if downloadedFile != null; that's OK.
+        if (downloadedFile != null)
+          downloadedFile.delete();
+      }
+    }
 
     public void openAction(final OpenFileConfiguration openFileConfiguration) {
       mainFrame.startTask(getUIString(UIStringKey.PROGRESS_OPEN), true);
       new Thread(new Runnable() {
         public void run() {
           try {
-            final File tempDir    = new File(System.getProperty("java.io.tmpdir"));
-            final File tempFile   = File.createTempFile("sc_", ".tmp", tempDir);
-            final File clientFile = new File(tempDir, openFileConfiguration.getClientName());
-            try {
-              // TODO: Optimize away in one case.
-              ServerContextUtil.downloadFile(serverContext, openFileConfiguration.getServerName(), tempFile);
-              final byte downloadedHash[] = Util.computeSHA1(tempFile);
-              if (clientFile.exists()) {
-                final byte localHash[] = Util.computeSHA1(clientFile);
-                if (!Arrays.equals(downloadedHash, localHash)) {
-                  boolean useDownloaded = Util.checkedSwingInvokeAndWait(new Util.CallableExt<Boolean,RuntimeException>() {
-                    public Boolean call() {
-                      final String downloadOption = getUIString(UIStringKey.DIALOG_OPEN_NEW_BUTTON);
-                      final String existingOption = getUIString(UIStringKey.DIALOG_OPEN_KEEP_BUTTON);
-                      int res = JOptionPane.showOptionDialog(mainFrame.getPositionDialog(),
-                          getUIString(UIStringKey.DIALOG_OPEN_EXISTING_MESSAGE,
-                            new Object[] { Util.getPathString(clientFile) }),
-                          getUIString(UIStringKey.DIALOG_OPEN_TITLE),
-                          JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
-                          null, new Object[] {downloadOption, existingOption}, existingOption);
-                      return res == JOptionPane.YES_OPTION;
-                    }
-                  });
-                }
-              } else {
-                if (!tempFile.renameTo(clientFile)) {
-                  System.err.println("Implement error handling (rename failed).");
-                }
+            openActionHelper(openFileConfiguration);
+            SwingUtilities.invokeLater(new Runnable() {
+              public void run() {
+                mainFrame.endTask();
               }
-              downloadedFiles.put(openFileConfiguration.getClientName(),
-                  new DownloadedFile(clientFile, downloadedHash));
-            } finally {
-              // OK for file to not exist in some cases.
-              tempFile.delete();
-            }
-            if (!Util.desktopOpenFile(clientFile)) {
-              // TODO: Do something.
-              System.err.println("Implement error handling (desktop open).");
-            }
-          } catch (IOException e) {
-            // TODO: Show dialog here.
-            e.printStackTrace();
-          } catch (StudyCasterException e) {
-            // TODO: Show dialog here.
-            e.printStackTrace();
+            });
+          } catch (final StudyCasterException e) {
+            SwingUtilities.invokeLater(new Runnable() {
+              public void run() {
+                reportGenericError(e, false);
+              }
+            });
           }
-          SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-              mainFrame.endTask();
-            }
-          });
         }
       }).start();
     }
@@ -335,11 +419,11 @@ public final class StudyUI {
 
     }
 
-    private class DownloadedFile {
+    private class OpenedFile {
       private File   path;
       private byte[] hashCode;
 
-      DownloadedFile(File path, byte[] hashCode) throws IOException {
+      OpenedFile(File path, byte[] hashCode) throws IOException {
         this.path     = path;
         this.hashCode = hashCode;
       }

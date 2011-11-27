@@ -24,10 +24,24 @@
                        Would you like to keep working on the existing file, or download a new one?</html>
       </uistring>
       <uistring key="DIALOG_OPEN_MODIFIED_MESSAGE">
-        <html xmlns="">The file<br/>
+        <html xmlns="">The file was opened previously:<br/>
                        {0}<br/><br/>
-                       was opened previously. Would you like to keep working on the existing file,
+                       Would you like to keep working on the existing file,
                        or download a new one?</html>
+      </uistring>
+      <uistring key="DIALOG_OPEN_RENAMED_MESSAGE">
+        <html xmlns="">The old file<br/>
+                       {0}<br/>
+                       was renamed to<br/>
+                       {1}</html>
+      </uistring>
+      <uistring key="DIALOG_OPEN_RENAME_FAILED_MESSAGE">
+        <html xmlns="">Failed to rename the file<br/>{0}<br/><br/>
+                       If the file is still open, please close it and try again.</html>
+      </uistring>
+      <uistring key="DIALOG_OPEN_ASSOCIATION_FAILED_MESSAGE">
+        <html xmlns="">Failed to open the file<br/>{0}<br/><br/>
+                       {1}</html>
       </uistring>
       <uistring key="DIALOG_OPEN_NEW_BUTTON">Download New File</uistring>
       <uistring key="DIALOG_OPEN_KEEP_BUTTON">Keep Existing File</uistring>
@@ -135,14 +149,12 @@
       <instructions>
         <html xmlns="">
           This is the second page. It has an open file button.<br/><br/>
-
-
         </html>
       </instructions>
       <openfile> <!-- Optional -->
-        <servername>currencies.xls</servername>
-        <clientname>userstudyHIT_currencies.xls</clientname>
-        <errormessage><macro id="openfile-error-excel"/></errormessage>
+        <servername>testfile.txt</servername>
+        <clientname>studycaster_testfile.txt</clientname>
+        <errormessage>Do you have a program that can open text files installed?</errormessage>
       </openfile>
     </page>
 
