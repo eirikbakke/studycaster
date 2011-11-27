@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <study xmlns="namespace://ebakke.no/studycaster-configuration">
+  <!-- TODO: Document this configuration file format. -->
   <macrodef id="uistrings-english">
     <uistrings>
       <uistring key="DIALOG_ALREADY_RUNNING_TITLE">Already Running</uistring>
@@ -18,30 +19,40 @@
       <uistring key="PROGRESS_OPEN">Opening file...</uistring>
 
       <uistring key="DIALOG_OPEN_TITLE">Open Sample Document</uistring>
-      <uistring key="DIALOG_OPEN_EXISTING_MESSAGE">
-        <html xmlns="">The StudyCaster client found a file from an old session:<br/>
-                       {0}<br/><br/>
-                       Would you like to keep working on the existing file, or download a new one?</html>
+      <uistring key="DIALOG_OPEN_EXISTING_MESSAGE"><html xmlns="">
+        The StudyCaster client found a modified file from an old session:<br/>
+        {0}<br/><br/>
+        Would you like to keep working on the existing file, or download a new one?</html>
       </uistring>
-      <uistring key="DIALOG_OPEN_MODIFIED_MESSAGE">
-        <html xmlns="">The file was opened previously:<br/>
-                       {0}<br/><br/>
-                       Would you like to keep working on the existing file,
-                       or download a new one?</html>
+      <uistring key="DIALOG_OPEN_MODIFIED_MESSAGE"><html xmlns="">
+        The file was opened and modified previously:<br/>
+        {0}<br/><br/>
+        Would you like to keep working on the existing file, or download a new one?</html>
       </uistring>
-      <uistring key="DIALOG_OPEN_RENAMED_MESSAGE">
-        <html xmlns="">The old file<br/>
-                       {0}<br/>
-                       was renamed to<br/>
-                       {1}</html>
+      <uistring key="DIALOG_OPEN_RENAMED_MESSAGE"><html xmlns="">
+        The old file<br/>
+        {0}<br/>
+        was renamed to<br/>
+        {1}</html>
       </uistring>
-      <uistring key="DIALOG_OPEN_RENAME_FAILED_MESSAGE">
-        <html xmlns="">Failed to rename the file<br/>{0}<br/><br/>
-                       If the file is still open, please close it and try again.</html>
+      <uistring key="DIALOG_OPEN_RENAME_FAILED_MESSAGE"><html xmlns="">
+        Failed to rename the file<br/>
+        {0}<br/><br/>
+        If the file is still open, please close it and try again.</html>
       </uistring>
-      <uistring key="DIALOG_OPEN_ASSOCIATION_FAILED_MESSAGE">
-        <html xmlns="">Failed to open the file<br/>{0}<br/><br/>
-                       {1}</html>
+      <!-- The message below is shown on a best-effort basis, currently never on JRE 1.5. The second
+      message parameter is a string from the <errormessage> element in the <openfile> configuration.
+      -->
+      <uistring key="DIALOG_OPEN_ASSOCIATION_FAILED_MESSAGE"><html xmlns="">
+        Failed to open the file<br/>{0}<br/><br/>
+        {1}</html>
+      </uistring>
+      <!-- The message below is shown on a best-effort basis; it is not always possible to detect
+      whether a file is already opened in a different program. -->
+      <uistring key="DIALOG_OPEN_ALREADY_MESSAGE"><html xmlns="">
+        The file appears to already be open:<br/>
+        {0}<br/><br/>
+        The file should have opened in a new window, possibly in the background.</html>
       </uistring>
       <uistring key="DIALOG_OPEN_NEW_BUTTON">Download New File</uistring>
       <uistring key="DIALOG_OPEN_KEEP_BUTTON">Keep Existing File</uistring>
@@ -132,7 +143,7 @@
   </macrodef>
   <macrodef id="upload-unchanged">
     <html xmlns="">Please edit, save, and close the file, then try again.<br/><br/>
-                   (The file should have opened in a new window, possibly in the background.)</html>
+                   The file should have opened in a new window, possibly in the background.</html>
   </macrodef>
 
   <configuration id="default" name="Recruiting">
@@ -152,8 +163,8 @@
         </html>
       </instructions>
       <openfile> <!-- Optional -->
-        <servername>testfile.txt</servername>
-        <clientname>studycaster_testfile.txt</clientname>
+        <servername>testfile.pdf</servername>
+        <clientname>studycaster_testfile.pdf</clientname>
         <errormessage>Do you have a program that can open text files installed?</errormessage>
       </openfile>
     </page>

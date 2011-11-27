@@ -5,7 +5,6 @@ import java.util.EnumMap;
 import java.util.Map;
 import no.ebakke.studycaster.api.StudyCasterException;
 import org.w3c.dom.Element;
-import sun.misc.UCDecoder;
 
 public class UIStrings {
   private final Map<UIStringKey,String>    strings;

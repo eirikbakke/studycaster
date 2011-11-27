@@ -24,7 +24,7 @@ import no.ebakke.studycaster.nouveau.MainFrame.UserActionListener;
 import no.ebakke.studycaster.util.Util;
 
 /*
-  Test cases for this class:
+  Manual test cases for this class:
   * Multiple application launches before and after configuration is loaded.
   * Close window before or after configuration is loaded, including right before the configuration
     is loaded such that the closing confirmation dialog still appears.
@@ -38,10 +38,19 @@ import no.ebakke.studycaster.util.Util;
   * A study configuration with or without two action buttons on a single page in the study
     configuration.
   * Opening an example document that already exists in the temporary folder, either modified or not,
-    and either as the first time for a particular launch or not.
+    and either as the first time for a particular launch or not. When a file already exists in
+    modified form, different messages should appear depending on whether it is the first time that
+    file has been opened during the current launch or not.
   * Opening an example document of an association that cannot be resolved.
   * Opening an example document requiring renaming of a locked already existing file.
   * Opening an example document that does not already exist in the temporary folder.
+  * Opening an example document while it's already opened exclusively (e.g. by Excel or Acrobat
+    Reader).
+  * Opening an example Excel spreadsheet, and correctly determining whether it has been modified by
+    the user or not. (Excel will modify files upon opening them even before the user has done
+    anything.)
+  * Unexpected error while opening an example document (e.g. file is deleted during rename succeeded
+    dialog).
 */
 
 // TODO: Rename to StudyCasterUI. Rename threads to reflect change.
@@ -298,6 +307,7 @@ public final class StudyUI {
     {
       File downloadedFile = null;
       try {
+        LOG.log(Level.INFO, "Open action for file {0}", openFileConfiguration.getClientName());
         final File tempDir    = new File(System.getProperty("java.io.tmpdir"));
         final File clientFile = new File(tempDir, openFileConfiguration.getClientName());
         final byte downloadedHash[];
@@ -306,19 +316,25 @@ public final class StudyUI {
           downloadedFile = downloadFile(openFileConfiguration, tempDir);
           downloadedHash = Util.computeSHA1(downloadedFile);
         } else {
+          LOG.info("File was previously opened");
           /* Small optimization: If the file was downloaded before, it might not be necessary to
           download it again, provided it has not been modified or the user chooses to keep a
           modified version. */
-          downloadedHash = openedFile.getHash();
+          downloadedHash = openedFile.getHashBeforeOpen();
         }
         final boolean useDownloaded;
         if (!clientFile.exists()) {
           useDownloaded = true;
         } else {
-          if (Arrays.equals(downloadedHash, Util.computeSHA1(clientFile))) {
+          final byte existingHash[] = Util.computeSHA1(clientFile);
+          if (Arrays.equals(existingHash, downloadedHash) ||
+              (openedFile != null && Arrays.equals(existingHash, openedFile.getHashAfterOpen())))
+          {
+            LOG.info("File already exists in identical form");
             // The existing file is identical to the downloaded one; so use the existing one.
             useDownloaded = false;
           } else {
+            LOG.info("File already exists in modified form, showing option dialog");
             // The existing file is different from the downloaded one; ask the user what to do.
             useDownloaded = Util.checkedSwingInvokeAndWait(new Util.CallableExt<Boolean,RuntimeException>() {
               public Boolean call() {
@@ -348,12 +364,14 @@ public final class StudyUI {
                 index++;
               } while (newName.exists());
               if (clientFile.renameTo(newName)) {
+                LOG.info("User chose to move existing file; succeeded, showing dialog");
                 JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
                     getUIString(UIStringKey.DIALOG_OPEN_RENAMED_MESSAGE, new Object[] {
                       Util.getPathString(clientFile), Util.getPathString(newName) }),
                     getUIString(UIStringKey.DIALOG_OPEN_TITLE),
                     JOptionPane.INFORMATION_MESSAGE);
               } else {
+                LOG.info("User chose to move existing file; failed, showing dialog");
                 JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
                     getUIString(UIStringKey.DIALOG_OPEN_RENAME_FAILED_MESSAGE, new Object[] {
                       Util.getPathString(clientFile) }),
@@ -373,17 +391,39 @@ public final class StudyUI {
           if (!downloadedFile.renameTo(clientFile))
             throw new IOException("Failed to rename");
         }
-
-        if (!Util.desktopOpenFile(clientFile)) {
+        if (Util.fileAvailableExclusive(clientFile)) {
+          if (!Util.desktopOpenFile(clientFile)) {
+            LOG.severe("File open by association failed, showing dialog");
+            JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
+                getUIString(UIStringKey.DIALOG_OPEN_ASSOCIATION_FAILED_MESSAGE, new Object[] {
+                  Util.getPathString(clientFile), openFileConfiguration.getErrorMessage() }),
+                getUIString(UIStringKey.DIALOG_OPEN_TITLE),
+                JOptionPane.WARNING_MESSAGE);
+            return;
+          }
+        } else {
+          LOG.severe("File already open on desktop, showing dialog");
           JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
-              getUIString(UIStringKey.DIALOG_OPEN_ASSOCIATION_FAILED_MESSAGE, new Object[] {
-                Util.getPathString(clientFile), openFileConfiguration.getErrorMessage() }),
+              getUIString(UIStringKey.DIALOG_OPEN_ALREADY_MESSAGE, new Object[] {
+                Util.getPathString(clientFile) }),
               getUIString(UIStringKey.DIALOG_OPEN_TITLE),
-              JOptionPane.WARNING_MESSAGE);
-          return;
+              JOptionPane.INFORMATION_MESSAGE);
         }
-        openedFiles.put(openFileConfiguration.getClientName(),
-            new OpenedFile(clientFile, downloadedHash));
+        if (openedFile == null) {
+          /* Certain applications, such as Microsoft Excel, will modify a file immediately upon
+          opening it. For the purposes of advising the user about the status of opened files,
+          consider a file to be unmodified if it matches either the originally downloaded file or
+          the file in the state it was a short moment after it was opened (presumably before the
+          user would have had time to change it. */
+          try {
+            Thread.sleep(500);
+          } catch (InterruptedException e) {
+            throw new StudyCasterException(e);
+          }
+          final byte hashAfterOpen[] = Util.computeSHA1(clientFile);
+          openedFiles.put(openFileConfiguration.getClientName(),
+              new OpenedFile(clientFile, downloadedHash, hashAfterOpen));
+        }
       } catch (IOException e) {
         throw new StudyCasterException(e);
       } finally {
@@ -421,18 +461,23 @@ public final class StudyUI {
 
     private class OpenedFile {
       private File   path;
-      private byte[] hashCode;
+      private byte[] hashBeforeOpen, hashAfterOpen;
 
-      OpenedFile(File path, byte[] hashCode) throws IOException {
-        this.path     = path;
-        this.hashCode = hashCode;
+      OpenedFile(File path, byte[] hashBeforeOpen, byte[] hashAfterOpen) {
+        this.path = path;
+        this.hashBeforeOpen = Util.copyOfRange(hashBeforeOpen, 0, hashBeforeOpen.length);
+        this.hashAfterOpen  = Util.copyOfRange(hashAfterOpen , 0, hashAfterOpen.length);
       }
 
-      byte[] getHash() {
-        return Util.copyOfRange(hashCode, 0, hashCode.length);
+      byte[] getHashBeforeOpen() {
+        return Util.copyOfRange(hashBeforeOpen, 0, hashBeforeOpen.length);
       }
 
-      public File getPath() {
+      byte[] getHashAfterOpen() {
+        return Util.copyOfRange(hashAfterOpen, 0, hashAfterOpen.length);
+      }
+
+      File getPath() {
         return path;
       }
     }

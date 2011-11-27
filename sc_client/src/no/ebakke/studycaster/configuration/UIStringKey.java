@@ -16,6 +16,7 @@ public enum UIStringKey {
   DIALOG_OPEN_RENAMED_MESSAGE(false, true, true),
   DIALOG_OPEN_RENAME_FAILED_MESSAGE(false, true, true),
   DIALOG_OPEN_ASSOCIATION_FAILED_MESSAGE(false, true, true),
+  DIALOG_OPEN_ALREADY_MESSAGE(false, true, true),
   DIALOG_OPEN_NEW_BUTTON(false, true, false),
   DIALOG_OPEN_KEEP_BUTTON(false, true, false);
 
