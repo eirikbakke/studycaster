@@ -32,7 +32,7 @@ public class CaptureDecoder {
   private long currentMetaTime = -1, currentFrameTime = 0, firstMetaTime = -1;
   private long nextCaptureTime = -1, lastBeforeCaptureTime = -1;
   private boolean firstFrameRead = false;
-  private int frameNo = 0;
+  private boolean statFrameChanged, statFrameIndicator, statMetaIndicator;
 
   public CaptureDecoder(InputStream is) throws IOException {
     dis = new DataInputStream(new BufferedInputStream(new GZIPInputStream(is), 4* 1024 * 1024));
@@ -128,6 +128,16 @@ public class CaptureDecoder {
     }
   }
 
+  /** The decoder overlays a blinking visual indication of when new frames and metastamps are
+  encountered. For this to work properly, the method below must be called after each call to
+  nextFrame(), except in the case of frames that are discarded by the client. */
+  public void blinkIndicators() {
+    // Provide a visual indication of when new frames and metastamps are encountered.
+    statMetaIndicator  = !statMetaIndicator;
+    statFrameIndicator = statFrameChanged ? !statFrameIndicator : statFrameIndicator;
+    statFrameChanged = false;
+  }
+
   public boolean nextFrame(BufferedImage output) throws IOException {
     MetaStamp ms;
     while (true) {
@@ -139,6 +149,7 @@ public class CaptureDecoder {
           readFrame();
           atFrame = false;
           firstFrameRead = true;
+          statFrameChanged = true;
           continue;
         } else {
           reachedEOF = !readUntilFrame();
@@ -160,9 +171,10 @@ public class CaptureDecoder {
           overlay.drawPointer(g, p.x, p.y);
         }
         final String formattedTimestamp =
-            String.format("%6d / ", frameNo) +
+            (statFrameIndicator ? "F" : " ") +
+            (statMetaIndicator  ? "M" : " ") + " / " +
             ServerTimeLogFormatter.getServerDateFormat().format(new Date(currentMetaTime)) +
-            String.format(" / %6d", (currentMetaTime - firstMetaTime) / 1000L);
+            String.format(" / %6ds", (currentMetaTime - firstMetaTime) / 1000L);
         overlay.drawStatus(g, formattedTimestamp);
         g.dispose();
         return true;
@@ -205,7 +217,6 @@ public class CaptureDecoder {
       throw new AssertionError(
           "Invalid run length should have been caught by earlier consistency check");
     }
-    frameNo++;
     g.dispose();
   }
 }

@@ -71,6 +71,7 @@ public final class RecordingConverter {
           continue;
         } else {
           System.err.print(".");
+          dec.blinkIndicators();
         }
 
         final IPacket packet = IPacket.make();
