@@ -174,7 +174,7 @@ public class CaptureDecoder {
             (statFrameIndicator ? "F" : " ") +
             (statMetaIndicator  ? "M" : " ") + " / " +
             ServerTimeLogFormatter.getServerDateFormat().format(new Date(currentMetaTime)) +
-            String.format(" / %6ds", (currentMetaTime - firstMetaTime) / 1000L);
+            String.format(" / %6.1fs", (currentMetaTime - firstMetaTime) / 1000.0);
         overlay.drawStatus(g, formattedTimestamp);
         g.dispose();
         return true;

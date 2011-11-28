@@ -53,7 +53,7 @@
       <!-- The message below is shown on a best-effort basis; it is not always possible to detect
       whether a file is already opened in a different program. -->
       <uistring key="DIALOG_OPEN_FILE_ALREADY_MESSAGE"><html xmlns="">
-        The file appears to already be open:<br/>
+        The file already appears to be open:<br/>
         {0}<br/><br/>
         The file should have opened in a new window, possibly in the background.</html>
       </uistring>

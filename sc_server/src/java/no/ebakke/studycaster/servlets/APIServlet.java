@@ -42,8 +42,7 @@ public class APIServlet extends HttpServlet {
     resp.setCharacterEncoding("UTF-8");
 
     Map<String,FileItem[]> multiPart = null;
-    String cmd = null, logEntry = null, clientCookie = null,
-        launchTicket = null;
+    String cmd = null, logEntry = null, clientCookie = null, launchTicket = null;
     Long wroteContent = null;
 
     File storageDir = LifeCycle.getBackend(req).getStorageDirectory();

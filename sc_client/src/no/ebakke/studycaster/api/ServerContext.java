@@ -20,7 +20,6 @@ import no.ebakke.studycaster.util.Util;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.MultipartEntity;
@@ -36,6 +35,7 @@ import org.apache.http.util.EntityUtils;
 Thread-safe. */
 public class ServerContext {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
+  private static final double SIMULATE_LATENCY_MILLIS = 0.0;
   private static final String SERVERURI_PROP_NAME = "studycaster.server.uri";
   private static final int    DEF_UPLOAD_CHUNK_SZ = 64 * 1024;
   // TODO: Rename this (legacy from earlier experiments).
@@ -62,11 +62,21 @@ public class ServerContext {
   private long getServerTimeMillis() throws StudyCasterException {
     HttpResponse response;
     try {
-      response = requestHelper(httpClient, "tim", null, null);
-      Header headerSTM = response.getFirstHeader("X-StudyCaster-ServerTime");
-      if (headerSTM == null)
-        throw new StudyCasterException("Missing server time response header");
-      return Long.parseLong(headerSTM.getValue());
+      if (SIMULATE_LATENCY_MILLIS > 0.0)
+        Thread.sleep((int) (Math.random() * SIMULATE_LATENCY_MILLIS / 2.0));
+      response = requestHelper("tim", null, null);
+      if (SIMULATE_LATENCY_MILLIS > 0.0)
+        Thread.sleep((int) (Math.random() * SIMULATE_LATENCY_MILLIS / 2.0));
+      try {
+        Header headerSTM = response.getFirstHeader("X-StudyCaster-ServerTime");
+        if (headerSTM == null)
+          throw new StudyCasterException("Missing server time response header");
+        return Long.parseLong(headerSTM.getValue());
+      } finally {
+        EntityUtils.consume(response.getEntity());
+      }
+    } catch (InterruptedException e) {
+      throw new StudyCasterException("Interrupted during latency simulation", e);
     } catch (NumberFormatException e) {
       throw new StudyCasterException("Got bad time format from server", e);
     } catch (IOException e) {
@@ -75,11 +85,35 @@ public class ServerContext {
   }
 
   private long measureServerMillisAhead() throws StudyCasterException {
-    long timeBef, timeAft;
-    timeBef = System.currentTimeMillis();
-    long serverTime = getServerTimeMillis();
-    timeAft = System.currentTimeMillis();
-    return serverTime - (timeBef / 2 + timeAft / 2);
+    final int MAX_ATTEMPTS = 15;
+    // See http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods .
+    // Running average, sum of squares, last number of samples, and last standard deviation.
+    double A = 0, Q = 0, N = 0, stdev = Double.POSITIVE_INFINITY;
+    for (int i = 1, attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+      // A single measurement.
+      final double x;
+      {
+        final long nanosBefore = System.nanoTime();
+        final long serverTime = getServerTimeMillis();
+        final long nanosAfter  = System.nanoTime();
+        final double requestLength = (nanosAfter - nanosBefore) / 1000000.0;
+        if (requestLength > 1000.0 && !(N == 0 && attempt == MAX_ATTEMPTS - 1))
+          continue;
+        final double adjustedLocalTime = System.currentTimeMillis() - requestLength / 2.0;
+        x = serverTime - adjustedLocalTime;
+      }
+      Q = Q + ((i - 1.0) / i) * (x - A) * (x - A);
+      A = A + (x - A) / i;
+      N = i;
+      i++;
+      stdev = (N == 1) ? Double.POSITIVE_INFINITY : Math.sqrt(Q / (N - 1.0));
+      if (N >= 5 && stdev < 50.0)
+        break;
+    }
+    LOG.log(Level.INFO,
+        "Measured server time ahead by {0,number,#}+/-{1,number,#}ms with {2} samples",
+        new Object[]{ A, stdev, N});
+    return Math.round(A);
   }
 
   public ServerContext(String serverScriptURIs) throws StudyCasterException {
@@ -91,8 +125,7 @@ public class ServerContext {
     }
 
     // Read ticket store.
-    File ticketStore = new File(System.getProperty("java.io.tmpdir") +
-        File.separator + TICKET_STORE_FILENAME);
+    File ticketStore = new File(System.getProperty("java.io.tmpdir"), TICKET_STORE_FILENAME);
     boolean writeTicketStore = true;
     String clientCookie = null;
     try {
@@ -133,11 +166,13 @@ public class ServerContext {
         }
       });
 
-      HttpResponse response = requestHelper(httpClient, "gsi", null,
-          clientCookie == null ? "" : clientCookie);
-      headerLAT = response.getFirstHeader("X-StudyCaster-LaunchTicket");
-      headerCIE = response.getFirstHeader("X-StudyCaster-ClientCookie");
-      EntityUtils.consume(response.getEntity());
+      HttpResponse response = requestHelper("gsi", null, clientCookie == null ? "" : clientCookie);
+      try {
+        headerLAT = response.getFirstHeader("X-StudyCaster-LaunchTicket");
+        headerCIE = response.getFirstHeader("X-StudyCaster-ClientCookie");
+      } finally {
+        EntityUtils.consume(response.getEntity());
+      }
       if (headerLAT == null || headerCIE == null)
         throw new StudyCasterException("Missing initialization headers.");
       if (clientCookie != null && !clientCookie.equals(headerCIE.getValue()))
@@ -183,14 +218,14 @@ public class ServerContext {
     return ret.toString();
   }
 
+  /** Callers must always remember to consume the response, or future requests may hang. */
   @SuppressWarnings("SleepWhileInLoop")
-  private HttpResponse requestHelper(HttpClient httpClient, String cmd,
-      ContentBody content, String arg) throws IOException
+  private HttpResponse requestHelper(String cmd, ContentBody content, String arg) throws IOException
   {
     HttpResponse ret = null;
     do {
       try {
-        ret = requestHelperSingle(httpClient, cmd, content, arg);
+        ret = requestHelperSingle(cmd, content, arg);
       } catch (IOException e) {
         LOG.log(Level.WARNING, "Failed request beyond HttpClient", e);
         if (e instanceof NonRetriableException)
@@ -208,8 +243,8 @@ public class ServerContext {
     return ret;
   }
 
-  private HttpResponse requestHelperSingle(HttpClient httpClient, String cmd,
-      ContentBody content, String arg) throws IOException
+  private HttpResponse requestHelperSingle(String cmd, ContentBody content, String arg)
+      throws IOException
   {
     HttpPost httpPost = new HttpPost(serverScriptURI);
     MultipartEntity params = new MultipartEntity();
@@ -256,8 +291,7 @@ public class ServerContext {
 
   public OutputStream uploadFile(final String remoteName) throws IOException {
     Util.checkClosed(closed);
-    EntityUtils.consume(requestHelper(httpClient, "upc",
-        new StringBody(remoteName), null).getEntity());
+    EntityUtils.consume(requestHelper("upc", new StringBody(remoteName), null).getEntity());
 
     return new BufferedOutputStream(new OutputStream() {
       private final AtomicBoolean closed  = new AtomicBoolean(false);
@@ -279,8 +313,7 @@ public class ServerContext {
           /* Use a ByteArrayBody rather than an InputStreamBody in case the
           request needs to be repeated. */
           ByteArrayBody bab = new ByteArrayBody(chunk, remoteName);
-          EntityUtils.consume(requestHelper(httpClient, "upa", bab,
-              Long.toString(written.get())).getEntity());
+          EntityUtils.consume(requestHelper("upa", bab, Long.toString(written.get())).getEntity());
           subOff += subLen;
           written.addAndGet(subLen);
         }
@@ -294,7 +327,7 @@ public class ServerContext {
   }
 
   public InputStream downloadFile(String remoteName) throws IOException {
-    final InputStream ret = requestHelper(httpClient, "dnl",
+    final InputStream ret = requestHelper("dnl",
         new StringBody(remoteName), null).getEntity().getContent();
     return new InputStream() {
       private final AtomicBoolean closed = new AtomicBoolean(false);
