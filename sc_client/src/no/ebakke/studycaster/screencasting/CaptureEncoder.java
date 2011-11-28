@@ -26,7 +26,7 @@ public class CaptureEncoder {
   private final Robot robot;
   private final CodecState state;
   // Used in the unsynchronized addMeta(), so must be declared volatile.
-  private volatile long serverSecondsAhead;
+  private volatile long serverMillisAhead;
   private ScreenCensor censor;
 
   public CaptureEncoder(OutputStream out, Rectangle screenRect) throws IOException, AWTException {
@@ -44,13 +44,13 @@ public class CaptureEncoder {
     this.censor = censor;
   }
 
-  public synchronized void setServerSecondsAhead(long serverSecondsAhead) {
-    this.serverSecondsAhead = serverSecondsAhead;
+  public synchronized void setServerMillisAhead(long serverMillisAhead) {
+    this.serverMillisAhead = serverMillisAhead;
   }
 
   /** No external synchronization is needed to invoke this method. */
   private void addMeta(FrameType type) {
-    long time = System.currentTimeMillis() + serverSecondsAhead * 1000L;
+    long time = System.currentTimeMillis() + serverMillisAhead;
     PointerInfo pi = MouseInfo.getPointerInfo();
     Point mouseLoc = (pi == null) ? null : pi.getLocation();
     state.addMetaStamp(new MetaStamp(time, mouseLoc, type));

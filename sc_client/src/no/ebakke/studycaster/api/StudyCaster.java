@@ -66,7 +66,7 @@ public class StudyCaster {
       throw e;
     }
     Runtime.getRuntime().addShutdownHook(shutdownHook);
-    logFormatter.setServerSecondsAhead(serverContext.getServerSecondsAhead());
+    logFormatter.setServerMillisAhead(serverContext.getServerMillisAhead());
     try {
       consoleStream.connect(serverContext.uploadFile("console.txt"));
     } catch (IOException e) {
@@ -92,7 +92,7 @@ public class StudyCaster {
     });
     try {
       recordingStream.connect(serverContext.uploadFile("screencast.ebc"));
-      recorder = new ScreenRecorder(recordingStream, serverContext.getServerSecondsAhead(),
+      recorder = new ScreenRecorder(recordingStream, serverContext.getServerMillisAhead(),
           ScreenRecorderConfiguration.DEFAULT);
     } catch (IOException e) {
       LOG.log(Level.WARNING, "Failed to initialize screen recorder", e);

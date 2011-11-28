@@ -251,7 +251,7 @@ public final class StudyUI {
         StudyCasterException exception = null;
         try {
           serverContextT = new ServerContext();
-          hooks.getLogFormatter().setServerSecondsAhead(serverContextT.getServerSecondsAhead());
+          hooks.getLogFormatter().setServerMillisAhead(serverContextT.getServerMillisAhead());
           try {
             hooks.getConsoleStream().connect(serverContextT.uploadFile("console.txt"));
             final String configurationID = System.getProperty(CONFIGID_PROP_NAME);

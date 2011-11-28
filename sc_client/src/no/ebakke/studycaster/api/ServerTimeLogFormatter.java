@@ -13,7 +13,7 @@ import java.util.logging.LogRecord;
 uses MessageFormat for formatting, regardless of whether the log record includes a parameter or any
 parameter references in the message string. */
 public class ServerTimeLogFormatter extends Formatter {
-  private volatile Long serverSecondsAhead;
+  private volatile Long serverMillisAhead;
   /* SimpleDateFormat is not thread-safe. The following is the standard way of dealing with it.
   See http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4264153 . */
   private static final ThreadLocal<DateFormat> SERVER_DATE_FORMAT =
@@ -40,8 +40,8 @@ public class ServerTimeLogFormatter extends Formatter {
     return SERVER_DATE_FORMAT.get();
   }
 
-  public void setServerSecondsAhead(long serverSecondsAhead) {
-    this.serverSecondsAhead = serverSecondsAhead;
+  public void setServerMillisAhead(long serverMillisAhead) {
+    this.serverMillisAhead = serverMillisAhead;
   }
 
   private static void formatThrowable(StringBuffer buf, Throwable e) {
@@ -59,10 +59,9 @@ public class ServerTimeLogFormatter extends Formatter {
     StringBuffer ret = new StringBuffer();
     ret.append(CLIENT_DATE_FORMAT.get().format(new Date(r.getMillis())));
     ret.append(" (client)");
-    if (serverSecondsAhead != null) {
+    if (serverMillisAhead != null) {
       ret.append(" / ");
-      ret.append(SERVER_DATE_FORMAT.get().format(
-          new Date(r.getMillis() + serverSecondsAhead * 1000L)));
+      ret.append(SERVER_DATE_FORMAT.get().format(new Date(r.getMillis() + serverMillisAhead)));
       ret.append(" (server)");
     }
     ret.append(" ");

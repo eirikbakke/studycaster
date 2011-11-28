@@ -42,7 +42,7 @@ public class ServerContext {
   private static final String TICKET_STORE_FILENAME = "sc_7403204709139484951.tmp";
   private final URI    serverScriptURI;
   private final String launchTicket;
-  private final long   serverSecondsAhead;
+  private final long   serverMillisAhead;
   /* Keep the HttpClient in common for all requests, as is standard for this interface. This would
   also preserve any session cookies involved, though the API currently does not use any. */
   private final DefaultHttpClient httpClient;
@@ -59,25 +59,27 @@ public class ServerContext {
     this(getServerScriptURIfromProperty());
   }
 
-  private long measureServerSecondsAhead() throws StudyCasterException {
+  private long getServerTimeMillis() throws StudyCasterException {
     HttpResponse response;
-    long timeBef, timeAft;
-    timeBef = System.currentTimeMillis();
     try {
       response = requestHelper(httpClient, "tim", null, null);
+      Header headerSTM = response.getFirstHeader("X-StudyCaster-ServerTime");
+      if (headerSTM == null)
+        throw new StudyCasterException("Missing server time response header");
+      return Long.parseLong(headerSTM.getValue());
+    } catch (NumberFormatException e) {
+      throw new StudyCasterException("Got bad time format from server", e);
     } catch (IOException e) {
       throw new StudyCasterException("Failed to retrieve server time", e);
     }
+  }
+
+  private long measureServerMillisAhead() throws StudyCasterException {
+    long timeBef, timeAft;
+    timeBef = System.currentTimeMillis();
+    long serverTime = getServerTimeMillis();
     timeAft = System.currentTimeMillis();
-    Header headerSTM = response.getFirstHeader("X-StudyCaster-ServerTime");
-    if (headerSTM == null)
-      throw new StudyCasterException("Missing server time response header");
-    try {
-      // TODO: Do this only for a single successful request.
-      return (Long.parseLong(headerSTM.getValue()) - (timeBef / 2 + timeAft / 2)) / 1000L;
-    } catch (NumberFormatException e) {
-      throw new StudyCasterException("Got bad time format from server", e);
-    }
+    return serverTime - (timeBef / 2 + timeAft / 2);
   }
 
   public ServerContext(String serverScriptURIs) throws StudyCasterException {
@@ -162,8 +164,9 @@ public class ServerContext {
         LOG.log(Level.WARNING, "Problem writing ticket file.", e);
       }
     }
-    serverSecondsAhead = measureServerSecondsAhead();
-    LOG.log(Level.INFO, "Server time ahead by {0} seconds.", getServerSecondsAhead());
+    serverMillisAhead = measureServerMillisAhead();
+    LOG.log(Level.INFO, "Server time ahead by {0,number,0.000} seconds.",
+        getServerMillisAhead() / 1000.0);
     Util.logEnvironmentInfo();
   }
 
@@ -321,8 +324,8 @@ public class ServerContext {
     return launchTicket;
   }
 
-  public final long getServerSecondsAhead() {
-    return serverSecondsAhead;
+  public final long getServerMillisAhead() {
+    return serverMillisAhead;
   }
 
   public void close() {

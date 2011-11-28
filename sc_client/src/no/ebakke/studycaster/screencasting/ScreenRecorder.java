@@ -74,7 +74,7 @@ public class ScreenRecorder {
     }
   };
 
-  public ScreenRecorder(OutputStream out, long serverSecondsAhead,
+  public ScreenRecorder(OutputStream out, long serverMillisAhead,
       ScreenRecorderConfiguration config) throws IOException, AWTException
   {
     this.config = config;
@@ -82,7 +82,7 @@ public class ScreenRecorder {
     nbos = (out instanceof NonBlockingOutputStream) ? ((NonBlockingOutputStream) out) : null;
     Rectangle screenRect = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
     enc = new CaptureEncoder(out, screenRect);
-    enc.setServerSecondsAhead(serverSecondsAhead);
+    enc.setServerMillisAhead(serverMillisAhead);
   }
 
   public synchronized void setCensor(ScreenCensor censor) {

@@ -58,14 +58,14 @@ public final class RecordingConverter {
     outStreamCoder.open();
     outContainer.writeHeader();
 
-    long previousTimeStamp = -1;
+    long previousTimeStampMicros = -1;
     final BufferedImage image = new BufferedImage(
         dec.getDimension().width, dec.getDimension().height, BufferedImage.TYPE_3BYTE_BGR);
     try {
       while (dec.nextFrame(image)) {
-        final long currentTimeStamp = (dec.getCurrentTimeMillis() * 1000L) / speedUpFactor;
-        if (speedUpFactor > 1 && previousTimeStamp >= 0 &&
-            currentTimeStamp - previousTimeStamp < 1000000L / FRAMERATE_LIMIT)
+        final long currentTimeStampMicros = (dec.getCurrentTimeMillis() * 1000L) / speedUpFactor;
+        if (speedUpFactor > 1 && previousTimeStampMicros >= 0 &&
+            currentTimeStampMicros - previousTimeStampMicros < 1000000L / FRAMERATE_LIMIT)
         {
           System.out.print(" ");
           continue;
@@ -75,11 +75,11 @@ public final class RecordingConverter {
 
         final IPacket packet = IPacket.make();
         final IConverter converter = ConverterFactory.createConverter(image, pixelFormat);
-        final IVideoPicture outFrame = converter.toPicture(image, currentTimeStamp);
+        final IVideoPicture outFrame = converter.toPicture(image, currentTimeStampMicros);
         outStreamCoder.encodeVideo(packet, outFrame, -1);
         if (packet.isComplete())
           outContainer.writePacket(packet);
-        previousTimeStamp = currentTimeStamp;
+        previousTimeStampMicros = currentTimeStampMicros;
       }
     } catch (IOException e) {
       System.err.println("ops");
