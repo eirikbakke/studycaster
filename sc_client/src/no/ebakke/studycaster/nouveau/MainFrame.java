@@ -14,6 +14,7 @@ import javax.swing.JDialog;
 import no.ebakke.studycaster.api.ServerContext;
 import no.ebakke.studycaster.configuration.ConcludeConfiguration;
 import no.ebakke.studycaster.configuration.OpenFileConfiguration;
+import no.ebakke.studycaster.configuration.OpenURIConfiguration;
 import no.ebakke.studycaster.configuration.PageConfiguration;
 import no.ebakke.studycaster.configuration.StudyConfiguration;
 import no.ebakke.studycaster.configuration.UIStringKey;
@@ -22,7 +23,8 @@ import no.ebakke.studycaster.ui.ResourceUtil;
 
 public class MainFrame extends javax.swing.JFrame {
   public static interface UserActionListener {
-    public void openAction(OpenFileConfiguration openFileConfiguration);
+    public void openFileAction(OpenFileConfiguration openFileConfiguration);
+    public void openURIAction(OpenURIConfiguration openURIConfiguration);
     public void concludeAction(ConcludeConfiguration concludeConfiguration);
   }
 
@@ -96,10 +98,12 @@ public class MainFrame extends javax.swing.JFrame {
     try {
       if (configuration != null) {
         final UIStrings strings = configuration.getUIStrings();
-        concludeButton.setText(strings.getString(UIStringKey.MAINFRAME_UPLOAD_BUTTON));
-        concludeButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_UPLOAD_BUTTON));
-        openButton.setText(strings.getString(UIStringKey.MAINFRAME_OPEN_BUTTON));
-        openButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_OPEN_BUTTON));
+        openFileButton.setText(strings.getString(UIStringKey.MAINFRAME_OPEN_FILE_BUTTON));
+        openFileButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_OPEN_FILE_BUTTON));
+        openURIButton.setText(strings.getString(UIStringKey.MAINFRAME_OPEN_URI_BUTTON));
+        openURIButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_OPEN_URI_BUTTON));
+        concludeButton.setText(strings.getString(UIStringKey.MAINFRAME_CONCLUDE_BUTTON));
+        concludeButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_CONCLUDE_BUTTON));
         backButton.setText(strings.getString(UIStringKey.MAINFRAME_BACK_BUTTON));
         backButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_BACK_BUTTON));
         nextButton.setText(strings.getString(UIStringKey.MAINFRAME_NEXT_BUTTON));
@@ -149,42 +153,45 @@ public class MainFrame extends javax.swing.JFrame {
   private void setPageIndex(Integer pageIndex) {
     final String instructions;
     final boolean navigationButtonsVisible;
-    final boolean concludeButtonVisible;
-    final boolean openButtonVisible;
+    final boolean openFileButtonVisible, openURIButtonVisible, concludeButtonVisible;
     this.pageIndex = pageIndex;
     if (this.pageIndex == null) {
       instructions = "Please wait...";
+      openFileButtonVisible    = false;
+      openURIButtonVisible     = false;
       concludeButtonVisible    = false;
-      openButtonVisible        = false;
       navigationButtonsVisible = false;
     } else {
       if (configuration == null)
         throw new IllegalStateException("Can't set page index before pages have been configured");
       PageConfiguration page = getPageConfiguration();
       OpenFileConfiguration openFileConfiguration = page.getOpenFileConfiguration();
+      OpenURIConfiguration  openURIConfiguration  = page.getOpenURIConfiguration();
       ConcludeConfiguration concludeConfiguration = page.getConcludeConfiguration();
 
       instructions             = page.getInstructions();
+      openFileButtonVisible    = openFileConfiguration != null;
+      openURIButtonVisible     = openURIConfiguration  != null;
       concludeButtonVisible    = concludeConfiguration != null;
-      openButtonVisible        = openFileConfiguration != null;
       navigationButtonsVisible = configuration.getPageConfigurations().size() > 1;
       backButton.setEnabled(pageIndex > 0);
       nextButton.setEnabled(pageIndex < configuration.getPageConfigurations().size() - 1);
     }
     instructionLabel.setText(instructions);
+
+    openFileButton.setEnabled(openFileButtonVisible);
+    openFileButton.setVisible(openFileButtonVisible);
+    openURIButton.setEnabled(openURIButtonVisible);
+    openURIButton.setVisible(openURIButtonVisible);
     concludeButton.setEnabled(concludeButtonVisible);
-    openButton.setEnabled(openButtonVisible);
-
-    actionButtonPanel.setMinimumSize(new Dimension(800, 600));
     concludeButton.setVisible(concludeButtonVisible);
-    openButton.setVisible(openButtonVisible);
-
     navigationPanel.setVisible(navigationButtonsVisible);
 
     // Disable buttons during ongoing background tasks.
     if (taskInProgress) {
+      openFileButton.setEnabled(false);
+      openURIButton.setEnabled(false);
       concludeButton.setEnabled(false);
-      openButton.setEnabled(false);
       backButton.setEnabled(false);
       nextButton.setEnabled(false);
     }
@@ -253,7 +260,8 @@ public class MainFrame extends javax.swing.JFrame {
 
         instructionLabel = new javax.swing.JLabel();
         actionButtonPanel = new javax.swing.JPanel();
-        openButton = new javax.swing.JButton();
+        openFileButton = new javax.swing.JButton();
+        openURIButton = new javax.swing.JButton();
         concludeButton = new javax.swing.JButton();
         navigationPanel = new javax.swing.JPanel();
         navigationPanelInner = new javax.swing.JPanel();
@@ -282,21 +290,33 @@ public class MainFrame extends javax.swing.JFrame {
         actionButtonPanel.setOpaque(false);
         actionButtonPanel.setLayout(new java.awt.GridBagLayout());
 
-        openButton.setMnemonic('O');
-        openButton.setText("Open Sample Document...");
-        openButton.addActionListener(new java.awt.event.ActionListener() {
+        openFileButton.setMnemonic('D');
+        openFileButton.setText("Open Sample Document...");
+        openFileButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                openButtonActionPerformed(evt);
+                openFileButtonActionPerformed(evt);
             }
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
         gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.weightx = 1.0;
-        actionButtonPanel.add(openButton, gridBagConstraints);
+        actionButtonPanel.add(openFileButton, gridBagConstraints);
 
-        concludeButton.setMnemonic('U');
+        openURIButton.setMnemonic('W');
+        openURIButton.setText("Open Sample Web Page...");
+        openURIButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                openURIButtonActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.weightx = 1.0;
+        actionButtonPanel.add(openURIButton, gridBagConstraints);
+
+        concludeButton.setMnemonic('C');
         concludeButton.setText("Upload and Retrieve Confirmation Code...");
         concludeButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -304,9 +324,7 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
         gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-        gridBagConstraints.gridheight = java.awt.GridBagConstraints.REMAINDER;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.weightx = 1.0;
         actionButtonPanel.add(concludeButton, gridBagConstraints);
@@ -373,15 +391,20 @@ public class MainFrame extends javax.swing.JFrame {
     setPageIndex(getPageIndex() - 1);
   }//GEN-LAST:event_backButtonActionPerformed
 
-  private void openButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openButtonActionPerformed
-    LOG.info("User pressed open button");
-    userActionListener.openAction(getPageConfiguration().getOpenFileConfiguration());
-  }//GEN-LAST:event_openButtonActionPerformed
+  private void openFileButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openFileButtonActionPerformed
+    LOG.info("User pressed open file button");
+    userActionListener.openFileAction(getPageConfiguration().getOpenFileConfiguration());
+  }//GEN-LAST:event_openFileButtonActionPerformed
 
   private void concludeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_concludeButtonActionPerformed
     LOG.info("User pressed conclude button");
     userActionListener.concludeAction(getPageConfiguration().getConcludeConfiguration());
   }//GEN-LAST:event_concludeButtonActionPerformed
+
+  private void openURIButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openURIButtonActionPerformed
+    LOG.info("User pressed open URI button");
+    userActionListener.openURIAction(getPageConfiguration().getOpenURIConfiguration());
+  }//GEN-LAST:event_openURIButtonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel actionButtonPanel;
@@ -391,7 +414,8 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JPanel navigationPanel;
     private javax.swing.JPanel navigationPanelInner;
     private javax.swing.JButton nextButton;
-    private javax.swing.JButton openButton;
+    private javax.swing.JButton openFileButton;
+    private javax.swing.JButton openURIButton;
     private javax.swing.JProgressBar progressBar;
     // End of variables declaration//GEN-END:variables
 }

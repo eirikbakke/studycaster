@@ -3,22 +3,24 @@ package no.ebakke.studycaster.configuration;
 public enum UIStringKey {
   DIALOG_ALREADY_RUNNING_TITLE(false, false, false),
   DIALOG_ALREADY_RUNNING_MESSAGE(false, true, false),
-  MAINFRAME_OPEN_BUTTON(true, true, false),
-  MAINFRAME_UPLOAD_BUTTON(true, true, false),
+  MAINFRAME_OPEN_FILE_BUTTON(true, true, false),
+  MAINFRAME_OPEN_URI_BUTTON(true, true, false),
+  MAINFRAME_CONCLUDE_BUTTON(true, true, false),
   MAINFRAME_BACK_BUTTON(true, true, false),
   MAINFRAME_NEXT_BUTTON(true, true, false),
   DIALOG_CLOSE_TITLE(false, false, false),
   DIALOG_CLOSE_MESSAGE(false, true, false),
-  PROGRESS_OPEN(false, false, false),
-  DIALOG_OPEN_TITLE(false, false, false),
-  DIALOG_OPEN_EXISTING_MESSAGE(false, true, true),
-  DIALOG_OPEN_MODIFIED_MESSAGE(false, true, true),
-  DIALOG_OPEN_RENAMED_MESSAGE(false, true, true),
-  DIALOG_OPEN_RENAME_FAILED_MESSAGE(false, true, true),
-  DIALOG_OPEN_ASSOCIATION_FAILED_MESSAGE(false, true, true),
-  DIALOG_OPEN_ALREADY_MESSAGE(false, true, true),
-  DIALOG_OPEN_NEW_BUTTON(false, true, false),
-  DIALOG_OPEN_KEEP_BUTTON(false, true, false);
+  PROGRESS_OPEN_FILE(false, false, false),
+  PROGRESS_OPEN_URI(false, false, false),
+  DIALOG_OPEN_FILE_TITLE(false, false, false),
+  DIALOG_OPEN_FILE_EXISTING_MESSAGE(false, true, true),
+  DIALOG_OPEN_FILE_MODIFIED_MESSAGE(false, true, true),
+  DIALOG_OPEN_FILE_RENAMED_MESSAGE(false, true, true),
+  DIALOG_OPEN_FILE_RENAME_FAILED_MESSAGE(false, true, true),
+  DIALOG_OPEN_FILE_ASSOCIATION_FAILED_MESSAGE(false, true, true),
+  DIALOG_OPEN_FILE_ALREADY_MESSAGE(false, true, true),
+  DIALOG_OPEN_FILE_NEW_BUTTON(false, true, false),
+  DIALOG_OPEN_FILE_KEEP_BUTTON(false, true, false);
 
   private boolean usesMnemonic, htmlAllowed, usesMessageFormat;
 

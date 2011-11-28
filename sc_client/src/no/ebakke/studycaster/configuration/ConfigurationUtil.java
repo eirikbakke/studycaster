@@ -123,7 +123,8 @@ final class ConfigurationUtil {
     String ret = XMLUtil.getTextContent(elm);
     if (ret == null)
       throw new StudyCasterException("Expected text content in <" + elm.getTagName() + "> element");
-    return ret;
+    // Collapse whitespace.
+    return ret.replaceAll("\\s+", " ");
   }
 
   public static String getTextContent(Node parent, String localName)
@@ -146,8 +147,7 @@ final class ConfigurationUtil {
       /* TODO: Consider always including a <base> tag that points to a set of image resources
                configured to be automatically downloaded. */
       try {
-        /* The regex replace serves mainly to remove newlines, which seem to confuse certain Swing
-        components (at least JOptionPane) when combined with HTML content. */
+        /* Collapse whitespace. Newlines in HTML markup seems to confuse Swing. */
         return XMLUtil.getXMLString(htmlContent.get(0), true).replaceAll("\\s+", " ");
       } catch (TransformerException e) {
         throw new StudyCasterException("Unexpected XML transformation error", e);

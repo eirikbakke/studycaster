@@ -8,11 +8,14 @@ public class PageConfiguration {
   private final String                instructions;
   private final OpenFileConfiguration openFileConfiguration;
   private final ConcludeConfiguration concludeConfiguration;
+  private final OpenURIConfiguration  openURIConfiguration;
 
   public PageConfiguration(Element elm) throws StudyCasterException {
     instructions = ConfigurationUtil.getSwingCaption(elm, "instructions");
     Element openFileElm = ConfigurationUtil.getUniqueElement(elm, "openfile", true);
     openFileConfiguration = (openFileElm == null) ? null : new OpenFileConfiguration(openFileElm);
+    Element openURIElm = ConfigurationUtil.getUniqueElement(elm, "openuri", true);
+    openURIConfiguration = (openURIElm == null) ? null : new OpenURIConfiguration(openURIElm);
     Element concludeElm = ConfigurationUtil.getUniqueElement(elm, "conclude", true);
     concludeConfiguration = (concludeElm == null) ? null : new ConcludeConfiguration(concludeElm);
   }
@@ -34,6 +37,11 @@ public class PageConfiguration {
   /** May be null. */
   public OpenFileConfiguration getOpenFileConfiguration() {
     return openFileConfiguration;
+  }
+
+  /** May be null. */
+  public OpenURIConfiguration getOpenURIConfiguration() {
+    return openURIConfiguration;
   }
 
   /** May be null. */

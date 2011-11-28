@@ -8,34 +8,37 @@
         <html xmlns="">The StudyCaster client is already running in a different window.<br/>
                        Please close it first if you wish to start over.</html>
       </uistring>
-      <uistring key="MAINFRAME_OPEN_BUTTON"   mnemonic="O">Open Sample Document...</uistring>
-      <uistring key="MAINFRAME_UPLOAD_BUTTON" mnemonic="U">Upload and Retrive Confirmation Code...</uistring>
-      <uistring key="MAINFRAME_BACK_BUTTON"   mnemonic="B">&lt; Back</uistring>
-      <uistring key="MAINFRAME_NEXT_BUTTON"   mnemonic="N">Next &gt;</uistring>
+      <!-- TODO: Make button captions individually settable. -->
+      <uistring key="MAINFRAME_OPEN_FILE_BUTTON"  mnemonic="D">Open Sample Document...</uistring>
+      <uistring key="MAINFRAME_OPEN_URI_BUTTON"   mnemonic="W">Open Sample Web Page...</uistring>
+      <uistring key="MAINFRAME_CONCLUDE_BUTTON"   mnemonic="C">Upload and Retrive Confirmation Code...</uistring>
+      <uistring key="MAINFRAME_BACK_BUTTON"       mnemonic="B">&lt; Back</uistring>
+      <uistring key="MAINFRAME_NEXT_BUTTON"       mnemonic="N">Next &gt;</uistring>
       <uistring key="DIALOG_CLOSE_TITLE"  >Exit Without Uploading?</uistring>
       <uistring key="DIALOG_CLOSE_MESSAGE">
         If you exit the StudyCaster client without uploading first, your changes will be lost.
       </uistring>
-      <uistring key="PROGRESS_OPEN">Opening file...</uistring>
+      <uistring key="PROGRESS_OPEN_FILE">Opening file...</uistring>
+      <uistring key="PROGRESS_OPEN_URI">Opening web page...</uistring>
 
-      <uistring key="DIALOG_OPEN_TITLE">Open Sample Document</uistring>
-      <uistring key="DIALOG_OPEN_EXISTING_MESSAGE"><html xmlns="">
+      <uistring key="DIALOG_OPEN_FILE_TITLE">Open Sample Document</uistring>
+      <uistring key="DIALOG_OPEN_FILE_EXISTING_MESSAGE"><html xmlns="">
         The StudyCaster client found a modified file from an old session:<br/>
         {0}<br/><br/>
         Would you like to keep working on the existing file, or download a new one?</html>
       </uistring>
-      <uistring key="DIALOG_OPEN_MODIFIED_MESSAGE"><html xmlns="">
+      <uistring key="DIALOG_OPEN_FILE_MODIFIED_MESSAGE"><html xmlns="">
         The file was previously opened and modified:<br/>
         {0}<br/><br/>
         Would you like to keep working on the existing file, or download a new one?</html>
       </uistring>
-      <uistring key="DIALOG_OPEN_RENAMED_MESSAGE"><html xmlns="">
+      <uistring key="DIALOG_OPEN_FILE_RENAMED_MESSAGE"><html xmlns="">
         The old file<br/>
         {0}<br/>
         was renamed to<br/>
         {1}</html>
       </uistring>
-      <uistring key="DIALOG_OPEN_RENAME_FAILED_MESSAGE"><html xmlns="">
+      <uistring key="DIALOG_OPEN_FILE_RENAME_FAILED_MESSAGE"><html xmlns="">
         Failed to rename the file<br/>
         {0}<br/><br/>
         If the file is still open, please close it and try again.</html>
@@ -43,19 +46,19 @@
       <!-- The message below is shown on a best-effort basis, currently never on JRE 1.5. The second
       message parameter is a string from the <errormessage> element in the <openfile> configuration.
       -->
-      <uistring key="DIALOG_OPEN_ASSOCIATION_FAILED_MESSAGE"><html xmlns="">
+      <uistring key="DIALOG_OPEN_FILE_ASSOCIATION_FAILED_MESSAGE"><html xmlns="">
         Failed to open the file<br/>{0}<br/><br/>
         {1}</html>
       </uistring>
       <!-- The message below is shown on a best-effort basis; it is not always possible to detect
       whether a file is already opened in a different program. -->
-      <uistring key="DIALOG_OPEN_ALREADY_MESSAGE"><html xmlns="">
+      <uistring key="DIALOG_OPEN_FILE_ALREADY_MESSAGE"><html xmlns="">
         The file appears to already be open:<br/>
         {0}<br/><br/>
         The file should have opened in a new window, possibly in the background.</html>
       </uistring>
-      <uistring key="DIALOG_OPEN_NEW_BUTTON">Download New File</uistring>
-      <uistring key="DIALOG_OPEN_KEEP_BUTTON">Keep Existing File</uistring>
+      <uistring key="DIALOG_OPEN_FILE_NEW_BUTTON">Download New File</uistring>
+      <uistring key="DIALOG_OPEN_FILE_KEEP_BUTTON">Keep Existing File</uistring>
 
     </uistrings>
   </macrodef>
@@ -67,10 +70,10 @@
         <html xmlns="">StudyCaster-klienten kjører allerede i et annet vindu.<br/>
                        Vennligst lukk det gamle vinduet først dersom du vil begynne på nytt.</html>
       </uistring>
-      <uistring key="MAINFRAME_OPEN_BUTTON"   mnemonic="Å">Åpne eksempeldokument...</uistring>
-      <uistring key="MAINFRAME_UPLOAD_BUTTON" mnemonic="L">Last opp og motta bekreftelseskode...</uistring>
-      <uistring key="MAINFRAME_BACK_BUTTON"   mnemonic="T">&lt; Tilbake</uistring>
-      <uistring key="MAINFRAME_NEXT_BUTTON"   mnemonic="N">Neste &gt;</uistring>
+      <uistring key="MAINFRAME_OPEN_FILE_BUTTON" mnemonic="Å">Åpne eksempeldokument...</uistring>
+      <uistring key="MAINFRAME_CONCLUDE_BUTTON" mnemonic="L">Last opp og motta bekreftelseskode...</uistring>
+      <uistring key="MAINFRAME_BACK_BUTTON"     mnemonic="T">&lt; Tilbake</uistring>
+      <uistring key="MAINFRAME_NEXT_BUTTON"     mnemonic="N">Neste &gt;</uistring>
       <uistring key="DIALOG_CLOSE_TITLE"  >Avslutt uten å laste opp?</uistring>
       <uistring key="DIALOG_CLOSE_MESSAGE">
         Hvis du avslutter StudyCaster uten å laste opp først, går endringene dine tapt.
@@ -159,14 +162,19 @@
     <page>
       <instructions>
         <html xmlns="">
-          This is the second page. It has an open file button.<br/><br/>
+          This is the second page. It has an open file button, and an open URI
+          button.<br/><br/>
         </html>
       </instructions>
       <openfile> <!-- Optional -->
         <servername>testfile.pdf</servername>
-        <clientname>studycaster_testfile.pdf</clientname>
-        <errormessage>Do you have a program that can open text files installed?</errormessage>
+        <clientname>StudyCaster testfile with spaces in name.pdf</clientname>
+        <errormessage>Do you have a program that can open PDF files
+                      (e.g. Acrobat Reader) installed?</errormessage>
       </openfile>
+      <openuri> <!-- Optional -->
+        <uri>http://www.youtube.com/watch?v=dQw4w9WgXcQ</uri>
+      </openuri>
     </page>
 
     <page>

@@ -18,6 +18,7 @@ import no.ebakke.studycaster.api.ServerContextUtil;
 import no.ebakke.studycaster.api.StudyCasterException;
 import no.ebakke.studycaster.configuration.ConcludeConfiguration;
 import no.ebakke.studycaster.configuration.OpenFileConfiguration;
+import no.ebakke.studycaster.configuration.OpenURIConfiguration;
 import no.ebakke.studycaster.configuration.StudyConfiguration;
 import no.ebakke.studycaster.configuration.UIStringKey;
 import no.ebakke.studycaster.nouveau.MainFrame.UserActionListener;
@@ -37,7 +38,7 @@ import no.ebakke.studycaster.util.Util;
   * 1, 2, or 3 pages in the study configuration.
   * A study configuration with or without two action buttons on a single page in the study
     configuration.
-  * Opening an example document in JRE 1.5 and in a JRE 1.6 or above.
+  * Opening an example document in JRE 1.5 and in JRE 1.6 or above.
   * Opening an example document that already exists in the temporary folder, either modified or not,
     and either as the first time for a particular launch or not. When a file already exists in
     modified form, different messages should appear depending on whether it is the first time that
@@ -304,8 +305,7 @@ public final class StudyUI {
   }
 
   private class PrivateUserActionListener implements UserActionListener {
-    private final Map<String,OpenedFile> openedFiles
-        = new LinkedHashMap<String,OpenedFile>();
+    private final Map<String,OpenedFile> openedFiles = new LinkedHashMap<String,OpenedFile>();
 
     private File downloadFile(OpenFileConfiguration config, File dir) throws IOException {
       File ret = File.createTempFile("sc_", ".tmp", dir);
@@ -318,7 +318,7 @@ public final class StudyUI {
       return ret;
     }
 
-    private void openActionHelper(OpenFileConfiguration openFileConfiguration)
+    private void openFileActionHelper(OpenFileConfiguration openFileConfiguration)
         throws StudyCasterException
     {
       File downloadedFile = null;
@@ -328,8 +328,8 @@ public final class StudyUI {
         final File clientFile = new File(tempDir, openFileConfiguration.getClientName());
         if (!Util.fileAvailableExclusive(clientFile)) {
           LOG.severe("File already open on desktop, showing dialog");
-          showMessageDialog(UIStringKey.DIALOG_OPEN_ALREADY_MESSAGE,
-              new Object[] { Util.getPathString(clientFile) }, UIStringKey.DIALOG_OPEN_TITLE,
+          showMessageDialog(UIStringKey.DIALOG_OPEN_FILE_ALREADY_MESSAGE,
+              new Object[] { Util.getPathString(clientFile) }, UIStringKey.DIALOG_OPEN_FILE_TITLE,
               JOptionPane.INFORMATION_MESSAGE);
           return;
         }
@@ -363,14 +363,14 @@ public final class StudyUI {
             // The existing file is different from the downloaded one; ask the user what to do.
             useDownloaded = Util.checkedSwingInvokeAndWait(new Util.CallableExt<Boolean,RuntimeException>() {
               public Boolean call() {
-                final String downloadOption = getUIString(UIStringKey.DIALOG_OPEN_NEW_BUTTON);
-                final String existingOption = getUIString(UIStringKey.DIALOG_OPEN_KEEP_BUTTON);
+                final String downloadOption = getUIString(UIStringKey.DIALOG_OPEN_FILE_NEW_BUTTON);
+                final String existingOption = getUIString(UIStringKey.DIALOG_OPEN_FILE_KEEP_BUTTON);
                 int res = JOptionPane.showOptionDialog(mainFrame.getPositionDialog(),
                     getUIString(
-                      openedFile == null ? UIStringKey.DIALOG_OPEN_EXISTING_MESSAGE
-                                         : UIStringKey.DIALOG_OPEN_MODIFIED_MESSAGE,
+                      openedFile == null ? UIStringKey.DIALOG_OPEN_FILE_EXISTING_MESSAGE
+                                         : UIStringKey.DIALOG_OPEN_FILE_MODIFIED_MESSAGE,
                       new Object[] { Util.getPathString(clientFile) }),
-                    getUIString(UIStringKey.DIALOG_OPEN_TITLE),
+                    getUIString(UIStringKey.DIALOG_OPEN_FILE_TITLE),
                     JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
                     null, new Object[] {downloadOption, existingOption}, existingOption);
                 return res == JOptionPane.YES_OPTION;
@@ -391,14 +391,14 @@ public final class StudyUI {
               } while (newName.exists());
               if (clientFile.renameTo(newName)) {
                 LOG.info("User chose to move existing file; succeeded, showing dialog");
-                showMessageDialog(UIStringKey.DIALOG_OPEN_RENAMED_MESSAGE,
+                showMessageDialog(UIStringKey.DIALOG_OPEN_FILE_RENAMED_MESSAGE,
                     new Object[] {Util.getPathString(clientFile), Util.getPathString(newName) },
-                    UIStringKey.DIALOG_OPEN_TITLE, JOptionPane.INFORMATION_MESSAGE);
+                    UIStringKey.DIALOG_OPEN_FILE_TITLE, JOptionPane.INFORMATION_MESSAGE);
               } else {
                 LOG.info("User chose to move existing file; failed, showing dialog");
-                showMessageDialog(UIStringKey.DIALOG_OPEN_RENAME_FAILED_MESSAGE,
+                showMessageDialog(UIStringKey.DIALOG_OPEN_FILE_RENAME_FAILED_MESSAGE,
                     new Object[] { Util.getPathString(clientFile) },
-                    UIStringKey.DIALOG_OPEN_TITLE, JOptionPane.WARNING_MESSAGE);
+                    UIStringKey.DIALOG_OPEN_FILE_TITLE, JOptionPane.WARNING_MESSAGE);
                 // Leave it up to the user to try again.
                 return;
               }
@@ -415,9 +415,9 @@ public final class StudyUI {
         }
         if (!Util.desktopOpenFile(clientFile)) {
           LOG.severe("File open by association failed, showing dialog");
-          showMessageDialog(UIStringKey.DIALOG_OPEN_ASSOCIATION_FAILED_MESSAGE,
+          showMessageDialog(UIStringKey.DIALOG_OPEN_FILE_ASSOCIATION_FAILED_MESSAGE,
               new Object[] { Util.getPathString(clientFile), openFileConfiguration.getErrorMessage() },
-              UIStringKey.DIALOG_OPEN_TITLE, JOptionPane.WARNING_MESSAGE);
+              UIStringKey.DIALOG_OPEN_FILE_TITLE, JOptionPane.WARNING_MESSAGE);
           return;
         }
         /* Certain applications, such as Microsoft Excel, will modify a file immediately upon
@@ -449,12 +449,35 @@ public final class StudyUI {
       }
     }
 
-    public void openAction(final OpenFileConfiguration openFileConfiguration) {
-      mainFrame.startTask(getUIString(UIStringKey.PROGRESS_OPEN), true);
+    // TODO: Reduce duplicated code between the following methods.
+    public void openURIAction(final OpenURIConfiguration openURIConfiguration) {
+      mainFrame.startTask(getUIString(UIStringKey.PROGRESS_OPEN_URI), true);
       new Thread(new Runnable() {
         public void run() {
           try {
-            openActionHelper(openFileConfiguration);
+            Util.desktopOpenURI(openURIConfiguration.getURI());
+            SwingUtilities.invokeLater(new Runnable() {
+              public void run() {
+                mainFrame.stopTask();
+              }
+            });
+          } catch (final StudyCasterException e) {
+            SwingUtilities.invokeLater(new Runnable() {
+              public void run() {
+                reportGenericError(e, false);
+              }
+            });
+          }
+        }
+      }).start();
+    }
+
+    public void openFileAction(final OpenFileConfiguration openFileConfiguration) {
+      mainFrame.startTask(getUIString(UIStringKey.PROGRESS_OPEN_FILE), true);
+      new Thread(new Runnable() {
+        public void run() {
+          try {
+            openFileActionHelper(openFileConfiguration);
             SwingUtilities.invokeLater(new Runnable() {
               public void run() {
                 mainFrame.stopTask();

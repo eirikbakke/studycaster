@@ -11,8 +11,10 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,6 +26,9 @@ public final class Util {
   private Util() { }
 
   public static boolean fileAvailableExclusive(File f) {
+    // Without this check, the file would be created below if it didn't already exist.
+    if (!f.exists())
+      return true;
     try {
       FileOutputStream exclusive = new FileOutputStream(f, true);
       exclusive.close();
@@ -85,11 +90,89 @@ public final class Util {
     public void run() throws InterruptedException;
   }
 
-  public static void executeShellCommand(String command[]) throws StudyCasterException {
+  /** Returns false iff Desktop API is unavailable on this platform. Any IOException thrown will
+  originate from the called method. */
+  private static boolean callDesktopMethod(String methodName, Class parameterType, Object argument)
+      throws StudyCasterException, IOException
+  {
+    Class<?> desktopClass = null;
+    try {
+      desktopClass = Class.forName("java.awt.Desktop");
+    } catch (ClassNotFoundException e) { }
+    if (desktopClass == null) {
+      LOG.info("Java Desktop API not found; probably on JRE 1.5");
+      return false;
+    }
+    final Object desktopObject;
+    final Method methodToCall;
+    try {
+      Method getDesktopMethod = desktopClass.getMethod("getDesktop");
+      try {
+        desktopObject = getDesktopMethod.invoke(null);
+      } catch (InvocationTargetException e) {
+        throw new StudyCasterException("Unexpected exception", e.getCause());
+      }
+      if (desktopObject == null || !(desktopClass.isInstance(desktopObject))) {
+        throw new StudyCasterException(
+            "Unexpected return value from Desktop.getDesktop(): " + desktopObject);
+      }
+      methodToCall = desktopClass.getMethod(methodName, parameterType);
+      try {
+        methodToCall.invoke(desktopObject, argument);
+      } catch (InvocationTargetException e) {
+        if (e.getCause() instanceof IOException) {
+          throw (IOException) e.getCause();
+        } else {
+          throw new StudyCasterException("Unexpected exception", e.getCause());
+        }
+      }
+    } catch (NoSuchMethodException e) {
+      throw new StudyCasterException("Failed to locate an expected library method", e);
+    } catch (IllegalAccessException e) {
+      throw new StudyCasterException("Failed to invoke a library method", e);
+    }
+    return true;
+  }
+
+  /** Returns false iff the command executes with a non-zero return code. */
+  private static boolean desktopOpenURIPlatformDependent(URI uri)
+      throws StudyCasterException
+  {
+    final String osString = System.getProperty("os.name").toLowerCase();
+    final String urlString;
+    try {
+      urlString = uri.toURL().toString();
+    } catch (MalformedURLException e) {
+      throw new StudyCasterException("Failed to generate URL", e);
+    }
+    final String command[];
+    // See http://www.rgagnon.com/javadetails/java-0014.html
+    // See http://frank.neatstep.com/node/84
+    // The "PlaceHolderTitle" argument is necessary to support files that might contain spaces.
+    /* While it may appear possible to omit the Windows "start" command from the implementations
+    below, this let to subtle bugs in which proc.waitFor() would block for certain applications (in
+    particular, Adobe Acrobat Professional, but not Microsoft Excel). The /MAX argument should not
+    be used as it would maximize even the "pick association" dialog. The "PlaceHolderTitle" argument
+    is needed to support opening files with spaces in their paths. */
+    if (osString.contains("windows 95") || osString.contains("windows 98") ||
+        osString.contains("windows me"))
+    {
+      // TODO: Test on this platform.
+      // See http://www.javaworld.com/javaworld/jw-12-2000/jw-1229-traps.html?page=4
+      command = new String[] {"command.com", "/C", "start", "\"PlaceholderTitle\"", urlString};
+    } else if (osString.contains("win")) {
+      command = new String[] {"cmd.exe", "/C", "start", "\"PlaceholderTitle\"", urlString};
+    } else if (osString.contains("mac")) {
+      /* Note: This was verified to work, opening an XLS file on MacOS X with Java 1.5.0_24.
+      Putting single quotes around the URL would break it, so don't. */
+      /* See http://developer.apple.com/mac/library/documentation/Darwin/Reference/ManPages/man1/open.1.html */
+      command = new String[] {"open", urlString};
+    } else {
+      throw new StudyCasterException("Desktop API emulation not supported on this platform");
+    }
     try {
       Process proc = Runtime.getRuntime().exec(command);
-      if (proc.waitFor() != 0)
-        throw new StudyCasterException("Got non-zero exit value while executing shell command");
+      return proc.waitFor() == 0;
     } catch (IOException e) {
       throw new StudyCasterException("Got IOException while executing shell command", e);
     } catch (InterruptedException e) {
@@ -97,82 +180,29 @@ public final class Util {
     }
   }
 
-  public static boolean desktopOpenFile(File fileToOpen)
-      throws StudyCasterException
+  /** Returns false in the case of an error likely to be caused by a missing file association. */
+  public static boolean desktopOpenFile(File fileToOpen) throws StudyCasterException
   {
-    Class<?> desktopClass = null;
     try {
-      desktopClass = Class.forName("java.awt.Desktop");
-    } catch (ClassNotFoundException e) { }
-    if (desktopClass != null) {
-      try {
-        Method getDesktopMethod = desktopClass.getMethod("getDesktop");
-        Object desktopObject = getDesktopMethod.invoke(null);
-        if (desktopObject == null || !(desktopClass.isInstance(desktopObject))) {
-          throw new StudyCasterException(
-              "Unexpected return value from Desktop.getDesktop(): " + desktopObject);
-        }
-        Method openMethod = desktopClass.getMethod("open", File.class);
-        openMethod.invoke(desktopObject, fileToOpen);
-      } catch (NoSuchMethodException e) {
-        throw new StudyCasterException("Failed to locate an expected library method", e);
-      } catch (IllegalAccessException e) {
-        throw new StudyCasterException("Failed to invoke a library method", e);
-      } catch (InvocationTargetException e) {
-        if (e.getCause() instanceof RuntimeException)
-          throw (RuntimeException) e.getCause();
-        if (e.getCause() instanceof Error)
-          throw (Error) e.getCause();
-        if (e.getCause() instanceof IOException) {
-          LOG.log(Level.SEVERE, "Failed to open file with association", e);
-          return false;
-        }
-      }
-    } else {
-      // TODO: Make unassociated file errors propagate in these implementations as well.
-      LOG.info("Did not find Java Desktop API, using platform-specific " +
-          "implementation instead (probably on JRE 1.5 or earlier)");
-      String osString = System.getProperty("os.name").toLowerCase();
-      /* Note: The implementations below should work equally well for opening URLs in the default
-      web browser. */
-      String fileURL;
-      try {
-        fileURL = fileToOpen.toURI().toURL().toString();
-      } catch (MalformedURLException e) {
-        throw new StudyCasterException("Failed to generate file URL", e);
-      }
-
-      String command[];
-      // See http://www.rgagnon.com/javadetails/java-0014.html
-      // See http://frank.neatstep.com/node/84
-      /* I considered using the /MAX argument of the windows "start" command to maximize the window
-      of the started application, but this even maximizes the pick association dialog if it happens
-      to appear, so don't. */
-      if (osString.contains("windows 95") || osString.contains("windows 98") ||
-          osString.contains("windows me"))
-      {
-        // TODO: Test this.
-        // See http://www.javaworld.com/javaworld/jw-12-2000/jw-1229-traps.html?page=4
-        command = new String[] {"command.com", "/C", "start", "\"WindowTitle\"", fileURL};
-      } else if (osString.contains("win")) {
-        command = new String[] {"cmd.exe", "/C", "start", "\"WindowTitle\"", fileURL};
-      } else if (osString.contains("mac")) {
-        /* Note: This was verified to work, opening an XLS file on MacOS X with Java 1.5.0_24.
-        Putting single quotes around the URL would break it, so don't. */
-        /* See http://developer.apple.com/mac/library/documentation/Darwin/Reference/ManPages/man1/open.1.html */
-        command = new String[] {"open", fileURL};
-      } else {
-        throw new StudyCasterException(
-            "Can't open file; Java Desktop API or platform-specific implementation not found");
-      }
-      try {
-        executeShellCommand(command);
-      } catch (StudyCasterException e) {
-        throw new StudyCasterException(
-            "Can't open file; problem while executing shell command", e);
-      }
+      if (callDesktopMethod("open", File.class, fileToOpen))
+        return true;
+    } catch (IOException e) {
+      return false;
     }
-    return true;
+
+    return desktopOpenURIPlatformDependent(fileToOpen.toURI());
+  }
+
+  public static void desktopOpenURI(URI toOpen) throws StudyCasterException {
+    try {
+      if (callDesktopMethod("browse", URI.class, toOpen))
+        return;
+    } catch (IOException e) {
+      throw new StudyCasterException("Java Desktop API failed to open URI", e);
+    }
+
+    if (!desktopOpenURIPlatformDependent(toOpen))
+      throw new StudyCasterException("Desktop API emulation failed to open URI");
   }
 
   public static String sanitizeFileNameComponent(String s) {
@@ -223,16 +253,14 @@ public final class Util {
     V call() throws E;
   }
 
-  /* This function is copied directly from the 1.6 version of java.util.Arrays.
+  /* This function is based on the method with the same name in the 1.6 version of java.util.Arrays.
   Include it here to work for 1.5. */
   public static byte[] copyOfRange(byte[] original, int from, int to) {
-    int newLength = to - from;
-    if (newLength < 0)
-        throw new IllegalArgumentException(from + " > " + to);
-    byte[] copy = new byte[newLength];
-    System.arraycopy(original, from, copy, 0,
-                     Math.min(original.length - from, newLength));
-    return copy;
+    if (from > to)
+      throw new IndexOutOfBoundsException();
+    final byte[] ret = new byte[to - from];
+    System.arraycopy(original, from, ret, 0, Math.min(original.length - from, ret.length));
+    return ret;
   }
 
   @SuppressWarnings("SleepWhileInLoop")
