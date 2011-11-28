@@ -57,25 +57,24 @@ public class APIServlet extends HttpServlet {
       if (launchTicket.isEmpty()) {
         if (!cmd.equals("gsi"))
           throw new BadRequestException("Missing launch ticket");
-        launchTicket =
-            ServletUtil.toHex(ServletUtil.randomBytes(random, LAUNCH_TICKET_BYTES));
+        launchTicket = ServletUtil.toHex(ServletUtil.randomBytes(random, LAUNCH_TICKET_BYTES));
       }
 
-      File ticketDir =
-          ServletUtil.getSaneFile(uploadDir, launchTicket.toString(), true);
+      File ticketDir = ServletUtil.getSaneFile(uploadDir, launchTicket.toString(), true);
       ticketDir.mkdir();
 
       if        (cmd.equals("gsi")) {
         // Idempotent.
         clientCookie = ServletUtil.getMultipartStringParam(multiPart, "arg");
-        if (clientCookie.isEmpty()) {
-          clientCookie =
-              ServletUtil.toHex(ServletUtil.randomBytes(random, CLIENT_COOKIE_BYTES));
-        }
+        if (clientCookie.isEmpty())
+          clientCookie = ServletUtil.toHex(ServletUtil.randomBytes(random, CLIENT_COOKIE_BYTES));
         resp.setHeader("X-StudyCaster-LaunchTicket", launchTicket.toString());
         resp.setHeader("X-StudyCaster-ClientCookie", clientCookie.toString());
-        resp.setHeader("X-StudyCaster-ServerTime"  , Long.toString(new Date().getTime()));
         resp.setHeader("X-StudyCaster-OK", "gsi");
+      } else if (cmd.equals("tim")) {
+        // Idempotent (read-only).
+        resp.setHeader("X-StudyCaster-ServerTime"  , Long.toString(new Date().getTime()));
+        resp.setHeader("X-StudyCaster-OK", "tim");
       } else if (cmd.equals("upc")) {
         // Idempotent.
         String base = ServletUtil.getMultipartStringParam(multiPart, "content");

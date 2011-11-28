@@ -59,6 +59,27 @@ public class ServerContext {
     this(getServerScriptURIfromProperty());
   }
 
+  private long measureServerSecondsAhead() throws StudyCasterException {
+    HttpResponse response;
+    long timeBef, timeAft;
+    timeBef = System.currentTimeMillis();
+    try {
+      response = requestHelper(httpClient, "tim", null, null);
+    } catch (IOException e) {
+      throw new StudyCasterException("Failed to retrieve server time", e);
+    }
+    timeAft = System.currentTimeMillis();
+    Header headerSTM = response.getFirstHeader("X-StudyCaster-ServerTime");
+    if (headerSTM == null)
+      throw new StudyCasterException("Missing server time response header");
+    try {
+      // TODO: Do this only for a single successful request.
+      return (Long.parseLong(headerSTM.getValue()) - (timeBef / 2 + timeAft / 2)) / 1000L;
+    } catch (NumberFormatException e) {
+      throw new StudyCasterException("Got bad time format from server", e);
+    }
+  }
+
   public ServerContext(String serverScriptURIs) throws StudyCasterException {
     LOG.log(Level.INFO, "Using server URI {0}", serverScriptURIs);
     try {
@@ -86,11 +107,9 @@ public class ServerContext {
       LOG.log(Level.WARNING, "Problem reading ticket store.", e);
     }
 
-    // Get server info.
-    Header headerSTM, headerLAT, headerCIE;
-    long timeBef, timeAft;
+    // Setup launch session.
+    Header headerLAT, headerCIE;
     try {
-      timeBef = System.currentTimeMillis();
       ThreadSafeClientConnManager connectionManager = new ThreadSafeClientConnManager();
       httpClient = new DefaultHttpClient(connectionManager);
       httpClient.setHttpRequestRetryHandler(new HttpRequestRetryHandler() {
@@ -114,12 +133,10 @@ public class ServerContext {
 
       HttpResponse response = requestHelper(httpClient, "gsi", null,
           clientCookie == null ? "" : clientCookie);
-      timeAft = System.currentTimeMillis();
-      headerSTM = response.getFirstHeader("X-StudyCaster-ServerTime");
       headerLAT = response.getFirstHeader("X-StudyCaster-LaunchTicket");
       headerCIE = response.getFirstHeader("X-StudyCaster-ClientCookie");
       EntityUtils.consume(response.getEntity());
-      if (headerSTM == null || headerLAT == null || headerCIE == null)
+      if (headerLAT == null || headerCIE == null)
         throw new StudyCasterException("Missing initialization headers.");
       if (clientCookie != null && !clientCookie.equals(headerCIE.getValue()))
         throw new StudyCasterException("Server returned odd client cookie");
@@ -128,17 +145,8 @@ public class ServerContext {
       throw new StudyCasterException("Cannot retrieve server info.", e);
     }
     launchTicket = headerLAT.getValue();
-    try {
-      // TODO: Do this only for a single successful request.
-      serverSecondsAhead = (Long.parseLong(headerSTM.getValue()) -
-          (timeBef / 2 + timeAft / 2)) / 1000L;
-      LOG.log(Level.INFO, "Server time ahead by {0} seconds.", serverSecondsAhead);
-    } catch (NumberFormatException e) {
-      throw new StudyCasterException("Got bad time format from server", e);
-    }
     LOG.log(Level.INFO, "clientCookie = {0}, launchTicket = {1}",
         new Object[] {clientCookie, launchTicket});
-    Util.logEnvironmentInfo();
 
     // Write ticket store.
     if (writeTicketStore) {
@@ -154,6 +162,9 @@ public class ServerContext {
         LOG.log(Level.WARNING, "Problem writing ticket file.", e);
       }
     }
+    serverSecondsAhead = measureServerSecondsAhead();
+    LOG.log(Level.INFO, "Server time ahead by {0} seconds.", getServerSecondsAhead());
+    Util.logEnvironmentInfo();
   }
 
   private static String getContentString(HttpResponse resp) throws IOException {
@@ -200,8 +211,7 @@ public class ServerContext {
     HttpPost httpPost = new HttpPost(serverScriptURI);
     MultipartEntity params = new MultipartEntity();
     params.addPart("cmd", new StringBody(cmd));
-    params.addPart("lt",
-        new StringBody(launchTicket == null ? "" : launchTicket));
+    params.addPart("lt", new StringBody(launchTicket == null ? "" : launchTicket));
     if (content != null)
       params.addPart("content", content);
     if (arg != null)
@@ -311,7 +321,7 @@ public class ServerContext {
     return launchTicket;
   }
 
-  public long getServerSecondsAhead() {
+  public final long getServerSecondsAhead() {
     return serverSecondsAhead;
   }
 
