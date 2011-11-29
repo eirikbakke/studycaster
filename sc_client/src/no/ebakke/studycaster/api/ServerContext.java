@@ -84,6 +84,7 @@ public class ServerContext {
     }
   }
 
+  @SuppressWarnings("AssignmentReplaceableWithOperatorAssignment")
   private long measureServerMillisAhead() throws StudyCasterException {
     final int MAX_ATTEMPTS = 15;
     // See http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods .
@@ -200,8 +201,6 @@ public class ServerContext {
       }
     }
     serverMillisAhead = measureServerMillisAhead();
-    LOG.log(Level.INFO, "Server time ahead by {0,number,0.000} seconds.",
-        getServerMillisAhead() / 1000.0);
     Util.logEnvironmentInfo();
   }
 

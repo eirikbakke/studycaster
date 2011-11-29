@@ -140,6 +140,7 @@ public final class Reports {
     }
 
     @Override
+    @SuppressWarnings("AccessingNonPublicFieldOfAnotherObject")
     public int compareTo(Subject o) {
       return firstRequest.compareTo(o.firstRequest);
     }
@@ -199,6 +200,7 @@ public final class Reports {
     }
 
     @Override
+    @SuppressWarnings("AccessingNonPublicFieldOfAnotherObject")
     public int compareTo(Launch o) {
       return firstRequest.compareTo(o.firstRequest);
     }

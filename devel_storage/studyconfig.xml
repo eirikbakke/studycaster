@@ -51,7 +51,7 @@
         {1}</html>
       </uistring>
       <!-- The message below is shown on a best-effort basis; it is not always possible to detect
-      whether a file is already opened in a different program. -->
+      whether a file is already open in a different program. -->
       <uistring key="DIALOG_OPEN_FILE_ALREADY_MESSAGE"><html xmlns="">
         The file already appears to be open:<br/>
         {0}<br/><br/>
@@ -59,6 +59,10 @@
       </uistring>
       <uistring key="DIALOG_OPEN_FILE_NEW_BUTTON">Download New File</uistring>
       <uistring key="DIALOG_OPEN_FILE_KEEP_BUTTON">Keep Existing File</uistring>
+      <uistring key="DIALOG_UPLOAD_TITLE">Upload and Retrieve Confirmation Code</uistring>
+      <uistring key="DIALOG_UPLOAD_FILE_PATH_LABEL" mnemonic="F">File to upload:</uistring>
+      <uistring key="DIALOG_UPLOAD_FILE_INFO_LABEL">If you saved the file to a different location, select the new location here. Otherwise, just click OK.</uistring>
+      <uistring key="DIALOG_UPLOAD_FILE_BROWSE_BUTTON" mnemonic="B">Browse...</uistring>
 
     </uistrings>
   </macrodef>

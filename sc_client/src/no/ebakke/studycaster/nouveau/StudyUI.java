@@ -22,6 +22,7 @@ import no.ebakke.studycaster.configuration.OpenURIConfiguration;
 import no.ebakke.studycaster.configuration.StudyConfiguration;
 import no.ebakke.studycaster.configuration.UIStringKey;
 import no.ebakke.studycaster.nouveau.MainFrame.UserActionListener;
+import no.ebakke.studycaster.ui.UploadDialogPanel;
 import no.ebakke.studycaster.util.Util;
 
 /*
@@ -495,7 +496,13 @@ public final class StudyUI {
     }
 
     public void concludeAction(ConcludeConfiguration concludeConfiguration) {
-
+      if (concludeConfiguration.getUploadConfiguration() != null) {
+        UploadDialogPanel udp = new UploadDialogPanel(configuration.getUIStrings());
+        JOptionPane.showOptionDialog(mainFrame.getPositionDialog(), udp,
+            getUIString(UIStringKey.DIALOG_UPLOAD_TITLE), JOptionPane.OK_CANCEL_OPTION,
+            JOptionPane.QUESTION_MESSAGE, null, null, null);
+      } else {
+      }
     }
 
     private class OpenedFile {

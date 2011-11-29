@@ -15,18 +15,18 @@ class WriteOpQueue {
   private final Condition notFull  = lock.newCondition();
   private final Condition notEmpty = lock.newCondition();
   private final long maxBytesInQueue;
-  private final AtomicLong bytesInQueue  = new AtomicLong(0);
+  private final AtomicLong bytesInQueue = new AtomicLong(0);
   /* The queue will be externally synchronized by the lock. This has equivalent memory
   synchronization behavior as using the synchronized statement; see the Javadoc for Lock. */
   private final Queue<byte[]> ops = new LinkedList<byte[]>();
 
-  public WriteOpQueue(long maxBytesInQueue) {
+  WriteOpQueue(long maxBytesInQueue) {
     if (maxBytesInQueue < 1)
       throw new IllegalArgumentException();
     this.maxBytesInQueue = maxBytesInQueue;
   }
 
-  public WriteOpQueue() {
+  WriteOpQueue() {
     this(Long.MAX_VALUE);
   }
 

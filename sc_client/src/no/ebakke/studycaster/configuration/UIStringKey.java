@@ -20,7 +20,11 @@ public enum UIStringKey {
   DIALOG_OPEN_FILE_ASSOCIATION_FAILED_MESSAGE(false, true, true),
   DIALOG_OPEN_FILE_ALREADY_MESSAGE(false, true, true),
   DIALOG_OPEN_FILE_NEW_BUTTON(false, true, false),
-  DIALOG_OPEN_FILE_KEEP_BUTTON(false, true, false);
+  DIALOG_OPEN_FILE_KEEP_BUTTON(false, true, false),
+  DIALOG_UPLOAD_TITLE(false, false, false),
+  DIALOG_UPLOAD_FILE_PATH_LABEL(true, true, false),
+  DIALOG_UPLOAD_FILE_INFO_LABEL(false, true, false),
+  DIALOG_UPLOAD_FILE_BROWSE_BUTTON(true, false, false);
 
   private boolean usesMnemonic, htmlAllowed, usesMessageFormat;
 
