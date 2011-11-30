@@ -6,11 +6,11 @@ import no.ebakke.studycaster.configuration.UIStrings;
 public class UploadDialogPanel extends javax.swing.JPanel {
   public UploadDialogPanel(UIStrings strings) {
     initComponents();
-    pathLabel.setText(strings.getString(UIStringKey.DIALOG_UPLOAD_FILE_PATH_LABEL));
-    pathLabel.setDisplayedMnemonic(strings.getMnemonic(UIStringKey.DIALOG_UPLOAD_FILE_PATH_LABEL));
-    infoLabel.setText(strings.getString(UIStringKey.DIALOG_UPLOAD_FILE_INFO_LABEL));
-    browseButton.setText(strings.getString(UIStringKey.DIALOG_UPLOAD_FILE_BROWSE_BUTTON));
-    browseButton.setMnemonic(strings.getMnemonic(UIStringKey.DIALOG_UPLOAD_FILE_BROWSE_BUTTON));
+    pathLabel.setText(strings.getString(UIStringKey.DIALOG_CONCLUDE_FILE_PATH_LABEL));
+    pathLabel.setDisplayedMnemonic(strings.getMnemonic(UIStringKey.DIALOG_CONCLUDE_FILE_PATH_LABEL));
+    infoLabel.setText(strings.getString(UIStringKey.DIALOG_CONCLUDE_FILE_INFO_LABEL));
+    browseButton.setText(strings.getString(UIStringKey.DIALOG_CONCLUDE_FILE_BROWSE_BUTTON));
+    browseButton.setMnemonic(strings.getMnemonic(UIStringKey.DIALOG_CONCLUDE_FILE_BROWSE_BUTTON));
     // TODO: Figure out why the path label mnemonic doesn't always work.
 
   }

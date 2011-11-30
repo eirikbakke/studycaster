@@ -498,10 +498,14 @@ public final class StudyUI {
     public void concludeAction(ConcludeConfiguration concludeConfiguration) {
       if (concludeConfiguration.getUploadConfiguration() != null) {
         UploadDialogPanel udp = new UploadDialogPanel(configuration.getUIStrings());
-        JOptionPane.showOptionDialog(mainFrame.getPositionDialog(), udp,
-            getUIString(UIStringKey.DIALOG_UPLOAD_TITLE), JOptionPane.OK_CANCEL_OPTION,
+        int res = JOptionPane.showOptionDialog(mainFrame.getPositionDialog(), udp,
+            getUIString(UIStringKey.DIALOG_CONCLUDE_TITLE), JOptionPane.OK_CANCEL_OPTION,
             JOptionPane.QUESTION_MESSAGE, null, null, null);
       } else {
+        int res = JOptionPane.showConfirmDialog(mainFrame.getPositionDialog(),
+            getUIString(UIStringKey.DIALOG_CONCLUDE_QUESTION),
+            getUIString(UIStringKey.DIALOG_CONCLUDE_TITLE), JOptionPane.OK_CANCEL_OPTION,
+            JOptionPane.QUESTION_MESSAGE);
       }
     }
 
