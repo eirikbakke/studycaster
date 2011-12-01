@@ -40,8 +40,8 @@ public final class RecordingConverter {
     outStreamCoder.setCodec(ICodec.ID.CODEC_ID_H264);
 
     // TODO: Allow a preset file to be specified on the command line.
-    InputStream in = RecordingConverter.class.getResourceAsStream(
-        "/no/ebakke/studycaster/screencasting/libx264.ffpreset");
+    InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(
+        "no/ebakke/studycaster/screencasting/libx264.ffpreset");
     if (in == null)
       throw new IOException("Could not find bundled ffmpeg preset file.");
     Properties ffpreset = new Properties();

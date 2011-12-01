@@ -18,8 +18,8 @@ public class BackendConfiguration {
   }
 
   public BackendConfiguration(String databaseURL, String storageDirPath) {
-    InputStream in =
-        Backend.class.getResourceAsStream("/development.properties");
+    InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(
+        "/development.properties");
     Properties develProp = new Properties();
     if (in != null) {
       try {

@@ -11,18 +11,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.net.URL;
-import no.ebakke.studycaster.screencasting.CaptureDecoder;
 
 public final class ResourceUtil {
-  private static final String RESOURCE_DIR = "/no/ebakke/studycaster/resources/";
+  private static final String RESOURCE_DIR = "no/ebakke/studycaster/resources/";
 
   private ResourceUtil() { }
 
   private static InputStream getResource(final String fileName) throws IOException {
-    InputStream is = ResourceUtil.class.getResourceAsStream(RESOURCE_DIR + fileName);
+    InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(
+        RESOURCE_DIR + fileName);
     if (is == null) {
       throw new FileNotFoundException(
-          "Could not locate resource \"" + fileName + "\" (is classpath set properly?)");
+          "Could not locate resource \"" + fileName + "\"");
     }
     return is;
   }
@@ -38,8 +38,9 @@ public final class ResourceUtil {
   public static Image loadImage(final String fileName, boolean wait) throws IOException {
     /* Do this to properly catch an error which may otherwise cause waitForAll() below to hang with
     an "Uncaught error fetching image" output. */
-    getResource(fileName).close();
-    final URL pointerImageURL = CaptureDecoder.class.getResource(RESOURCE_DIR + fileName);
+    //getResource(fileName).close();
+    final URL pointerImageURL = Thread.currentThread().getContextClassLoader().getResource(
+        RESOURCE_DIR + fileName);
     final Image ret = Toolkit.getDefaultToolkit().getImage(pointerImageURL);
     if (wait) {
       final MediaTracker mt = new MediaTracker(new Canvas());

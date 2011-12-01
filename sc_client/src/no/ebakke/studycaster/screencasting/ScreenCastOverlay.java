@@ -115,7 +115,7 @@ public class ScreenCastOverlay {
         new Dimension(screenRect.width, screenRect.height + overlay.getStatusAreaHeight())));
     CodecUtil.copyImage(capture, target);
     Graphics2D g = target.createGraphics();
-    overlay.drawStatus(g, "     0 / 0000-00-00 00:00:00.000 /      0");
+    overlay.drawStatus(g, "FM / 0000-00-00 00:00:00.000 /      0");
     overlay.drawWarning(g, "This is a test warning.");
     g.dispose();
     ImageDebugFrame.showImage(target);

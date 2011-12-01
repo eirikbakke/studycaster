@@ -276,7 +276,7 @@ public class MainFrame extends javax.swing.JFrame {
         setResizable(false);
         getContentPane().setLayout(new java.awt.GridBagLayout());
 
-        instructionLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        instructionLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         instructionLabel.setText("Instructions go here.");
         instructionLabel.setVerticalAlignment(javax.swing.SwingConstants.TOP);
         gridBagConstraints = new java.awt.GridBagConstraints();
