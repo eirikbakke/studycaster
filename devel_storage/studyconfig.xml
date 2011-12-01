@@ -173,6 +173,7 @@
         <html xmlns="">
           This is the second page. It has an open file button, and an open URI
           button.<br/><br/>
+          This is a second paragraph (actually, just after some BR tags).
         </html>
       </instructions>
       <openfile> <!-- Optional -->
@@ -185,6 +186,33 @@
         <uri>http://www.youtube.com/watch?v=dQw4w9WgXcQ</uri>
       </openuri>
     </page>
+
+<!--
+    <page>
+      <instructions><html xmlns="">
+        This is another page. This one demonstrates the use of an HTML table.<br/><br/>
+        <table border="1">
+        <thead>
+        <tr><td colspan="5"></td><td colspan="4">Custom Connector</td></tr>
+        <tr><td colspan="7">Digilent JTAG3 L-C JTAG D/D Cable</td><td colspan="4">S3 Starter Kit Board</td></tr>
+        <tr><th colspan="5">Parallel port</th><th colspan="2">JTAG</th><th colspan="2">B1 Exp. port</th><th colspan="2">FPGA Pins</th></tr>	
+        <tr><th>Pin</th><th>Name</th><th>Register</th><th>Inv?</th><th>Direction</th><th>Pin</th><th>Name</th><th>Pin</th><th>Name</th><th>Pin</th><th>Name</th></tr>
+        </thead>
+        <tbody>
+        <tr><td>4</td><td>Data 2</td><td>Data</td><td>No</td><td><code>-&gt;</code></td><td>1</td><td><code>TMS</code></td><td>4</td><td><code>PB-ADR0</code></td><td><code>C10</code></td><td><code>IO3</code></td></tr>
+        <tr><td>2</td><td>Data 0</td><td>Data</td><td>No</td><td><code>-&gt;</code></td><td>2</td><td><code>tdI</code></td><td>6</td><td><code>PB-ADR1</code></td><td><code>E10</code></td><td><code>l30P_1</code></td></tr>
+        <tr><td>13</td><td>Select</td><td>Status</td><td>No</td><td><code>&lt;-</code></td><td>3</td><td><code>tdO</code></td><td>8</td><td><code>PB-ADR2</code></td><td><code>C11</code></td><td><code>L29P_1</code></td></tr>
+        <tr><td>3</td><td>Data 1</td><td>Data</td><td>No</td><td><code>-&gt;</code></td><td>4</td><td><code>TCK</code></td><td>10</td><td><code>PB-ADR3</code></td><td><code>D11</code></td><td><code>L28N_1</code></td></tr>
+        <tr><td>18</td><td>GND</td><td></td><td></td><td><code>-</code></td><td>5</td><td><code>GND</code></td><td>1</td><td><code>GND</code></td></tr>
+        <tr><td></td><td></td><td></td><td></td><td></td><td>6</td><td><code>VCC</code></td><td>3</td><td><code>Vcco</code> (3.3V)</td></tr>
+        <tr><td>9</td><td>Data 7 (6?)</td><td>Data</td><td>No</td><td><code>-&gt;</code>|</td><td></td></tr>
+        <tr><td>11</td><td>Busy</td><td>Status</td><td>Yes</td><td><code>&lt;-</code>|</td><td></td></tr>
+        <tr><td>12</td><td>Paper-Out</td><td>Status</td><td>No</td><td><code>&lt;-</code>|</td><td></td></tr>
+        </tbody>
+        </table>
+      </html></instructions>
+    </page>
+-->
 
     <page>
       <instructions>
