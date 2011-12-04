@@ -55,6 +55,9 @@ import no.ebakke.studycaster.util.Util;
     anything.)
   * Unexpected error while opening an example document (e.g. file is deleted during rename succeeded
     dialog).
+  * Uploading downloaded but unchanged default file.
+  * Uploading with non-existent default file.
+  * Uploading locked file.
 */
 
 // TODO: Rename to StudyCasterUI. Rename threads to reflect change.
@@ -307,43 +310,39 @@ public final class StudyUI {
   }
 
   private class PrivateUserActionListener implements UserActionListener {
-    /** No real concurrency should happen, but the map is accessed from different threads. */
-    private final Map<String,OpenedFile> openedFiles = new ConcurrentHashMap<String,OpenedFile>();
-
+    /** No real concurrency should happen, but these maps are accessed from different threads. */
     private final Map<String,byte[]> hashesBeforeOpen = new ConcurrentHashMap<String,byte[]>();
     private final Map<String,byte[]> hashesAfterOpen  = new ConcurrentHashMap<String,byte[]>();
 
-    private File getDownloadLocation() {
+    private File getOpenFileDirectory() {
       return new File(System.getProperty("java.io.tmpdir"));
     }
 
-    /** If calling both fileHashMatches() and downloadFile(), call downloadFile() first to avoid an
-    extra download. */
-    private boolean fileHashMatches(OpenFileConfiguration openFileConfiguration, File otherFile)
+    private File getOpenFilePath(OpenFileConfiguration openFileConfiguration) {
+      return new File(getOpenFileDirectory(), openFileConfiguration.getClientName());
+    }
+
+    private boolean fileModified(OpenFileConfiguration openFileConfiguration, File otherFile)
         throws IOException
     {
       final String key = openFileConfiguration.getClientName();
       byte[] otherHash = Util.computeSHA1(otherFile);
       byte[] hashAfterOpen = hashesAfterOpen.get(key);
       if (hashAfterOpen != null && Arrays.equals(otherHash, hashAfterOpen))
-        return true;
+        return false;
+      if (!hashesBeforeOpen.containsKey(key))
+        downloadFile(openFileConfiguration).delete();
       byte[] hashBeforeOpen = hashesBeforeOpen.get(key);
-      if (hashBeforeOpen == null) {
-        File file = downloadFile(openFileConfiguration);
-        try {
-          hashBeforeOpen = Util.computeSHA1(file);
-        } finally {
-          file.delete();
-        }
-        hashesBeforeOpen.put(key, hashBeforeOpen);
-      }
-      return false;
+      return !Arrays.equals(otherHash, hashBeforeOpen);
     }
 
-    private File downloadFile(OpenFileConfiguration config) throws IOException {
-      File ret = File.createTempFile("sc_", ".tmp", getDownloadLocation());
+    private File downloadFile(OpenFileConfiguration openFileConfiguration) throws IOException {
+      final String key = openFileConfiguration.getClientName();
+      File ret = File.createTempFile("sc_", ".tmp", getOpenFileDirectory());
       try {
-        ServerContextUtil.downloadFile(serverContext, config.getServerName(), ret);
+        ServerContextUtil.downloadFile(serverContext, openFileConfiguration.getServerName(), ret);
+        if (!hashesBeforeOpen.containsKey(key))
+          hashesBeforeOpen.put(key, Util.computeSHA1(ret));
       } catch (IOException e) {
         ret.delete();
         throw e;
@@ -354,22 +353,12 @@ public final class StudyUI {
     private void openFileActionHelper(OpenFileConfiguration openFileConfiguration)
         throws StudyCasterException
     {
+      final String key = openFileConfiguration.getClientName();
+      final boolean openedInThisSession = hashesBeforeOpen.containsKey(key);
       File downloadedFile = null;
       try {
-        LOG.log(Level.INFO, "Open action for file {0}", openFileConfiguration.getClientName());
-        final File clientFile = new File(getDownloadLocation(), openFileConfiguration.getClientName());
-        final byte downloadedHash[];
-        final OpenedFile openedFile = openedFiles.get(openFileConfiguration.getClientName());
-        if (openedFile == null) {
-          downloadedFile = downloadFile(openFileConfiguration);
-          downloadedHash = Util.computeSHA1(downloadedFile);
-        } else {
-          LOG.info("File was previously opened");
-          /* Small optimization: If the file was downloaded before, it might not be necessary to
-          download it again, provided it has not been modified or the user chooses to keep a
-          modified version. */
-          downloadedHash = openedFile.getHashBeforeOpen();
-        }
+        LOG.log(Level.INFO, "Open action for file {0}", key);
+        final File clientFile = getOpenFilePath(openFileConfiguration);
         if (!Util.fileAvailableExclusive(clientFile)) {
           LOG.severe("File already open on desktop, showing dialog");
           showMessageDialog(UIStringKey.DIALOG_OPEN_FILE_ALREADY_MESSAGE,
@@ -382,10 +371,10 @@ public final class StudyUI {
           useDownloaded = true;
           modified      = false;
         } else {
-          final byte existingHash[] = Util.computeSHA1(clientFile);
-          if (Arrays.equals(existingHash, downloadedHash) ||
-              (openedFile != null && Arrays.equals(existingHash, openedFile.getHashAfterOpen())))
-          {
+          /* Small optimization: call downloadFile() before fileModified() to avoid downloading the
+          file both via fileModified() and the other call to downloadFile() below. */
+          downloadedFile = downloadFile(openFileConfiguration);
+          if (!fileModified(openFileConfiguration, clientFile)) {
             LOG.info("File already exists in identical form");
             // The existing file is identical to the downloaded one; so use the existing one.
             useDownloaded = false;
@@ -399,8 +388,8 @@ public final class StudyUI {
                 final String existingOption = getUIString(UIStringKey.DIALOG_OPEN_FILE_KEEP_BUTTON);
                 int ret = JOptionPane.showOptionDialog(mainFrame.getPositionDialog(),
                     getUIString(
-                      openedFile == null ? UIStringKey.DIALOG_OPEN_FILE_EXISTING_MESSAGE
-                                         : UIStringKey.DIALOG_OPEN_FILE_MODIFIED_MESSAGE,
+                      openedInThisSession ? UIStringKey.DIALOG_OPEN_FILE_MODIFIED_MESSAGE
+                                          : UIStringKey.DIALOG_OPEN_FILE_EXISTING_MESSAGE,
                       new Object[] { Util.getPathString(clientFile) }),
                     getUIString(UIStringKey.DIALOG_OPEN_FILE_TITLE),
                     JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
@@ -463,20 +452,17 @@ public final class StudyUI {
         originally downloaded file or the file in the state it was a short moment after it was
         opened in an unmodified state (presumably before the user would have had time to change
         it.) */
-        final byte hashAfterOpen[];
         if (modified) {
           // Once the file is considered modified, don't use hashAfterOpen for matching anymore.
-          hashAfterOpen = new byte[0];
+          hashesAfterOpen.remove(key);
         } else {
           try {
             Thread.sleep(500);
           } catch (InterruptedException e) {
             throw new StudyCasterException(e);
           }
-          hashAfterOpen = Util.computeSHA1(clientFile);
+          hashesAfterOpen.put(key, Util.computeSHA1(clientFile));
         }
-        openedFiles.put(openFileConfiguration.getClientName(),
-            new OpenedFile(clientFile, downloadedHash, hashAfterOpen));
       } catch (IOException e) {
         throw new StudyCasterException(e);
       } finally {
@@ -535,9 +521,9 @@ public final class StudyUI {
       if (concludeConfiguration.getUploadConfiguration() != null) {
         UploadConfiguration uploadConfiguration = concludeConfiguration.getUploadConfiguration();
         UploadDialogPanel udp = new UploadDialogPanel(configuration.getUIStrings());
-        if (uploadConfiguration.getDefaultName() != null) {
-          OpenedFile openedFile = openedFiles.get(uploadConfiguration.getDefaultName());
-          if (openedFile == null) {
+        OpenFileConfiguration defaultFile = uploadConfiguration.getDefaultFile();
+        if (defaultFile != null) {
+          if (!getOpenFilePath(defaultFile).exists()) {
             JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
                 getUIString(UIStringKey.DIALOG_CONCLUDE_FILE_NOT_OPENED_MESSAGE),
                 getUIString(UIStringKey.DIALOG_CONCLUDE_TITLE), JOptionPane.INFORMATION_MESSAGE);
@@ -552,29 +538,6 @@ public final class StudyUI {
             getUIString(UIStringKey.DIALOG_CONCLUDE_QUESTION),
             getUIString(UIStringKey.DIALOG_CONCLUDE_TITLE), JOptionPane.OK_CANCEL_OPTION,
             JOptionPane.QUESTION_MESSAGE);
-      }
-    }
-
-    private class OpenedFile {
-      private File   path;
-      private byte[] hashBeforeOpen, hashAfterOpen;
-
-      OpenedFile(File path, byte[] hashBeforeOpen, byte[] hashAfterOpen) {
-        this.path = path;
-        this.hashBeforeOpen = Util.copyOfRange(hashBeforeOpen, 0, hashBeforeOpen.length);
-        this.hashAfterOpen  = Util.copyOfRange(hashAfterOpen , 0, hashAfterOpen.length);
-      }
-
-      byte[] getHashBeforeOpen() {
-        return Util.copyOfRange(hashBeforeOpen, 0, hashBeforeOpen.length);
-      }
-
-      byte[] getHashAfterOpen() {
-        return Util.copyOfRange(hashAfterOpen, 0, hashAfterOpen.length);
-      }
-
-      File getPath() {
-        return path;
       }
     }
   }
