@@ -313,9 +313,22 @@ public final class StudyUI {
     /** No real concurrency should happen, but these maps are accessed from different threads. */
     private final Map<String,byte[]> hashesBeforeOpen = new ConcurrentHashMap<String,byte[]>();
     private final Map<String,byte[]> hashesAfterOpen  = new ConcurrentHashMap<String,byte[]>();
+    private final File openFileDirectory;
+
+    public PrivateUserActionListener() {
+      File rawOpenFileDirectory = new File(System.getProperty("java.io.tmpdir"));
+      try {
+        /* I/O operations should generally not go on the EHT, but this is a tiny one, and we do it
+        in the constructor only once, before the main frame is shown. */
+        rawOpenFileDirectory = rawOpenFileDirectory.getCanonicalFile();
+      } catch (IOException e) {
+        // Canonicalization of the path is only for cosmetic reasons, so take no action.
+      }
+      openFileDirectory = rawOpenFileDirectory;
+    }
 
     private File getOpenFileDirectory() {
-      return new File(System.getProperty("java.io.tmpdir"));
+      return openFileDirectory;
     }
 
     private File getOpenFilePath(OpenFileConfiguration openFileConfiguration) {
@@ -520,15 +533,19 @@ public final class StudyUI {
     public void concludeAction(final ConcludeConfiguration concludeConfiguration) {
       if (concludeConfiguration.getUploadConfiguration() != null) {
         UploadConfiguration uploadConfiguration = concludeConfiguration.getUploadConfiguration();
-        UploadDialogPanel udp = new UploadDialogPanel(configuration.getUIStrings());
+        UploadDialogPanel udp =
+            new UploadDialogPanel(configuration.getUIStrings(), uploadConfiguration);
         OpenFileConfiguration defaultFile = uploadConfiguration.getDefaultFile();
         if (defaultFile != null) {
+          // TODO: Avoid doing any kind of IO on the EHT (including in setFile)
+          // I/O operations should generally not be on the EHT, but this one should be quick.
           if (!getOpenFilePath(defaultFile).exists()) {
             JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
                 getUIString(UIStringKey.DIALOG_CONCLUDE_FILE_NOT_OPENED_MESSAGE),
                 getUIString(UIStringKey.DIALOG_CONCLUDE_TITLE), JOptionPane.INFORMATION_MESSAGE);
             return;
           }
+          udp.setFile(getOpenFilePath(defaultFile));
         }
         int res = JOptionPane.showOptionDialog(mainFrame.getPositionDialog(), udp,
             getUIString(UIStringKey.DIALOG_CONCLUDE_TITLE), JOptionPane.OK_CANCEL_OPTION,

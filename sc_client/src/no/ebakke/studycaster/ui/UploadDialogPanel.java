@@ -1,17 +1,33 @@
 package no.ebakke.studycaster.ui;
 
+import java.io.File;
+import java.io.IOException;
+import javax.swing.JFileChooser;
 import no.ebakke.studycaster.configuration.UIStringKey;
 import no.ebakke.studycaster.configuration.UIStrings;
+import no.ebakke.studycaster.configuration.UploadConfiguration;
 
 public class UploadDialogPanel extends javax.swing.JPanel {
-  public UploadDialogPanel(UIStrings strings) {
+  private final JFileChooser fileChooser;
+
+  public UploadDialogPanel(UIStrings strings, UploadConfiguration uploadFileConfiguration) {
     initComponents();
+    // TODO: Figure out why the path label mnemonic doesn't always work.
     pathLabel.setText(strings.getString(UIStringKey.DIALOG_CONCLUDE_FILE_PATH_LABEL));
     pathLabel.setDisplayedMnemonic(strings.getMnemonic(UIStringKey.DIALOG_CONCLUDE_FILE_PATH_LABEL));
     infoLabel.setText(strings.getString(UIStringKey.DIALOG_CONCLUDE_FILE_INFO_LABEL));
     browseButton.setText(strings.getString(UIStringKey.DIALOG_CONCLUDE_FILE_BROWSE_BUTTON));
     browseButton.setMnemonic(strings.getMnemonic(UIStringKey.DIALOG_CONCLUDE_FILE_BROWSE_BUTTON));
-    // TODO: Figure out why the path label mnemonic doesn't always work.
+    fileChooser = new JFileChooser();
+    fileChooser.setFileFilter(uploadFileConfiguration.getFileFilter());
+  }
+
+  public File getFile() {
+    return new File(pathTextField.getText());
+  }
+
+  public void setFile(File file) {
+    pathTextField.setText(file.getAbsolutePath());
   }
 
   /** This method is called from within the constructor to
@@ -70,6 +86,11 @@ public class UploadDialogPanel extends javax.swing.JPanel {
 
         browseButton.setMnemonic('B');
         browseButton.setText("Browse...");
+        browseButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                browseButtonActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 2;
@@ -90,6 +111,13 @@ public class UploadDialogPanel extends javax.swing.JPanel {
   private void pathTextFieldFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_pathTextFieldFocusGained
     pathTextField.selectAll();
   }//GEN-LAST:event_pathTextFieldFocusGained
+
+  private void browseButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_browseButtonActionPerformed
+    fileChooser.setSelectedFile(getFile());
+    int res = fileChooser.showOpenDialog(this);
+    if (res == JFileChooser.APPROVE_OPTION)
+      setFile(fileChooser.getSelectedFile());
+  }//GEN-LAST:event_browseButtonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton browseButton;
