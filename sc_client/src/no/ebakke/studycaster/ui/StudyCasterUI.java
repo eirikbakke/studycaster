@@ -20,7 +20,7 @@ import no.ebakke.studycaster.util.stream.NonBlockingOutputStream;
 import no.ebakke.studycaster.util.stream.StreamProgressObserver;
 
 // TODO: Check that this is actually the case.
-/* This class should be thread-safe. */
+/** This class should be thread-safe. */
 public class StudyCasterUI {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   public enum UIAction {

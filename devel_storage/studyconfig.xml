@@ -68,7 +68,9 @@
       <uistring key="DIALOG_CONCLUDE_QUESTION">
         OK to conclude study and retrieve a confirmation code?
       </uistring>
-
+      <uistring key="DIALOG_CONCLUDE_FILE_NOT_OPENED_MESSAGE">
+        To upload an edited file, please open it first using the "Open Sample Document" button.
+      </uistring>
     </uistrings>
   </macrodef>
   <!-- Foreign language example, to test UI string settings. -->

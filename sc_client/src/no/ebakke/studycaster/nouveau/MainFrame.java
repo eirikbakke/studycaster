@@ -22,6 +22,7 @@ import no.ebakke.studycaster.configuration.UIStrings;
 import no.ebakke.studycaster.ui.ResourceUtil;
 
 public class MainFrame extends javax.swing.JFrame {
+  /** Public methods on this interface will be called on the EHT. */
   public static interface UserActionListener {
     public void openFileAction(OpenFileConfiguration openFileConfiguration);
     public void openURIAction(OpenURIConfiguration openURIConfiguration);
@@ -276,7 +277,7 @@ public class MainFrame extends javax.swing.JFrame {
         setResizable(false);
         getContentPane().setLayout(new java.awt.GridBagLayout());
 
-        instructionLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        instructionLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         instructionLabel.setText("Instructions go here.");
         instructionLabel.setVerticalAlignment(javax.swing.SwingConstants.TOP);
         gridBagConstraints = new java.awt.GridBagConstraints();

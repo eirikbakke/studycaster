@@ -6,8 +6,8 @@ import java.awt.event.WindowListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.jnlp.SingleInstanceListener;
@@ -21,6 +21,7 @@ import no.ebakke.studycaster.configuration.OpenFileConfiguration;
 import no.ebakke.studycaster.configuration.OpenURIConfiguration;
 import no.ebakke.studycaster.configuration.StudyConfiguration;
 import no.ebakke.studycaster.configuration.UIStringKey;
+import no.ebakke.studycaster.configuration.UploadConfiguration;
 import no.ebakke.studycaster.nouveau.MainFrame.UserActionListener;
 import no.ebakke.studycaster.ui.UploadDialogPanel;
 import no.ebakke.studycaster.util.Util;
@@ -306,10 +307,41 @@ public final class StudyUI {
   }
 
   private class PrivateUserActionListener implements UserActionListener {
-    private final Map<String,OpenedFile> openedFiles = new LinkedHashMap<String,OpenedFile>();
+    /** No real concurrency should happen, but the map is accessed from different threads. */
+    private final Map<String,OpenedFile> openedFiles = new ConcurrentHashMap<String,OpenedFile>();
 
-    private File downloadFile(OpenFileConfiguration config, File dir) throws IOException {
-      File ret = File.createTempFile("sc_", ".tmp", dir);
+    private final Map<String,byte[]> hashesBeforeOpen = new ConcurrentHashMap<String,byte[]>();
+    private final Map<String,byte[]> hashesAfterOpen  = new ConcurrentHashMap<String,byte[]>();
+
+    private File getDownloadLocation() {
+      return new File(System.getProperty("java.io.tmpdir"));
+    }
+
+    /** If calling both fileHashMatches() and downloadFile(), call downloadFile() first to avoid an
+    extra download. */
+    private boolean fileHashMatches(OpenFileConfiguration openFileConfiguration, File otherFile)
+        throws IOException
+    {
+      final String key = openFileConfiguration.getClientName();
+      byte[] otherHash = Util.computeSHA1(otherFile);
+      byte[] hashAfterOpen = hashesAfterOpen.get(key);
+      if (hashAfterOpen != null && Arrays.equals(otherHash, hashAfterOpen))
+        return true;
+      byte[] hashBeforeOpen = hashesBeforeOpen.get(key);
+      if (hashBeforeOpen == null) {
+        File file = downloadFile(openFileConfiguration);
+        try {
+          hashBeforeOpen = Util.computeSHA1(file);
+        } finally {
+          file.delete();
+        }
+        hashesBeforeOpen.put(key, hashBeforeOpen);
+      }
+      return false;
+    }
+
+    private File downloadFile(OpenFileConfiguration config) throws IOException {
+      File ret = File.createTempFile("sc_", ".tmp", getDownloadLocation());
       try {
         ServerContextUtil.downloadFile(serverContext, config.getServerName(), ret);
       } catch (IOException e) {
@@ -325,19 +357,11 @@ public final class StudyUI {
       File downloadedFile = null;
       try {
         LOG.log(Level.INFO, "Open action for file {0}", openFileConfiguration.getClientName());
-        final File tempDir    = new File(System.getProperty("java.io.tmpdir"));
-        final File clientFile = new File(tempDir, openFileConfiguration.getClientName());
-        if (!Util.fileAvailableExclusive(clientFile)) {
-          LOG.severe("File already open on desktop, showing dialog");
-          showMessageDialog(UIStringKey.DIALOG_OPEN_FILE_ALREADY_MESSAGE,
-              new Object[] { Util.getPathString(clientFile) }, UIStringKey.DIALOG_OPEN_FILE_TITLE,
-              JOptionPane.INFORMATION_MESSAGE);
-          return;
-        }
+        final File clientFile = new File(getDownloadLocation(), openFileConfiguration.getClientName());
         final byte downloadedHash[];
         final OpenedFile openedFile = openedFiles.get(openFileConfiguration.getClientName());
         if (openedFile == null) {
-          downloadedFile = downloadFile(openFileConfiguration, tempDir);
+          downloadedFile = downloadFile(openFileConfiguration);
           downloadedHash = Util.computeSHA1(downloadedFile);
         } else {
           LOG.info("File was previously opened");
@@ -345,6 +369,13 @@ public final class StudyUI {
           download it again, provided it has not been modified or the user chooses to keep a
           modified version. */
           downloadedHash = openedFile.getHashBeforeOpen();
+        }
+        if (!Util.fileAvailableExclusive(clientFile)) {
+          LOG.severe("File already open on desktop, showing dialog");
+          showMessageDialog(UIStringKey.DIALOG_OPEN_FILE_ALREADY_MESSAGE,
+              new Object[] { Util.getPathString(clientFile) }, UIStringKey.DIALOG_OPEN_FILE_TITLE,
+              JOptionPane.INFORMATION_MESSAGE);
+          return;
         }
         final boolean modified, useDownloaded;
         if (!clientFile.exists()) {
@@ -362,11 +393,11 @@ public final class StudyUI {
           } else {
             LOG.info("File already exists in modified form, showing option dialog");
             // The existing file is different from the downloaded one; ask the user what to do.
-            useDownloaded = Util.checkedSwingInvokeAndWait(new Util.CallableExt<Boolean,RuntimeException>() {
-              public Boolean call() {
+            int res = Util.checkedSwingInvokeAndWait(new Util.CallableExt<Integer,RuntimeException>() {
+              public Integer call() {
                 final String downloadOption = getUIString(UIStringKey.DIALOG_OPEN_FILE_NEW_BUTTON);
                 final String existingOption = getUIString(UIStringKey.DIALOG_OPEN_FILE_KEEP_BUTTON);
-                int res = JOptionPane.showOptionDialog(mainFrame.getPositionDialog(),
+                int ret = JOptionPane.showOptionDialog(mainFrame.getPositionDialog(),
                     getUIString(
                       openedFile == null ? UIStringKey.DIALOG_OPEN_FILE_EXISTING_MESSAGE
                                          : UIStringKey.DIALOG_OPEN_FILE_MODIFIED_MESSAGE,
@@ -374,9 +405,14 @@ public final class StudyUI {
                     getUIString(UIStringKey.DIALOG_OPEN_FILE_TITLE),
                     JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
                     null, new Object[] {downloadOption, existingOption}, existingOption);
-                return res == JOptionPane.YES_OPTION;
+                return ret;
               }
             });
+            if (res == JOptionPane.CLOSED_OPTION) {
+              LOG.info("User closed option window");
+              return;
+            }
+            useDownloaded = (res == JOptionPane.YES_OPTION);
             modified = !useDownloaded;
             if (useDownloaded) {
               // Move the old file out of place without deleting it.
@@ -408,7 +444,7 @@ public final class StudyUI {
         }
         if (useDownloaded) {
           if (downloadedFile == null)
-            downloadedFile = downloadFile(openFileConfiguration, tempDir);
+            downloadedFile = downloadFile(openFileConfiguration);
           /* An error here is unexpected, as any existing file should already have been moved out of
           the way at this point. */
           if (!downloadedFile.renameTo(clientFile))
@@ -495,9 +531,19 @@ public final class StudyUI {
       }).start();
     }
 
-    public void concludeAction(ConcludeConfiguration concludeConfiguration) {
+    public void concludeAction(final ConcludeConfiguration concludeConfiguration) {
       if (concludeConfiguration.getUploadConfiguration() != null) {
+        UploadConfiguration uploadConfiguration = concludeConfiguration.getUploadConfiguration();
         UploadDialogPanel udp = new UploadDialogPanel(configuration.getUIStrings());
+        if (uploadConfiguration.getDefaultName() != null) {
+          OpenedFile openedFile = openedFiles.get(uploadConfiguration.getDefaultName());
+          if (openedFile == null) {
+            JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
+                getUIString(UIStringKey.DIALOG_CONCLUDE_FILE_NOT_OPENED_MESSAGE),
+                getUIString(UIStringKey.DIALOG_CONCLUDE_TITLE), JOptionPane.INFORMATION_MESSAGE);
+            return;
+          }
+        }
         int res = JOptionPane.showOptionDialog(mainFrame.getPositionDialog(), udp,
             getUIString(UIStringKey.DIALOG_CONCLUDE_TITLE), JOptionPane.OK_CANCEL_OPTION,
             JOptionPane.QUESTION_MESSAGE, null, null, null);

@@ -25,7 +25,8 @@ public enum UIStringKey {
   DIALOG_CONCLUDE_FILE_PATH_LABEL(true, true, false),
   DIALOG_CONCLUDE_FILE_INFO_LABEL(false, true, false),
   DIALOG_CONCLUDE_FILE_BROWSE_BUTTON(true, false, false),
-  DIALOG_CONCLUDE_QUESTION(false, true, false);
+  DIALOG_CONCLUDE_QUESTION(false, true, false),
+  DIALOG_CONCLUDE_FILE_NOT_OPENED_MESSAGE(false, true, false);
 
   private boolean usesMnemonic, htmlAllowed, usesMessageFormat;
 

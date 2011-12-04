@@ -35,7 +35,7 @@ public class CaptureDecoder {
   private boolean statFrameChanged, statFrameIndicator, statMetaIndicator;
 
   public CaptureDecoder(InputStream is) throws IOException {
-    dis = new DataInputStream(new BufferedInputStream(new GZIPInputStream(is), 4* 1024 * 1024));
+    dis = new DataInputStream(new BufferedInputStream(new GZIPInputStream(is), 4 * 1024 * 1024));
     if (!dis.readUTF().equals(CodecConstants.MAGIC_STRING))
       throw new IOException("File not in StudyCaster screencast format");
     int width  = dis.readInt();

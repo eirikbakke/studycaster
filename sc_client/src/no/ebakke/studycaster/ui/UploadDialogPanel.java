@@ -12,7 +12,6 @@ public class UploadDialogPanel extends javax.swing.JPanel {
     browseButton.setText(strings.getString(UIStringKey.DIALOG_CONCLUDE_FILE_BROWSE_BUTTON));
     browseButton.setMnemonic(strings.getMnemonic(UIStringKey.DIALOG_CONCLUDE_FILE_BROWSE_BUTTON));
     // TODO: Figure out why the path label mnemonic doesn't always work.
-
   }
 
   /** This method is called from within the constructor to
