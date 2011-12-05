@@ -1,9 +1,7 @@
 package no.ebakke.studycaster.ui;
 
-import java.awt.Container;
 import java.io.File;
 import javax.swing.JFileChooser;
-import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 import no.ebakke.studycaster.configuration.UIStringKey;
 import no.ebakke.studycaster.configuration.UIStrings;

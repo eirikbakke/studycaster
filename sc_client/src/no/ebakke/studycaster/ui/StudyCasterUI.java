@@ -66,7 +66,7 @@ public class StudyCasterUI {
   }
 
   public StudyCasterUI()
-      throws StudyCasterException
+      throws StudyCasterException, InterruptedException
   {
     StatusFrame.setSystemLookAndFeel();
 
@@ -95,7 +95,7 @@ public class StudyCasterUI {
           "Couldn''t create a SingleInstanceService (normal when run outside of JWS)", e);
     }
 
-    Util.checkedSwingInvokeAndWait(new Util.CallableExt<Void, StudyCasterException>() {
+    Util.checkedSwingInvokeAndWait(new Util.CallableExt<Void,StudyCasterException>() {
       public Void call() {
         sf = new StatusFrame();
         sf.addWindowListener(new java.awt.event.WindowAdapter() {
@@ -130,7 +130,7 @@ public class StudyCasterUI {
         sf.getUploadButton().addActionListener(new ActionListener() {
           public void actionPerformed(ActionEvent e) {
             sf.getUploadButton().setEnabled(false);
-            UploadDialog upld = new UploadDialog(sf, uploadFileFilter, defaultFile);
+            UploadDialogOld upld = new UploadDialogOld(sf, uploadFileFilter, defaultFile);
             LOG.info("Now displaying upload dialog");
             upld.setVisible(true);
             selectedFile = upld.getSelectedFile();
@@ -176,7 +176,9 @@ public class StudyCasterUI {
     });
   }
 
-  public boolean showDownloadOrExistingDialog(final String fileName) throws StudyCasterException {
+  public boolean showDownloadOrExistingDialog(final String fileName)
+      throws StudyCasterException, InterruptedException
+  {
     return Util.checkedSwingInvokeAndWait(new CallableExt<Boolean, StudyCasterException>() {
       public Boolean call() {
         final String downloadOption = "Download New File";
@@ -194,7 +196,7 @@ public class StudyCasterUI {
   }
 
   public void showConfirmationCodeDialog(final String confirmationCode, boolean block)
-      throws StudyCasterException
+      throws StudyCasterException, InterruptedException
   {
     Util.checkedSwingInvokeAndWait(new CallableExt<Void, StudyCasterException>() {
       public Void call() {
@@ -206,12 +208,14 @@ public class StudyCasterUI {
 
   public void showMessageDialog(final String title, final String message, final int messageType) {
     try {
-      Util.checkedSwingInvokeAndWait(new CallableExt<Void, StudyCasterException>() {
+      Util.checkedSwingInvokeAndWait(new CallableExt<Void,StudyCasterException>() {
         public Void call() throws StudyCasterException {
           JOptionPane.showMessageDialog(sf.getPositionDialog(), message, title, messageType);
           return null;
         }
       });
+    } catch (InterruptedException e) {
+      LOG.log(Level.WARNING, "Got an unexpected exception showing a message dialog", e);
     } catch (StudyCasterException e) {
       LOG.log(Level.WARNING, "Got an unexpected exception showing a message dialog", e);
     }
