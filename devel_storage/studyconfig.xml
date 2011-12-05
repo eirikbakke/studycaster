@@ -20,6 +20,8 @@
       </uistring>
       <uistring key="PROGRESS_OPEN_FILE">Opening file...</uistring>
       <uistring key="PROGRESS_OPEN_URI">Opening web page...</uistring>
+      <uistring key="PROGRESS_UPLOAD_FILE">Uploading file...</uistring>
+      <uistring key="PROGRESS_UPLOAD_SCREENCAST">Finishing screencast upload...</uistring>
 
       <uistring key="DIALOG_OPEN_FILE_TITLE">Open Sample Document</uistring>
       <uistring key="DIALOG_OPEN_FILE_EXISTING_MESSAGE"><html xmlns="">
@@ -70,6 +72,22 @@
       </uistring>
       <uistring key="DIALOG_CONCLUDE_FILE_NOT_OPENED_MESSAGE">
         To upload an edited file, please open it first using the "Open Sample Document" button.
+      </uistring>
+      <uistring key="DIALOG_CONCLUDE_EMPTY_PATH_MESSAGE">
+        Please select a file to upload.
+      </uistring>
+      <uistring key="DIALOG_CONCLUDE_FILE_NOT_EXISTS_MESSAGE"><html xmlns="">
+        The file does not exist:<br/>
+        {0}</html>
+      </uistring>
+      <uistring key="DIALOG_CONCLUDE_FILE_OPEN_MESSAGE"><html xmlns="">
+        Please close the file, then try again.<br/>
+        {0}</html>
+      </uistring>
+      <uistring key="DIALOG_CONCLUDE_FILE_NOT_MODIFIED_MESSAGE"><html xmlns="">
+        Please edit, save, and close the file before uploading it:<br/>
+        {0}<br/><br/>
+        If necessary, open the file again using the "Open Sample Document" button.</html>
       </uistring>
     </uistrings>
   </macrodef>

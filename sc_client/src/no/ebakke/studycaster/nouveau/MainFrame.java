@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.Window;
+import java.awt.datatransfer.StringSelection;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -20,9 +21,10 @@ import no.ebakke.studycaster.configuration.StudyConfiguration;
 import no.ebakke.studycaster.configuration.UIStringKey;
 import no.ebakke.studycaster.configuration.UIStrings;
 import no.ebakke.studycaster.ui.ResourceUtil;
+import no.ebakke.studycaster.ui.UploadDialogPanel;
 
 public class MainFrame extends javax.swing.JFrame {
-  /** Public methods on this interface will be called on the EHT. */
+  /** Public methods on this interface will be called on the EDT. */
   public static interface UserActionListener {
     public void openFileAction(OpenFileConfiguration openFileConfiguration);
     public void openURIAction(OpenURIConfiguration openURIConfiguration);
@@ -36,6 +38,7 @@ public class MainFrame extends javax.swing.JFrame {
   private StudyConfiguration configuration;
   private Integer pageIndex;
   private boolean taskInProgress;
+  private UploadDialogPanel uploadDialogPanel;
 
   public MainFrame(UserActionListener userActionListener) {
     this.userActionListener = userActionListener;
@@ -49,6 +52,12 @@ public class MainFrame extends javax.swing.JFrame {
   on the screen while still being descendants of the normally off-center MainFrame dialog. */
   public JDialog getPositionDialog() {
     return positionDialog;
+  }
+
+  public UploadDialogPanel getUploadDialogPanel() {
+    if (configuration == null)
+      throw new IllegalStateException("Not configured");
+    return uploadDialogPanel;
   }
 
   private void initIcon() {
@@ -109,6 +118,8 @@ public class MainFrame extends javax.swing.JFrame {
         backButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_BACK_BUTTON));
         nextButton.setText(strings.getString(UIStringKey.MAINFRAME_NEXT_BUTTON));
         nextButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_NEXT_BUTTON));
+
+        uploadDialogPanel = new UploadDialogPanel(strings);
 
         /* Both the action button panel and the frame itself should remain the same size across
         different pages. */
@@ -198,10 +209,12 @@ public class MainFrame extends javax.swing.JFrame {
     }
   }
 
-  public void startTask(String progressBarMessage, boolean indeterminate) {
-    LOG.log(Level.INFO, "Setting status bar text to \"{0}\"", progressBarMessage);
+  /** messageKey may be null. */
+  public void startTask(UIStringKey messageKey, boolean indeterminate) {
+    LOG.log(Level.INFO, "Setting status bar message to {0}", messageKey);
     taskInProgress = true;
-    progressBar.setString(progressBarMessage);
+    progressBar.setString(
+        messageKey == null ? "" : configuration.getUIStrings().getString(messageKey));
     progressBar.setValue(0);
     setProgressBarBounds(0, 100);
     progressBar.setIndeterminate(indeterminate);

@@ -218,7 +218,7 @@ public final class Util {
   class. */
   @SuppressWarnings("unchecked")
   public static <V,E extends Exception> V checkedSwingInvokeAndWait(final CallableExt<V,E> r)
-      throws StudyCasterException, E
+      throws E, InterruptedException
   {
     final Wrapper<V> ret = new Wrapper<V>();
     final Wrapper<Exception> retE = new Wrapper<Exception>();
@@ -232,11 +232,14 @@ public final class Util {
           }
         }
       });
-    } catch (InterruptedException e) {
-      throw new StudyCasterException("Interrupted method on EHT", e);
     } catch (InvocationTargetException e) {
-      LOG.severe("Unexpected InvocationTargetException");
-      throw new StudyCasterException("Unexcpected exception from method on EHT", e);
+      if        (e.getCause() instanceof RuntimeException) {
+        throw ((RuntimeException) e.getCause());
+      } else if (e.getCause() instanceof Error) {
+        throw ((Error) e.getCause());
+      } else {
+        throw new RuntimeException("Unexpected exception on the EDT", e.getCause());
+      }
     }
     if (retE.value != null) {
       if (retE.value instanceof RuntimeException) {

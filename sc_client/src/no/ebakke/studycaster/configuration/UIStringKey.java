@@ -12,6 +12,8 @@ public enum UIStringKey {
   DIALOG_CLOSE_MESSAGE(false, true, false),
   PROGRESS_OPEN_FILE(false, false, false),
   PROGRESS_OPEN_URI(false, false, false),
+  PROGRESS_UPLOAD_FILE(false, false, false),
+  PROGRESS_UPLOAD_SCREENCAST(false, false, false),
   DIALOG_OPEN_FILE_TITLE(false, false, false),
   DIALOG_OPEN_FILE_EXISTING_MESSAGE(false, true, true),
   DIALOG_OPEN_FILE_MODIFIED_MESSAGE(false, true, true),
@@ -26,7 +28,11 @@ public enum UIStringKey {
   DIALOG_CONCLUDE_FILE_INFO_LABEL(false, true, false),
   DIALOG_CONCLUDE_FILE_BROWSE_BUTTON(true, false, false),
   DIALOG_CONCLUDE_QUESTION(false, true, false),
-  DIALOG_CONCLUDE_FILE_NOT_OPENED_MESSAGE(false, true, false);
+  DIALOG_CONCLUDE_FILE_NOT_OPENED_MESSAGE(false, true, false),
+  DIALOG_CONCLUDE_EMPTY_PATH_MESSAGE(false, true, false),
+  DIALOG_CONCLUDE_FILE_NOT_EXISTS_MESSAGE(false, true, true),
+  DIALOG_CONCLUDE_FILE_OPEN_MESSAGE(false, true, true),
+  DIALOG_CONCLUDE_FILE_NOT_MODIFIED_MESSAGE(false, true, true);
 
   private boolean usesMnemonic, htmlAllowed, usesMessageFormat;
 

@@ -1,16 +1,17 @@
 package no.ebakke.studycaster.ui;
 
+import java.awt.Container;
 import java.io.File;
-import java.io.IOException;
 import javax.swing.JFileChooser;
+import javax.swing.SwingUtilities;
+import javax.swing.filechooser.FileFilter;
 import no.ebakke.studycaster.configuration.UIStringKey;
 import no.ebakke.studycaster.configuration.UIStrings;
-import no.ebakke.studycaster.configuration.UploadConfiguration;
 
 public class UploadDialogPanel extends javax.swing.JPanel {
   private final JFileChooser fileChooser;
 
-  public UploadDialogPanel(UIStrings strings, UploadConfiguration uploadFileConfiguration) {
+  public UploadDialogPanel(UIStrings strings) {
     initComponents();
     // TODO: Figure out why the path label mnemonic doesn't always work.
     pathLabel.setText(strings.getString(UIStringKey.DIALOG_CONCLUDE_FILE_PATH_LABEL));
@@ -19,15 +20,18 @@ public class UploadDialogPanel extends javax.swing.JPanel {
     browseButton.setText(strings.getString(UIStringKey.DIALOG_CONCLUDE_FILE_BROWSE_BUTTON));
     browseButton.setMnemonic(strings.getMnemonic(UIStringKey.DIALOG_CONCLUDE_FILE_BROWSE_BUTTON));
     fileChooser = new JFileChooser();
-    fileChooser.setFileFilter(uploadFileConfiguration.getFileFilter());
   }
 
-  public File getFile() {
-    return new File(pathTextField.getText());
+  public void setFileFilter(FileFilter fileFilter) {
+    fileChooser.setFileFilter(fileFilter);
   }
 
-  public void setFile(File file) {
-    pathTextField.setText(file.getAbsolutePath());
+  public String getFilePath() {
+    return pathTextField.getText();
+  }
+
+  public void setFilePath(String filePath) {
+    pathTextField.setText(filePath);
   }
 
   /** This method is called from within the constructor to
@@ -113,10 +117,10 @@ public class UploadDialogPanel extends javax.swing.JPanel {
   }//GEN-LAST:event_pathTextFieldFocusGained
 
   private void browseButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_browseButtonActionPerformed
-    fileChooser.setSelectedFile(getFile());
+    fileChooser.setSelectedFile(new File(getFilePath()));
     int res = fileChooser.showOpenDialog(this);
     if (res == JFileChooser.APPROVE_OPTION)
-      setFile(fileChooser.getSelectedFile());
+      setFilePath(fileChooser.getSelectedFile().getAbsolutePath());
   }//GEN-LAST:event_browseButtonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

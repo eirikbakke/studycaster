@@ -1,5 +1,6 @@
 package no.ebakke.studycaster.nouveau;
 
+import java.awt.EventQueue;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
@@ -25,6 +26,7 @@ import no.ebakke.studycaster.configuration.UploadConfiguration;
 import no.ebakke.studycaster.nouveau.MainFrame.UserActionListener;
 import no.ebakke.studycaster.ui.UploadDialogPanel;
 import no.ebakke.studycaster.util.Util;
+import no.ebakke.studycaster.util.Util.CallableExt;
 
 /*
   Manual test cases for this class:
@@ -64,8 +66,8 @@ import no.ebakke.studycaster.util.Util;
 // TODO: Pay attention to button focus.
 public final class StudyUI {
   /* Except where noted, methods in this class, including private ones, must be called from the
-  event-handling thread (EHT) only. Similarly, all non-final member variables must be accessed from
-  the EHT. This avoids declaring members volatile, and makes it easier to reason about concurrency.
+  event-handling thread (EDT) only. Similarly, all non-final member variables must be accessed from
+  the EDT. This avoids declaring members volatile, and makes it easier to reason about concurrency.
   */
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private static final String CONFIGID_PROP_NAME = "studycaster.config.id";
@@ -150,10 +152,10 @@ public final class StudyUI {
     });
   }
 
-  private void closeBackend(final Runnable onEndEHT) {
+  private void closeBackend(final Runnable onEndEDT) {
     if (backendCloseThread != null)
       throw new IllegalStateException("Backend already closed");
-    // Only access members from EHT.
+    // Only access members from EDT.
     final Thread initializerThreadT = initializerThread;
     backendCloseThread = new Thread(new Runnable() {
       public void run() {
@@ -168,8 +170,8 @@ public final class StudyUI {
         // In the case of an error, serverContext may still not be defined.
         if (serverContext != null)
           serverContext.close();
-        if (onEndEHT != null)
-          SwingUtilities.invokeLater(onEndEHT);
+        if (onEndEDT != null)
+          SwingUtilities.invokeLater(onEndEDT);
       }
     }, "StudyUI-backendClose");
     backendCloseThread.start();
@@ -190,20 +192,39 @@ public final class StudyUI {
     }
   }
 
-  /** Convenience method for showing a parameterized message dialog. The MainFrame taskbar will be
-  reset prior to showing the dialog. This method may be called from any thread. */
+  /** Convenience method for showing a parameterized modal message dialog. The MainFrame taskbar
+  will be reset prior to showing the dialog. This method may be called from any thread, including
+  the EDT. The method blocks until the dialog is closed. */
   private void showMessageDialog(final UIStringKey messageKey,
       final Object messageParameters[], final UIStringKey titleKey, final int messageType)
   {
-    SwingUtilities.invokeLater(new Runnable() {
-      public void run() {
-        mainFrame.stopTask();
-        String message = (messageParameters != null) ?
-            getUIString(messageKey, messageParameters) : getUIString(messageKey);
-        JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
-            message, getUIString(titleKey), messageType);
+    if (failsafeCloseThread != null) {
+      LOG.log(Level.INFO, "Suppressing dialog with message {0} due to earlier close action",
+          messageKey.toString());
+      return;
+    }
+    final String message = (messageParameters != null) ?
+        getUIString(messageKey, messageParameters) : getUIString(messageKey);
+    LOG.log(Level.INFO, "Showing dialog with message {0}", messageKey.toString());
+    if (EventQueue.isDispatchThread()) {
+      mainFrame.stopTask();
+      JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
+          message, getUIString(titleKey), messageType);
+    } else {
+      try {
+        Util.checkedSwingInvokeAndWait(new CallableExt<Void,RuntimeException>() {
+          public Void call() {
+            mainFrame.stopTask();
+            JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
+                message, getUIString(titleKey), messageType);
+            return null;
+          }
+        });
+      } catch (InterruptedException e) {
+        LOG.warning("showMessageDialog() interrupted");
+        Thread.currentThread().interrupt();
       }
-    });
+    }
   }
 
   private void initUI(StudyCasterException storedException) {
@@ -224,17 +245,8 @@ public final class StudyUI {
       if (sih != null) {
         sih.setListener(new SingleInstanceListener() {
           public void newActivation(String[] strings) {
-            SwingUtilities.invokeLater(new Runnable() {
-              public void run() {
-                if (failsafeCloseThread != null) {
-                  LOG.info("Already running, suppressing dialog due to earlier close action");
-                } else {
-                  LOG.info("Already running, showing dialog");
-                  showMessageDialog(UIStringKey.DIALOG_ALREADY_RUNNING_MESSAGE, null,
-                      UIStringKey.DIALOG_ALREADY_RUNNING_TITLE, JOptionPane.INFORMATION_MESSAGE);
-                }
-              }
-            });
+            showMessageDialog(UIStringKey.DIALOG_ALREADY_RUNNING_MESSAGE, null,
+                UIStringKey.DIALOG_ALREADY_RUNNING_TITLE, JOptionPane.INFORMATION_MESSAGE);
           }
         });
       }
@@ -274,7 +286,7 @@ public final class StudyUI {
         final StudyCasterException exceptionF = exception;
         SwingUtilities.invokeLater(new Runnable() {
           public void run() {
-            // Only access members from EHT.
+            // Only access members from EDT.
             serverContext = serverContextT;
             configuration = configurationT;
             initUI(exceptionF);
@@ -287,7 +299,7 @@ public final class StudyUI {
     the UI can be displayed, and started after the UI has been displayed. */
     /* TODO: If configuration files ever get parsed on the server side, consider including the
     initial few UI strings as parameters in the JNLP file. */
-    mainFrame.startTask("Loading instructions...", true);
+    mainFrame.startTask(null, true);
     mainFrame.setVisible(true);
     initializerThread.start();
   }
@@ -315,10 +327,10 @@ public final class StudyUI {
     private final Map<String,byte[]> hashesAfterOpen  = new ConcurrentHashMap<String,byte[]>();
     private final File openFileDirectory;
 
-    public PrivateUserActionListener() {
+    PrivateUserActionListener() {
       File rawOpenFileDirectory = new File(System.getProperty("java.io.tmpdir"));
       try {
-        /* I/O operations should generally not go on the EHT, but this is a tiny one, and we do it
+        /* I/O operations should generally not go on the EDT, but this is a tiny one, and we do it
         in the constructor only once, before the main frame is shown. */
         rawOpenFileDirectory = rawOpenFileDirectory.getCanonicalFile();
       } catch (IOException e) {
@@ -335,7 +347,7 @@ public final class StudyUI {
       return new File(getOpenFileDirectory(), openFileConfiguration.getClientName());
     }
 
-    private boolean fileModified(OpenFileConfiguration openFileConfiguration, File otherFile)
+    private boolean fileIsModified(OpenFileConfiguration openFileConfiguration, File otherFile)
         throws IOException
     {
       final String key = openFileConfiguration.getClientName();
@@ -363,6 +375,7 @@ public final class StudyUI {
       return ret;
     }
 
+    /** Should not be called on the EDT. */
     private void openFileActionHelper(OpenFileConfiguration openFileConfiguration)
         throws StudyCasterException
     {
@@ -373,7 +386,6 @@ public final class StudyUI {
         LOG.log(Level.INFO, "Open action for file {0}", key);
         final File clientFile = getOpenFilePath(openFileConfiguration);
         if (!Util.fileAvailableExclusive(clientFile)) {
-          LOG.severe("File already open on desktop, showing dialog");
           showMessageDialog(UIStringKey.DIALOG_OPEN_FILE_ALREADY_MESSAGE,
               new Object[] { Util.getPathString(clientFile) }, UIStringKey.DIALOG_OPEN_FILE_TITLE,
               JOptionPane.INFORMATION_MESSAGE);
@@ -387,8 +399,8 @@ public final class StudyUI {
           /* Small optimization: call downloadFile() before fileModified() to avoid downloading the
           file both via fileModified() and the other call to downloadFile() below. */
           downloadedFile = downloadFile(openFileConfiguration);
-          if (!fileModified(openFileConfiguration, clientFile)) {
-            LOG.info("File already exists in identical form");
+          if (!fileIsModified(openFileConfiguration, clientFile)) {
+            LOG.info("File already exists in unmodified form");
             // The existing file is identical to the downloaded one; so use the existing one.
             useDownloaded = false;
             modified      = false;
@@ -429,12 +441,10 @@ public final class StudyUI {
                 index++;
               } while (newName.exists());
               if (clientFile.renameTo(newName)) {
-                LOG.info("User chose to move existing file; succeeded, showing dialog");
                 showMessageDialog(UIStringKey.DIALOG_OPEN_FILE_RENAMED_MESSAGE,
                     new Object[] {Util.getPathString(clientFile), Util.getPathString(newName) },
                     UIStringKey.DIALOG_OPEN_FILE_TITLE, JOptionPane.INFORMATION_MESSAGE);
               } else {
-                LOG.info("User chose to move existing file; failed, showing dialog");
                 showMessageDialog(UIStringKey.DIALOG_OPEN_FILE_RENAME_FAILED_MESSAGE,
                     new Object[] { Util.getPathString(clientFile) },
                     UIStringKey.DIALOG_OPEN_FILE_TITLE, JOptionPane.WARNING_MESSAGE);
@@ -453,7 +463,6 @@ public final class StudyUI {
             throw new IOException("Failed to rename");
         }
         if (!Util.desktopOpenFile(clientFile)) {
-          LOG.severe("File open by association failed, showing dialog");
           showMessageDialog(UIStringKey.DIALOG_OPEN_FILE_ASSOCIATION_FAILED_MESSAGE,
               new Object[] { Util.getPathString(clientFile), openFileConfiguration.getErrorMessage() },
               UIStringKey.DIALOG_OPEN_FILE_TITLE, JOptionPane.WARNING_MESSAGE);
@@ -478,6 +487,8 @@ public final class StudyUI {
         }
       } catch (IOException e) {
         throw new StudyCasterException(e);
+      } catch (InterruptedException e) {
+        throw new StudyCasterException(e);
       } finally {
         // This file won't exist in all cases, even if downloadedFile != null; that's OK.
         if (downloadedFile != null)
@@ -485,13 +496,11 @@ public final class StudyUI {
       }
     }
 
-    // TODO: Reduce duplicated code between the following methods.
-    public void openURIAction(final OpenURIConfiguration openURIConfiguration) {
-      mainFrame.startTask(getUIString(UIStringKey.PROGRESS_OPEN_URI), true);
+    private void processAction(final CallableExt<Void,StudyCasterException> callable) {
       new Thread(new Runnable() {
         public void run() {
           try {
-            Util.desktopOpenURI(openURIConfiguration.getURI());
+            callable.call();
             SwingUtilities.invokeLater(new Runnable() {
               public void run() {
                 mainFrame.stopTask();
@@ -508,54 +517,119 @@ public final class StudyUI {
       }).start();
     }
 
-    public void openFileAction(final OpenFileConfiguration openFileConfiguration) {
-      mainFrame.startTask(getUIString(UIStringKey.PROGRESS_OPEN_FILE), true);
-      new Thread(new Runnable() {
-        public void run() {
-          try {
-            openFileActionHelper(openFileConfiguration);
-            SwingUtilities.invokeLater(new Runnable() {
-              public void run() {
-                mainFrame.stopTask();
-              }
-            });
-          } catch (final StudyCasterException e) {
-            SwingUtilities.invokeLater(new Runnable() {
-              public void run() {
-                reportGenericError(e, false);
-              }
-            });
-          }
+    public void openURIAction(final OpenURIConfiguration openURIConfiguration) {
+      mainFrame.startTask(UIStringKey.PROGRESS_OPEN_URI, true);
+      processAction(new CallableExt<Void,StudyCasterException>() {
+        public Void call() throws StudyCasterException {
+          Util.desktopOpenURI(openURIConfiguration.getURI());
+          return null;
         }
-      }).start();
+      });
+    }
+
+    public void openFileAction(final OpenFileConfiguration openFileConfiguration) {
+      mainFrame.startTask(UIStringKey.PROGRESS_OPEN_FILE, true);
+      processAction(new CallableExt<Void,StudyCasterException>() {
+        public Void call() throws StudyCasterException {
+          openFileActionHelper(openFileConfiguration);
+          return null;
+        }
+      });
+    }
+
+    /** Returns true if the operation should be retried. Should not be called on the EDT.
+    openFileConfiguration may be null. */
+    private void uploadFileHelper(final OpenFileConfiguration openFileConfiguration,
+        final UploadDialogPanel udp)
+        throws StudyCasterException, IOException, InterruptedException
+    {
+      boolean first = true;
+      do {
+        final boolean firstF = first;
+        first = false;
+        String selectedFilePath =
+            Util.checkedSwingInvokeAndWait(new Util.CallableExt<String,RuntimeException>()
+        {
+          public String call() {
+            if (firstF && openFileConfiguration != null)
+              udp.setFilePath(getOpenFilePath(openFileConfiguration).getAbsolutePath());
+            mainFrame.stopTask();
+            int res = JOptionPane.showOptionDialog(mainFrame.getPositionDialog(), udp,
+                getUIString(UIStringKey.DIALOG_CONCLUDE_TITLE), JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE, null, null, null);
+            if (res != JOptionPane.OK_OPTION)
+              return null;
+            mainFrame.startTask(UIStringKey.PROGRESS_UPLOAD_FILE, true);
+            return udp.getFilePath();
+          }
+        });
+        if (selectedFilePath == null)
+          break;
+        if (selectedFilePath.trim().length() == 0) {
+          showMessageDialog(UIStringKey.DIALOG_CONCLUDE_EMPTY_PATH_MESSAGE, null,
+              UIStringKey.DIALOG_CONCLUDE_TITLE, JOptionPane.INFORMATION_MESSAGE);
+          continue;
+        }
+        final File selectedFile = new File(selectedFilePath);
+        if (!selectedFile.exists()) {
+          showMessageDialog(UIStringKey.DIALOG_CONCLUDE_FILE_NOT_EXISTS_MESSAGE,
+              new Object[] { selectedFile.getAbsolutePath() },
+              UIStringKey.DIALOG_CONCLUDE_TITLE, JOptionPane.WARNING_MESSAGE);
+          continue;
+        }
+        if (!Util.fileAvailableExclusive(selectedFile)) {
+          showMessageDialog(UIStringKey.DIALOG_CONCLUDE_FILE_OPEN_MESSAGE,
+              new Object[] { selectedFile.getAbsolutePath() },
+              UIStringKey.DIALOG_CONCLUDE_TITLE, JOptionPane.INFORMATION_MESSAGE);
+          continue;
+        }
+        if (!fileIsModified(openFileConfiguration, selectedFile)) {
+          showMessageDialog(UIStringKey.DIALOG_CONCLUDE_FILE_NOT_MODIFIED_MESSAGE,
+              new Object[] { selectedFile.getAbsolutePath() },
+              UIStringKey.DIALOG_CONCLUDE_TITLE, JOptionPane.INFORMATION_MESSAGE);
+          continue;
+        }
+        // TODO: Upload now.
+        Thread.sleep(1500);
+        break;
+      } while (true);
     }
 
     public void concludeAction(final ConcludeConfiguration concludeConfiguration) {
       if (concludeConfiguration.getUploadConfiguration() != null) {
-        UploadConfiguration uploadConfiguration = concludeConfiguration.getUploadConfiguration();
-        UploadDialogPanel udp =
-            new UploadDialogPanel(configuration.getUIStrings(), uploadConfiguration);
-        OpenFileConfiguration defaultFile = uploadConfiguration.getDefaultFile();
-        if (defaultFile != null) {
-          // TODO: Avoid doing any kind of IO on the EHT (including in setFile)
-          // I/O operations should generally not be on the EHT, but this one should be quick.
-          if (!getOpenFilePath(defaultFile).exists()) {
-            JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
-                getUIString(UIStringKey.DIALOG_CONCLUDE_FILE_NOT_OPENED_MESSAGE),
-                getUIString(UIStringKey.DIALOG_CONCLUDE_TITLE), JOptionPane.INFORMATION_MESSAGE);
-            return;
+        /* To avoid a race condition, briefly disable buttons while waiting for the upload dialog to
+        appear. */
+        mainFrame.startTask(null, false);
+        final UploadDialogPanel udp = mainFrame.getUploadDialogPanel();
+        final UploadConfiguration uploadConfiguration = concludeConfiguration.getUploadConfiguration();
+        udp.setFileFilter(uploadConfiguration.getFileFilter());
+        processAction(new CallableExt<Void,StudyCasterException>() {
+          public Void call() throws StudyCasterException {
+            OpenFileConfiguration originalFile = uploadConfiguration.getDefaultFile();
+            if (originalFile != null && !getOpenFilePath(originalFile).exists()) {
+              showMessageDialog(UIStringKey.DIALOG_CONCLUDE_FILE_NOT_OPENED_MESSAGE, null,
+                  UIStringKey.DIALOG_CONCLUDE_TITLE, JOptionPane.INFORMATION_MESSAGE);
+              return null;
+            }
+            try {
+              uploadFileHelper(originalFile, udp);
+            } catch (InterruptedException e) {
+              throw new StudyCasterException(e);
+            } catch (IOException e) {
+              throw new StudyCasterException(e);
+            }
+            return null;
           }
-          udp.setFile(getOpenFilePath(defaultFile));
-        }
-        int res = JOptionPane.showOptionDialog(mainFrame.getPositionDialog(), udp,
-            getUIString(UIStringKey.DIALOG_CONCLUDE_TITLE), JOptionPane.OK_CANCEL_OPTION,
-            JOptionPane.QUESTION_MESSAGE, null, null, null);
+        });
       } else {
         int res = JOptionPane.showConfirmDialog(mainFrame.getPositionDialog(),
             getUIString(UIStringKey.DIALOG_CONCLUDE_QUESTION),
             getUIString(UIStringKey.DIALOG_CONCLUDE_TITLE), JOptionPane.OK_CANCEL_OPTION,
             JOptionPane.QUESTION_MESSAGE);
+        if (res != JOptionPane.OK_OPTION)
+          return;
       }
+      // TODO: Conclude study here.
     }
   }
 }
