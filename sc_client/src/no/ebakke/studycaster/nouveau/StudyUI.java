@@ -55,28 +55,35 @@ import no.ebakke.studycaster.util.Util.CallableExt;
   * Opening an example Excel spreadsheet, and correctly determining whether it has been modified by
     the user or not. (Excel will modify files upon opening them even before the user has done
     anything.)
+  * Canceling rename dialog upon open.
   * Unexpected error while opening an example document (e.g. file is deleted during rename succeeded
     dialog).
-  * Uploading downloaded but unchanged default file.
+  * Uploading downloaded but unmodified default file.
+  * Uploading a file remaining from a previous session but not opened in the current session.
+  * Uploading with an empty provided path.
   * Uploading with non-existent default file.
   * Uploading locked file.
+  * Uploading without default file existing or having been opened in the session before.
+  * Verifying that upload dialog path remains the same between errors and gets reset when opened
+    manually again.
+  * Concluding without upload.
 */
 
 // TODO: Rename to StudyCasterUI. Rename threads to reflect change.
 // TODO: Pay attention to button focus.
+/** Except where noted, methods in this class, including private ones, must be called from the
+event-dispatching thread (EDT) only. */
 public final class StudyUI {
-  /* Except where noted, methods in this class, including private ones, must be called from the
-  event-handling thread (EDT) only. Similarly, all non-final member variables must be accessed from
-  the EDT. This avoids declaring members volatile, and makes it easier to reason about concurrency.
-  */
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private static final String CONFIGID_PROP_NAME = "studycaster.config.id";
   private final MainFrame mainFrame;
   private final EnvironmentHooks hooks;
   private final WindowListener windowClosingListener;
-  private ServerContext serverContext;
-  private StudyConfiguration configuration;
   private Thread initializerThread, failsafeCloseThread, backendCloseThread;
+  /** Accessed from multiple threads. */
+  private volatile ServerContext serverContext;
+  /** Accessed from multiple threads. */
+  private volatile StudyConfiguration configuration;
 
   private StudyUI(EnvironmentHooks hooks) {
     this.hooks = hooks;
@@ -107,10 +114,12 @@ public final class StudyUI {
     mainFrame.addWindowListener(windowClosingListener);
   }
 
+  /** This method may be called from any thread. */
   private String getUIString(UIStringKey key) {
     return configuration.getUIStrings().getString(key);
   }
 
+  /** This method may be called from any thread. */
   private String getUIString(UIStringKey key, Object parameters[]) {
     return configuration.getUIStrings().getString(key, parameters);
   }
@@ -177,47 +186,29 @@ public final class StudyUI {
     backendCloseThread.start();
   }
 
-  // TODO: Integrate with the showMessageDialog()
-  private void reportGenericError(Exception e, boolean fatal) {
-    final String TYPE = "Generic error (" + (fatal ? "fatal" : "non-fatal") + ")";
-    if (failsafeCloseThread != null) {
-      LOG.log(Level.SEVERE, TYPE + ", suppressing error dialog due to earlier close action", e);
-    } else {
-      LOG.log(Level.SEVERE, TYPE + ", showing error dialog", e);
-      mainFrame.stopTask();
-      JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
-          "There was an unexpected error:\n" + e.getMessage(), "Error",
-          JOptionPane.ERROR_MESSAGE);
-      if (fatal)
-        closeUIandBackend();
-    }
-  }
-
-  /** Convenience method for showing a parameterized modal message dialog. The MainFrame taskbar
-  will be reset prior to showing the dialog. This method may be called from any thread, including
-  the EDT. The method blocks until the dialog is closed. */
-  private void showMessageDialog(final UIStringKey messageKey,
-      final Object messageParameters[], final UIStringKey titleKey, final int messageType)
+  private void showDialogHelperEDT(
+        final String message, final String title, final int messageType, final boolean fatal)
   {
     if (failsafeCloseThread != null) {
-      LOG.log(Level.INFO, "Suppressing dialog with message {0} due to earlier close action",
-          messageKey.toString());
+      LOG.log(Level.INFO, "Suppressing dialog due to earlier close action");
       return;
     }
-    final String message = (messageParameters != null) ?
-        getUIString(messageKey, messageParameters) : getUIString(messageKey);
-    LOG.log(Level.INFO, "Showing dialog with message {0}", messageKey.toString());
+    mainFrame.stopTask();
+    JOptionPane.showMessageDialog(mainFrame.getPositionDialog(), message, title, messageType);
+    if (fatal)
+      closeUIandBackend();
+  }
+
+  private void showDialogHelper(
+      final String message, final String title, final int messageType, final boolean fatal)
+  {
     if (EventQueue.isDispatchThread()) {
-      mainFrame.stopTask();
-      JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
-          message, getUIString(titleKey), messageType);
+      showDialogHelperEDT(message, title, messageType, fatal);
     } else {
       try {
         Util.checkedSwingInvokeAndWait(new CallableExt<Void,RuntimeException>() {
           public Void call() {
-            mainFrame.stopTask();
-            JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
-                message, getUIString(titleKey), messageType);
+            showDialogHelperEDT(message, title, messageType, fatal);
             return null;
           }
         });
@@ -226,6 +217,25 @@ public final class StudyUI {
         Thread.currentThread().interrupt();
       }
     }
+  }
+
+  /** Displays a parameterized modal message dialog. The MainFrame taskbar will be reset. The method
+  blocks and can be called from any thread, including the EDT. */
+  private void reportMessage(final UIStringKey messageKey,
+      final Object messageParameters[], final UIStringKey titleKey, final int messageType)
+  {
+    final String message = (messageParameters != null) ?
+        getUIString(messageKey, messageParameters) : getUIString(messageKey);
+    LOG.log(Level.INFO, "Showing dialog with message key {0}", messageKey.toString());
+    showDialogHelper(message, getUIString(titleKey), messageType, false);
+  }
+
+  /** Displays a modal dialog for reporting an exception. The MainFrame taskbar will be reset. The
+  method blocks and can be called from any thread, including the EDT. */
+  private void reportError(Exception e, boolean fatal) {
+    LOG.log(Level.SEVERE, fatal ? "Fatal error " : "Generic non-fatal error ", e);
+    showDialogHelper("There was an unexpected error:\n" + e.getMessage(),
+        "Error", JOptionPane.ERROR_MESSAGE, fatal);
   }
 
   private void initUI(StudyCasterException storedException) {
@@ -246,14 +256,14 @@ public final class StudyUI {
       if (sih != null) {
         sih.setListener(new SingleInstanceListener() {
           public void newActivation(String[] strings) {
-            showMessageDialog(UIStringKey.DIALOG_ALREADY_RUNNING_MESSAGE, null,
+            reportMessage(UIStringKey.DIALOG_ALREADY_RUNNING_MESSAGE, null,
                 UIStringKey.DIALOG_ALREADY_RUNNING_TITLE, JOptionPane.INFORMATION_MESSAGE);
           }
         });
       }
     } catch (StudyCasterException e) {
       // Note: Due to the exception, configuration and serverContext may not be defined.
-      reportGenericError(e, true);
+      reportError(e, true);
     }
   }
 
@@ -384,10 +394,10 @@ public final class StudyUI {
       final boolean openedInThisSession = hashesBeforeOpen.containsKey(key);
       File downloadedFile = null;
       try {
-        LOG.log(Level.INFO, "Open action for file {0}", key);
+        LOG.log(Level.INFO, "Open action for file \"{0}\"", key);
         final File clientFile = getOpenFilePath(openFileConfiguration);
         if (!Util.fileAvailableExclusive(clientFile)) {
-          showMessageDialog(UIStringKey.DIALOG_OPEN_FILE_ALREADY_MESSAGE,
+          reportMessage(UIStringKey.DIALOG_OPEN_FILE_ALREADY_MESSAGE,
               new Object[] { Util.getPathString(clientFile) }, UIStringKey.DIALOG_OPEN_FILE_TITLE,
               JOptionPane.INFORMATION_MESSAGE);
           return;
@@ -442,11 +452,11 @@ public final class StudyUI {
                 index++;
               } while (newName.exists());
               if (clientFile.renameTo(newName)) {
-                showMessageDialog(UIStringKey.DIALOG_OPEN_FILE_RENAMED_MESSAGE,
+                reportMessage(UIStringKey.DIALOG_OPEN_FILE_RENAMED_MESSAGE,
                     new Object[] {Util.getPathString(clientFile), Util.getPathString(newName) },
                     UIStringKey.DIALOG_OPEN_FILE_TITLE, JOptionPane.INFORMATION_MESSAGE);
               } else {
-                showMessageDialog(UIStringKey.DIALOG_OPEN_FILE_RENAME_FAILED_MESSAGE,
+                reportMessage(UIStringKey.DIALOG_OPEN_FILE_RENAME_FAILED_MESSAGE,
                     new Object[] { Util.getPathString(clientFile) },
                     UIStringKey.DIALOG_OPEN_FILE_TITLE, JOptionPane.WARNING_MESSAGE);
                 // Leave it up to the user to try again.
@@ -464,7 +474,7 @@ public final class StudyUI {
             throw new IOException("Failed to rename");
         }
         if (!Util.desktopOpenFile(clientFile)) {
-          showMessageDialog(UIStringKey.DIALOG_OPEN_FILE_ASSOCIATION_FAILED_MESSAGE,
+          reportMessage(UIStringKey.DIALOG_OPEN_FILE_ASSOCIATION_FAILED_MESSAGE,
               new Object[] { Util.getPathString(clientFile), openFileConfiguration.getErrorMessage() },
               UIStringKey.DIALOG_OPEN_FILE_TITLE, JOptionPane.WARNING_MESSAGE);
           return;
@@ -508,11 +518,7 @@ public final class StudyUI {
               }
             });
           } catch (final StudyCasterException e) {
-            SwingUtilities.invokeLater(new Runnable() {
-              public void run() {
-                reportGenericError(e, false);
-              }
-            });
+            reportError(e, false);
           }
         }
       }).start();
@@ -571,33 +577,33 @@ public final class StudyUI {
         if (selectedFilePath == null)
           break;
         if (selectedFilePath.trim().length() == 0) {
-          showMessageDialog(UIStringKey.DIALOG_CONCLUDE_EMPTY_PATH_MESSAGE, null,
+          reportMessage(UIStringKey.DIALOG_CONCLUDE_EMPTY_PATH_MESSAGE, null,
               UIStringKey.DIALOG_CONCLUDE_TITLE, JOptionPane.INFORMATION_MESSAGE);
           continue;
         }
         final File selectedFile = new File(selectedFilePath);
         if (!selectedFile.exists()) {
-          showMessageDialog(UIStringKey.DIALOG_CONCLUDE_FILE_NOT_EXISTS_MESSAGE,
+          reportMessage(UIStringKey.DIALOG_CONCLUDE_FILE_NOT_EXISTS_MESSAGE,
               new Object[] { selectedFile.getAbsolutePath() },
               UIStringKey.DIALOG_CONCLUDE_TITLE, JOptionPane.WARNING_MESSAGE);
           continue;
         }
         if (!Util.fileAvailableExclusive(selectedFile)) {
-          showMessageDialog(UIStringKey.DIALOG_CONCLUDE_FILE_OPEN_MESSAGE,
+          reportMessage(UIStringKey.DIALOG_CONCLUDE_FILE_OPEN_MESSAGE,
               new Object[] { selectedFile.getAbsolutePath() },
               UIStringKey.DIALOG_CONCLUDE_TITLE, JOptionPane.INFORMATION_MESSAGE);
           continue;
         }
         if (!fileIsModified(openFileConfiguration, selectedFile)) {
-          showMessageDialog(UIStringKey.DIALOG_CONCLUDE_FILE_NOT_MODIFIED_MESSAGE,
+          reportMessage(UIStringKey.DIALOG_CONCLUDE_FILE_NOT_MODIFIED_MESSAGE,
               new Object[] { selectedFile.getAbsolutePath() },
               UIStringKey.DIALOG_CONCLUDE_TITLE, JOptionPane.INFORMATION_MESSAGE);
           continue;
         }
         ServerContextUtil.uploadFile(serverContext, selectedFile,
             "upload_" + Util.sanitizeFileNameComponent(selectedFile.getName()));
-        break;
-      } while (true);
+
+      } while (false);
     }
 
     public void concludeAction(final ConcludeConfiguration concludeConfiguration) {
@@ -612,7 +618,7 @@ public final class StudyUI {
           public Void call() throws StudyCasterException {
             OpenFileConfiguration originalFile = uploadConfiguration.getDefaultFile();
             if (originalFile != null && !getOpenFilePath(originalFile).exists()) {
-              showMessageDialog(UIStringKey.DIALOG_CONCLUDE_FILE_NOT_OPENED_MESSAGE, null,
+              reportMessage(UIStringKey.DIALOG_CONCLUDE_FILE_NOT_OPENED_MESSAGE, null,
                   UIStringKey.DIALOG_CONCLUDE_TITLE, JOptionPane.INFORMATION_MESSAGE);
               return null;
             }
