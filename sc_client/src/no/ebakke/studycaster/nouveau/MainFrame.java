@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JButton;
 import javax.swing.JDialog;
 import no.ebakke.studycaster.api.ServerContext;
 import no.ebakke.studycaster.configuration.ConcludeConfiguration;
@@ -40,6 +41,7 @@ public class MainFrame extends javax.swing.JFrame {
   private boolean taskInProgress;
   private UploadDialogPanel uploadDialogPanel;
   private ConfirmationCodeDialogPanel confirmationCodeDialogPanel;
+  private JButton previouslyClicked;
 
   public MainFrame(UserActionListener userActionListener) {
     this.userActionListener = userActionListener;
@@ -134,23 +136,23 @@ public class MainFrame extends javax.swing.JFrame {
         actionButtonPanel.setPreferredSize(null);
         Dimension actionButtonPanelDim = new Dimension(0, 0);
         for (int i = 0; i < configuration.getPageConfigurations().size(); i++) {
-          setPageIndex(i);
+          setPageIndex(i, false);
           actionButtonPanelDim = max(actionButtonPanelDim, actionButtonPanel.getPreferredSize());
         }
         actionButtonPanel.setPreferredSize(actionButtonPanelDim);
 
         Dimension frameDim = new Dimension(0, 0);
         for (int i = 0; i < configuration.getPageConfigurations().size(); i++) {
-          setPageIndex(i);
+          setPageIndex(i, false);
           pack();
           frameDim = max(frameDim, getSize());
         }
-        setPageIndex(0);
+        setPageIndex(0, true);
         setSize(frameDim);
       } else {
         // Enforce a minimum window width; might as well use the actionButtonPanel to do this.
         actionButtonPanel.setPreferredSize(new Dimension(200, 0));
-        setPageIndex(null);
+        setPageIndex(null, false);
         pack();
       }
       updateLocation();
@@ -169,11 +171,13 @@ public class MainFrame extends javax.swing.JFrame {
     return configuration.getPageConfigurations().get(getPageIndex());
   }
 
-  // TODO: Log page changes.
-  private void setPageIndex(Integer pageIndex) {
+  private void setPageIndex(Integer pageIndex, boolean doLog) {
+    if (doLog)
+      LOG.log(Level.INFO, "Switching to page {0}", pageIndex);
     final String instructions;
     final boolean navigationButtonsVisible;
     final boolean openFileButtonVisible, openURIButtonVisible, concludeButtonVisible;
+    final boolean changed = this.pageIndex != pageIndex;
     this.pageIndex = pageIndex;
     if (this.pageIndex == null) {
       instructions = "Please wait...";
@@ -215,11 +219,38 @@ public class MainFrame extends javax.swing.JFrame {
       backButton.setEnabled(false);
       nextButton.setEnabled(false);
     }
+
+    if (changed) {
+      previouslyClicked = null;
+      advanceFocus();
+    } else if (previouslyClicked != null){
+      previouslyClicked.requestFocusInWindow();
+    }
+  }
+
+  /** Focus on the next button in logical order after any previously clicked one, or the first
+  button if no button was previously clicked on this page. */
+  private void advanceFocus() {
+    boolean previousFound = (previouslyClicked == null);
+    for (JButton button : new JButton[] {
+      openFileButton, openURIButton, concludeButton, nextButton
+    }) {
+      if (previousFound && button.isEnabled()) {
+        button.requestFocusInWindow();
+        break;
+      }
+      if (button == previouslyClicked)
+        previousFound = true;
+    }
   }
 
   /** messageKey may be null. */
   public void startTask(UIStringKey messageKey, boolean indeterminate) {
-    LOG.log(Level.INFO, "Setting status bar with message key {0}", messageKey);
+    if (messageKey == null) {
+      LOG.log(Level.INFO, "Starting status bar task with empty description");
+    } else {
+      LOG.log(Level.INFO, "Starting status bar task with message key {0}", messageKey);
+    }
     taskInProgress = true;
     progressBar.setString(
         messageKey == null ? "" : configuration.getUIStrings().getString(messageKey));
@@ -227,19 +258,20 @@ public class MainFrame extends javax.swing.JFrame {
     setProgressBarBounds(0, 100);
     progressBar.setIndeterminate(indeterminate);
     // Update button enabled status.
-    setPageIndex(getPageIndex());
+    setPageIndex(getPageIndex(), false);
   }
 
-  public void stopTask() {
+  public void stopTask(boolean advanceFocus) {
     if (!taskInProgress)
-      return;
-    LOG.log(Level.INFO, "Clearing status bar");
+      LOG.log(Level.INFO, "Clearing status bar");
     taskInProgress = false;
     progressBar.setString("");
     progressBar.setIndeterminate(false);
     progressBar.setValue(0);
     // Update button enabled status.
-    setPageIndex(getPageIndex());
+    setPageIndex(getPageIndex(), false);
+    if (advanceFocus)
+      advanceFocus();
   }
 
   private void setProgressBarBounds(final int minimum, final int maximum) {
@@ -407,25 +439,28 @@ public class MainFrame extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
   private void nextButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nextButtonActionPerformed
-    setPageIndex(getPageIndex() + 1);
+    setPageIndex(getPageIndex() + 1, true);
   }//GEN-LAST:event_nextButtonActionPerformed
 
   private void backButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backButtonActionPerformed
-    setPageIndex(getPageIndex() - 1);
+    setPageIndex(getPageIndex() - 1, true);
   }//GEN-LAST:event_backButtonActionPerformed
 
   private void openFileButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openFileButtonActionPerformed
     LOG.info("User pressed open file button");
+    previouslyClicked = openFileButton;
     userActionListener.openFileAction(getPageConfiguration().getOpenFileConfiguration());
   }//GEN-LAST:event_openFileButtonActionPerformed
 
   private void concludeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_concludeButtonActionPerformed
     LOG.info("User pressed conclude button");
+    previouslyClicked = concludeButton;
     userActionListener.concludeAction(getPageConfiguration().getConcludeConfiguration());
   }//GEN-LAST:event_concludeButtonActionPerformed
 
   private void openURIButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openURIButtonActionPerformed
     LOG.info("User pressed open URI button");
+    previouslyClicked = openURIButton;
     userActionListener.openURIAction(getPageConfiguration().getOpenURIConfiguration());
   }//GEN-LAST:event_openURIButtonActionPerformed
 

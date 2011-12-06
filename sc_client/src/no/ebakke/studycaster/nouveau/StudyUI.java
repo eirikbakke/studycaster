@@ -30,7 +30,7 @@ import no.ebakke.studycaster.util.Util;
 import no.ebakke.studycaster.util.Util.CallableExt;
 
 /*
-  Manual test cases for this class:
+  Manual test cases for this class and its dependees:
   * Multiple application launches before and after configuration is loaded.
   * Close window before or after configuration is loaded, including right before the configuration
     is loaded such that the closing confirmation dialog still appears.
@@ -68,10 +68,14 @@ import no.ebakke.studycaster.util.Util.CallableExt;
   * Verifying that upload dialog path remains the same between errors and gets reset when opened
     manually again.
   * Concluding without upload.
+  * Focus on correct button upon startup.
+  * Focus on correct button when moving back and forth between pages.
+  * Focus retained on previous action button after canceled action or action with error.
+  * Focus advances to next logical button after successful action.
+  * Confirmation code is automatically copied to clipboard.
 */
 
 // TODO: Rename to StudyCasterUI. Rename threads to reflect change.
-// TODO: Pay attention to button focus.
 /** Except where noted, methods in this class, including private ones, must be called from the
 event-dispatching thread (EDT) only. */
 public final class StudyUI {
@@ -194,7 +198,7 @@ public final class StudyUI {
       LOG.log(Level.INFO, "Suppressing dialog due to earlier close action");
       return;
     }
-    mainFrame.stopTask();
+    mainFrame.stopTask(false);
     JOptionPane.showMessageDialog(mainFrame.getPositionDialog(), message, title, messageType);
     if (fatal)
       closeUIandBackend();
@@ -249,7 +253,7 @@ public final class StudyUI {
         neutralizing an earlier dispose(). */
         return;
       }
-      mainFrame.stopTask();
+      mainFrame.stopTask(false);
       mainFrame.configure(configuration, serverContext);
 
       // Do this after properly setting up the main window, in case there are enqueued messages.
@@ -388,11 +392,12 @@ public final class StudyUI {
     }
 
     /** Should not be called on the EDT. */
-    private void openFileActionHelper(OpenFileConfiguration openFileConfiguration)
+    private boolean openFileActionHelper(OpenFileConfiguration openFileConfiguration)
         throws StudyCasterException
     {
       final String key = openFileConfiguration.getClientName();
       final boolean openedInThisSession = hashesBeforeOpen.containsKey(key);
+      File renameNewName = null;
       File downloadedFile = null;
       try {
         LOG.log(Level.INFO, "Open action for file \"{0}\"", key);
@@ -401,7 +406,7 @@ public final class StudyUI {
           reportMessage(UIStringKey.DIALOG_OPEN_FILE_ALREADY_MESSAGE,
               new Object[] { Util.getPathString(clientFile) }, UIStringKey.DIALOG_OPEN_FILE_TITLE,
               JOptionPane.INFORMATION_MESSAGE);
-          return;
+          return false;
         }
         final boolean modified, useDownloaded;
         if (!clientFile.exists()) {
@@ -436,7 +441,7 @@ public final class StudyUI {
             });
             if (res == JOptionPane.CLOSED_OPTION) {
               LOG.info("User closed option window");
-              return;
+              return false;
             }
             useDownloaded = (res == JOptionPane.YES_OPTION);
             modified = !useDownloaded;
@@ -446,22 +451,17 @@ public final class StudyUI {
               int dot = path.lastIndexOf('.');
               String basename = (dot < 0) ? path : path.substring(0, dot);
               String extension = (dot < 0) ? "" : path.substring(dot);
-              File newName;
               int index = 1;
               do {
-                newName = new File(basename + " (" + index + ")" + extension);
+                renameNewName = new File(basename + " (" + index + ")" + extension);
                 index++;
-              } while (newName.exists());
-              if (clientFile.renameTo(newName)) {
-                reportMessage(UIStringKey.DIALOG_OPEN_FILE_RENAMED_MESSAGE,
-                    new Object[] {Util.getPathString(clientFile), Util.getPathString(newName) },
-                    UIStringKey.DIALOG_OPEN_FILE_TITLE, JOptionPane.INFORMATION_MESSAGE);
-              } else {
+              } while (renameNewName.exists());
+              if (!clientFile.renameTo(renameNewName)) {
                 reportMessage(UIStringKey.DIALOG_OPEN_FILE_RENAME_FAILED_MESSAGE,
                     new Object[] { Util.getPathString(clientFile) },
                     UIStringKey.DIALOG_OPEN_FILE_TITLE, JOptionPane.WARNING_MESSAGE);
                 // Leave it up to the user to try again.
-                return;
+                return false;
               }
             }
           }
@@ -478,7 +478,7 @@ public final class StudyUI {
           reportMessage(UIStringKey.DIALOG_OPEN_FILE_ASSOCIATION_FAILED_MESSAGE,
               new Object[] { Util.getPathString(clientFile), openFileConfiguration.getErrorMessage() },
               UIStringKey.DIALOG_OPEN_FILE_TITLE, JOptionPane.WARNING_MESSAGE);
-          return;
+          return false;
         }
         /* Certain applications, such as Microsoft Excel, will modify a file immediately upon
         opening it, possibly in a new way every time. For the purposes of advising the user about
@@ -497,6 +497,13 @@ public final class StudyUI {
           }
           hashesAfterOpen.put(key, Util.computeSHA1(clientFile));
         }
+        if (renameNewName != null) {
+          /* Don't show this message until we're done doing everything else, since reportMessage()
+          will also re-enable the action buttons. */
+          reportMessage(UIStringKey.DIALOG_OPEN_FILE_RENAMED_MESSAGE,
+              new Object[] {Util.getPathString(clientFile), Util.getPathString(renameNewName) },
+              UIStringKey.DIALOG_OPEN_FILE_TITLE, JOptionPane.INFORMATION_MESSAGE);
+        }
       } catch (IOException e) {
         throw new StudyCasterException(e);
       } catch (InterruptedException e) {
@@ -506,16 +513,17 @@ public final class StudyUI {
         if (downloadedFile != null)
           downloadedFile.delete();
       }
+      return true;
     }
 
-    private void processAction(final CallableExt<Void,StudyCasterException> callable) {
+    private void processAction(final CallableExt<Boolean,StudyCasterException> callable) {
       new Thread(new Runnable() {
         public void run() {
           try {
-            callable.call();
+            final boolean success = callable.call();
             SwingUtilities.invokeLater(new Runnable() {
               public void run() {
-                mainFrame.stopTask();
+                mainFrame.stopTask(success);
               }
             });
           } catch (final StudyCasterException e) {
@@ -527,20 +535,19 @@ public final class StudyUI {
 
     public void openURIAction(final OpenURIConfiguration openURIConfiguration) {
       mainFrame.startTask(UIStringKey.PROGRESS_OPEN_URI, true);
-      processAction(new CallableExt<Void,StudyCasterException>() {
-        public Void call() throws StudyCasterException {
+      processAction(new CallableExt<Boolean,StudyCasterException>() {
+        public Boolean call() throws StudyCasterException {
           Util.desktopOpenURI(openURIConfiguration.getURI());
-          return null;
+          return true;
         }
       });
     }
 
     public void openFileAction(final OpenFileConfiguration openFileConfiguration) {
       mainFrame.startTask(UIStringKey.PROGRESS_OPEN_FILE, true);
-      processAction(new CallableExt<Void,StudyCasterException>() {
-        public Void call() throws StudyCasterException {
-          openFileActionHelper(openFileConfiguration);
-          return null;
+      processAction(new CallableExt<Boolean,StudyCasterException>() {
+        public Boolean call() throws StudyCasterException {
+          return openFileActionHelper(openFileConfiguration);
         }
       });
     }
@@ -561,7 +568,7 @@ public final class StudyUI {
           public String call() {
             if (firstF && openFileConfiguration != null)
               udp.setFilePath(getOpenFilePath(openFileConfiguration).getAbsolutePath());
-            mainFrame.stopTask();
+            mainFrame.stopTask(false);
             /* TODO: Find a workaround for a Swing bug, particularily prevalent in 1.5 (about 1/20th
                      of the time), that causes the dialog contents not to get painted occasionally.
                      See http://bugs.sun.com/view_bug.do?bug_id=6859086 and
@@ -617,7 +624,7 @@ public final class StudyUI {
       mainFrame.startTask(UIStringKey.PROGRESS_UPLOAD_SCREENCAST, true);
       closeBackend(new Runnable() {
         public void run() {
-          mainFrame.stopTask();
+          mainFrame.stopTask(false);
           ConfirmationCodeDialogPanel ccdp = mainFrame.getConfirmationCodeDialogPanel();
           ccdp.setConfirmationCode(serverContext.getLaunchTicket());
           JOptionPane.showMessageDialog(mainFrame.getPositionDialog(), ccdp,
@@ -635,13 +642,13 @@ public final class StudyUI {
         final UploadDialogPanel udp = mainFrame.getUploadDialogPanel();
         final UploadConfiguration uploadConfiguration = concludeConfiguration.getUploadConfiguration();
         udp.setFileFilter(uploadConfiguration.getFileFilter());
-        processAction(new CallableExt<Void,StudyCasterException>() {
-          public Void call() throws StudyCasterException {
+        processAction(new CallableExt<Boolean,StudyCasterException>() {
+          public Boolean call() throws StudyCasterException {
             OpenFileConfiguration originalFile = uploadConfiguration.getDefaultFile();
             if (originalFile != null && !getOpenFilePath(originalFile).exists()) {
               reportMessage(UIStringKey.DIALOG_CONCLUDE_FILE_NOT_OPENED_MESSAGE, null,
                   UIStringKey.DIALOG_CONCLUDE_TITLE, JOptionPane.INFORMATION_MESSAGE);
-              return null;
+              return false;
             }
             try {
               uploadFileHelper(originalFile, udp);
@@ -650,7 +657,7 @@ public final class StudyUI {
             } catch (IOException e) {
               throw new StudyCasterException(e);
             }
-            return null;
+            return true;
           }
         });
       } else {

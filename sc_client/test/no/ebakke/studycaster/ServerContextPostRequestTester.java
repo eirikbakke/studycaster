@@ -10,7 +10,7 @@ public class ServerContextPostRequestTester {
     ServerContext sc = new ServerContext();
     String remoteName = "ServerContextPostRequestTester.tmp";
     RandomHookup hookup = new RandomHookup(0);
-    
+
     OutputStream uploadOS = sc.uploadFile(remoteName);
     RandomInputStream ris = new RandomInputStream(43, 5000000, 5000000);
     hookup.hookupStreams(ris, uploadOS);
