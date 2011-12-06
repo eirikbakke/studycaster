@@ -80,6 +80,7 @@ public class APIServlet extends HttpServlet {
         logEntry = base;
         File outFile = ServletUtil.getSaneFile(ticketDir, base, false);
 
+        // TODO: Share similar rename functionality with client.
         /* Rename old files with the same name until we can create a new one
         with the specified name. The length check ensures idempotence. */
         while (!outFile.createNewFile() && outFile.length() > 0) {

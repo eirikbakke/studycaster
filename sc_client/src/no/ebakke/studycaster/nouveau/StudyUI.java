@@ -177,6 +177,7 @@ public final class StudyUI {
     backendCloseThread.start();
   }
 
+  // TODO: Integrate with the showMessageDialog()
   private void reportGenericError(Exception e, boolean fatal) {
     final String TYPE = "Generic error (" + (fatal ? "fatal" : "non-fatal") + ")";
     if (failsafeCloseThread != null) {
@@ -554,6 +555,10 @@ public final class StudyUI {
             if (firstF && openFileConfiguration != null)
               udp.setFilePath(getOpenFilePath(openFileConfiguration).getAbsolutePath());
             mainFrame.stopTask();
+            /* TODO: Find a workaround for a Swing bug, particularily prevalent in 1.5 (about 1/20th
+                     of the time), that causes the dialog contents not to get painted occasionally.
+                     See http://bugs.sun.com/view_bug.do?bug_id=6859086 and
+                     http://stackoverflow.com/questions/8391554 . */
             int res = JOptionPane.showOptionDialog(mainFrame.getPositionDialog(), udp,
                 getUIString(UIStringKey.DIALOG_CONCLUDE_TITLE), JOptionPane.OK_CANCEL_OPTION,
                 JOptionPane.QUESTION_MESSAGE, null, null, null);
@@ -589,8 +594,8 @@ public final class StudyUI {
               UIStringKey.DIALOG_CONCLUDE_TITLE, JOptionPane.INFORMATION_MESSAGE);
           continue;
         }
-        // TODO: Upload now.
-        Thread.sleep(1500);
+        ServerContextUtil.uploadFile(serverContext, selectedFile,
+            "upload_" + Util.sanitizeFileNameComponent(selectedFile.getName()));
         break;
       } while (true);
     }
