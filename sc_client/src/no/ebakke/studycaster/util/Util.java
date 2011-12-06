@@ -43,7 +43,7 @@ public final class Util {
     try {
       return f.getCanonicalPath();
     } catch (IOException e) {
-      LOG.log(Level.WARNING, "Couldn''t get canonical path.", e);
+      LOG.log(Level.WARNING, "Couldn't get canonical path", e);
       return f.getAbsolutePath();
     }
   }

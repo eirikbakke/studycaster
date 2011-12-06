@@ -75,7 +75,7 @@ public class MainFrame extends javax.swing.JFrame {
       } catch (NoSuchMethodException e) { }
       if (setIconImagesMethod == null) {
         // Running JRE < 1.6
-        LOG.info("Can''t find Window.setIconImages(), probably on JRE 1.5 or earlier");
+        LOG.info("Can't find Window.setIconImages(), probably on JRE 1.5 or earlier");
         /* Custom icons on JRE 1.5 or earlier look crummy due to inevitable low-quality scaling, so
         don't bother in this case. */
         // setIconImage(ResourceUtil.loadImage("icon256.png", false));

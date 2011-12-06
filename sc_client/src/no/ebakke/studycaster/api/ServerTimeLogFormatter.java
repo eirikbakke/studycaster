@@ -1,17 +1,13 @@
 package no.ebakke.studycaster.api;
 
 import java.text.DateFormat;
-import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 
-// TODO: Reverse the MessageFormat design decision below.
-/** Thread-safe. For consistency in logging statements throughout the codebase, this class always
-uses MessageFormat for formatting, regardless of whether the log record includes a parameter or any
-parameter references in the message string. */
+/** Thread-safe. */
 public class ServerTimeLogFormatter extends Formatter {
   private volatile Long serverMillisAhead;
   /* SimpleDateFormat is not thread-safe. The following is the standard way of dealing with it.
@@ -69,7 +65,8 @@ public class ServerTimeLogFormatter extends Formatter {
     ret.append(r.getSourceMethodName()).append("\n");
     ret.append(r.getLevel());
     ret.append(": ");
-    ret.append(new MessageFormat(r.getMessage()).format(r.getParameters())).append("\n");
+    ret.append(formatMessage(r));
+    ret.append("\n");
     if (r.getThrown() != null) {
       ret.append("  exception was ");
       formatThrowable(ret, r.getThrown());

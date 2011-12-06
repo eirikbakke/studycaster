@@ -92,7 +92,7 @@ public class StudyCasterUI {
       singleInstanceService.addSingleInstanceListener(singleInstanceListener);
     } catch (UnavailableServiceException e) {
       LOG.log(Level.INFO,
-          "Couldn''t create a SingleInstanceService (normal when run outside of JWS)", e);
+          "Couldn't create a SingleInstanceService (normal when run outside of JWS)", e);
     }
 
     Util.checkedSwingInvokeAndWait(new Util.CallableExt<Void,StudyCasterException>() {

@@ -52,7 +52,7 @@ public final class ScreenCensor {
       this.whiteList.add("StudyCaster");
     windowEnumerator = Win32WindowEnumerator.create();
     if (windowEnumerator == null) {
-      LOG.log(Level.WARNING, "Can''t initialize native library; applying mosaic to entire screen");
+      LOG.log(Level.WARNING, "Can't initialize native library; applying mosaic to entire screen");
       nativeFail = new Quilt<CensorType>(CensorType.MOSAIC);
     } else {
       nativeFail = null;

@@ -141,7 +141,7 @@ public final class StudyLauncher {
       scui.getProgressBarUI().setTaskAppearance("", false);
       scui.getProgressBarUI().setProgress(0);
     } catch (StudyCasterException e) {
-      LOG.log(Level.SEVERE, "Can''t Load User Study", e);
+      LOG.log(Level.SEVERE, "Can't Load User Study", e);
       if (sc != null)
         sc.concludeStudy();
       scui.showMessageDialog("Can't Load User Study", e.getLocalizedMessage(),

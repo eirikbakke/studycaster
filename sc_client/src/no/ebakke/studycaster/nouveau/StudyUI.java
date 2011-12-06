@@ -323,7 +323,7 @@ public final class StudyUI {
     try {
       UIUtil.setSystemLookAndFeel();
     } catch (StudyCasterException e) {
-      LOG.log(Level.INFO, "Couldn''t set system L&F", e);
+      LOG.log(Level.INFO, "Couldn't set system L&F", e);
     }
 
     SwingUtilities.invokeLater(new Runnable() {

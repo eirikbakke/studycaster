@@ -43,7 +43,7 @@ public class StatusFrame extends javax.swing.JFrame {
     try {
       UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
     } catch (Exception e) {
-      LOG.log(Level.WARNING, "Can''t set default Look and Feel", e);
+      LOG.log(Level.WARNING, "Can't set default Look and Feel", e);
     }
   }
 
@@ -55,7 +55,7 @@ public class StatusFrame extends javax.swing.JFrame {
       } catch (NoSuchMethodException e) { }
       if (setIconImagesMethod == null) {
         // Running JRE < 1.6
-        LOG.info("Can''t find Window.setIconImages(), using Frame.setIconImage() " +
+        LOG.info("Can't find Window.setIconImages(), using Frame.setIconImage() " +
             "instead (probably on JRE 1.5 or earlier)");
         setIconImage(ResourceUtil.loadImage("icon256.png", false));
       } else {
