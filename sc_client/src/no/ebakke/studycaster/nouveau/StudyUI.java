@@ -24,6 +24,7 @@ import no.ebakke.studycaster.configuration.StudyConfiguration;
 import no.ebakke.studycaster.configuration.UIStringKey;
 import no.ebakke.studycaster.configuration.UploadConfiguration;
 import no.ebakke.studycaster.nouveau.MainFrame.UserActionListener;
+import no.ebakke.studycaster.ui.ConfirmationCodeDialog;
 import no.ebakke.studycaster.ui.UploadDialogPanel;
 import no.ebakke.studycaster.util.Util;
 import no.ebakke.studycaster.util.Util.CallableExt;
@@ -602,8 +603,30 @@ public final class StudyUI {
         }
         ServerContextUtil.uploadFile(serverContext, selectedFile,
             "upload_" + Util.sanitizeFileNameComponent(selectedFile.getName()));
-
+        SwingUtilities.invokeLater(new Runnable() {
+          public void run() {
+            concludeHelperEDT();
+          }
+        });
       } while (false);
+    }
+
+    /** Must be called on the EDT. */
+    public void concludeHelperEDT() {
+      mainFrame.startTask(UIStringKey.PROGRESS_UPLOAD_SCREENCAST, true);
+      closeBackend(new Runnable() {
+        public void run() {
+          mainFrame.stopTask();
+          try {
+            UIUtil.copyStringToClipboard(serverContext.getLaunchTicket());
+          } catch (StudyCasterException e) {
+            LOG.log(Level.WARNING, "Failed to copy confirmation code to clipboard", e);
+          }
+          ConfirmationCodeDialog.show(mainFrame.getPositionDialog(),
+              serverContext.getLaunchTicket());
+          closeUI();
+        }
+      });
     }
 
     public void concludeAction(final ConcludeConfiguration concludeConfiguration) {
@@ -639,8 +662,8 @@ public final class StudyUI {
             JOptionPane.QUESTION_MESSAGE);
         if (res != JOptionPane.OK_OPTION)
           return;
+        concludeHelperEDT();
       }
-      // TODO: Conclude study here.
     }
   }
 }

@@ -1,8 +1,10 @@
 package no.ebakke.studycaster.ui;
 
+import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Toolkit;
+import java.awt.Window;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -17,22 +19,29 @@ public class ConfirmationCodeDialog extends JDialog {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private static final long serialVersionUID = 1L;
 
-  public static void show(Frame parent, String confcode) {
-    new ConfirmationCodeDialog(parent, confcode).setVisible(true);
+  // TODO: Get rid of all these variations.
+  public static void show(Window parent, String confcode) {
+    final ConfirmationCodeDialog ccd;
+    if        (parent instanceof Frame) {
+      ccd = new ConfirmationCodeDialog((Frame) parent, confcode);
+    } else if (parent instanceof Dialog) {
+      ccd = new ConfirmationCodeDialog((Dialog) parent, confcode);
+    } else if (parent == null) {
+      ccd = new ConfirmationCodeDialog(confcode);
+    } else {
+      throw new IllegalArgumentException();
+    }
+    ccd.setVisible(true);
     LOG.log(Level.INFO,
         "Now displaying confirmation code dialog with confirmation code {0}", confcode);
   }
 
-  private ConfirmationCodeDialog(Frame parent, String confcode) {
-    super(parent);
+  private void init(String confcode) {
     initComponents();
     codeBox.setText(confcode);
-    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(
-        new StringSelection(confcode), null);
     getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
         KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "close");
     getRootPane().getActionMap().put("close", new AbstractAction() {
-
       private static final long serialVersionUID = 1L;
 
       public void actionPerformed(ActionEvent e) {
@@ -47,6 +56,21 @@ public class ConfirmationCodeDialog extends JDialog {
     /* Since the dialog will be modal, offset it slightly from the center so it
     will be less likely to cover up other application's dialogs.  */
     setLocation((sdim.width - wdim.width) / 2, (sdim.height - wdim.height) / 2 - 200);
+  }
+
+  private ConfirmationCodeDialog(Dialog parent, String confcode) {
+    super(parent);
+    init(confcode);
+  }
+
+  private ConfirmationCodeDialog(Frame parent, String confcode) {
+    super(parent);
+    init(confcode);
+  }
+
+  private ConfirmationCodeDialog(String confcode) {
+    super();
+    init(confcode);
   }
 
   /** This method is called from within the constructor to
