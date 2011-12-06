@@ -1,6 +1,8 @@
 package no.ebakke.studycaster.configuration;
 
 public enum UIStringKey {
+  DIALOG_CONSENT_TITLE(false, false, false),
+  DIALOG_CONSENT_QUESTION(false, true, false),
   DIALOG_ALREADY_RUNNING_TITLE(false, false, false),
   DIALOG_ALREADY_RUNNING_MESSAGE(false, true, false),
   MAINFRAME_OPEN_FILE_BUTTON(true, true, false),

@@ -1,5 +1,6 @@
 package no.ebakke.studycaster.nouveau;
 
+import java.awt.AWTException;
 import java.awt.EventQueue;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -24,10 +25,13 @@ import no.ebakke.studycaster.configuration.StudyConfiguration;
 import no.ebakke.studycaster.configuration.UIStringKey;
 import no.ebakke.studycaster.configuration.UploadConfiguration;
 import no.ebakke.studycaster.nouveau.MainFrame.UserActionListener;
+import no.ebakke.studycaster.screencasting.ScreenRecorder;
+import no.ebakke.studycaster.screencasting.ScreenRecorderConfiguration;
 import no.ebakke.studycaster.ui.ConfirmationCodeDialogPanel;
 import no.ebakke.studycaster.ui.UploadDialogPanel;
 import no.ebakke.studycaster.util.Util;
 import no.ebakke.studycaster.util.Util.CallableExt;
+import no.ebakke.studycaster.util.stream.NonBlockingOutputStream;
 
 /*
   Manual test cases for this class and its dependees:
@@ -79,15 +83,17 @@ import no.ebakke.studycaster.util.Util.CallableExt;
 /** Except where noted, methods in this class, including private ones, must be called from the
 event-dispatching thread (EDT) only. */
 public final class StudyUI {
+  private static final int RECORDING_BUFFER_SZ = 4 * 1024 * 1024;
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private static final String CONFIGID_PROP_NAME = "studycaster.config.id";
   private final MainFrame mainFrame;
   private final EnvironmentHooks hooks;
   private final WindowListener windowClosingListener;
-  private Thread initializerThread, failsafeCloseThread, backendCloseThread;
-  /** Accessed from multiple threads. */
+  /** Some variables are accessed from multiple threads. Rather than try to remember which ones,
+  declare them all volatile. */
+  private volatile Thread initializerThread, failsafeCloseThread, backendCloseThread;
+  private volatile ScreenRecorder recorder;
   private volatile ServerContext serverContext;
-  /** Accessed from multiple threads. */
   private volatile StudyConfiguration configuration;
 
   private StudyUI(EnvironmentHooks hooks) {
@@ -137,6 +143,7 @@ public final class StudyUI {
   }
 
   private void closeUI() {
+    LOG.info("Closing UI");
     if (failsafeCloseThread != null)
       throw new IllegalStateException("UI already closed");
     mainFrame.removeWindowListener(windowClosingListener);
@@ -167,18 +174,25 @@ public final class StudyUI {
   }
 
   private void closeBackend(final Runnable onEndEDT) {
+    LOG.info("Closing backend");
     if (backendCloseThread != null)
       throw new IllegalStateException("Backend already closed");
-    // Only access members from EDT.
-    final Thread initializerThreadT = initializerThread;
+    final Thread initializerThreadF = initializerThread;
     backendCloseThread = new Thread(new Runnable() {
       public void run() {
-        if (initializerThreadT != null) {
+        if (initializerThreadF != null) {
           Util.ensureInterruptible(new Util.Interruptible() {
             public void run() throws InterruptedException {
-              initializerThreadT.join();
+              initializerThreadF.join();
             }
           });
+        }
+        if (recorder != null) {
+          try {
+            recorder.close();
+          } catch (IOException e) {
+            LOG.log(Level.SEVERE, "Error while closing screen recorder", e);
+          }
         }
         EnvironmentHooks.shutdown();
         // In the case of an error, serverContext may still not be defined.
@@ -191,7 +205,7 @@ public final class StudyUI {
     backendCloseThread.start();
   }
 
-  private void showDialogHelperEDT(
+  private void reportHelperEDT(
         final String message, final String title, final int messageType, final boolean fatal)
   {
     if (failsafeCloseThread != null) {
@@ -204,16 +218,16 @@ public final class StudyUI {
       closeUIandBackend();
   }
 
-  private void showDialogHelper(
+  private void reportHelper(
       final String message, final String title, final int messageType, final boolean fatal)
   {
     if (EventQueue.isDispatchThread()) {
-      showDialogHelperEDT(message, title, messageType, fatal);
+      reportHelperEDT(message, title, messageType, fatal);
     } else {
       try {
         Util.checkedSwingInvokeAndWait(new CallableExt<Void,RuntimeException>() {
           public Void call() {
-            showDialogHelperEDT(message, title, messageType, fatal);
+            reportHelperEDT(message, title, messageType, fatal);
             return null;
           }
         });
@@ -224,22 +238,22 @@ public final class StudyUI {
     }
   }
 
-  /** Displays a parameterized modal message dialog. The MainFrame taskbar will be reset. The method
-  blocks and can be called from any thread, including the EDT. */
+  /** Displays a parameterized modal message dialog. The MainFrame taskbar and button states will be
+  reset. The method blocks and can be called from any thread, including the EDT. */
   private void reportMessage(final UIStringKey messageKey,
       final Object messageParameters[], final UIStringKey titleKey, final int messageType)
   {
     final String message = (messageParameters != null) ?
         getUIString(messageKey, messageParameters) : getUIString(messageKey);
     LOG.log(Level.INFO, "Showing dialog with message key {0}", messageKey.toString());
-    showDialogHelper(message, getUIString(titleKey), messageType, false);
+    reportHelper(message, getUIString(titleKey), messageType, false);
   }
 
   /** Displays a modal dialog for reporting an exception. The MainFrame taskbar will be reset. The
   method blocks and can be called from any thread, including the EDT. */
   private void reportError(Exception e, boolean fatal) {
     LOG.log(Level.SEVERE, fatal ? "Fatal error " : "Generic non-fatal error ", e);
-    showDialogHelper("There was an unexpected error:\n" + e.getMessage(),
+    reportHelper("There was an unexpected error:\n" + e.getMessage(),
         "Error", JOptionPane.ERROR_MESSAGE, fatal);
   }
 
@@ -266,6 +280,16 @@ public final class StudyUI {
           }
         });
       }
+      LOG.info("Showing consent dialog");
+      int res = JOptionPane.showOptionDialog(mainFrame.getPositionDialog(),
+          getUIString(UIStringKey.DIALOG_CONSENT_QUESTION),
+          getUIString(UIStringKey.DIALOG_CONSENT_TITLE), JOptionPane.OK_CANCEL_OPTION,
+          JOptionPane.QUESTION_MESSAGE, null, null, null);
+      if (res != JOptionPane.OK_OPTION) {
+        LOG.info("User declined at consent dialog");
+        closeUIandBackend();
+      }
+      recorder.start();
     } catch (StudyCasterException e) {
       // Note: Due to the exception, configuration and serverContext may not be defined.
       reportError(e, true);
@@ -277,22 +301,30 @@ public final class StudyUI {
     if (initializerThread != null)
       throw new IllegalStateException("Already started");
     initializerThread = new Thread(new Runnable() {
-      private ServerContext      serverContextT;
-      private StudyConfiguration configurationT;
-
       public void run() {
         StudyCasterException exception = null;
         try {
-          serverContextT = new ServerContext();
-          hooks.getLogFormatter().setServerMillisAhead(serverContextT.getServerMillisAhead());
+          serverContext = new ServerContext();
+          hooks.getLogFormatter().setServerMillisAhead(serverContext.getServerMillisAhead());
           try {
-            hooks.getConsoleStream().connect(serverContextT.uploadFile("console.txt"));
+            hooks.getConsoleStream().connect(serverContext.uploadFile("console.txt"));
             final String configurationID = System.getProperty(CONFIGID_PROP_NAME);
             if (configurationID == null)
               throw new StudyCasterException("Unspecified configuration ID");
-            configurationT = StudyConfiguration.parseConfiguration(
-              serverContextT.downloadFile("studyconfig.xml"), configurationID);
-            LOG.log(Level.INFO, "Loaded configuration with name \"{0}\"", configurationT.getName());
+            configuration = StudyConfiguration.parseConfiguration(
+              serverContext.downloadFile("studyconfig.xml"), configurationID);
+            LOG.log(Level.INFO, "Loaded configuration with name \"{0}\"", configuration.getName());
+
+            // Prepare the screen recorder without starting it yet.
+            NonBlockingOutputStream recordingStream =
+                new NonBlockingOutputStream(RECORDING_BUFFER_SZ);
+            recordingStream.connect(serverContext.uploadFile("screencast.ebc"));
+            try {
+              recorder = new ScreenRecorder(recordingStream, serverContext.getServerMillisAhead(),
+                  ScreenRecorderConfiguration.DEFAULT);
+            } catch (AWTException e) {
+              throw new StudyCasterException("Failed to initialize screen recorder", e);
+            }
           } catch (IOException e) {
             throw new StudyCasterException("Unexpected I/O error", e);
           }
@@ -302,9 +334,6 @@ public final class StudyUI {
         final StudyCasterException exceptionF = exception;
         SwingUtilities.invokeLater(new Runnable() {
           public void run() {
-            // Only access members from EDT.
-            serverContext = serverContextT;
-            configuration = configurationT;
             initUI(exceptionF);
           }
         });
@@ -573,6 +602,7 @@ public final class StudyUI {
                      of the time), that causes the dialog contents not to get painted occasionally.
                      See http://bugs.sun.com/view_bug.do?bug_id=6859086 and
                      http://stackoverflow.com/questions/8391554 . */
+            LOG.info("Showing upload conclude dialog");
             int res = JOptionPane.showOptionDialog(mainFrame.getPositionDialog(), udp,
                 getUIString(UIStringKey.DIALOG_CONCLUDE_TITLE), JOptionPane.OK_CANCEL_OPTION,
                 JOptionPane.QUESTION_MESSAGE, null, null, null);
@@ -627,6 +657,7 @@ public final class StudyUI {
           mainFrame.stopTask(false);
           ConfirmationCodeDialogPanel ccdp = mainFrame.getConfirmationCodeDialogPanel();
           ccdp.setConfirmationCode(serverContext.getLaunchTicket());
+          LOG.info("Showing confirmation code dialog");
           JOptionPane.showMessageDialog(mainFrame.getPositionDialog(), ccdp,
               getUIString(UIStringKey.DIALOG_CONFIRMATION_TITLE), JOptionPane.PLAIN_MESSAGE);
           closeUI();
@@ -661,6 +692,7 @@ public final class StudyUI {
           }
         });
       } else {
+        LOG.info("Showing conclude confirmation dialog");
         int res = JOptionPane.showConfirmDialog(mainFrame.getPositionDialog(),
             getUIString(UIStringKey.DIALOG_CONCLUDE_QUESTION),
             getUIString(UIStringKey.DIALOG_CONCLUDE_TITLE), JOptionPane.OK_CANCEL_OPTION,

@@ -3,12 +3,17 @@
   <!-- TODO: Document this configuration file format. -->
   <macrodef id="uistrings-english">
     <uistrings>
+      <uistring key="DIALOG_CONSENT_TITLE">Screencasting</uistring>
+      <uistring key="DIALOG_CONSENT_QUESTION"><html xmlns="">
+        This tool will record the contents of your screen while you perform the HIT,<br/>
+        so we can learn about how different people approached the task.<br/><br/>
+        OK to start recording?</html>
+      </uistring>
       <uistring key="DIALOG_ALREADY_RUNNING_TITLE">Already Running</uistring>
       <uistring key="DIALOG_ALREADY_RUNNING_MESSAGE">
         <html xmlns="">The StudyCaster client is already running in a different window.<br/>
                        Please close it first if you wish to start over.</html>
       </uistring>
-      <!-- TODO: Make button captions individually settable. -->
       <uistring key="MAINFRAME_OPEN_FILE_BUTTON"  mnemonic="D">Open Sample Document...</uistring>
       <uistring key="MAINFRAME_OPEN_URI_BUTTON"   mnemonic="W">Open Sample Web Page...</uistring>
       <uistring key="MAINFRAME_CONCLUDE_BUTTON"   mnemonic="C">Upload and Retrive Confirmation Code...</uistring>

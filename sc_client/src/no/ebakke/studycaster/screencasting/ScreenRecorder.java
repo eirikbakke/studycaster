@@ -92,6 +92,7 @@ public class ScreenRecorder {
   public synchronized void start() {
     if (!stopped.getAndSet(false))
       return;
+    LOG.info("Starting screen recorder");
     pointerRecorder = new CaptureScheduler(pointerRecorderTask);
     pointerRecorder.start();
     frameRecorder   = new CaptureScheduler(frameRecorderTask);
@@ -99,12 +100,9 @@ public class ScreenRecorder {
   }
 
   public void stop() throws IOException {
-    /* TODO: Remove the verbose logging messages once we're confident that an old deadlock bug is
-    not still present. */
-    LOG.info("ScreenRecorder.stop() called");
+    LOG.info("Stopping screen recorder");
     if (stopped.getAndSet(true))
       return;
-    LOG.info("Calling pointerRecorder.close()");
     try {
       pointerRecorder.close();
     } catch (IOException e) {
@@ -112,19 +110,17 @@ public class ScreenRecorder {
     } finally {
       pointerRecorder = null;
     }
-    LOG.info("Calling frameRecorder.close()");
     try {
       frameRecorder.close();
     } finally {
       frameRecorder = null;
     }
-    LOG.info("ScreenRecorder.stop() completed");
   }
 
   /** Closes the underlying OutputStream as well. */
   public void close() throws IOException {
+    LOG.info("Closing screen recorder");
     stop();
     enc.close();
-    LOG.info("Closed the encoding stream.");
   }
 }
