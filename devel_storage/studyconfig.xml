@@ -89,6 +89,14 @@
         {0}<br/><br/>
         If necessary, open the file again using the "Open Sample Document" button.</html>
       </uistring>
+      <uistring key="DIALOG_CONFIRMATION_TITLE">Upload Successful</uistring>
+      <uistring key="DIALOG_CONFIRMATION_CODEBOX_LABEL" mnemonic="U">
+        Upload Successful! Your confirmation code is...
+      </uistring>
+      <uistring key="DIALOG_CONFIRMATION_CLIPBOARD_MESSAGE">
+        (The code has been copied to the clipboard so you can paste it into the HIT.)
+      </uistring>
+
     </uistrings>
   </macrodef>
   <!-- Foreign language example, to test UI string settings. -->

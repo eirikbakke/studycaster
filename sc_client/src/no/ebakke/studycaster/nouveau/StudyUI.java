@@ -24,7 +24,7 @@ import no.ebakke.studycaster.configuration.StudyConfiguration;
 import no.ebakke.studycaster.configuration.UIStringKey;
 import no.ebakke.studycaster.configuration.UploadConfiguration;
 import no.ebakke.studycaster.nouveau.MainFrame.UserActionListener;
-import no.ebakke.studycaster.ui.ConfirmationCodeDialog;
+import no.ebakke.studycaster.ui.ConfirmationCodeDialogPanel;
 import no.ebakke.studycaster.ui.UploadDialogPanel;
 import no.ebakke.studycaster.util.Util;
 import no.ebakke.studycaster.util.Util.CallableExt;
@@ -608,7 +608,8 @@ public final class StudyUI {
             concludeHelperEDT();
           }
         });
-      } while (false);
+        break;
+      } while (true);
     }
 
     /** Must be called on the EDT. */
@@ -617,13 +618,10 @@ public final class StudyUI {
       closeBackend(new Runnable() {
         public void run() {
           mainFrame.stopTask();
-          try {
-            UIUtil.copyStringToClipboard(serverContext.getLaunchTicket());
-          } catch (StudyCasterException e) {
-            LOG.log(Level.WARNING, "Failed to copy confirmation code to clipboard", e);
-          }
-          ConfirmationCodeDialog.show(mainFrame.getPositionDialog(),
-              serverContext.getLaunchTicket());
+          ConfirmationCodeDialogPanel ccdp = mainFrame.getConfirmationCodeDialogPanel();
+          ccdp.setConfirmationCode(serverContext.getLaunchTicket());
+          JOptionPane.showMessageDialog(mainFrame.getPositionDialog(), ccdp,
+              getUIString(UIStringKey.DIALOG_CONFIRMATION_TITLE), JOptionPane.PLAIN_MESSAGE);
           closeUI();
         }
       });

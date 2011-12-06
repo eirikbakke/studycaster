@@ -5,7 +5,7 @@ import java.awt.datatransfer.StringSelection;
 import javax.swing.UIManager;
 import no.ebakke.studycaster.api.StudyCasterException;
 
-final class UIUtil {
+public final class UIUtil {
   private UIUtil() { }
 
   public static void setSystemLookAndFeel() throws StudyCasterException {

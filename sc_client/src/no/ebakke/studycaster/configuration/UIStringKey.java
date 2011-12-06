@@ -32,7 +32,10 @@ public enum UIStringKey {
   DIALOG_CONCLUDE_EMPTY_PATH_MESSAGE(false, true, false),
   DIALOG_CONCLUDE_FILE_NOT_EXISTS_MESSAGE(false, true, true),
   DIALOG_CONCLUDE_FILE_OPEN_MESSAGE(false, true, true),
-  DIALOG_CONCLUDE_FILE_NOT_MODIFIED_MESSAGE(false, true, true);
+  DIALOG_CONCLUDE_FILE_NOT_MODIFIED_MESSAGE(false, true, true),
+  DIALOG_CONFIRMATION_TITLE(false, false, false),
+  DIALOG_CONFIRMATION_CODEBOX_LABEL(true, true, false),
+  DIALOG_CONFIRMATION_CLIPBOARD_MESSAGE(false, true, false);
 
   private boolean usesMnemonic, htmlAllowed, usesMessageFormat;
 
