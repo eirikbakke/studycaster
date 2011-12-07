@@ -32,6 +32,7 @@ import no.ebakke.studycaster.ui.UploadDialogPanel;
 import no.ebakke.studycaster.util.Util;
 import no.ebakke.studycaster.util.Util.CallableExt;
 import no.ebakke.studycaster.util.stream.NonBlockingOutputStream;
+import no.ebakke.studycaster.util.stream.StreamProgressObserver;
 
 /*
   Manual test cases for this class and its dependees:
@@ -71,12 +72,13 @@ import no.ebakke.studycaster.util.stream.NonBlockingOutputStream;
   * Uploading without default file existing or having been opened in the session before.
   * Verifying that upload dialog path remains the same between errors and gets reset when opened
     manually again.
-  * Concluding without upload.
+  * Concluding with or without file upload.
   * Focus on correct button upon startup.
   * Focus on correct button when moving back and forth between pages.
   * Focus retained on previous action button after canceled action or action with error.
   * Focus advances to next logical button after successful action.
   * Confirmation code is automatically copied to clipboard.
+  * Screencast upload progress bar.
 */
 
 // TODO: Rename to StudyCasterUI. Rename threads to reflect change.
@@ -95,6 +97,20 @@ public final class StudyUI {
   private volatile ScreenRecorder recorder;
   private volatile ServerContext serverContext;
   private volatile StudyConfiguration configuration;
+  private volatile NonBlockingOutputStream recordingStream;
+  private final StreamProgressObserver streamProgressObserver = new StreamProgressObserver() {
+      public void updateProgress(final NonBlockingOutputStream nbos) {
+        SwingUtilities.invokeLater(new Runnable() {
+          public void run() {
+            // A workaround to support the longs returned by NonBlockingOutputStream methods.
+            double fraction = ((double) nbos.getBytesWritten()) / ((double) nbos.getBytesPosted());
+            final int STEPS = 1000000;
+            mainFrame.setProgressBarBounds(0, STEPS);
+            mainFrame.setProgressBarValue((int) (STEPS * fraction));
+          }
+        });
+      }
+    };
 
   private StudyUI(EnvironmentHooks hooks) {
     this.hooks = hooks;
@@ -174,9 +190,9 @@ public final class StudyUI {
   }
 
   private void closeBackend(final Runnable onEndEDT) {
-    LOG.info("Closing backend");
     if (backendCloseThread != null)
-      throw new IllegalStateException("Backend already closed");
+      return;
+    LOG.info("Closing backend");
     final Thread initializerThreadF = initializerThread;
     backendCloseThread = new Thread(new Runnable() {
       public void run() {
@@ -189,7 +205,13 @@ public final class StudyUI {
         }
         if (recorder != null) {
           try {
+            if (onEndEDT != null) {
+              recorder.stop();
+              recordingStream.addObserver(streamProgressObserver);
+            }
             recorder.close();
+            if (onEndEDT != null)
+              recordingStream.removeObserver(streamProgressObserver);
           } catch (IOException e) {
             LOG.log(Level.SEVERE, "Error while closing screen recorder", e);
           }
@@ -316,8 +338,7 @@ public final class StudyUI {
             LOG.log(Level.INFO, "Loaded configuration with name \"{0}\"", configuration.getName());
 
             // Prepare the screen recorder without starting it yet.
-            NonBlockingOutputStream recordingStream =
-                new NonBlockingOutputStream(RECORDING_BUFFER_SZ);
+            recordingStream = new NonBlockingOutputStream(RECORDING_BUFFER_SZ);
             recordingStream.connect(serverContext.uploadFile("screencast.ebc"));
             try {
               recorder = new ScreenRecorder(recordingStream, serverContext.getServerMillisAhead(),
@@ -545,16 +566,20 @@ public final class StudyUI {
       return true;
     }
 
+    /** Callback should return true for a successful task, false for an unsuccessful task, or null
+    for an ongoing termination task. */
     private void processAction(final CallableExt<Boolean,StudyCasterException> callable) {
       new Thread(new Runnable() {
         public void run() {
           try {
-            final boolean success = callable.call();
-            SwingUtilities.invokeLater(new Runnable() {
-              public void run() {
-                mainFrame.stopTask(success);
-              }
-            });
+            final Boolean success = callable.call();
+            if (success != null) {
+              SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                  mainFrame.stopTask(success);
+                }
+              });
+            }
           } catch (final StudyCasterException e) {
             reportError(e, false);
           }
@@ -581,14 +606,13 @@ public final class StudyUI {
       });
     }
 
-    /** Returns true if the operation should be retried. Should not be called on the EDT.
-    openFileConfiguration may be null. */
-    private void uploadFileHelper(final OpenFileConfiguration openFileConfiguration,
+    /** Should not be called on the EDT. openFileConfiguration may be null. */
+    private boolean uploadFileHelper(final OpenFileConfiguration openFileConfiguration,
         final UploadDialogPanel udp)
         throws StudyCasterException, IOException, InterruptedException
     {
       boolean first = true;
-      do {
+      while (true) {
         final boolean firstF = first;
         first = false;
         String selectedFilePath =
@@ -613,7 +637,7 @@ public final class StudyUI {
           }
         });
         if (selectedFilePath == null)
-          break;
+          return false;
         if (selectedFilePath.trim().length() == 0) {
           reportMessage(UIStringKey.DIALOG_CONCLUDE_EMPTY_PATH_MESSAGE, null,
               UIStringKey.DIALOG_CONCLUDE_TITLE, JOptionPane.INFORMATION_MESSAGE);
@@ -640,18 +664,13 @@ public final class StudyUI {
         }
         ServerContextUtil.uploadFile(serverContext, selectedFile,
             "upload_" + Util.sanitizeFileNameComponent(selectedFile.getName()));
-        SwingUtilities.invokeLater(new Runnable() {
-          public void run() {
-            concludeHelperEDT();
-          }
-        });
-        break;
-      } while (true);
+        return true;
+      }
     }
 
     /** Must be called on the EDT. */
     public void concludeHelperEDT() {
-      mainFrame.startTask(UIStringKey.PROGRESS_UPLOAD_SCREENCAST, true);
+      mainFrame.startTask(UIStringKey.PROGRESS_UPLOAD_SCREENCAST, false);
       closeBackend(new Runnable() {
         public void run() {
           mainFrame.stopTask(false);
@@ -682,13 +701,21 @@ public final class StudyUI {
               return false;
             }
             try {
-              uploadFileHelper(originalFile, udp);
+              if (uploadFileHelper(originalFile, udp)) {
+                SwingUtilities.invokeLater(new Runnable() {
+                  public void run() {
+                    concludeHelperEDT();
+                  }
+                });
+                return null;
+              } else {
+                return false;
+              }
             } catch (InterruptedException e) {
               throw new StudyCasterException(e);
             } catch (IOException e) {
               throw new StudyCasterException(e);
             }
-            return true;
           }
         });
       } else {

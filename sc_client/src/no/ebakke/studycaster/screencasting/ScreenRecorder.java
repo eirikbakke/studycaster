@@ -100,9 +100,9 @@ public class ScreenRecorder {
   }
 
   public void stop() throws IOException {
-    LOG.info("Stopping screen recorder");
     if (stopped.getAndSet(true))
       return;
+    LOG.info("Stopping screen recorder");
     try {
       pointerRecorder.close();
     } catch (IOException e) {

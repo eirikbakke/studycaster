@@ -262,7 +262,7 @@ public class MainFrame extends javax.swing.JFrame {
   }
 
   public void stopTask(boolean advanceFocus) {
-    if (!taskInProgress)
+    if (taskInProgress)
       LOG.log(Level.INFO, "Clearing status bar");
     taskInProgress = false;
     progressBar.setString("");
@@ -274,7 +274,7 @@ public class MainFrame extends javax.swing.JFrame {
       advanceFocus();
   }
 
-  private void setProgressBarBounds(final int minimum, final int maximum) {
+  public void setProgressBarBounds(final int minimum, final int maximum) {
     if (!taskInProgress)
       throw new IllegalStateException("Task not started");
     progressBar.setMinimum(minimum);
