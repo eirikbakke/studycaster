@@ -13,6 +13,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.UIManager;
 import no.ebakke.studycaster.backend.StudyCasterException;
+import no.ebakke.studycaster.configuration.UIStringKey;
+import no.ebakke.studycaster.configuration.UIStrings;
 import no.ebakke.studycaster.screencasting.Quilt.ValueRun;
 import no.ebakke.studycaster.screencasting.WindowEnumerator.WindowInfo;
 import no.ebakke.studycaster.util.ImageDebugFrame;
@@ -23,7 +25,7 @@ public final class ScreenCensor {
   // TODO: Make this configurable.
   public static final int MOSAIC_WIDTH = 5;
 
-  private final List<String> whiteList, blackList;
+  private final List<String> whitelist, blacklist;
   private final Quilt<CensorType> nativeFail;
   private final WindowEnumerator windowEnumerator;
   private final boolean blackoutDesktop;
@@ -33,24 +35,21 @@ public final class ScreenCensor {
       boolean whiteListStudyCasterDialogs, boolean blackoutDesktop)
       throws StudyCasterException
   {
-    this.whiteList       = new ArrayList<String>(whiteList);
-    this.blackList       = new ArrayList<String>(blackList);
+    this.whitelist       = new ArrayList<String>(whiteList);
+    this.blacklist       = new ArrayList<String>(blackList);
     this.blackoutDesktop = blackoutDesktop;
     if (blacklistFileDialogs) {
-      // TODO: Take these strings from a common place (below, too).
-      this.blackList.add("Select File to Upload");
-      this.blackList.add("Open Sample File");
-      this.blackList.add("Upload and Retrieve Confirmation Code");
-      this.blackList.add("Save");
-      this.blackList.add("Open");
+      this.blacklist.add("Save");
+      this.blacklist.add("Open");
+      this.blacklist.add("Browse");
       String localized;
       if ((localized = UIManager.getString("FileChooser.saveDialogTitleText")) != null)
-        this.blackList.add(localized);
+        this.blacklist.add(localized);
       if ((localized = UIManager.getString("FileChooser.openDialogTitleText")) != null)
-        this.blackList.add(localized);
+        this.blacklist.add(localized);
     }
     if (whiteListStudyCasterDialogs)
-      this.whiteList.add("StudyCaster");
+      this.whitelist.add("StudyCaster");
     windowEnumerator = Win32WindowEnumerator.create();
     if (windowEnumerator == null) {
       LOG.log(Level.WARNING, "Can't initialize native library; applying mosaic to entire screen");
@@ -67,7 +66,7 @@ public final class ScreenCensor {
     List<WindowInfo> windows = windowEnumerator.getWindowList();
     Set<Integer> pidWhiteList = new LinkedHashSet<Integer>();
     for (WindowInfo wi : windows) {
-      for (String whiteListItem : whiteList) {
+      for (String whiteListItem : whitelist) {
         if (wi.getTitle().toLowerCase().contains(whiteListItem.toLowerCase()))
           pidWhiteList.add(wi.getPID());
       }
@@ -77,7 +76,7 @@ public final class ScreenCensor {
     for (WindowInfo wi : windows) {
       boolean ok = pidWhiteList.contains(wi.getPID());
       if (ok) {
-        for (String blackListItem : blackList) {
+        for (String blackListItem : blacklist) {
           if (wi.getTitle().toLowerCase().contains(blackListItem.toLowerCase())) {
             ok = false;
             break;

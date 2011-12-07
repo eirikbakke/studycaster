@@ -11,6 +11,7 @@ import java.awt.event.WindowListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -27,6 +28,7 @@ import no.ebakke.studycaster.configuration.OpenURIConfiguration;
 import no.ebakke.studycaster.configuration.StudyConfiguration;
 import no.ebakke.studycaster.configuration.UIStringKey;
 import no.ebakke.studycaster.configuration.UploadConfiguration;
+import no.ebakke.studycaster.screencasting.ScreenCensor;
 import no.ebakke.studycaster.ui.MainFrame;
 import no.ebakke.studycaster.ui.MainFrame.UserActionListener;
 import no.ebakke.studycaster.screencasting.ScreenRecorder;
@@ -180,7 +182,7 @@ public final class StudyCaster {
         }
         System.exit(1);
       }
-    }, "StudyUI-failsafeClose");
+    }, "StudyCaster-failsafeClose");
     // Don't keep the VM running just because of the failsafe thread.
     failsafeCloseThread.setDaemon(true);
     failsafeCloseThread.start();
@@ -227,7 +229,7 @@ public final class StudyCaster {
         if (onEndEDT != null)
           SwingUtilities.invokeLater(onEndEDT);
       }
-    }, "StudyUI-backendClose");
+    }, "StudyCaster-backendClose");
     backendCloseThread.start();
   }
 
@@ -350,6 +352,12 @@ public final class StudyCaster {
             } catch (AWTException e) {
               throw new StudyCasterException("Failed to initialize screen recorder", e);
             }
+            List<String> screenCastBlacklist = configuration.getScreenCastBlacklist();
+            screenCastBlacklist.add(getUIString(UIStringKey.DIALOG_CONCLUDE_TITLE));
+            screenCastBlacklist.add(getUIString(UIStringKey.DIALOG_OPEN_FILE_TITLE));
+            recorder.setCensor(new ScreenCensor(
+                configuration.getScreenCastWhitelist(), screenCastBlacklist,
+                true, true, true));
           } catch (IOException e) {
             throw new StudyCasterException("Unexpected I/O error", e);
           }
@@ -363,7 +371,7 @@ public final class StudyCaster {
           }
         });
       }
-    }, "StudyUI-runStudy");
+    }, "StudyCaster-runStudy");
 
     /* To avoid a race condition with closeBackend(), initializerThread must be initialized before
     the UI can be displayed, and started after the UI has been displayed. */
@@ -588,7 +596,7 @@ public final class StudyCaster {
             reportError(e, false);
           }
         }
-      }).start();
+      }, "StudyCaster-action").start();
     }
 
     public void openURIAction(final OpenURIConfiguration openURIConfiguration) {

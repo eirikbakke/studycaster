@@ -92,11 +92,11 @@ public class StudyConfiguration {
     return id;
   }
 
-  public List<String> getScreenCastWhiteList() {
+  public List<String> getScreenCastWhitelist() {
     return new ArrayList<String>(screenCastWhiteList);
   }
 
-  public List<String> getScreenCastBlackList() {
+  public List<String> getScreenCastBlacklist() {
     return new ArrayList<String>(screenCastBlackList);
   }
 
