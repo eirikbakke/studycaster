@@ -18,7 +18,6 @@ public interface WindowEnumerator {
       this.bounds = bounds;
       this.title  = title;
       this.pid    = pid;
-      
     }
 
     public Rectangle getBounds() {

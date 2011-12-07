@@ -2,7 +2,7 @@ package no.ebakke.studycaster.configuration;
 
 import java.util.Map;
 import javax.swing.filechooser.FileFilter;
-import no.ebakke.studycaster.api.StudyCasterException;
+import no.ebakke.studycaster.backend.StudyCasterException;
 import no.ebakke.studycaster.util.MyFileNameExtensionFilter;
 import org.w3c.dom.Element;
 

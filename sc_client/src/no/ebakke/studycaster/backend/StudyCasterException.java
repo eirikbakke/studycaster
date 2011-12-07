@@ -1,4 +1,4 @@
-package no.ebakke.studycaster.api;
+package no.ebakke.studycaster.backend;
 
 // TODO: See if it's possible to avoid the use of this custom exception.
 public class StudyCasterException extends Exception {

@@ -2,7 +2,7 @@ package no.ebakke.studycaster.configuration;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import no.ebakke.studycaster.api.StudyCasterException;
+import no.ebakke.studycaster.backend.StudyCasterException;
 import org.w3c.dom.Element;
 
 public class OpenURIConfiguration {

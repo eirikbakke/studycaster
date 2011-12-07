@@ -20,7 +20,7 @@ public class MyFileNameExtensionFilter extends FileFilter {
   @Override
   public boolean accept(File f) {
     String fn = f.getName();
-    int at = fn.lastIndexOf(".");
+    int at = fn.lastIndexOf('.');
     if (at < 0 || at + 1 >= fn.length())
       return false;
     String acte = fn.substring(at + 1).toLowerCase(Locale.ENGLISH);

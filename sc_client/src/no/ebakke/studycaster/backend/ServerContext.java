@@ -1,4 +1,4 @@
-package no.ebakke.studycaster.api;
+package no.ebakke.studycaster.backend;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -356,7 +356,7 @@ public class ServerContext {
     return launchTicket;
   }
 
-  public final long getServerMillisAhead() {
+  public long getServerMillisAhead() {
     return serverMillisAhead;
   }
 
@@ -364,5 +364,13 @@ public class ServerContext {
     if (closed.getAndSet(true))
       return;
     httpClient.getConnectionManager().shutdown();
+  }
+
+  private static class NonRetriableException extends IOException {
+    private static final long serialVersionUID = 1L;
+
+    NonRetriableException(String s) {
+      super(s);
+    }
   }
 }

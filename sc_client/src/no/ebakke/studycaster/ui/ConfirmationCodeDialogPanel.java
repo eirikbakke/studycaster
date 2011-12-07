@@ -2,10 +2,9 @@ package no.ebakke.studycaster.ui;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import no.ebakke.studycaster.api.StudyCasterException;
+import no.ebakke.studycaster.backend.StudyCasterException;
 import no.ebakke.studycaster.configuration.UIStringKey;
 import no.ebakke.studycaster.configuration.UIStrings;
-import no.ebakke.studycaster.nouveau.UIUtil;
 
 public class ConfirmationCodeDialogPanel extends javax.swing.JPanel {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");

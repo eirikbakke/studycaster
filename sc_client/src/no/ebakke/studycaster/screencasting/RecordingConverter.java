@@ -25,6 +25,7 @@ public final class RecordingConverter {
 
   private RecordingConverter() { }
 
+  @SuppressWarnings("CallToThreadDumpStack")
   public static void convert(InputStream input, String fileTo, int speedUpFactor)
       throws IOException
   {

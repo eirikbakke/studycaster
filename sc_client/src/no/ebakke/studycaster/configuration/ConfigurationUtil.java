@@ -5,7 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.xml.transform.TransformerException;
-import no.ebakke.studycaster.api.StudyCasterException;
+import no.ebakke.studycaster.backend.StudyCasterException;
 import no.ebakke.studycaster.util.XMLUtil;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;

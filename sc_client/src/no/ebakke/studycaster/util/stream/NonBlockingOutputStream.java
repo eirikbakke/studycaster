@@ -181,4 +181,9 @@ public class NonBlockingOutputStream extends OutputStream {
   public long getBytesPosted() {
     return bytesPosted.get();
   }
+
+  /* ******************************************************************************************** */
+  public interface StreamProgressObserver {
+    public void updateProgress(NonBlockingOutputStream nbos);
+  }
 }

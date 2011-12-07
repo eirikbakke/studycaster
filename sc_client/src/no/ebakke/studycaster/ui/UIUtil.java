@@ -6,16 +6,38 @@ import java.awt.FontFormatException;
 import java.awt.Image;
 import java.awt.MediaTracker;
 import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.net.URL;
+import javax.swing.UIManager;
+import no.ebakke.studycaster.backend.StudyCasterException;
 
-public final class ResourceUtil {
+public final class UIUtil {
   private static final String RESOURCE_DIR = "no/ebakke/studycaster/resources/";
+  private UIUtil() { }
 
-  private ResourceUtil() { }
+  public static void setSystemLookAndFeel() throws StudyCasterException {
+    try {
+      UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+    } catch (Exception e) {
+      throw new StudyCasterException(e);
+    }
+  }
+
+  public static void copyStringToClipboard(String str) throws StudyCasterException {
+    try {
+      Toolkit.getDefaultToolkit().getSystemClipboard().setContents(
+          new StringSelection(str), null);
+    } catch (Exception e) {
+      /* Convert unchecked to checked exception; on Windows, setContents() is known to throw an
+      IllegalStateException ("cannot open system clipboard") from an underlying native method every
+      now and then. */
+      throw new StudyCasterException(e);
+    }
+  }
 
   private static InputStream getResource(final String fileName) throws IOException {
     InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(

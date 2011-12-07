@@ -13,7 +13,7 @@ import java.awt.Toolkit;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import no.ebakke.studycaster.ui.ResourceUtil;
+import no.ebakke.studycaster.ui.UIUtil;
 import no.ebakke.studycaster.util.ImageDebugFrame;
 
 public class ScreenCastOverlay {
@@ -35,10 +35,10 @@ public class ScreenCastOverlay {
   }
 
   public ScreenCastOverlay(Dimension inputDimension) throws IOException {
-    iconImage    = ResourceUtil.loadImage(FILEPATH, true);
-    pointerImage = ResourceUtil.loadImage(POINTER_IMAGE_FILE, true);
-    fontMono     = ResourceUtil.createFont(FONT_MONO_FILE, FONT_SIZE);
-    fontSans     = ResourceUtil.createFont(FONT_SANS_FILE, FONT_SIZE);
+    iconImage    = UIUtil.loadImage(FILEPATH, true);
+    pointerImage = UIUtil.loadImage(POINTER_IMAGE_FILE, true);
+    fontMono     = UIUtil.createFont(FONT_MONO_FILE, FONT_SIZE);
+    fontSans     = UIUtil.createFont(FONT_SANS_FILE, FONT_SIZE);
 
     Graphics2D g = new ScreenCastImage(inputDimension).createGraphics();
     fontCapHeight = (int) Math.round(
@@ -55,6 +55,7 @@ public class ScreenCastOverlay {
         new Dimension(inputDimension.width, inputDimension.height + getStatusAreaHeight());
   }
 
+  @SuppressWarnings("FinalMethod")
   public final int getStatusAreaHeight() {
     return fontCapHeight + 2 * STATUS_MARGIN;
   }

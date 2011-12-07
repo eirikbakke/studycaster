@@ -14,7 +14,7 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
-import no.ebakke.studycaster.api.ServerTimeLogFormatter;
+import no.ebakke.studycaster.backend.ServerTimeLogFormatter;
 import no.ebakke.studycaster.screencasting.MetaStamp.FrameType;
 
 /** Not thread-safe. */
@@ -182,6 +182,7 @@ public class CaptureDecoder {
     }
   }
 
+  @SuppressWarnings("AssignmentToForLoopParameter")
   private void readFrame() throws IOException {
     state.swapFrames();
     final Graphics2D g  = state.getCurrentFrame().createGraphics();

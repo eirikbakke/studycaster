@@ -1,5 +1,8 @@
-package no.ebakke.studycaster.nouveau;
+package no.ebakke.studycaster.applications;
 
+import no.ebakke.studycaster.ui.UIUtil;
+import no.ebakke.studycaster.backend.SingleInstanceHandler;
+import no.ebakke.studycaster.backend.EnvironmentHooks;
 import java.awt.AWTException;
 import java.awt.EventQueue;
 import java.awt.event.WindowAdapter;
@@ -15,16 +18,17 @@ import java.util.logging.Logger;
 import javax.jnlp.SingleInstanceListener;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-import no.ebakke.studycaster.api.ServerContext;
-import no.ebakke.studycaster.api.ServerContextUtil;
-import no.ebakke.studycaster.api.StudyCasterException;
+import no.ebakke.studycaster.backend.ServerContext;
+import no.ebakke.studycaster.backend.ServerContextUtil;
+import no.ebakke.studycaster.backend.StudyCasterException;
 import no.ebakke.studycaster.configuration.ConcludeConfiguration;
 import no.ebakke.studycaster.configuration.OpenFileConfiguration;
 import no.ebakke.studycaster.configuration.OpenURIConfiguration;
 import no.ebakke.studycaster.configuration.StudyConfiguration;
 import no.ebakke.studycaster.configuration.UIStringKey;
 import no.ebakke.studycaster.configuration.UploadConfiguration;
-import no.ebakke.studycaster.nouveau.MainFrame.UserActionListener;
+import no.ebakke.studycaster.ui.MainFrame;
+import no.ebakke.studycaster.ui.MainFrame.UserActionListener;
 import no.ebakke.studycaster.screencasting.ScreenRecorder;
 import no.ebakke.studycaster.screencasting.ScreenRecorderConfiguration;
 import no.ebakke.studycaster.ui.ConfirmationCodeDialogPanel;
@@ -32,7 +36,7 @@ import no.ebakke.studycaster.ui.UploadDialogPanel;
 import no.ebakke.studycaster.util.Util;
 import no.ebakke.studycaster.util.Util.CallableExt;
 import no.ebakke.studycaster.util.stream.NonBlockingOutputStream;
-import no.ebakke.studycaster.util.stream.StreamProgressObserver;
+import no.ebakke.studycaster.util.stream.NonBlockingOutputStream.StreamProgressObserver;
 
 /*
   Manual test cases for this class and its dependees:
@@ -84,7 +88,7 @@ import no.ebakke.studycaster.util.stream.StreamProgressObserver;
 // TODO: Rename to StudyCasterUI. Rename threads to reflect change.
 /** Except where noted, methods in this class, including private ones, must be called from the
 event-dispatching thread (EDT) only. */
-public final class StudyUI {
+public final class StudyCaster {
   private static final int RECORDING_BUFFER_SZ = 4 * 1024 * 1024;
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private static final String CONFIGID_PROP_NAME = "studycaster.config.id";
@@ -112,7 +116,7 @@ public final class StudyUI {
       }
     };
 
-  private StudyUI(EnvironmentHooks hooks) {
+  private StudyCaster(EnvironmentHooks hooks) {
     this.hooks = hooks;
     mainFrame = new MainFrame(new PrivateUserActionListener());
     windowClosingListener = new WindowAdapter() {
@@ -382,7 +386,7 @@ public final class StudyUI {
 
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
-        new StudyUI(hooks).runStudy(args);
+        new StudyCaster(hooks).runStudy(args);
       }
     });
   }

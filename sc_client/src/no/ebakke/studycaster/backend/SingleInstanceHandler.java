@@ -1,4 +1,4 @@
-package no.ebakke.studycaster.nouveau;
+package no.ebakke.studycaster.backend;
 
 import java.util.ArrayList;
 import java.util.List;

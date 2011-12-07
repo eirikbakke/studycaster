@@ -1,6 +1,6 @@
 package no.ebakke.studycaster.configuration;
 
-import no.ebakke.studycaster.api.StudyCasterException;
+import no.ebakke.studycaster.backend.StudyCasterException;
 import org.w3c.dom.Element;
 
 public class OpenFileConfiguration {
@@ -11,11 +11,9 @@ public class OpenFileConfiguration {
   public OpenFileConfiguration(Element elm) throws StudyCasterException {
     serverName   = ConfigurationUtil.getTextContent(elm, "servername"  );
     clientName   = ConfigurationUtil.getTextContent(elm, "clientname"  );
-    // TODO: Change to getSwingCaption once entire message is used.
     errorMessage = ConfigurationUtil.getTextContent(elm, "errormessage");
   }
 
-  // TODO: Rename to clientName/serverName.
   public String getServerName() {
     return serverName;
   }

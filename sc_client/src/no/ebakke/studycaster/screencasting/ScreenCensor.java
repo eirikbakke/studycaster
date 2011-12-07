@@ -12,7 +12,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.UIManager;
-import no.ebakke.studycaster.api.StudyCasterException;
+import no.ebakke.studycaster.backend.StudyCasterException;
 import no.ebakke.studycaster.screencasting.Quilt.ValueRun;
 import no.ebakke.studycaster.screencasting.WindowEnumerator.WindowInfo;
 import no.ebakke.studycaster.util.ImageDebugFrame;
@@ -28,6 +28,7 @@ public final class ScreenCensor {
   private final WindowEnumerator windowEnumerator;
   private final boolean blackoutDesktop;
 
+  @SuppressWarnings("NestedAssignment")
   public ScreenCensor(List<String> whiteList, List<String> blackList, boolean blacklistFileDialogs,
       boolean whiteListStudyCasterDialogs, boolean blackoutDesktop)
       throws StudyCasterException

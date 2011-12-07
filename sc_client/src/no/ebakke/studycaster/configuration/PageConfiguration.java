@@ -3,7 +3,7 @@ package no.ebakke.studycaster.configuration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import no.ebakke.studycaster.api.StudyCasterException;
+import no.ebakke.studycaster.backend.StudyCasterException;
 import org.w3c.dom.Element;
 
 public class PageConfiguration {

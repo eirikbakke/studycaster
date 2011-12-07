@@ -10,7 +10,7 @@ final class CodecState {
   private final Dimension dimension;
   private volatile ScreenCastImage currentFrame, previousFrame;
 
-  public CodecState(Dimension dimension) {
+  CodecState(Dimension dimension) {
     this.dimension     = dimension;
     this.currentFrame  = new ScreenCastImage(dimension);
     this.previousFrame = new ScreenCastImage(dimension);

@@ -1,4 +1,4 @@
-package no.ebakke.studycaster.nouveau;
+package no.ebakke.studycaster.ui;
 
 import java.awt.Dimension;
 import java.awt.Image;
@@ -12,7 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import no.ebakke.studycaster.api.ServerContext;
+import no.ebakke.studycaster.backend.ServerContext;
 import no.ebakke.studycaster.configuration.ConcludeConfiguration;
 import no.ebakke.studycaster.configuration.OpenFileConfiguration;
 import no.ebakke.studycaster.configuration.OpenURIConfiguration;
@@ -20,9 +20,6 @@ import no.ebakke.studycaster.configuration.PageConfiguration;
 import no.ebakke.studycaster.configuration.StudyConfiguration;
 import no.ebakke.studycaster.configuration.UIStringKey;
 import no.ebakke.studycaster.configuration.UIStrings;
-import no.ebakke.studycaster.ui.ConfirmationCodeDialogPanel;
-import no.ebakke.studycaster.ui.ResourceUtil;
-import no.ebakke.studycaster.ui.UploadDialogPanel;
 
 public class MainFrame extends javax.swing.JFrame {
   /** Public methods on this interface will be called on the EDT. */
@@ -80,18 +77,18 @@ public class MainFrame extends javax.swing.JFrame {
         LOG.info("Can't find Window.setIconImages(), probably on JRE 1.5 or earlier");
         /* Custom icons on JRE 1.5 or earlier look crummy due to inevitable low-quality scaling, so
         don't bother in this case. */
-        // setIconImage(ResourceUtil.loadImage("icon256.png", false));
+        // setIconImage(UIUtil.loadImage("icon256.png", false));
       } else {
         // Running JRE >= 1.6
         List<Image> icons = new ArrayList<Image>();
-        icons.add(ResourceUtil.loadImage("icon16.png", false));
-        icons.add(ResourceUtil.loadImage("icon22.png", false));
-        icons.add(ResourceUtil.loadImage("icon24.png", false));
-        icons.add(ResourceUtil.loadImage("icon32.png", false));
-        icons.add(ResourceUtil.loadImage("icon48.png", false));
-        icons.add(ResourceUtil.loadImage("icon64.png", false));
-        icons.add(ResourceUtil.loadImage("icon128.png", false));
-        icons.add(ResourceUtil.loadImage("icon256.png", false));
+        icons.add(UIUtil.loadImage("icon16.png", false));
+        icons.add(UIUtil.loadImage("icon22.png", false));
+        icons.add(UIUtil.loadImage("icon24.png", false));
+        icons.add(UIUtil.loadImage("icon32.png", false));
+        icons.add(UIUtil.loadImage("icon48.png", false));
+        icons.add(UIUtil.loadImage("icon64.png", false));
+        icons.add(UIUtil.loadImage("icon128.png", false));
+        icons.add(UIUtil.loadImage("icon256.png", false));
         try {
           setIconImagesMethod.invoke(this, icons);
         } catch (IllegalAccessException e) {

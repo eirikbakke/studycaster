@@ -1,6 +1,5 @@
 package no.ebakke.studycaster.configuration;
 
-import javax.swing.filechooser.FileFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -11,7 +10,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
-import no.ebakke.studycaster.api.StudyCasterException;
+import no.ebakke.studycaster.backend.StudyCasterException;
 import no.ebakke.studycaster.util.XMLUtil;
 import org.xml.sax.SAXException;
 import org.w3c.dom.Document;
@@ -83,37 +82,6 @@ public class StudyConfiguration {
     screenCastBlackList = ConfigurationUtil.getStrings(screencast, "blacklist");
 
     uiStrings = new UIStrings(ConfigurationUtil.getUniqueElement(conf, "uistrings"));
-  }
-
-  // TODO: Get rid of this.
-  private PageConfiguration getLonePageConfiguration() {
-    if (pageConfigurations.size() != 1)
-      throw new UnsupportedOperationException();
-    return pageConfigurations.get(0);
-  }
-
-  // TODO: Get rid of this.
-  public String getInstructions() {
-    return getLonePageConfiguration().getInstructions();
-  }
-
-  // TODO: Get rid of this.
-  public OpenFileConfiguration getOpenFileConfiguration() {
-    OpenFileConfiguration ret = getLonePageConfiguration().getOpenFileConfiguration();
-    if (ret == null)
-      throw new UnsupportedOperationException();
-    return ret;
-  }
-
-  // TODO: Get rid of this.
-  public FileFilter getUploadFileFilter() {
-    ConcludeConfiguration conclude = getLonePageConfiguration().getConcludeConfiguration();
-    if (conclude == null)
-      throw new UnsupportedOperationException();
-    UploadConfiguration ret = conclude.getUploadConfiguration();
-    if (ret == null)
-      throw new UnsupportedOperationException();
-    return ret.getFileFilter();
   }
 
   public String getName() {

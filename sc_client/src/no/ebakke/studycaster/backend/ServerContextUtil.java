@@ -1,4 +1,4 @@
-package no.ebakke.studycaster.api;
+package no.ebakke.studycaster.backend;
 
 import java.io.File;
 import java.io.FileInputStream;

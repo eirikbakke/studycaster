@@ -11,7 +11,7 @@ class MetaStamp {
   private final Point     pointerLocation;
   private final FrameType type;
 
-  public MetaStamp(long timeMillis, Point pointerLocation, FrameType type) {
+  MetaStamp(long timeMillis, Point pointerLocation, FrameType type) {
     this.timeMillis = timeMillis;
     this.pointerLocation = pointerLocation;
     this.type = type;

@@ -1,4 +1,4 @@
-package no.ebakke.studycaster.api;
+package no.ebakke.studycaster.backend;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;

@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
-import no.ebakke.studycaster.api.StudyCasterException;
+import no.ebakke.studycaster.backend.StudyCasterException;
 
 public final class Util {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
@@ -188,7 +188,6 @@ public final class Util {
     } catch (IOException e) {
       return false;
     }
-
     return desktopOpenURIPlatformDependent(fileToOpen.toURI());
   }
 
@@ -199,7 +198,6 @@ public final class Util {
     } catch (IOException e) {
       throw new StudyCasterException("Java Desktop API failed to open URI", e);
     }
-
     if (!desktopOpenURIPlatformDependent(toOpen))
       throw new StudyCasterException("Desktop API emulation failed to open URI");
   }
@@ -214,8 +212,10 @@ public final class Util {
     return ret.toString();
   }
 
-  /* TODO: Get rid of this method and the Wrapper class, as well as other unused methods in this
-  class. */
+  private static class Wrapper<T> {
+    T value;
+  }
+
   @SuppressWarnings("unchecked")
   public static <V,E extends Exception> V checkedSwingInvokeAndWait(final CallableExt<V,E> r)
       throws E, InterruptedException
