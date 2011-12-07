@@ -2,7 +2,6 @@ package no.ebakke.studycaster.screencasting.jna;
 
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
-import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.platform.win32.WinDef.RECT;
 import com.sun.jna.platform.win32.WinUser;
@@ -14,19 +13,27 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import no.ebakke.studycaster.screencasting.jna.MyUser32.LastInputInfo;
 
-/** Platform-dependent window detector. */
+/** Microsoft Windows implementation of the DesktopLibrary. */
 public final class Win32DesktopLibrary implements DesktopLibrary {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
-  private final MyUser32   user32;
-  private final MyKernel32 kernel32;
-  private static final int STR_BUF_SZ = 32768;
+  private static boolean    SIMULATE_WRAPAROUND = false;
+  private static final long UINT_WRAP = 4294967296L; // 2 ** 32
+  private static final int  STR_BUF_SZ = 32768;
+  private final MyUser32    user32;
+  private final MyKernel32  kernel32;
+  private final long        kernelTimeOffset;
 
   private Win32DesktopLibrary() {
     user32   = (MyUser32)   Native.loadLibrary("user32"  , MyUser32.class  );
     kernel32 = (MyKernel32) Native.loadLibrary("kernel32", MyKernel32.class);
+    /* Err on the side of overestimating the offset (to avoid negative times since last input), so
+    get the Java time first. */
+    final long javaTime   = System.nanoTime();
+    final long kernelTime = getTickCount() * 1000000L;
+    kernelTimeOffset = kernelTime - javaTime;
     // Fail-fast by exercising all library calls.
     getWindowList();
-    getTimeSinceLastInputMillis();
+    getLastInputTimeNanos();
   }
 
   public static DesktopLibrary create() {
@@ -56,8 +63,8 @@ public final class Win32DesktopLibrary implements DesktopLibrary {
       }
     }, null);
 
-    // Don't include the desktop window.
-    // TODO: Verify that "Program Manager" is the right name in other Windows versions than XP.
+    /* Don't include the desktop window. "Program Manager" is the correct name on at least
+    Windows XP and Windows 7. */
     if (!ret.isEmpty() && ret.get(0).getTitle().equals("Program Manager"))
       ret.remove(0);
     return ret;
@@ -92,19 +99,26 @@ public final class Win32DesktopLibrary implements DesktopLibrary {
     return ret.dwTime;
   }
 
-  public long getTimeSinceLastInputMillis() {
-    final long UINT_WRAP = 4294967296L; // 2 ** 32
+  private long getTickCount() {
+    return kernel32.GetTickCount64() + (SIMULATE_WRAPAROUND ? UINT_WRAP : 0);
+  }
+
+  public long getLastInputTimeNanos() {
     // This value wraps around every 49.7 days (every UINT_WRAP milliseconds).
     long last = getLastInputInfo();
-    // This value "never" wraps around.
-    long now  = kernel32.GetTickCount64();
+    /* This value "never" wraps around. The only purpose of using GetTickCount here is to use its
+    value to handle the wraparound of GetLastInputInfo. */
+    long now  = getTickCount();
 
-    // This should never happen, even with wraparound on last.
-    if (now < last)
-      return 0;
-    /* This will handle wraparound on last as long as the _difference_ between the two times are no
-    more than the wraparound time. */
-    return (now - last) % UINT_WRAP;
+    /* This will handle wraparound of GetLastInputInfo as long as the _difference_ between the two
+    times are no more than the wraparound time. The less-than case should never happen even with
+    wraparound, but we handle it anyway. */
+    long sinceLast = (now < last) ? 0 : ((now - last) % UINT_WRAP);
+    long adjustedLast = now - sinceLast;
+
+    /* The kernel and Java timers may not always be perfectly in sync, so explicitly constrain the
+    return value so that it does not exceed System.nanoTime(). */
+    return Math.min(adjustedLast * 1000000L - kernelTimeOffset, System.nanoTime());
   }
 
   public static void main(String args[]) throws InterruptedException {
@@ -112,7 +126,10 @@ public final class Win32DesktopLibrary implements DesktopLibrary {
     for (WindowInfo wi : windowEnumerator.getWindowList())
       System.out.println(wi);
     while (true) {
-      System.out.println(windowEnumerator.getTimeSinceLastInputMillis());
+      long last = windowEnumerator.getLastInputTimeNanos();
+      long nano = System.nanoTime();
+      long since = nano - last;
+      System.out.println(last / 1000000L + "\t" + since / 1000000L);
       Thread.sleep(1000);
     }
   }
