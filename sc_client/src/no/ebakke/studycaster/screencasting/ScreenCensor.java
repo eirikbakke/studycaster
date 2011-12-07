@@ -1,4 +1,5 @@
 package no.ebakke.studycaster.screencasting;
+import no.ebakke.studycaster.screencasting.jna.Win32DesktopLibrary;
 import java.awt.AWTException;
 import java.awt.Rectangle;
 import java.awt.Robot;
@@ -13,10 +14,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.UIManager;
 import no.ebakke.studycaster.backend.StudyCasterException;
-import no.ebakke.studycaster.configuration.UIStringKey;
-import no.ebakke.studycaster.configuration.UIStrings;
 import no.ebakke.studycaster.screencasting.Quilt.ValueRun;
-import no.ebakke.studycaster.screencasting.WindowEnumerator.WindowInfo;
+import no.ebakke.studycaster.screencasting.jna.DesktopLibrary;
+import no.ebakke.studycaster.screencasting.jna.DesktopLibrary.WindowInfo;
 import no.ebakke.studycaster.util.ImageDebugFrame;
 
 /** Not thread-safe. */
@@ -27,7 +27,7 @@ public final class ScreenCensor {
 
   private final List<String> whitelist, blacklist;
   private final Quilt<CensorType> nativeFail;
-  private final WindowEnumerator windowEnumerator;
+  private final DesktopLibrary windowEnumerator;
   private final boolean blackoutDesktop;
 
   @SuppressWarnings("NestedAssignment")
@@ -50,7 +50,7 @@ public final class ScreenCensor {
     }
     if (whiteListStudyCasterDialogs)
       this.whitelist.add("StudyCaster");
-    windowEnumerator = Win32WindowEnumerator.create();
+    windowEnumerator = Win32DesktopLibrary.create();
     if (windowEnumerator == null) {
       LOG.log(Level.WARNING, "Can't initialize native library; applying mosaic to entire screen");
       nativeFail = new Quilt<CensorType>(CensorType.MOSAIC);
