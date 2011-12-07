@@ -17,11 +17,13 @@ public interface DesktopLibrary {
     private Rectangle bounds;
     private String    title;
     private int       pid;
+    private boolean   foreground;
 
-    public WindowInfo(Rectangle bounds, String title, int pid) {
-      this.bounds = bounds;
-      this.title  = title;
-      this.pid    = pid;
+    public WindowInfo(Rectangle bounds, String title, int pid, boolean foreground) {
+      this.bounds     = bounds;
+      this.title      = title;
+      this.pid        = pid;
+      this.foreground = foreground;
     }
 
     public Rectangle getBounds() {
@@ -36,9 +38,13 @@ public interface DesktopLibrary {
       return pid;
     }
 
+    public boolean isForeground() {
+      return foreground;
+    }
+
     @Override
     public String toString() {
-      return pid + "\t" + bounds + "\t" + "\"" + title + "\"";
+      return pid + "\t" + (foreground ? "F" : " ") + "\t" + bounds + "\t\"" + title + "\"";
     }
   }
 }

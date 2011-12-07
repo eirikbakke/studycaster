@@ -96,7 +96,7 @@ public final class ScreenCensor {
     Rectangle screenRect = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
     BufferedImage image = new Robot().createScreenCapture(screenRect);
     Quilt<CensorType> permitted = censor.getPermittedRecordingArea();
-    
+
     /*
     permitted = new Quilt();
     permitted.addPatch(screenRect, true);

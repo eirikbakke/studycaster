@@ -2,6 +2,7 @@ package no.ebakke.studycaster.screencasting.jna;
 
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
+import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.platform.win32.WinDef.RECT;
 import com.sun.jna.platform.win32.WinUser;
@@ -42,13 +43,15 @@ public final class Win32DesktopLibrary implements DesktopLibrary {
 
   /* See http://stackoverflow.com/questions/4478624 . */
   public List<WindowInfo> getWindowList() {
+    final HWND foreground = user32.GetForegroundWindow();
     final List<WindowInfo> ret = new ArrayList<WindowInfo>();
     user32.EnumWindows(new WinUser.WNDENUMPROC() {
       public boolean callback(HWND hWnd, Pointer pntr) {
         if (!user32.IsWindowVisible(hWnd))
           return true;
         // Add in reverse order.
-        ret.add(0, new WindowInfo(getWindowBounds(hWnd), getWindowTitle(hWnd), getWindowPID(hWnd)));
+        ret.add(0, new WindowInfo(getWindowBounds(hWnd), getWindowTitle(hWnd), getWindowPID(hWnd),
+            hWnd.equals(foreground)));
         return true;
       }
     }, null);

@@ -9,9 +9,10 @@ import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.win32.StdCallLibrary;
 
 public interface MyUser32 extends StdCallLibrary {
+  @SuppressWarnings("PublicField")
   public static class LastInputInfo extends Structure {
-      public int cbSize = 8;
-      public int dwTime;
+    public int cbSize = 8;
+    public int dwTime;
   }
   public boolean GetLastInputInfo(LastInputInfo result);
   public boolean EnumWindows(WNDENUMPROC lpEnumFunc, Pointer data);
@@ -19,4 +20,5 @@ public interface MyUser32 extends StdCallLibrary {
   public int GetWindowTextW(HWND hWnd, char[] lpString, int nMaxCount);
   public int GetWindowThreadProcessId(HWND hWnd, IntByReference lpdwProcessId);
   public boolean GetWindowRect(HWND hWnd, RECT rect);
+  public HWND GetForegroundWindow();
 }

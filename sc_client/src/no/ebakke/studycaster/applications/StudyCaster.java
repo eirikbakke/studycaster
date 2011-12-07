@@ -85,9 +85,9 @@ import no.ebakke.studycaster.util.stream.NonBlockingOutputStream.StreamProgressO
   * Focus advances to next logical button after successful action.
   * Confirmation code is automatically copied to clipboard.
   * Screencast upload progress bar.
+  * Closing the main frame before the screencast has finished uploading.
 */
 
-// TODO: Rename to StudyCasterUI. Rename threads to reflect change.
 /** Except where noted, methods in this class, including private ones, must be called from the
 event-dispatching thread (EDT) only. */
 public final class StudyCaster {
