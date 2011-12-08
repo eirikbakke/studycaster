@@ -1,14 +1,14 @@
 sc_client/build
 sc_client/dist
 sc_client/nbproject/private/
-sc_client/nbproject/build-impl.xml
+#sc_client/nbproject/build-impl.xml
 sc_client/nbproject/genfiles.properties
 sc_client/hs_err_*.log
 
 sc_server/build
 sc_server/dist
 sc_server/nbproject/private/
-sc_server/nbproject/build-impl.xml
+#sc_server/nbproject/build-impl.xml
 sc_server/nbproject/genfiles.properties
 sc_server/derby.log
 
