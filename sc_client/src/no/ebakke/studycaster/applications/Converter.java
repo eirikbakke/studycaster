@@ -39,25 +39,29 @@ public final class Converter {
         speedUpFactor + "x." + RecordingConverter.FILE_EXTENSION;
     File outFile = new File(outputFileName);
     File tmpFile = new File(outFile.getParentFile(), "~" + outFile.getName());
-    if (outFile.exists()) {
-      System.err.println("Skipping existing file " + outputFileName);
-      return;
-    }
-    FileInputStream fis;
     try {
-      fis = new FileInputStream(inputFileName);
-    } catch (FileNotFoundException e) {
-      System.err.println("File not found: " + inputFileName);
-      return;
-    }
-    try {
-      System.err.format("Converting to %s at %dx speedup: \n", outFile.toString(), speedUpFactor);
+      if (!tmpFile.createNewFile()) {
+        System.err.println("Skipping incomplete file " + tmpFile);
+        return;
+      }
+      if (outFile.exists()) {
+        System.err.println("Skipping already converted file " + outFile);
+        tmpFile.delete();
+        return;
+      }
+      FileInputStream fis;
+      try {
+        fis = new FileInputStream(inputFileName);
+      } catch (FileNotFoundException e) {
+        System.err.println("File not found: " + inputFileName);
+        return;
+      }
+      System.err.format("Converting to %s at %dx speedup: \n", outFile, speedUpFactor);
       RecordingConverter.convert(fis, tmpFile.toString(), speedUpFactor);
       tmpFile.renameTo(outFile);
     } catch (IOException e) {
       System.err.println("Got an error: " + e.getMessage());
       e.printStackTrace(System.err);
-      return;
     }
   }
 }

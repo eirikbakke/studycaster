@@ -76,14 +76,22 @@ public class ServerContext {
     }
   }
 
+  private void simulateLatency() throws StudyCasterException {
+    if (SIMULATE_LATENCY_NANOS > 0.0) {
+      try {
+        Util.delayAtLeast(Math.round(Math.random() * SIMULATE_LATENCY_NANOS / 2.0));
+      } catch (InterruptedException e) {
+        throw new StudyCasterException("Interrupted during latency simulation", e);
+      }
+    }
+  }
+
   private long getServerTimeNanos() throws StudyCasterException {
     HttpResponse response;
     try {
-      if (SIMULATE_LATENCY_NANOS > 0.0)
-        Util.delayAtLeast(Math.round(Math.random() * SIMULATE_LATENCY_NANOS / 2.0));
+      simulateLatency();
       response = requestHelper("tim", null, null);
-      if (SIMULATE_LATENCY_NANOS > 0.0)
-        Util.delayAtLeast(Math.round(Math.random() * SIMULATE_LATENCY_NANOS / 2.0));
+      simulateLatency();
       try {
         /* RealTimeNanos is only used on the first request to calculate the offset of the more
         accurate TickTimeNanos timer. */
@@ -93,11 +101,11 @@ public class ServerContext {
         final long tickTimeNanos =
             convertLong(getMandatoryHeader(response, "X-StudyCaster-TickTimeNanos"));
         final long newServerTickTimeOffset = tickTimeNanos - realTimeNanos;
-        /* If the offset between the two timers has changed substantially, assume that it needs to
-        be set again. This can be due to an adjustment of the real-time clock on the server, or
-        because the server was restarted. Still, it's unlikely that this will happen during the few
-        seconds that the client is requesting timing measurements. */
         synchronized (this) {
+          /* If the offset between the two timers has changed substantially, assume that it needs to
+          be set again. This can be due to an adjustment of the real-time clock on the server, or
+          because the server was restarted. Still, it's unlikely that this will happen during the
+          few seconds that the client is requesting timing measurements. */
           if (serverTickTimeOffset == null ||
               Math.abs(serverTickTimeOffset - newServerTickTimeOffset) > 3000000000L)
           {
@@ -108,8 +116,6 @@ public class ServerContext {
       } finally {
         EntityUtils.consume(response.getEntity());
       }
-    } catch (InterruptedException e) {
-      throw new StudyCasterException("Interrupted during latency simulation", e);
     } catch (IOException e) {
       throw new StudyCasterException("Failed to retrieve server time", e);
     }
@@ -123,7 +129,6 @@ public class ServerContext {
     final int    MAX_ATTEMPTS        = 15;
     final double MAX_STDEV_NANOS     =   50 * 1000000.0;
     final double MAX_ROUNDTRIP_NANOS = 1000 * 1000000.0;
-    // See http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods .
     // Running average, sum of squares, last number of samples, and last standard deviation.
     double A = 0, Q = 0, N = 0, stdev = Double.POSITIVE_INFINITY;
     for (int i = 1, attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
@@ -146,6 +151,7 @@ public class ServerContext {
             localTimeSource.currentTimeNanos() - requestLengthNanos / 2.0;
         x = serverTimeNanos - adjustedLocalTime;
       }
+      // See http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods .
       Q = Q + ((i - 1.0) / i) * (x - A) * (x - A);
       A = A + (x - A) / i;
       N = i;
