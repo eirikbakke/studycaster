@@ -5,7 +5,8 @@
  *  - Added @WebServlet annotation.
  *  - Intercepted MIME type determination.
  *  - Added sending of disable cache headers.
- *  - Added serialVersionUID
+ *  - Added serialVersionUID.
+ *  - Fixed warnings.
  */
 
 /*
@@ -70,6 +71,7 @@ public class FileServlet extends HttpServlet {
    * Process HEAD request. This returns the same headers as GET request, but without content.
    * @see HttpServlet#doHead(HttpServletRequest, HttpServletResponse).
    */
+  @Override
   protected void doHead(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
     // Process request without content.
@@ -80,6 +82,7 @@ public class FileServlet extends HttpServlet {
    * Process GET request.
    * @see HttpServlet#doGet(HttpServletRequest, HttpServletResponse).
    */
+  @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
     // Process request with content.
@@ -215,8 +218,8 @@ public class FileServlet extends HttpServlet {
         for (String part : range.substring(6).split(",")) {
           // Assuming a file with length of 100, the following examples returns bytes at:
           // 50-80 (50 to 80), 40- (40 to length=100), -20 (length-20=80 to length=100).
-          long start = sublong(part, 0, part.indexOf("-"));
-          long end = sublong(part, part.indexOf("-") + 1, part.length());
+          long start = sublong(part, 0, part.indexOf('-'));
+          long end = sublong(part, part.indexOf('-') + 1, part.length());
 
           if (start == -1) {
             start = length - end;
@@ -402,6 +405,7 @@ public class FileServlet extends HttpServlet {
    * @param length Length of the byte range.
    * @throws IOException If something fails at I/O level.
    */
+  @SuppressWarnings("NestedAssignment")
   private static void copy(RandomAccessFile input, OutputStream output, long start, long length)
       throws IOException {
     byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
@@ -447,7 +451,7 @@ public class FileServlet extends HttpServlet {
   /**
    * This class represents a byte range.
    */
-  protected class Range {
+  private static class Range {
     long start;
     long end;
     long length;
@@ -459,7 +463,7 @@ public class FileServlet extends HttpServlet {
      * @param end End of the byte range.
      * @param total Total length of the byte source.
      */
-    public Range(long start, long end, long total) {
+    Range(long start, long end, long total) {
       this.start = start;
       this.end = end;
       this.length = end - start + 1;

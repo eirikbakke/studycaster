@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.GZIPOutputStream;
+import no.ebakke.studycaster.backend.TimeSource;
 import no.ebakke.studycaster.screencasting.MetaStamp.FrameType;
 import no.ebakke.studycaster.screencasting.Quilt.ValueRun;
 import no.ebakke.studycaster.screencasting.ScreenCensor.CensorType;
@@ -26,7 +27,7 @@ public class CaptureEncoder {
   private final Robot robot;
   private final CodecState state;
   // Used in the unsynchronized addMeta(), so must be declared volatile.
-  private volatile long serverMillisAhead;
+  private volatile TimeSource timeSource;
   private ScreenCensor censor;
 
   public CaptureEncoder(OutputStream out, Rectangle screenRect) throws IOException, AWTException {
@@ -44,13 +45,13 @@ public class CaptureEncoder {
     this.censor = censor;
   }
 
-  public synchronized void setServerMillisAhead(long serverMillisAhead) {
-    this.serverMillisAhead = serverMillisAhead;
+  public synchronized void setTimeSource(TimeSource timeSource) {
+    this.timeSource = timeSource;
   }
 
   /** No external synchronization is needed to invoke this method. */
   private void addMeta(FrameType type) {
-    long time = System.currentTimeMillis() + serverMillisAhead;
+    long time = timeSource.currentTimeMillis();
     PointerInfo pi = MouseInfo.getPointerInfo();
     Point mouseLoc = (pi == null) ? null : pi.getLocation();
     state.addMetaStamp(new MetaStamp(time, mouseLoc, type));

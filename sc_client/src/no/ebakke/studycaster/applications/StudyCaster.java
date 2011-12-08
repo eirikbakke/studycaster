@@ -333,7 +333,7 @@ public final class StudyCaster {
         StudyCasterException exception = null;
         try {
           serverContext = new ServerContext();
-          hooks.getLogFormatter().setServerMillisAhead(serverContext.getServerMillisAhead());
+          hooks.getLogFormatter().setServerTimeSource(serverContext.getServerTimeSource());
           try {
             hooks.getConsoleStream().connect(serverContext.uploadFile("console.txt"));
             final String configurationID = System.getProperty(CONFIGID_PROP_NAME);
@@ -347,7 +347,7 @@ public final class StudyCaster {
             recordingStream = new NonBlockingOutputStream(RECORDING_BUFFER_SZ);
             recordingStream.connect(serverContext.uploadFile("screencast.ebc"));
             try {
-              recorder = new ScreenRecorder(recordingStream, serverContext.getServerMillisAhead(),
+              recorder = new ScreenRecorder(recordingStream, serverContext.getServerTimeSource(),
                   ScreenRecorderConfiguration.DEFAULT);
             } catch (AWTException e) {
               throw new StudyCasterException("Failed to initialize screen recorder", e);

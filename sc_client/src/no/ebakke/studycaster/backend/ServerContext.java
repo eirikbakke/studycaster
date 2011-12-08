@@ -35,18 +35,20 @@ import org.apache.http.util.EntityUtils;
 Thread-safe. */
 public class ServerContext {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
-  private static final double SIMULATE_LATENCY_MILLIS = 0.0;
+  private static final long   SIMULATE_SERVER_AHEAD_NANOS = 0 * 1000000L;
+  private static final long   SIMULATE_LATENCY_NANOS      = 0 * 1000000L;
   private static final String SERVERURI_PROP_NAME = "studycaster.server.uri";
   private static final int    DEF_UPLOAD_CHUNK_SZ = 64 * 1024;
   // TODO: Rename this (legacy from earlier experiments).
   private static final String TICKET_STORE_FILENAME = "sc_7403204709139484951.tmp";
   private final URI    serverScriptURI;
   private final String launchTicket;
-  private final long   serverMillisAhead;
+  private final TimeSource serverTimeSource;
   /* Keep the HttpClient in common for all requests, as is standard for this interface. This would
   also preserve any session cookies involved, though the API currently does not use any. */
   private final DefaultHttpClient httpClient;
   private final AtomicBoolean closed = new AtomicBoolean(false);
+  private Long serverTickTimeOffset;
 
   private static String getServerScriptURIfromProperty() throws StudyCasterException {
     String serverScriptURIs = System.getProperty(SERVERURI_PROP_NAME);
@@ -59,34 +61,68 @@ public class ServerContext {
     this(getServerScriptURIfromProperty());
   }
 
-  private long getServerTimeMillis() throws StudyCasterException {
+  private String getMandatoryHeader(HttpResponse response, String name) throws IOException {
+    Header[] ret = response.getHeaders(name);
+    if (ret.length != 1 || ret[0].getValue() == null)
+      throw new IOException("Expected a single header " + name + " from the server");
+    return ret[0].getValue();
+  }
+
+  private long convertLong(String value) throws StudyCasterException {
+    try {
+      return Long.parseLong(value);
+    } catch (NumberFormatException e) {
+      throw new StudyCasterException("Got bad number format from server", e);
+    }
+  }
+
+  private long getServerTimeNanos() throws StudyCasterException {
     HttpResponse response;
     try {
-      if (SIMULATE_LATENCY_MILLIS > 0.0)
-        Thread.sleep((int) (Math.random() * SIMULATE_LATENCY_MILLIS / 2.0));
+      if (SIMULATE_LATENCY_NANOS > 0.0)
+        Util.delayAtLeast(Math.round(Math.random() * SIMULATE_LATENCY_NANOS / 2.0));
       response = requestHelper("tim", null, null);
-      if (SIMULATE_LATENCY_MILLIS > 0.0)
-        Thread.sleep((int) (Math.random() * SIMULATE_LATENCY_MILLIS / 2.0));
+      if (SIMULATE_LATENCY_NANOS > 0.0)
+        Util.delayAtLeast(Math.round(Math.random() * SIMULATE_LATENCY_NANOS / 2.0));
       try {
-        Header headerSTM = response.getFirstHeader("X-StudyCaster-ServerTime");
-        if (headerSTM == null)
-          throw new StudyCasterException("Missing server time response header");
-        return Long.parseLong(headerSTM.getValue());
+        /* RealTimeNanos is only used on the first request to calculate the offset of the more
+        accurate TickTimeNanos timer. */
+        final long realTimeNanos =
+            convertLong(getMandatoryHeader(response, "X-StudyCaster-RealTimeNanos")) +
+            SIMULATE_SERVER_AHEAD_NANOS;
+        final long tickTimeNanos =
+            convertLong(getMandatoryHeader(response, "X-StudyCaster-TickTimeNanos"));
+        final long newServerTickTimeOffset = tickTimeNanos - realTimeNanos;
+        /* If the offset between the two timers has changed substantially, assume that it needs to
+        be set again. This can be due to an adjustment of the real-time clock on the server, or
+        because the server was restarted. Still, it's unlikely that this will happen during the few
+        seconds that the client is requesting timing measurements. */
+        synchronized (this) {
+          if (serverTickTimeOffset == null ||
+              Math.abs(serverTickTimeOffset - newServerTickTimeOffset) > 3000000000L)
+          {
+            serverTickTimeOffset = newServerTickTimeOffset;
+          }
+          return tickTimeNanos - serverTickTimeOffset;
+        }
       } finally {
         EntityUtils.consume(response.getEntity());
       }
     } catch (InterruptedException e) {
       throw new StudyCasterException("Interrupted during latency simulation", e);
-    } catch (NumberFormatException e) {
-      throw new StudyCasterException("Got bad time format from server", e);
     } catch (IOException e) {
       throw new StudyCasterException("Failed to retrieve server time", e);
     }
   }
 
   @SuppressWarnings("AssignmentReplaceableWithOperatorAssignment")
-  private long measureServerMillisAhead() throws StudyCasterException {
-    final int MAX_ATTEMPTS = 15;
+  private TimeSource measureServerTime() throws StudyCasterException {
+    /* TODO: Don't depend on System.currentTimeMillis() via TimeSource here. */
+    final TimeSource localTimeSource = new TimeSource();
+    final int    MIN_ATTEMPTS        = 5;
+    final int    MAX_ATTEMPTS        = 15;
+    final double MAX_STDEV_NANOS     =   50 * 1000000.0;
+    final double MAX_ROUNDTRIP_NANOS = 1000 * 1000000.0;
     // See http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods .
     // Running average, sum of squares, last number of samples, and last standard deviation.
     double A = 0, Q = 0, N = 0, stdev = Double.POSITIVE_INFINITY;
@@ -95,26 +131,33 @@ public class ServerContext {
       final double x;
       {
         final long nanosBefore = System.nanoTime();
-        final long serverTime = getServerTimeMillis();
+        final long serverTimeNanos = getServerTimeNanos();
         final long nanosAfter  = System.nanoTime();
-        final double requestLength = (nanosAfter - nanosBefore) / 1000000.0;
-        if (requestLength > 1000.0 && !(N == 0 && attempt == MAX_ATTEMPTS - 1))
-          continue;
-        final double adjustedLocalTime = System.currentTimeMillis() - requestLength / 2.0;
-        x = serverTime - adjustedLocalTime;
+        final double requestLengthNanos = nanosAfter - nanosBefore;
+        if (requestLengthNanos > MAX_ROUNDTRIP_NANOS) {
+          // Only disregard if we can still get to MIN_ATTEMPTS.
+          boolean disregard = (attempt < MAX_ATTEMPTS - MIN_ATTEMPTS + N);
+          LOG.log(Level.INFO, "Long timing roundtrip ({0,number,#}ms), disregard={1}",
+              new Object[] { requestLengthNanos / 1000000.0, disregard });
+          if (disregard)
+            continue;
+        }
+        final double adjustedLocalTime =
+            localTimeSource.currentTimeNanos() - requestLengthNanos / 2.0;
+        x = serverTimeNanos - adjustedLocalTime;
       }
       Q = Q + ((i - 1.0) / i) * (x - A) * (x - A);
       A = A + (x - A) / i;
       N = i;
       i++;
       stdev = (N == 1) ? Double.POSITIVE_INFINITY : Math.sqrt(Q / (N - 1.0));
-      if (N >= 5 && stdev < 50.0)
+      if (N >= MIN_ATTEMPTS && stdev < MAX_STDEV_NANOS)
         break;
     }
     LOG.log(Level.INFO,
         "Measured server time ahead by {0,number,#}+/-{1,number,#}ms with {2} samples",
-        new Object[]{ A, stdev, N});
-    return Math.round(A);
+        new Object[]{ A / 1000000.0, stdev / 1000000.0, N});
+    return new TimeSource(localTimeSource, Math.round(A));
   }
 
   public ServerContext(String serverScriptURIs) throws StudyCasterException {
@@ -144,7 +187,6 @@ public class ServerContext {
     }
 
     // Setup launch session.
-    Header headerLAT, headerCIE;
     try {
       ThreadSafeClientConnManager connectionManager = new ThreadSafeClientConnManager();
       httpClient = new DefaultHttpClient(connectionManager);
@@ -167,22 +209,20 @@ public class ServerContext {
         }
       });
 
+      String receivedClientCookie;
       HttpResponse response = requestHelper("gsi", null, clientCookie == null ? "" : clientCookie);
       try {
-        headerLAT = response.getFirstHeader("X-StudyCaster-LaunchTicket");
-        headerCIE = response.getFirstHeader("X-StudyCaster-ClientCookie");
+        launchTicket         = getMandatoryHeader(response, "X-StudyCaster-LaunchTicket");
+        receivedClientCookie = getMandatoryHeader(response, "X-StudyCaster-ClientCookie");
       } finally {
         EntityUtils.consume(response.getEntity());
       }
-      if (headerLAT == null || headerCIE == null)
-        throw new StudyCasterException("Missing initialization headers.");
-      if (clientCookie != null && !clientCookie.equals(headerCIE.getValue()))
+      if (clientCookie != null && !clientCookie.equals(receivedClientCookie))
         throw new StudyCasterException("Server returned odd client cookie");
-      clientCookie = headerCIE.getValue();
+      clientCookie = receivedClientCookie;
     } catch (IOException e) {
       throw new StudyCasterException("Cannot retrieve server info.", e);
     }
-    launchTicket = headerLAT.getValue();
     LOG.log(Level.INFO, "clientCookie = {0}, launchTicket = {1}",
         new Object[] {clientCookie, launchTicket});
 
@@ -200,7 +240,7 @@ public class ServerContext {
         LOG.log(Level.WARNING, "Problem writing ticket file.", e);
       }
     }
-    serverMillisAhead = measureServerMillisAhead();
+    serverTimeSource = measureServerTime();
     Util.logEnvironmentInfo();
   }
 
@@ -219,7 +259,8 @@ public class ServerContext {
 
   /** Callers must always remember to consume the response, or future requests may hang. */
   @SuppressWarnings("SleepWhileInLoop")
-  private HttpResponse requestHelper(String cmd, ContentBody content, String arg) throws IOException
+  private HttpResponse requestHelper(String cmd, ContentBody content, String arg)
+      throws IOException
   {
     HttpResponse ret = null;
     do {
@@ -257,6 +298,7 @@ public class ServerContext {
     HttpResponse response = httpClient.execute(httpPost);
     if (response.getEntity() == null)
       throw new IOException("Failed to get response entity.");
+    boolean error = true;
     try {
       if (response.getStatusLine().getStatusCode() != 200) {
         Header disableRetryHeader = response.getFirstHeader("X-StudyCaster-DisableRetry");
@@ -273,18 +315,14 @@ public class ServerContext {
           throw new IOException(exceptionMessage);
         }
       }
-      Header okHeader = response.getFirstHeader("X-StudyCaster-OK");
-      if (okHeader == null)
-        throw new IOException("Failed to get StudyCaster response header");
-      if (!okHeader.getValue().equals(cmd))
-        throw new IOException("Got invalid StudyCaster response header: " + okHeader.getValue());
+      String okHeader = getMandatoryHeader(response, "X-StudyCaster-OK");
+      if (!okHeader.equals(cmd))
+        throw new IOException("Got invalid StudyCaster response header: " + okHeader);
+      error = false;
       return response;
-    } catch (IOException e) {
-      EntityUtils.consume(response.getEntity());
-      throw e;
-    } catch (RuntimeException e) {
-      EntityUtils.consume(response.getEntity());
-      throw e;
+    } finally {
+      if (error)
+        EntityUtils.consume(response.getEntity());
     }
   }
 
@@ -356,8 +394,8 @@ public class ServerContext {
     return launchTicket;
   }
 
-  public long getServerMillisAhead() {
-    return serverMillisAhead;
+  public TimeSource getServerTimeSource() {
+    return serverTimeSource;
   }
 
   public void close() {
@@ -372,5 +410,10 @@ public class ServerContext {
     NonRetriableException(String s) {
       super(s);
     }
+  }
+
+  public static void main(String args[]) throws StudyCasterException {
+    ServerContext serverContext = new ServerContext();
+    serverContext.close();
   }
 }

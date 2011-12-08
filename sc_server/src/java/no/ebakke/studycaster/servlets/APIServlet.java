@@ -72,7 +72,10 @@ public class APIServlet extends HttpServlet {
         resp.setHeader("X-StudyCaster-OK", "gsi");
       } else if (cmd.equals("tim")) {
         // Idempotent (read-only).
-        resp.setHeader("X-StudyCaster-ServerTime"  , Long.toString(new Date().getTime()));
+        final long realTimeNanos = System.currentTimeMillis() * 1000000L;
+        final long tickTimeNanos = System.nanoTime();
+        resp.setHeader("X-StudyCaster-RealTimeNanos", Long.toString(realTimeNanos));
+        resp.setHeader("X-StudyCaster-TickTimeNanos", Long.toString(tickTimeNanos));
         resp.setHeader("X-StudyCaster-OK", "tim");
       } else if (cmd.equals("upc")) {
         // Idempotent.
@@ -160,6 +163,7 @@ public class APIServlet extends HttpServlet {
       e.sendError(resp);
     }
     // TODO: Split off locations into separate table.
-    ServletUtil.logRequest(req, cmd, wroteContent, launchTicket, clientCookie, logEntry);
+    if (!cmd.equals("tim"))
+      ServletUtil.logRequest(req, cmd, wroteContent, launchTicket, clientCookie, logEntry);
   }
 }

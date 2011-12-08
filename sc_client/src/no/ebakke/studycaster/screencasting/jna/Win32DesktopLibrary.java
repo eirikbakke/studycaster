@@ -115,7 +115,6 @@ public final class Win32DesktopLibrary implements DesktopLibrary {
     wraparound, but we handle it anyway. */
     long sinceLast = (now < last) ? 0 : ((now - last) % UINT_WRAP);
     long adjustedLast = now - sinceLast;
-
     /* The kernel and Java timers may not always be perfectly in sync, so explicitly constrain the
     return value so that it does not exceed System.nanoTime(). */
     return Math.min(adjustedLast * 1000000L - kernelTimeOffset, System.nanoTime());

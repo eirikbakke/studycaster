@@ -9,7 +9,7 @@ import java.util.logging.LogRecord;
 
 /** Thread-safe. */
 public class ServerTimeLogFormatter extends Formatter {
-  private volatile Long serverMillisAhead;
+  private volatile TimeSource serverTimeSource;
   /* SimpleDateFormat is not thread-safe. The following is the standard way of dealing with it.
   See http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4264153 . */
   private static final ThreadLocal<DateFormat> SERVER_DATE_FORMAT =
@@ -26,8 +26,7 @@ public class ServerTimeLogFormatter extends Formatter {
     new ThreadLocal<DateFormat>() {
       @Override
       public DateFormat initialValue() {
-        DateFormat ret = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ");
-        return ret;
+        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ");
       }
     };
 
@@ -36,8 +35,8 @@ public class ServerTimeLogFormatter extends Formatter {
     return SERVER_DATE_FORMAT.get();
   }
 
-  public void setServerMillisAhead(long serverMillisAhead) {
-    this.serverMillisAhead = serverMillisAhead;
+  public void setServerTimeSource(TimeSource serverTimeSource) {
+    this.serverTimeSource = serverTimeSource;
   }
 
   private static void formatThrowable(StringBuffer buf, Throwable e) {
@@ -55,9 +54,11 @@ public class ServerTimeLogFormatter extends Formatter {
     StringBuffer ret = new StringBuffer();
     ret.append(CLIENT_DATE_FORMAT.get().format(new Date(r.getMillis())));
     ret.append(" (client)");
-    if (serverMillisAhead != null) {
+    if (serverTimeSource != null) {
       ret.append(" / ");
-      ret.append(SERVER_DATE_FORMAT.get().format(new Date(r.getMillis() + serverMillisAhead)));
+      /* This assumes the log record is formatted immediately after being posted, which is not
+      necessarily the case. However, the real log record time is shown as well above. */
+      ret.append(SERVER_DATE_FORMAT.get().format(new Date(serverTimeSource.currentTimeMillis())));
       ret.append(" (server)");
     }
     ret.append(" ");

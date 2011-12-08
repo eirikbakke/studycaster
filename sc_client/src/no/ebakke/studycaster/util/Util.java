@@ -266,13 +266,13 @@ public final class Util {
   }
 
   @SuppressWarnings("SleepWhileInLoop")
-  public static void delayAtLeast(long millis) throws InterruptedException {
-    final long startTime = System.currentTimeMillis();
+  public static void delayAtLeast(long nanos) throws InterruptedException {
+    final long startTime = System.nanoTime();
     while (true) {
-      final long remainingMillis = Math.round(millis - (System.currentTimeMillis() - startTime));
-      if (remainingMillis <= 0)
+      final long remaining = Math.round(nanos - (System.nanoTime() - startTime));
+      if (remaining <= 0)
         break;
-      Thread.sleep(remainingMillis);
+      Thread.sleep(remaining / 1000000L, (int) (remaining % 1000000L));
     }
   }
 

@@ -23,7 +23,7 @@ public class CaptureScheduler {
     captureThread = new Thread(new Runnable() {
       public void run() {
         while (true) {
-          final double beforeTime, afterTime;
+          final long beforeTime, afterTime;
           /* Give the thread running close() a way to wait with its interrupt until the last
           capture has completed successfully. Otherwise the underlying I/O operations might fail
           with an InterruptedIOException in rare cases. */
@@ -31,9 +31,9 @@ public class CaptureScheduler {
           try {
             if (Thread.interrupted())
               break;
-            beforeTime = System.currentTimeMillis();
+            beforeTime = System.nanoTime();
             task.capture();
-            afterTime = System.currentTimeMillis();
+            afterTime = System.nanoTime();
           } catch (IOException e) {
             LOG.log(Level.WARNING, "Storing an exception in CaptureScheduler", e);
             storedException = e;
@@ -42,9 +42,10 @@ public class CaptureScheduler {
             interruptLock.unlock();
           }
 
-          avgDuration.enterReading(afterTime - beforeTime);
+          final double duration = afterTime - beforeTime;
+          avgDuration.enterReading(duration);
           final double minDelayDuty = avgDuration.get() * (1.0 / task.getMaxDutyCycle() - 1.0);
-          final double minDelayFreq = 1000.0 / task.getMaxFrequency() - (afterTime - beforeTime);
+          final double minDelayFreq = 1000000000.0 / task.getMaxFrequency() - duration;
           try {
             Util.delayAtLeast(Math.round(Math.max(minDelayDuty, minDelayFreq)));
           } catch (InterruptedException e) {
@@ -54,7 +55,7 @@ public class CaptureScheduler {
       }
     }, "CaptureScheduler-capture-" + task.toString());
     // Average duty cycle over a longer time if the frequency is low.
-    avgDuration = new MovingAverage(30000.0 / task.getMaxFrequency());
+    avgDuration = new MovingAverage(30000.0 * 1000000.0 / task.getMaxFrequency());
   }
 
   /* This used to happen automatically in the constructor, which is dangerous. See

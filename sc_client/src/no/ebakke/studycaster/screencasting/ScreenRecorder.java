@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import no.ebakke.studycaster.backend.TimeSource;
 import no.ebakke.studycaster.screencasting.CaptureScheduler.CaptureTask;
 import no.ebakke.studycaster.util.stream.NonBlockingOutputStream;
 
@@ -74,7 +75,7 @@ public class ScreenRecorder {
     }
   };
 
-  public ScreenRecorder(OutputStream out, long serverMillisAhead,
+  public ScreenRecorder(OutputStream out, TimeSource timeSource,
       ScreenRecorderConfiguration config) throws IOException, AWTException
   {
     this.config = config;
@@ -82,7 +83,7 @@ public class ScreenRecorder {
     nbos = (out instanceof NonBlockingOutputStream) ? ((NonBlockingOutputStream) out) : null;
     Rectangle screenRect = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
     enc = new CaptureEncoder(out, screenRect);
-    enc.setServerMillisAhead(serverMillisAhead);
+    enc.setTimeSource(timeSource);
   }
 
   public synchronized void setCensor(ScreenCensor censor) {

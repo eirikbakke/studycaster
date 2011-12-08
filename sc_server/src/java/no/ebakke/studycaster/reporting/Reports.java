@@ -176,12 +176,12 @@ public final class Reports {
 
     public boolean isLastRequestAfter(long secondsAgo) {
       return lastRequest.after(
-        new Date(new Date().getTime() - secondsAgo * 1000L));
+        new Date(System.currentTimeMillis() - secondsAgo * 1000L));
     }
 
     public String getTimeSinceLastRequest() {
       return ServletUtil.humanReadableInterval(
-          new Date(new Date().getTime() - lastRequest.getTime()).getTime() / 1000);
+          new Date(System.currentTimeMillis() - lastRequest.getTime()).getTime() / 1000);
     }
 
     public String getTotalDuration() {
