@@ -4,6 +4,7 @@ import java.text.MessageFormat;
 import java.util.EnumMap;
 import java.util.Map;
 import no.ebakke.studycaster.backend.StudyCasterException;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.w3c.dom.Element;
 
 public class UIStrings {
@@ -57,7 +58,18 @@ public class UIStrings {
   public String getString(UIStringKey key, Object parameters[]) {
     if (!key.takesParameters())
       throw new IllegalArgumentException("UI string with key " + key + " does not take parameters");
-    return new MessageFormat(strings.get(key)).format(parameters);
+    final Object escapedParameters[];
+    final String msg = strings.get(key);
+    if (msg.startsWith("<html>")) {
+      escapedParameters = new Object[parameters.length];
+      for (int i = 0; i < parameters.length; i++) {
+        escapedParameters[i] = StringEscapeUtils.escapeHtml3(
+            parameters[i] == null ? "null" : parameters[i].toString());
+      }
+    } else {
+      escapedParameters = parameters;
+    }
+    return new MessageFormat(msg).format(escapedParameters);
   }
 
   public char getMnemonic(UIStringKey key) {
