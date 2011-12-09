@@ -173,14 +173,20 @@ public final class StudyCaster {
     failsafeCloseThread = new Thread(new Runnable() {
       public void run() {
         try {
-          Thread.sleep(7000);
-          LOG.warning("Forcing exit in three seconds (this may be last log message)");
-          Thread.sleep(3000);
-          LOG.warning("Forcing exit ten seconds after window closure");
-        } catch (InterruptedException e) {
-          LOG.warning("Failsafe exit thread interrupted; exiting immediately");
+          try {
+            Thread.sleep(7000);
+            LOG.warning("Forcing exit in three seconds (this may be last log message)");
+            Thread.sleep(3000);
+            LOG.warning("Forcing exit ten seconds after window closure");
+          } catch (InterruptedException e) {
+            LOG.warning("Failsafe exit thread interrupted; exiting immediately");
+          }
+          SingleInstanceHandler sih = hooks.getSingleInstanceHandler();
+          if (sih != null)
+            sih.close();
+        } finally {
+          System.exit(1);
         }
-        System.exit(1);
       }
     }, "StudyCaster-failsafeClose");
     // Don't keep the VM running just because of the failsafe thread.
@@ -303,8 +309,16 @@ public final class StudyCaster {
       if (sih != null) {
         sih.setListener(new SingleInstanceListener() {
           public void newActivation(String[] strings) {
-            reportMessage(UIStringKey.DIALOG_ALREADY_RUNNING_MESSAGE, null,
-                UIStringKey.DIALOG_ALREADY_RUNNING_TITLE, JOptionPane.INFORMATION_MESSAGE);
+            /* Don't use reportMessage() in this case, since we don't want buttons to be
+            re-enabled. */
+            SwingUtilities.invokeLater(new Runnable() {
+              public void run() {
+                JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
+                    getUIString(UIStringKey.DIALOG_ALREADY_RUNNING_MESSAGE),
+                    getUIString(UIStringKey.DIALOG_ALREADY_RUNNING_TITLE),
+                    JOptionPane.INFORMATION_MESSAGE);
+              }
+            });
           }
         });
       }

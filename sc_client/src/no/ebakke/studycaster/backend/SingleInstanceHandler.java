@@ -1,6 +1,7 @@
 package no.ebakke.studycaster.backend;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.jnlp.ServiceManager;
@@ -11,7 +12,7 @@ import javax.jnlp.UnavailableServiceException;
 /** Thread-safe. */
 public class SingleInstanceHandler {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
-  private final List<String[]>        pending = new ArrayList<String[]>();
+  private final List<List<String>>    pending = new ArrayList<List<String>>();
   private final SingleInstanceService service;
   private SingleInstanceListener      clientListener;
 
@@ -19,17 +20,25 @@ public class SingleInstanceHandler {
     public void newActivation(String[] strings) {
       LOG.info("User attempted to open an additional instance of the client");
       synchronized (SingleInstanceHandler.this) {
-        pending.add(strings);
+        pending.add(new ArrayList<String>(Arrays.asList(strings)));
         callPendingWhenReady();
       }
     }
   };
 
-  private synchronized void callPendingWhenReady() {
-    if (clientListener != null) {
-      for (String[] args : pending)
-        clientListener.newActivation(args);
-      pending.clear();
+  private void callPendingWhenReady() {
+    SingleInstanceListener listenerCopy = null;
+    List<List<String>>     pendingCopy  = null;
+    synchronized (this) {
+      if (clientListener != null) {
+        listenerCopy = clientListener;
+        pendingCopy = new ArrayList<List<String>>(pending);
+        pending.clear();
+      }
+    }
+    if (listenerCopy != null) {
+      for (final List<String> args : pendingCopy)
+        listenerCopy.newActivation(args.toArray(new String[args.size()]));
     }
   }
 
