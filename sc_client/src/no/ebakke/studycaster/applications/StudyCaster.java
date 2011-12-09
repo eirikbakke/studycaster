@@ -316,8 +316,20 @@ public final class StudyCaster {
       if (res != JOptionPane.OK_OPTION) {
         LOG.info("User declined at consent dialog");
         closeUIandBackend();
+      } else {
+        /* This is probably overkill, but ScreenRecorder.start() may theoretically block. */
+        mainFrame.startTask(null, true);
+        new Thread(new Runnable() {
+          public void run() {
+            recorder.start();
+            SwingUtilities.invokeLater(new Runnable() {
+              public void run() {
+                mainFrame.stopTask(false);
+              }
+            });
+          }
+        }, "StudyCaster-startRecording").start();
       }
-      recorder.start();
     } catch (StudyCasterException e) {
       // Note: Due to the exception, configuration and serverContext may not be defined.
       reportError(e, true);

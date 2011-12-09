@@ -21,6 +21,7 @@ public class ScreenRecorder {
   private final ScreenRecorderConfiguration config;
   private volatile CaptureScheduler pointerRecorder, frameRecorder;
 
+  /* ******************************************************************************************** */
   private final CaptureTask pointerRecorderTask = new CaptureTask() {
     public void capture() {
       enc.capturePointer();
@@ -40,6 +41,7 @@ public class ScreenRecorder {
     }
   };
 
+  /* ******************************************************************************************** */
   private final CaptureTask frameRecorderTask = new CaptureTask() {
     public void capture() throws IOException {
       enc.captureFrame();
@@ -75,6 +77,7 @@ public class ScreenRecorder {
     }
   };
 
+  /* ******************************************************************************************** */
   public ScreenRecorder(OutputStream out, TimeSource timeSource,
       ScreenRecorderConfiguration config) throws IOException, AWTException
   {
@@ -86,7 +89,7 @@ public class ScreenRecorder {
     enc.setTimeSource(timeSource);
   }
 
-  public synchronized void setCensor(ScreenCensor censor) {
+  public void setCensor(ScreenCensor censor) {
     enc.setCensor(censor);
   }
 
@@ -100,7 +103,7 @@ public class ScreenRecorder {
     frameRecorder.start();
   }
 
-  public void stop() throws IOException {
+  public synchronized void stop() throws IOException {
     if (stopped.getAndSet(true))
       return;
     LOG.info("Stopping screen recorder");
@@ -119,7 +122,7 @@ public class ScreenRecorder {
   }
 
   /** Closes the underlying OutputStream as well. */
-  public void close() throws IOException {
+  public synchronized void close() throws IOException {
     LOG.info("Closing screen recorder");
     stop();
     enc.close();
