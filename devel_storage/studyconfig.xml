@@ -14,7 +14,7 @@
         <html xmlns="">The StudyCaster client is already running in a different window.<br/>
                        Please close it first if you wish to start over.</html>
       </uistring>
-      <uistring key="MAINFRAME_OPEN_FILE_BUTTON"  mnemonic="D">Open Sample Document...</uistring>
+      <uistring key="MAINFRAME_OPEN_FILE_BUTTON"  mnemonic="D">Open Sample Document</uistring>
       <uistring key="MAINFRAME_OPEN_URI_BUTTON"   mnemonic="W">Open Sample Web Page...</uistring>
       <uistring key="MAINFRAME_CONCLUDE_BUTTON"   mnemonic="C">Upload and Retrive Confirmation Code...</uistring>
       <uistring key="MAINFRAME_BACK_BUTTON"       mnemonic="B">&lt; Back</uistring>
@@ -130,10 +130,11 @@
       <html xmlns="">
         <b>Instructions:</b>
         <ol>
-          <li>Edit the spreadsheet that opened in another window<br/>
+          <li>Click "Open Sample Document" below.</li>
+          <li>Edit the spreadsheet that opened in a different window<br/>
               (according to the instructions in the HIT).</li>
-          <li>Save and close the spreadsheet</li>
-          <li>Click the button below.</li>
+          <li>Save and close the spreadsheet.</li>
+          <li>Click "Upload and Retrieve Confirmation Code" below.</li>
           <li>Paste the confirmation code into the HIT.</li>
         </ol>
         <p align="right">
@@ -192,6 +193,25 @@
   </macrodef>
 
   <configuration id="default" name="Recruiting">
+    <macro id="configuration-common"/>
+    <page>
+      <macro id="instructions"/>
+      <openfile> <!-- Optional -->
+        <servername>currencies.xls</servername>
+        <clientname>userstudyHIT_currencies.xls</clientname>
+        <errormessage><macro id="openfile-error-excel"/></errormessage>
+      </openfile>
+      <conclude> <!-- Optional -->
+        <uploadfile> <!-- Optional -->
+          <macro id="filefilter-excel"/>
+          <default>userstudyHIT_currencies.xls</default> <!-- Optional -->
+          <unchangedwarning><macro id="upload-unchanged"/></unchangedwarning> <!-- Optional -->
+        </uploadfile>
+      </conclude>
+    </page>
+  </configuration>
+
+  <configuration id="testing" name="Test Configuration">
     <macro id="configuration-common"/>
     <page>
       <instructions>
