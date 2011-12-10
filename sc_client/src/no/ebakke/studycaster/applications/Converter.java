@@ -40,6 +40,11 @@ public final class Converter {
     File outFile = new File(outputFileName);
     File tmpFile = new File(outFile.getParentFile(), "~" + outFile.getName());
     try {
+      // Optimistic optimalization to avoid creating the temporary file most of the time.
+      if (outFile.exists()) {
+        System.err.println("Skipping already converted file " + outFile);
+        return;
+      }
       if (!tmpFile.createNewFile()) {
         System.err.println("Skipping incomplete file " + tmpFile);
         return;

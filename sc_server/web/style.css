@@ -107,3 +107,7 @@ thead {
 .launchTicket {
   font-family: monospace;
 }
+
+tbody tr:hover {
+  background: rgb(150,150,150);
+}

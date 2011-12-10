@@ -162,7 +162,7 @@ public class APIServlet extends HttpServlet {
       e.sendError(resp);
     }
     // TODO: Split off locations into separate table.
-    if (!cmd.equals("tim"))
+    if (cmd != null && !cmd.equals("tim"))
       ServletUtil.logRequest(req, cmd, wroteContent, launchTicket, clientCookie, logEntry);
   }
 }

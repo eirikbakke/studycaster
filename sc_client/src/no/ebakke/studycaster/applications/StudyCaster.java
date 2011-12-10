@@ -59,7 +59,8 @@ import no.ebakke.studycaster.util.stream.NonBlockingOutputStream.StreamProgressO
     and either as the first time for a particular launch or not. When a file already exists in
     modified form, different messages should appear depending on whether it is the first time that
     file has been opened during the current launch or not.
-  * Opening an example document of an association that cannot be resolved.
+  * Opening an example document of an association that cannot be resolved, in both Java 1.5 and
+    Java 1.6 or above.
   * Opening an example document requiring renaming of a locked already existing file.
   * Opening an example document that does not already exist in the temporary folder.
   * Opening an example document while it's already opened exclusively (e.g. by Excel or Acrobat

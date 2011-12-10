@@ -10,8 +10,8 @@ public interface DesktopLibrary {
   public List<WindowInfo> getWindowList();
 
   /** Returns the time, in nanoseconds, of the last desktop-level input event, that is, mouse or
-  keyboard input from the user. The time base is such that the difference between the return value
-  of this method and that of System.nanoTime() will yield a valid interval. */
+  keyboard input from the user. The time base is such that
+  (System.nanoTime() - getLastInputTimeNanos()) will yield the time since the last input event. */
   public long getLastInputTimeNanos();
 
   /** Information about a single window on the screen. */
