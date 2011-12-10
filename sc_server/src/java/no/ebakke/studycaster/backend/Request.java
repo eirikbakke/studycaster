@@ -3,6 +3,8 @@ package no.ebakke.studycaster.backend;
 import java.util.Date;
 
 public class Request {
+  /* TODO: Don't store timestamps using Date via Hibernate/JDBC, since JDBC drivers are inconsistent
+           in their handling of time zones. See http://stackoverflow.com/questions/4123534 . */
   private Long    id;
   private Date    time;
   private String  type;

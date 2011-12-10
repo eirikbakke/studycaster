@@ -10,7 +10,7 @@ import no.ebakke.studycaster.util.OrderedBidiMap;
 import org.apache.commons.lang3.tuple.Pair;
 
 public class Linker<V> {
-  OrderedBidiMap<Pair<String,String>,Node<V>> contentMap =
+  private OrderedBidiMap<Pair<String,String>,Node<V>> contentMap =
       new OrderedBidiMap<Pair<String,String>,Node<V>>();
 
   public Linker() {

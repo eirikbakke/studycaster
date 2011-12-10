@@ -237,13 +237,18 @@ public final class ServletUtil {
   }
 
   public static String humanReadableInterval(long seconds) {
+    return humanReadableInterval(seconds, Integer.MAX_VALUE);
+  }
+
+  public static String humanReadableInterval(long seconds, int maxComponents) {
     StringBuilder ret = new StringBuilder();
     long remainingSeconds = seconds;
     if (remainingSeconds < 0) {
-      ret.append("negative ");
+      ret.append("-");
       remainingSeconds = -remainingSeconds;
     }
     boolean first = true;
+    int n = 0;
     for (TimeUnit tu : TimeUnit.UNITS) {
       long inUnit = remainingSeconds / tu.seconds;
       if (inUnit > 0 || (tu.seconds == 1 && first)) {
@@ -254,6 +259,9 @@ public final class ServletUtil {
         ret.append(inUnit == 1 ? tu.singular : tu.plural);
         remainingSeconds -= inUnit * tu.seconds;
         first = false;
+        n++;
+        if (n >= maxComponents)
+          break;
       }
     }
     return ret.toString();

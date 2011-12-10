@@ -18,11 +18,12 @@ public final class Reports {
   private Reports() { }
 
   public static List<Subject> getSubjectReport(SessionFactory sf) {
-    // Each key is a launchTicket.
+    // Each key is a launchTicket
     Map<String,Date> firstRequest = ColUtil.newOrderedMap();
     Map<String,Date> lastRequest  = ColUtil.newOrderedMap();
     Map<String,Long> numRequests  = ColUtil.newOrderedMap();
     Map<String,Long> contentSize  = ColUtil.newOrderedMap();
+    // Key is remote address hash
     Map<String,Date> firstAddrRequest = ColUtil.newOrderedMap();
 
     Linker<Request> linker = new Linker<Request>();
@@ -112,8 +113,9 @@ public final class Reports {
       return geoLocation;
     }
 
-    public Set<String> getVersionString() {
-      return versionString;
+    public String getVersionString() {
+      // Make line breaking easier.
+      return versionString.toString().replaceAll(",", ", ").replaceAll(";", "; ");
     }
 
     public Set<String> getConfigurationID() {
@@ -181,12 +183,12 @@ public final class Reports {
 
     public String getTimeSinceLastRequest() {
       return ServletUtil.humanReadableInterval(
-          new Date(System.currentTimeMillis() - lastRequest.getTime()).getTime() / 1000);
+          new Date(System.currentTimeMillis() - lastRequest.getTime()).getTime() / 1000, 2);
     }
 
     public String getTotalDuration() {
       return ServletUtil.humanReadableInterval(
-          new Date(lastRequest.getTime() - firstRequest.getTime()).getTime() / 1000);
+          new Date(lastRequest.getTime() - firstRequest.getTime()).getTime() / 1000, 2);
     }
 
     @Override

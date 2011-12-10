@@ -185,6 +185,9 @@ public final class StudyCaster {
           if (sih != null)
             sih.close();
         } finally {
+          /* Note: This will forcibly exit the Java Web Start console as well, if enabled. This is
+          normal and preferable to alternative approaches which might not guarantee that the VM
+          terminates in all cases. */
           System.exit(1);
         }
       }
@@ -240,28 +243,29 @@ public final class StudyCaster {
   }
 
   private void reportHelperEDT(
-        final String message, final String title, final int messageType, final boolean fatal)
+      String message, String title, int messageType, boolean fatal, boolean stopTask)
   {
     if (failsafeCloseThread != null) {
       LOG.log(Level.INFO, "Suppressing dialog due to earlier close action");
       return;
     }
-    mainFrame.stopTask(false);
+    if (stopTask)
+      mainFrame.stopTask(false);
     JOptionPane.showMessageDialog(mainFrame.getPositionDialog(), message, title, messageType);
     if (fatal)
       closeUIandBackend();
   }
 
-  private void reportHelper(
-      final String message, final String title, final int messageType, final boolean fatal)
+  private void reportHelper(final String message, final String title, final int messageType,
+      final boolean fatal, final boolean stopTask)
   {
     if (EventQueue.isDispatchThread()) {
-      reportHelperEDT(message, title, messageType, fatal);
+      reportHelperEDT(message, title, messageType, fatal, stopTask);
     } else {
       try {
         Util.checkedSwingInvokeAndWait(new CallableExt<Void,RuntimeException>() {
           public Void call() {
-            reportHelperEDT(message, title, messageType, fatal);
+            reportHelperEDT(message, title, messageType, fatal, stopTask);
             return null;
           }
         });
@@ -272,15 +276,22 @@ public final class StudyCaster {
     }
   }
 
-  /** Displays a parameterized modal message dialog. The MainFrame taskbar and button states will be
-  reset. The method blocks and can be called from any thread, including the EDT. */
   private void reportMessage(final UIStringKey messageKey,
       final Object messageParameters[], final UIStringKey titleKey, final int messageType)
+  {
+    reportMessage(messageKey, messageParameters, titleKey, messageType, true);
+  }
+
+  /** Displays a parameterized modal message dialog. If stopTask is true, the MainFrame taskbar and
+  button states will be reset. The method blocks and can be called from any thread, including the
+  EDT. */
+  private void reportMessage(UIStringKey messageKey, Object messageParameters[],
+      UIStringKey titleKey, int messageType, boolean stopTask)
   {
     final String message = (messageParameters != null) ?
         getUIString(messageKey, messageParameters) : getUIString(messageKey);
     LOG.log(Level.INFO, "Showing dialog with message key {0}", messageKey.toString());
-    reportHelper(message, getUIString(titleKey), messageType, false);
+    reportHelper(message, getUIString(titleKey), messageType, false, stopTask);
   }
 
   /** Displays a modal dialog for reporting an exception. The MainFrame taskbar will be reset. The
@@ -288,7 +299,7 @@ public final class StudyCaster {
   private void reportError(Exception e, boolean fatal) {
     LOG.log(Level.SEVERE, fatal ? "Fatal error " : "Generic non-fatal error ", e);
     reportHelper("There was an unexpected error:\n" + e.getMessage(),
-        "Error", JOptionPane.ERROR_MESSAGE, fatal);
+        "Error", JOptionPane.ERROR_MESSAGE, fatal, true);
   }
 
   private void initUI(StudyCasterException storedException) {
@@ -309,16 +320,8 @@ public final class StudyCaster {
       if (sih != null) {
         sih.setListener(new SingleInstanceListener() {
           public void newActivation(String[] strings) {
-            /* Don't use reportMessage() in this case, since we don't want buttons to be
-            re-enabled. */
-            SwingUtilities.invokeLater(new Runnable() {
-              public void run() {
-                JOptionPane.showMessageDialog(mainFrame.getPositionDialog(),
-                    getUIString(UIStringKey.DIALOG_ALREADY_RUNNING_MESSAGE),
-                    getUIString(UIStringKey.DIALOG_ALREADY_RUNNING_TITLE),
-                    JOptionPane.INFORMATION_MESSAGE);
-              }
-            });
+            reportMessage(UIStringKey.DIALOG_ALREADY_RUNNING_MESSAGE, null,
+                UIStringKey.DIALOG_ALREADY_RUNNING_TITLE, JOptionPane.INFORMATION_MESSAGE, false);
           }
         });
       }

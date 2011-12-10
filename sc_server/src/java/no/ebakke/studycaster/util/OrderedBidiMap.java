@@ -41,6 +41,7 @@ public class OrderedBidiMap<K,V> {
   }
 
   public Collection<V> values() {
+    // TODO: Consider defensive copying.
     return contents.values();
   }
 }

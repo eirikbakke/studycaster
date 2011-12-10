@@ -19,49 +19,66 @@
 </form>
 
 <h2>Subject Report</h2>
-<p>Note: Screencast MP4 files are only available after manual conversion on the server.
+<p>Note: Screencast mp4 files are only available after manual conversion on the server.
    All timestamps are in UTC.</p>
-<ol>
-  <c:forEach items="${subjectReport}" var="subject">
-    <li>
-      Subject
-      <ul>
-        <li><span class="reportKey">firstRequest</span>    = <c:out value="${subject.firstRequest}"/></li>
-        <li><span class="reportKey">clientCookie</span>    = <c:out value="${subject.clientCookie}"/></li>
-        <li><span class="reportKey">remoteAddrHash</span>  = <c:out value="${subject.remoteAddrHash}"/></li>
-        <li><span class="reportKey">geoLocation</span>     = <c:out value="${subject.geoLocation}"/></li>
-        <li><span class="reportKey">versionString</span>   = <c:out value="${subject.versionString}"/></li>
-        <li><span class="reportKey">configurationID</span> = <c:out value="${subject.configurationID}"/></li>
-        <li>
-          <c:choose>
-            <c:when test="${empty subject.launches}">
-              <em>(no launches)</em>
-            </c:when>
-            <c:otherwise>
-              <ol>
-              <c:forEach items="${subject.launches}" var="launch">
-                <li class="${launch.isLastRequestAfter(highlightMinutes * 60) ? 'recentLaunch' : 'oldLaunch'}">
-                  <!-- TODO: Don't hardcode video encoding speedup. -->
-                  Launch (<a href="download/uploads/${fn:escapeXml(launch.launchTicket)}/console.txt">client log</a>,
-                          <a href="download/uploads/${fn:escapeXml(launch.launchTicket)}/screencast_8x.mp4">screencast</a>)
-                  <ul>
-                  <li><span class="reportKey">launchTicket</span>  = <c:out value="${launch.launchTicket}"/></li>
-                  <li><span class="reportKey">firstRequest</span>  = <c:out value="${launch.firstRequest}"/></li>
-                  <li><span class="reportKey">lastRequest</span>   = <c:out value="${launch.lastRequest}"/>
-                    (<c:out value="${launch.timeSinceLastRequest}"/> ago)</li>
-                  <li><span class="reportKey">numRequests</span>   = <c:out value="${launch.numRequests}"/></li>
-                  <li><span class="reportKey">totalDuration</span> = <c:out value="${launch.totalDuration}"/></li>
-                  <li><span class="reportKey">contentSize</span>   = <c:out value="${launch.contentSize}"/> KB</li>
-                  </ul>
-                </li>
-              </c:forEach>
-              </ol>
-            </c:otherwise>
-          </c:choose>
-        </li>
-      </ul>
-    </li>
-  </c:forEach>
-</ol>
+<table>
+  <thead>
+    <tr>
+      <th colspan="7">Subject</th>
+      <th colspan="7">Launches</th>
+    </tr>
+    <tr>
+      <th class="number">#</th>
+      <th               ><span class="reportKey">firstRequest</span></th>
+      <th               ><span class="reportKey">clientCookie</span></th>
+      <th               ><span class="reportKey">remote&#173;Addr&#173;Hash</span></th>
+      <th               ><span class="reportKey">geoLocation</span></th>
+      <th               ><span class="reportKey">versionString</span></th>
+      <th               ><span class="reportKey">configurationID</span></th>
+      <!-- Launches -->
+      <th               ><span class="reportKey">launchTicket</span></th>
+      <th               ><span class="reportKey">firstRequest</span></th>
+      <th               ><span class="reportKey">lastRequest</span></th>
+      <th               ><span class="reportKey">timeSinceLastRequest</span></th>
+      <th class="number"><span class="reportKey">num&#173;Requests</span></th>
+      <th               ><span class="reportKey">totalDuration</span></th>
+      <th class="number"><span class="reportKey">content&#173;Size</span></th>
+    </tr>
+  </thead>
+  <tbody>
+    <c:forEach items="${subjectReport}" var="subject" varStatus="status">
+      <tr class="subjectRow">
+        <td rowspan="${subject.launches.size() + 1}" class="number"><c:out value="${status.count}"/></td>
+        <td rowspan="${subject.launches.size() + 1}" class="nowrap"><c:out value="${subject.firstRequest}"/></td>
+        <td rowspan="${subject.launches.size() + 1}"               ><c:out value="${subject.clientCookie}"/></td>
+        <td rowspan="${subject.launches.size() + 1}"               ><c:out value="${subject.remoteAddrHash}"/></td>
+        <td rowspan="${subject.launches.size() + 1}"               ><c:out value="${subject.geoLocation}"/></td>
+        <td rowspan="${subject.launches.size() + 1}" class="versionStringCell">
+          <c:out value="${subject.versionString}"/>
+        </td>
+        <td rowspan="${subject.launches.size() + 1}"><c:out value="${subject.configurationID}"/></td>
+        <td class="hidden" colspan="7"/>
+      </tr>
+
+      <c:forEach items="${subject.launches}" var="launch">
+        <tr class="${launch.isLastRequestAfter(highlightMinutes * 60) ? 'recentLaunch' : 'oldLaunch'}">
+          <td class="nowrap">
+            <!-- TODO: Don't hardcode video encoding speedup. -->
+            <a class="launchTicket" href="download/uploads/${fn:escapeXml(launch.launchTicket)}/console.txt">
+              <c:out value="${launch.launchTicket}"/>
+            </a>
+            &#160;(<a href="download/uploads/${fn:escapeXml(launch.launchTicket)}/screencast_8x.mp4">mp4</a>)
+          </td>
+          <td class="nowrap"><c:out value="${launch.firstRequest}"/></td>
+          <td class="nowrap"><c:out value="${launch.lastRequest}"/></td>
+          <td class="nowrap"><c:out value="${launch.timeSinceLastRequest}"/></td>
+          <td class="number"><c:out value="${launch.numRequests}"/></td>
+          <td class="nowrap"><c:out value="${launch.totalDuration}"/></td>
+          <td class="number"><c:out value="${launch.contentSize}"/> KB</td>
+        </tr>
+      </c:forEach>
+    </c:forEach>
+  </tbody>
+</table>
 
 </jsp:root>
