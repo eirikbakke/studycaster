@@ -58,7 +58,6 @@ h1, h2, h3 {
 }
 
 .reportKey {
-  display: inline-block;
   width: 10em;
   font-family: monospace;
 }
@@ -69,4 +68,42 @@ h1, h2, h3 {
 
 ol, ul {
   padding-left: 20px;
+}
+
+td, th {
+  text-align: left;
+  vertical-align: top;
+  border-style: solid;
+  border-color: rgb(150,150,150);
+  border-left-width: 1px;
+  border-bottom-width: 1px;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.number {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.hidden {
+  visibility: collapse;
+}
+
+.versionString {
+  font-size: x-small;
+}
+
+thead {
+  background: rgb(240,240,240);
+  padding-bottom: 10px;
+  border-bottom-style: solid;
+  border-bottom-color: black;
+  border-bottom-width: 2px;
+}
+
+.launchTicket {
+  font-family: monospace;
 }

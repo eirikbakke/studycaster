@@ -52,6 +52,7 @@
 </c:choose>
 
     <![CDATA[<script type="text/javascript" src="jquery-1.6.3.min.js"></script>]]>
+    <![CDATA[<script type="text/javascript" src="stickyTableHeaders.js"></script>]]>
     <![CDATA[<script type="text/javascript" src="admin.js"></script>]]>
   </body>
 </html>

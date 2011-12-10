@@ -39,7 +39,7 @@
       <th               ><span class="reportKey">launchTicket</span></th>
       <th               ><span class="reportKey">firstRequest</span></th>
       <th               ><span class="reportKey">lastRequest</span></th>
-      <th               ><span class="reportKey">timeSinceLastRequest</span></th>
+      <th               ><span class="reportKey">time&#173;Since&#173;Last&#173;Request</span></th>
       <th class="number"><span class="reportKey">num&#173;Requests</span></th>
       <th               ><span class="reportKey">totalDuration</span></th>
       <th class="number"><span class="reportKey">content&#173;Size</span></th>
@@ -53,7 +53,7 @@
         <td rowspan="${subject.launches.size() + 1}"               ><c:out value="${subject.clientCookie}"/></td>
         <td rowspan="${subject.launches.size() + 1}"               ><c:out value="${subject.remoteAddrHash}"/></td>
         <td rowspan="${subject.launches.size() + 1}"               ><c:out value="${subject.geoLocation}"/></td>
-        <td rowspan="${subject.launches.size() + 1}" class="versionStringCell">
+        <td rowspan="${subject.launches.size() + 1}" class="versionString">
           <c:out value="${subject.versionString}"/>
         </td>
         <td rowspan="${subject.launches.size() + 1}"><c:out value="${subject.configurationID}"/></td>
