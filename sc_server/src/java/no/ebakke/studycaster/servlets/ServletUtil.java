@@ -269,13 +269,13 @@ public final class ServletUtil {
 
   private static class TimeUnit {
     public static final List<TimeUnit> UNITS = Arrays.asList(new TimeUnit[] {
-      new TimeUnit("years"  , "year"  , 365 * 24 * 60 * 60),
-      new TimeUnit("months" , "month" ,  30 * 24 * 60 * 60),
-      new TimeUnit("weeks"  , "week"  ,   7 * 24 * 60 * 60),
-      new TimeUnit("days"   , "day"   ,       24 * 60 * 60),
-      new TimeUnit("hours"  , "hour"  ,            60 * 60),
-      new TimeUnit("minutes", "minute",                 60),
-      new TimeUnit("seconds", "second",                  1)
+      new TimeUnit("yrs", "yr" , 365 * 24 * 60 * 60),
+      new TimeUnit("mos", "mo" ,  30 * 24 * 60 * 60),
+      new TimeUnit("wks", "wk" ,   7 * 24 * 60 * 60),
+      new TimeUnit("dys", "dy" ,       24 * 60 * 60),
+      new TimeUnit("hrs", "hr" ,            60 * 60),
+      new TimeUnit("min", "min",                 60),
+      new TimeUnit("sec", "sec",                  1)
     });
 
     String plural, singular;

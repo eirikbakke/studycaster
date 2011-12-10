@@ -29,19 +29,19 @@
     </tr>
     <tr>
       <th class="number">#</th>
-      <th               ><span class="reportKey">firstRequest</span></th>
-      <th               ><span class="reportKey">clientCookie</span></th>
+      <th               ><span class="reportKey">first&#173;Request</span></th>
+      <th               ><span class="reportKey">client&#173;Cookie</span></th>
       <th               ><span class="reportKey">remote&#173;Addr&#173;Hash</span></th>
-      <th               ><span class="reportKey">geoLocation</span></th>
-      <th               ><span class="reportKey">versionString</span></th>
-      <th               ><span class="reportKey">configurationID</span></th>
+      <th               ><span class="reportKey">geo&#173;Location</span></th>
+      <th               ><span class="reportKey">version&#173;String</span></th>
+      <th               ><span class="reportKey">configuration&#173;ID</span></th>
       <!-- Launches -->
-      <th               ><span class="reportKey">launchTicket</span></th>
-      <th               ><span class="reportKey">firstRequest</span></th>
-      <th               ><span class="reportKey">lastRequest</span></th>
-      <th               ><span class="reportKey">time&#173;Since&#173;Last&#173;Request</span></th>
+      <th               ><span class="reportKey">launch&#173;Ticket</span></th>
+      <th               ><span class="reportKey">first&#173;Request</span></th>
+      <th               ><span class="reportKey">last&#173;Request</span></th>
+      <th class="number"><span class="reportKey">time&#173;Since&#173;Last&#173;Request</span></th>
       <th class="number"><span class="reportKey">num&#173;Requests</span></th>
-      <th               ><span class="reportKey">totalDuration</span></th>
+      <th class="number"><span class="reportKey">total&#173;Duration</span></th>
       <th class="number"><span class="reportKey">content&#173;Size</span></th>
     </tr>
   </thead>
@@ -71,10 +71,10 @@
           </td>
           <td class="nowrap"><c:out value="${launch.firstRequest}"/></td>
           <td class="nowrap"><c:out value="${launch.lastRequest}"/></td>
-          <td class="nowrap"><c:out value="${launch.timeSinceLastRequest}"/></td>
+          <td class="number"><c:out value="${launch.timeSinceLastRequest}"/></td>
           <td class="number"><c:out value="${launch.numRequests}"/></td>
-          <td class="nowrap"><c:out value="${launch.totalDuration}"/></td>
-          <td class="number"><c:out value="${launch.contentSize}"/> KB</td>
+          <td class="number"><c:out value="${launch.totalDuration}"/></td>
+          <td class="number"><c:out value="${launch.contentSize}"/> K</td>
         </tr>
       </c:forEach>
     </c:forEach>

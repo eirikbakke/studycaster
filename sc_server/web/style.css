@@ -84,8 +84,11 @@ td, th {
 }
 
 .number {
-  white-space: nowrap;
   text-align: right;
+}
+
+td.number {
+  white-space: nowrap;
 }
 
 .hidden {
