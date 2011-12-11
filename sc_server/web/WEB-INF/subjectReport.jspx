@@ -71,7 +71,12 @@
           </td>
           <td class="nowrap"><c:out value="${launch.firstRequest}"/></td>
           <td class="nowrap"><c:out value="${launch.lastRequest}"/></td>
-          <td class="number"><c:out value="${launch.timeSinceLastRequest}"/></td>
+          <td class="number">
+            <c:if test="${launch.isLastRequestAfter(highlightMinutes * 60)}">
+              *
+            </c:if>
+            <c:out value="${launch.timeSinceLastRequest}"/>
+          </td>
           <td class="number"><c:out value="${launch.numRequests}"/></td>
           <td class="number"><c:out value="${launch.totalDuration}"/></td>
           <td class="number"><c:out value="${launch.contentSize}"/> K</td>

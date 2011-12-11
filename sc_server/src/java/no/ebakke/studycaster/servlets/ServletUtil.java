@@ -270,7 +270,7 @@ public final class ServletUtil {
   private static class TimeUnit {
     public static final List<TimeUnit> UNITS = Arrays.asList(new TimeUnit[] {
       new TimeUnit("yrs", "yr" , 365 * 24 * 60 * 60),
-      new TimeUnit("mos", "mo" ,  30 * 24 * 60 * 60),
+      new TimeUnit("mo" , "mo" ,  30 * 24 * 60 * 60),
       new TimeUnit("wks", "wk" ,   7 * 24 * 60 * 60),
       new TimeUnit("dys", "dy" ,       24 * 60 * 60),
       new TimeUnit("hrs", "hr" ,            60 * 60),

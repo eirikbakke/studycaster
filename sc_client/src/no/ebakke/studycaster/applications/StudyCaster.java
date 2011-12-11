@@ -5,6 +5,7 @@ import no.ebakke.studycaster.backend.SingleInstanceHandler;
 import no.ebakke.studycaster.backend.EnvironmentHooks;
 import java.awt.AWTException;
 import java.awt.EventQueue;
+import java.awt.Frame;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
@@ -92,6 +93,7 @@ import no.ebakke.studycaster.util.stream.NonBlockingOutputStream.StreamProgressO
 /** Except where noted, methods in this class, including private ones, must be called from the
 event-dispatching thread (EDT) only. */
 public final class StudyCaster {
+  private static final long STILL_ALIVE_INTERVAL_NANOS = 60 * 1000 * 1000000L;
   private static final int RECORDING_BUFFER_SZ = 4 * 1024 * 1024;
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private static final String CONFIGID_PROP_NAME = "studycaster.config.id";
@@ -118,6 +120,44 @@ public final class StudyCaster {
         });
       }
     };
+  private final Thread stillAliveThread = new Thread(new Runnable() {
+    public void run() {
+      try {
+        while (!Thread.interrupted()) {
+          Util.checkedSwingInvokeAndWait(new CallableExt<Void,RuntimeException>() {
+            public Void call() {
+              final String mainFrameStatus;
+              if        (mainFrame == null) {
+                mainFrameStatus = "null";
+              } else if (mainFrame.isVisible()) {
+                mainFrameStatus = ((mainFrame.getExtendedState() == Frame.ICONIFIED) ?
+                    "iconified" : "visible and not iconified");
+              } else if (mainFrame.isDisplayable()) {
+                mainFrameStatus = "invisible but displayable";
+              } else {
+                mainFrameStatus = "disposed";
+              }
+              final String recordingStreamStatus;
+              final NonBlockingOutputStream nbos = recordingStream;
+              if (nbos == null) {
+                recordingStreamStatus = "recording buffer has not been initialized";
+              } else {
+                long bytesWritten = nbos.getBytesWritten();
+                long bytesPosted  = nbos.getBytesPosted();
+                recordingStreamStatus = (bytesPosted - bytesWritten) + " bytes in recording buffer";
+              }
+              LOG.log(Level.INFO, "Still alive, main frame is {0}, {1}",
+                  new Object[] {mainFrameStatus, recordingStreamStatus});
+              return null;
+            }
+          });
+          Util.delayAtLeast(STILL_ALIVE_INTERVAL_NANOS);
+        }
+      } catch (InterruptedException e) {
+        LOG.info("Closing stillAlive thread");
+      }
+    }
+  }, "StudyCaster-stillAlive");
 
   private StudyCaster(EnvironmentHooks hooks) {
     this.hooks = hooks;
@@ -209,13 +249,12 @@ public final class StudyCaster {
     if (backendCloseThread != null)
       return;
     LOG.info("Closing backend");
-    final Thread initializerThreadF = initializerThread;
     backendCloseThread = new Thread(new Runnable() {
       public void run() {
-        if (initializerThreadF != null) {
+        if (initializerThread != null) {
           Util.ensureInterruptible(new Util.Interruptible() {
             public void run() throws InterruptedException {
-              initializerThreadF.join();
+              initializerThread.join();
             }
           });
         }
@@ -232,6 +271,12 @@ public final class StudyCaster {
             LOG.log(Level.SEVERE, "Error while closing screen recorder", e);
           }
         }
+        Util.ensureInterruptible(new Util.Interruptible() {
+          public void run() throws InterruptedException {
+            stillAliveThread.interrupt();
+            stillAliveThread.join();
+          }
+        });
         EnvironmentHooks.shutdown();
         // In the case of an error, serverContext may still not be defined.
         if (serverContext != null)
@@ -391,6 +436,7 @@ public final class StudyCaster {
           } catch (IOException e) {
             throw new StudyCasterException("Unexpected I/O error", e);
           }
+          stillAliveThread.start();
         } catch (StudyCasterException e) {
           exception = e;
         }
