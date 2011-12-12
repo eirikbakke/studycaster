@@ -132,7 +132,6 @@ public class CaptureDecoder {
   encountered. For this to work properly, the method below must be called after each call to
   nextFrame(), except in the case of frames that are discarded by the client. */
   public void blinkIndicators() {
-    // Provide a visual indication of when new frames and metastamps are encountered.
     statMetaIndicator  = !statMetaIndicator;
     statFrameIndicator = statFrameChanged ? !statFrameIndicator : statFrameIndicator;
     statFrameChanged = false;

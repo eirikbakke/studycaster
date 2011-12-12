@@ -10,7 +10,7 @@ public final class Quilt<V> {
   // To avoid overflow errors, don't go all the way to the boundaries.
   private static final int MAXVAL = Integer.MAX_VALUE / 8;
   private static final int MINVAL = Integer.MIN_VALUE / 8;
-  // Non-overlapping list of rectangles, each either positive or negative.
+  // Non-overlapping list of rectangles, each associated with a value of type V.
   private List<Patch<V>> patches = new ArrayList<Patch<V>>();
 
   public Quilt(V background) {

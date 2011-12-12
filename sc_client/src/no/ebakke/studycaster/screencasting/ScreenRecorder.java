@@ -55,11 +55,11 @@ public class ScreenRecorder {
         double fillLevel = ((double) (nbos.getBytesPosted() - nbos.getBytesWritten())) /
                            ((double) nbos.getBufferLimitBytes());
         // TODO: Find a less ad-hoc way of doing this.
-        if (fillLevel > 0.9) {
-          return 0.0;
-        } else if (fillLevel > 0.75) {
+        if        (fillLevel > 0.8) {
+          return Math.min(0.1, ret * 0.1);
+        } else if (fillLevel > 0.6) {
           return ret * 0.1;
-        } else if (fillLevel > 0.50) {
+        } else if (fillLevel > 0.4) {
           return ret * 0.2;
         } else {
           return ret;

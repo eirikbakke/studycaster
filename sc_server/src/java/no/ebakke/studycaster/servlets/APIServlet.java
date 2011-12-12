@@ -136,7 +136,7 @@ public class APIServlet extends HttpServlet {
               os.close();
             }
           } else {
-            LOG.warning("Ignored double append.");
+            LOG.warning("Ignored double append");
           }
         } finally {
           is.close();

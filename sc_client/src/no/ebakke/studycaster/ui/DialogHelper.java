@@ -77,15 +77,6 @@ public class DialogHelper {
     return ret;
   }
 
-  public void showMessageDialog(UIStringKey messageKey,
-      Object messageParameters[], UIStringKey titleKey, int messageType)
-  {
-    final String message = (messageParameters != null) ?
-        strings.get(messageKey, messageParameters) : strings.get(messageKey);
-    showCustomOptionDialog(messageKey.toString(), message, titleKey, JOptionPane.DEFAULT_OPTION,
-        messageType, null, null);
-  }
-
   public int showOptionDialog(UIStringKey messageKey,
       Object messageParameters[], UIStringKey titleKey, int optionType, int messageType,
       UIStringKey[] options, UIStringKey initialValue)
@@ -94,6 +85,13 @@ public class DialogHelper {
         strings.get(messageKey, messageParameters) : strings.get(messageKey);
     return showCustomOptionDialog(messageKey.toString(), message, titleKey, optionType, messageType,
         options, initialValue);
+  }
+
+  public void showMessageDialog(UIStringKey messageKey,
+      Object messageParameters[], UIStringKey titleKey, int messageType)
+  {
+    showOptionDialog(messageKey, messageParameters, titleKey, JOptionPane.DEFAULT_OPTION,
+        messageType, null, null);
   }
 
   public void showErrorDialog(Exception e) {

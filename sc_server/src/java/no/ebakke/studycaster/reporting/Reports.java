@@ -3,6 +3,7 @@ package no.ebakke.studycaster.reporting;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -113,9 +114,12 @@ public final class Reports {
       return geoLocation;
     }
 
-    public String getVersionString() {
-      // Make line breaking easier.
-      return versionString.toString().replaceAll(",", ", ").replaceAll(";", "; ");
+    public Set<String> getVersionString() {
+      Set<String> ret = new LinkedHashSet<String>();
+      // Make line breaking easier (yet another presentation detail that should go away).
+      for (String s : versionString)
+        ret.add(s.replaceAll(",", ", ").replaceAll(";", "; "));
+      return ret;
     }
 
     public Set<String> getConfigurationID() {

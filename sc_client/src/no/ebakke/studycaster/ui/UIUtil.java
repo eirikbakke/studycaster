@@ -47,10 +47,8 @@ public final class UIUtil {
   private static InputStream getResource(final String fileName) throws IOException {
     InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(
         RESOURCE_DIR + fileName);
-    if (is == null) {
-      throw new FileNotFoundException(
-          "Could not locate resource \"" + fileName + "\"");
-    }
+    if (is == null)
+      throw new FileNotFoundException("Could not locate resource \"" + fileName + "\"");
     return is;
   }
 
@@ -82,7 +80,7 @@ public final class UIUtil {
   }
 
   public static String jOptionPaneChoiceString(int choice) {
-    if (choice == JOptionPane.OK_OPTION) {
+    if        (choice == JOptionPane.OK_OPTION) {
       return "OK";
     } else if (choice == JOptionPane.CANCEL_OPTION){
       return "Cancel";

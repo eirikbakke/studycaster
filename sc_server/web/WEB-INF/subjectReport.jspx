@@ -50,13 +50,31 @@
       <tr class="subjectRow">
         <td rowspan="${subject.launches.size() + 1}" class="number"><c:out value="${status.count}"/></td>
         <td rowspan="${subject.launches.size() + 1}" class="nowrap"><c:out value="${subject.firstRequest}"/></td>
-        <td rowspan="${subject.launches.size() + 1}"               ><c:out value="${subject.clientCookie}"/></td>
-        <td rowspan="${subject.launches.size() + 1}"               ><c:out value="${subject.remoteAddrHash}"/></td>
-        <td rowspan="${subject.launches.size() + 1}"               ><c:out value="${subject.geoLocation}"/></td>
-        <td rowspan="${subject.launches.size() + 1}" class="versionString">
-          <c:out value="${subject.versionString}"/>
+        <td rowspan="${subject.launches.size() + 1}" class="ticket">
+          <c:forEach items="${subject.clientCookie}" var="elm">
+            <c:out value="${elm}"/><br/>
+          </c:forEach>
         </td>
-        <td rowspan="${subject.launches.size() + 1}"><c:out value="${subject.configurationID}"/></td>
+        <td rowspan="${subject.launches.size() + 1}" class="ticket">
+          <c:forEach items="${subject.remoteAddrHash}" var="elm">
+            <c:out value="${elm}"/><br/>
+          </c:forEach>
+        </td>
+        <td rowspan="${subject.launches.size() + 1}">
+          <c:forEach items="${subject.geoLocation}" var="elm">
+            <c:out value="${elm}"/><br/>
+          </c:forEach>
+        </td>
+        <td rowspan="${subject.launches.size() + 1}" class="versionString">
+          <c:forEach items="${subject.versionString}" var="elm">
+            <c:out value="${elm}"/><br/>
+          </c:forEach>
+        </td>
+        <td rowspan="${subject.launches.size() + 1}">
+          <c:forEach items="${subject.configurationID}" var="elm">
+            <c:out value="${elm}"/><br/>
+          </c:forEach>
+        </td>
         <td class="hidden" colspan="7"/>
       </tr>
 
@@ -64,7 +82,7 @@
         <tr class="${launch.isLastRequestAfter(highlightMinutes * 60) ? 'recentLaunch' : 'oldLaunch'}">
           <td class="nowrap">
             <!-- TODO: Don't hardcode video encoding speedup. -->
-            <a class="launchTicket" href="download/uploads/${fn:escapeXml(launch.launchTicket)}/console.txt">
+            <a class="ticket" href="download/uploads/${fn:escapeXml(launch.launchTicket)}/console.txt">
               <c:out value="${launch.launchTicket}"/>
             </a>
             &#160;(<a href="download/uploads/${fn:escapeXml(launch.launchTicket)}/screencast_8x.mp4">mp4</a>)

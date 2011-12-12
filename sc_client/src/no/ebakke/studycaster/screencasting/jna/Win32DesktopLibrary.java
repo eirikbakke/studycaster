@@ -141,13 +141,24 @@ public final class Win32DesktopLibrary implements DesktopLibrary {
   }
 
   public static void main(String args[]) throws InterruptedException {
-    DesktopLibrary windowEnumerator = create();
-    for (WindowInfo wi : windowEnumerator.getWindowList())
+    DesktopLibrary desktopLibrary = create();
+    for (WindowInfo wi : desktopLibrary.getWindowList())
       System.out.println(wi);
+    long timeBefore = System.nanoTime();
+    final long ITERATIONS = 1000;
+    for (int i = 0; i < ITERATIONS; i++) {
+      if (i % 100 == 0)
+        System.out.println(i);
+      desktopLibrary.getWindowList();
+      desktopLibrary.getLastInputTimeNanos();
+    }
+    long timeAfter = System.nanoTime();
+    // Got about 24 milliseconds per call on my laptop.
+    System.out.println((timeAfter - timeBefore) / ITERATIONS + "ns per call");
     for (int i = 0; i < 20; i++) {
-      long lastJava  = windowEnumerator.getLastInputTimeNanos();
-      long nowKernel = ((Win32DesktopLibrary) windowEnumerator).getKernelTimeNanos();
-      long nowJava   = ((Win32DesktopLibrary) windowEnumerator).getJavaTimeNanos();
+      long lastJava  = desktopLibrary.getLastInputTimeNanos();
+      long nowKernel = ((Win32DesktopLibrary) desktopLibrary).getKernelTimeNanos();
+      long nowJava   = ((Win32DesktopLibrary) desktopLibrary).getJavaTimeNanos();
       long since = nowJava - lastJava;
       System.out.println(
           nowKernel / 1000000L + "\t" + lastJava / 1000000L + "\t" + since / 1000000L);
