@@ -93,6 +93,8 @@ public class ScreenRecorder {
     enc.setCensor(censor);
   }
 
+  /** This method will not block unless a previous stop() or close() operation is in progress in a
+  different thread. */
   public synchronized void start() {
     if (!stopped.getAndSet(false))
       return;

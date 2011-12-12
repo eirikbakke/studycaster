@@ -182,6 +182,14 @@ public class NonBlockingOutputStream extends OutputStream {
     return bytesPosted.get();
   }
 
+  @Override
+  public String toString() {
+    // Read in this order to avoid negative values due to a race condition.
+    long bytesWrittenL = getBytesWritten();
+    long bytesPostedL  = getBytesPosted();
+    return "NonBlockingOutputStream with " + (bytesPostedL - bytesWrittenL) + " bytes pending";
+  }
+
   /* ******************************************************************************************** */
   public interface StreamProgressObserver {
     public void updateProgress(NonBlockingOutputStream nbos);

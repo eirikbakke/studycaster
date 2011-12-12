@@ -49,14 +49,14 @@ public class UIStrings {
     }
   }
 
-  public String getString(UIStringKey key) {
+  public String get(UIStringKey key) {
     if (key.takesParameters())
       throw new IllegalArgumentException("UI string with key " + key + " takes parameters");
     return strings.get(key);
   }
 
   // TODO: Use designated HTML parameter tags instead of MessageFormat.
-  public String getString(UIStringKey key, Object parameters[]) {
+  public String get(UIStringKey key, Object parameters[]) {
     if (!key.takesParameters())
       throw new IllegalArgumentException("UI string with key " + key + " does not take parameters");
     final Object escapedParameters[];

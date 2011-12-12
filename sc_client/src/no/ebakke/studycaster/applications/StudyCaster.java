@@ -4,8 +4,6 @@ import no.ebakke.studycaster.ui.UIUtil;
 import no.ebakke.studycaster.backend.SingleInstanceHandler;
 import no.ebakke.studycaster.backend.EnvironmentHooks;
 import java.awt.AWTException;
-import java.awt.EventQueue;
-import java.awt.Frame;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
@@ -18,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.jnlp.SingleInstanceListener;
+import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import no.ebakke.studycaster.backend.ServerContext;
@@ -35,9 +34,10 @@ import no.ebakke.studycaster.ui.MainFrame.UserActionListener;
 import no.ebakke.studycaster.screencasting.ScreenRecorder;
 import no.ebakke.studycaster.screencasting.ScreenRecorderConfiguration;
 import no.ebakke.studycaster.ui.ConfirmationCodeDialogPanel;
+import no.ebakke.studycaster.ui.DialogHelper;
+import no.ebakke.studycaster.ui.UIUtil.CallableExt;
 import no.ebakke.studycaster.ui.UploadDialogPanel;
 import no.ebakke.studycaster.util.Util;
-import no.ebakke.studycaster.util.Util.CallableExt;
 import no.ebakke.studycaster.util.stream.NonBlockingOutputStream;
 import no.ebakke.studycaster.util.stream.NonBlockingOutputStream.StreamProgressObserver;
 
@@ -93,13 +93,14 @@ import no.ebakke.studycaster.util.stream.NonBlockingOutputStream.StreamProgressO
 /** Except where noted, methods in this class, including private ones, must be called from the
 event-dispatching thread (EDT) only. */
 public final class StudyCaster {
+  private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private static final long STILL_ALIVE_INTERVAL_NANOS = 60 * 1000 * 1000000L;
   private static final int RECORDING_BUFFER_SZ = 4 * 1024 * 1024;
-  private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private static final String CONFIGID_PROP_NAME = "studycaster.config.id";
   private final MainFrame mainFrame;
   private final EnvironmentHooks hooks;
   private final WindowListener windowClosingListener;
+  private final DialogHelper dialogHelper;
   /** Some variables are accessed from multiple threads. Rather than try to remember which ones,
   declare them all volatile. */
   private volatile Thread initializerThread, failsafeCloseThread, backendCloseThread;
@@ -124,30 +125,10 @@ public final class StudyCaster {
     public void run() {
       try {
         while (!Thread.interrupted()) {
-          Util.checkedSwingInvokeAndWait(new CallableExt<Void,RuntimeException>() {
+          UIUtil.swingBlock(new CallableExt<Void,RuntimeException>() {
             public Void call() {
-              final String mainFrameStatus;
-              if        (mainFrame == null) {
-                mainFrameStatus = "null";
-              } else if (mainFrame.isVisible()) {
-                mainFrameStatus = ((mainFrame.getExtendedState() == Frame.ICONIFIED) ?
-                    "iconified" : "visible and not iconified");
-              } else if (mainFrame.isDisplayable()) {
-                mainFrameStatus = "invisible but displayable";
-              } else {
-                mainFrameStatus = "disposed";
-              }
-              final String recordingStreamStatus;
-              final NonBlockingOutputStream nbos = recordingStream;
-              if (nbos == null) {
-                recordingStreamStatus = "recording buffer has not been initialized";
-              } else {
-                long bytesWritten = nbos.getBytesWritten();
-                long bytesPosted  = nbos.getBytesPosted();
-                recordingStreamStatus = (bytesPosted - bytesWritten) + " bytes in recording buffer";
-              }
-              LOG.log(Level.INFO, "Still alive, main frame is {0}, {1}",
-                  new Object[] {mainFrameStatus, recordingStreamStatus});
+              LOG.log(Level.INFO, "Still alive, main frame is {0}, recording buffer is {1}",
+                  new Object[] {UIUtil.windowStateString(mainFrame), recordingStream});
               return null;
             }
           });
@@ -167,48 +148,38 @@ public final class StudyCaster {
       public void windowClosing(WindowEvent e) {
         final boolean doClose;
         if (configuration != null) {
-          LOG.info("User tried to close main StudyCaster window");
-          doClose = JOptionPane.showConfirmDialog(mainFrame.getPositionDialog(),
-              getUIString(UIStringKey.DIALOG_CLOSE_MESSAGE),
-              getUIString(UIStringKey.DIALOG_CLOSE_TITLE),
-              JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) == JOptionPane.OK_OPTION;
-          if (doClose) {
-            LOG.info("User confirmed closing of main StudyCaster window");
-          } else {
-            LOG.info("User canceled closing of main StudyCaster window");
-          }
+          doClose = dialogHelper.showOptionDialog(UIStringKey.DIALOG_CLOSE_MESSAGE, null,
+              UIStringKey.DIALOG_CLOSE_TITLE, JOptionPane.OK_CANCEL_OPTION,
+              JOptionPane.WARNING_MESSAGE, null, null) == JOptionPane.OK_OPTION;
         } else {
           doClose = true;
           LOG.info("User closed main StudyCaster window before configuration was loaded; exiting");
         }
         if (doClose)
-          closeUIandBackend();
+          close();
       }
     };
     mainFrame.addWindowListener(windowClosingListener);
+    /* Wrap dialog boxes in an invisible JDialog in order to center them on the screen rather than
+    on the main frame. */
+    dialogHelper = new DialogHelper(new JDialog(mainFrame));
   }
 
-  /** This method may be called from any thread. */
-  private String getUIString(UIStringKey key) {
-    return configuration.getUIStrings().getString(key);
-  }
-
-  /** This method may be called from any thread. */
-  private String getUIString(UIStringKey key, Object parameters[]) {
-    return configuration.getUIStrings().getString(key, parameters);
-  }
-
-  // TODO: Rename, refactor, or combine closeUI() and closeBackend().
   // Before calling this function, consider whether the user may already have closed the window.
-  private void closeUIandBackend() {
+  public void close() {
     closeUI();
     closeBackend(null);
   }
 
+  private boolean isClosed() {
+    return failsafeCloseThread != null;
+  }
+
   private void closeUI() {
-    LOG.info("Closing UI");
-    if (failsafeCloseThread != null)
+    if (isClosed())
       throw new IllegalStateException("UI already closed");
+    dialogHelper.setClosed(true);
+    LOG.info("Closing UI");
     mainFrame.removeWindowListener(windowClosingListener);
     mainFrame.setVisible(false);
     failsafeCloseThread = new Thread(new Runnable() {
@@ -277,6 +248,8 @@ public final class StudyCaster {
             stillAliveThread.join();
           }
         });
+        if (onEndEDT != null)
+          LOG.info("Will run final UI tasks after shutting down console");
         EnvironmentHooks.shutdown();
         // In the case of an error, serverContext may still not be defined.
         if (serverContext != null)
@@ -288,71 +261,11 @@ public final class StudyCaster {
     backendCloseThread.start();
   }
 
-  private void reportHelperEDT(
-      String message, String title, int messageType, boolean fatal, boolean stopTask)
-  {
-    if (failsafeCloseThread != null) {
-      LOG.log(Level.INFO, "Suppressing dialog due to earlier close action");
-      return;
-    }
-    if (stopTask)
-      mainFrame.stopTask(false);
-    JOptionPane.showMessageDialog(mainFrame.getPositionDialog(), message, title, messageType);
-    if (fatal)
-      closeUIandBackend();
-  }
-
-  private void reportHelper(final String message, final String title, final int messageType,
-      final boolean fatal, final boolean stopTask)
-  {
-    if (EventQueue.isDispatchThread()) {
-      reportHelperEDT(message, title, messageType, fatal, stopTask);
-    } else {
-      try {
-        Util.checkedSwingInvokeAndWait(new CallableExt<Void,RuntimeException>() {
-          public Void call() {
-            reportHelperEDT(message, title, messageType, fatal, stopTask);
-            return null;
-          }
-        });
-      } catch (InterruptedException e) {
-        LOG.warning("showMessageDialog() interrupted");
-        Thread.currentThread().interrupt();
-      }
-    }
-  }
-
-  private void reportMessage(final UIStringKey messageKey,
-      final Object messageParameters[], final UIStringKey titleKey, final int messageType)
-  {
-    reportMessage(messageKey, messageParameters, titleKey, messageType, true);
-  }
-
-  /** Displays a parameterized modal message dialog. If stopTask is true, the MainFrame taskbar and
-  button states will be reset. The method blocks and can be called from any thread, including the
-  EDT. */
-  private void reportMessage(UIStringKey messageKey, Object messageParameters[],
-      UIStringKey titleKey, int messageType, boolean stopTask)
-  {
-    final String message = (messageParameters != null) ?
-        getUIString(messageKey, messageParameters) : getUIString(messageKey);
-    LOG.log(Level.INFO, "Showing dialog with message key {0}", messageKey.toString());
-    reportHelper(message, getUIString(titleKey), messageType, false, stopTask);
-  }
-
-  /** Displays a modal dialog for reporting an exception. The MainFrame taskbar will be reset. The
-  method blocks and can be called from any thread, including the EDT. */
-  private void reportError(Exception e, boolean fatal) {
-    LOG.log(Level.SEVERE, fatal ? "Fatal error " : "Generic non-fatal error ", e);
-    reportHelper("There was an unexpected error:\n" + e.getMessage(),
-        "Error", JOptionPane.ERROR_MESSAGE, fatal, true);
-  }
-
   private void initUI(StudyCasterException storedException) {
     try {
       if (storedException != null)
         throw storedException;
-      if (failsafeCloseThread != null) {
+      if (isClosed()) {
         LOG.info("Window closed before UI was configured");
         /* Explicitly return here as the operations below may make the window displayable again,
         neutralizing an earlier dispose(). */
@@ -366,36 +279,23 @@ public final class StudyCaster {
       if (sih != null) {
         sih.setListener(new SingleInstanceListener() {
           public void newActivation(String[] strings) {
-            reportMessage(UIStringKey.DIALOG_ALREADY_RUNNING_MESSAGE, null,
-                UIStringKey.DIALOG_ALREADY_RUNNING_TITLE, JOptionPane.INFORMATION_MESSAGE, false);
+            dialogHelper.showMessageDialog(UIStringKey.DIALOG_ALREADY_RUNNING_MESSAGE, null,
+                UIStringKey.DIALOG_ALREADY_RUNNING_TITLE, JOptionPane.INFORMATION_MESSAGE);
           }
         });
       }
-      LOG.info("Showing consent dialog");
-      int res = JOptionPane.showOptionDialog(mainFrame.getPositionDialog(),
-          getUIString(UIStringKey.DIALOG_CONSENT_QUESTION),
-          getUIString(UIStringKey.DIALOG_CONSENT_TITLE), JOptionPane.OK_CANCEL_OPTION,
-          JOptionPane.QUESTION_MESSAGE, null, null, null);
+      int res = dialogHelper.showOptionDialog(UIStringKey.DIALOG_CONSENT_QUESTION, null,
+          UIStringKey.DIALOG_CONSENT_TITLE, JOptionPane.OK_CANCEL_OPTION,
+          JOptionPane.QUESTION_MESSAGE, null, null);
       if (res != JOptionPane.OK_OPTION) {
-        LOG.info("User declined at consent dialog");
-        closeUIandBackend();
+        close();
       } else {
-        /* This is probably overkill, but ScreenRecorder.start() may theoretically block. */
-        mainFrame.startTask(null, true);
-        new Thread(new Runnable() {
-          public void run() {
-            recorder.start();
-            SwingUtilities.invokeLater(new Runnable() {
-              public void run() {
-                mainFrame.stopTask(false);
-              }
-            });
-          }
-        }, "StudyCaster-startRecording").start();
+        recorder.start();
       }
     } catch (StudyCasterException e) {
       // Note: Due to the exception, configuration and serverContext may not be defined.
-      reportError(e, true);
+      dialogHelper.showErrorDialog(e);
+      close();
     }
   }
 
@@ -417,6 +317,7 @@ public final class StudyCaster {
             configuration = StudyConfiguration.parseConfiguration(
               serverContext.downloadFile("studyconfig.xml"), configurationID);
             LOG.log(Level.INFO, "Loaded configuration with name \"{0}\"", configuration.getName());
+            dialogHelper.setStrings(configuration.getUIStrings());
 
             // Prepare the screen recorder without starting it yet.
             recordingStream = new NonBlockingOutputStream(RECORDING_BUFFER_SZ);
@@ -428,8 +329,10 @@ public final class StudyCaster {
               throw new StudyCasterException("Failed to initialize screen recorder", e);
             }
             List<String> screenCastBlacklist = configuration.getScreenCastBlacklist();
-            screenCastBlacklist.add(getUIString(UIStringKey.DIALOG_CONCLUDE_TITLE));
-            screenCastBlacklist.add(getUIString(UIStringKey.DIALOG_OPEN_FILE_TITLE));
+            screenCastBlacklist.add(
+                configuration.getUIStrings().get(UIStringKey.DIALOG_CONCLUDE_TITLE));
+            screenCastBlacklist.add(
+                configuration.getUIStrings().get(UIStringKey.DIALOG_OPEN_FILE_TITLE));
             recorder.setCensor(new ScreenCensor(
                 configuration.getScreenCastWhitelist(), screenCastBlacklist,
                 true, true, true));
@@ -535,13 +438,12 @@ public final class StudyCaster {
     {
       final String key = openFileConfiguration.getClientName();
       final boolean openedInThisSession = hashesBeforeOpen.containsKey(key);
-      File renameNewName = null;
       File downloadedFile = null;
       try {
         LOG.log(Level.INFO, "Open action for file \"{0}\"", key);
         final File clientFile = getOpenFilePath(openFileConfiguration);
         if (!Util.fileAvailableExclusive(clientFile)) {
-          reportMessage(UIStringKey.DIALOG_OPEN_FILE_ALREADY_MESSAGE,
+          dialogHelper.showMessageDialog(UIStringKey.DIALOG_OPEN_FILE_ALREADY_MESSAGE,
               new Object[] { Util.getPathString(clientFile) }, UIStringKey.DIALOG_OPEN_FILE_TITLE,
               JOptionPane.INFORMATION_MESSAGE);
           return false;
@@ -560,42 +462,45 @@ public final class StudyCaster {
             useDownloaded = false;
             modified      = false;
           } else {
-            LOG.info("File already exists in modified form, showing option dialog");
+            LOG.info("File already exists in modified form");
             // The existing file is different from the downloaded one; ask the user what to do.
-            int res = Util.checkedSwingInvokeAndWait(new Util.CallableExt<Integer,RuntimeException>() {
+            int res = UIUtil.swingBlock(new UIUtil.CallableExt<Integer,RuntimeException>() {
               public Integer call() {
-                final String downloadOption = getUIString(UIStringKey.DIALOG_OPEN_FILE_NEW_BUTTON);
-                final String existingOption = getUIString(UIStringKey.DIALOG_OPEN_FILE_KEEP_BUTTON);
-                int ret = JOptionPane.showOptionDialog(mainFrame.getPositionDialog(),
-                    getUIString(
+                int ret = dialogHelper.showOptionDialog(
                       openedInThisSession ? UIStringKey.DIALOG_OPEN_FILE_MODIFIED_MESSAGE
                                           : UIStringKey.DIALOG_OPEN_FILE_EXISTING_MESSAGE,
-                      new Object[] { Util.getPathString(clientFile) }),
-                    getUIString(UIStringKey.DIALOG_OPEN_FILE_TITLE),
+                      new Object[] { Util.getPathString(clientFile) },
+                    UIStringKey.DIALOG_OPEN_FILE_TITLE,
                     JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
-                    null, new Object[] {downloadOption, existingOption}, existingOption);
+                    new UIStringKey[] { UIStringKey.DIALOG_OPEN_FILE_NEW_BUTTON,
+                                        UIStringKey.DIALOG_OPEN_FILE_KEEP_BUTTON },
+                    UIStringKey.DIALOG_OPEN_FILE_KEEP_BUTTON);
                 return ret;
               }
             });
-            if (res == JOptionPane.CLOSED_OPTION) {
-              LOG.info("User closed option window");
-              return false;
-            }
             useDownloaded = (res == JOptionPane.YES_OPTION);
+            if (res == JOptionPane.CLOSED_OPTION)
+              return false;
             modified = !useDownloaded;
             if (useDownloaded) {
               // Move the old file out of place without deleting it.
-              String path = clientFile.getPath();
+              final String path = clientFile.getPath();
               int dot = path.lastIndexOf('.');
               String basename = (dot < 0) ? path : path.substring(0, dot);
               String extension = (dot < 0) ? "" : path.substring(dot);
+              File renameNewName;
               int index = 1;
               do {
                 renameNewName = new File(basename + " (" + index + ")" + extension);
                 index++;
               } while (renameNewName.exists());
-              if (!clientFile.renameTo(renameNewName)) {
-                reportMessage(UIStringKey.DIALOG_OPEN_FILE_RENAME_FAILED_MESSAGE,
+              if (clientFile.renameTo(renameNewName)) {
+                dialogHelper.showMessageDialog(UIStringKey.DIALOG_OPEN_FILE_RENAMED_MESSAGE,
+                    new Object[] {
+                      Util.getPathString(clientFile), Util.getPathString(renameNewName) },
+                    UIStringKey.DIALOG_OPEN_FILE_TITLE, JOptionPane.INFORMATION_MESSAGE);
+              } else {
+                dialogHelper.showMessageDialog(UIStringKey.DIALOG_OPEN_FILE_RENAME_FAILED_MESSAGE,
                     new Object[] { Util.getPathString(clientFile) },
                     UIStringKey.DIALOG_OPEN_FILE_TITLE, JOptionPane.WARNING_MESSAGE);
                 // Leave it up to the user to try again.
@@ -613,8 +518,9 @@ public final class StudyCaster {
             throw new IOException("Failed to rename");
         }
         if (!Util.desktopOpenFile(clientFile)) {
-          reportMessage(UIStringKey.DIALOG_OPEN_FILE_ASSOCIATION_FAILED_MESSAGE,
-              new Object[] { Util.getPathString(clientFile), openFileConfiguration.getErrorMessage() },
+          dialogHelper.showMessageDialog(UIStringKey.DIALOG_OPEN_FILE_ASSOCIATION_FAILED_MESSAGE,
+              new Object[] {
+                Util.getPathString(clientFile), openFileConfiguration.getErrorMessage() },
               UIStringKey.DIALOG_OPEN_FILE_TITLE, JOptionPane.WARNING_MESSAGE);
           return false;
         }
@@ -635,13 +541,6 @@ public final class StudyCaster {
           }
           hashesAfterOpen.put(key, Util.computeSHA1(clientFile));
         }
-        if (renameNewName != null) {
-          /* Don't show this message until we're done doing everything else, since reportMessage()
-          will also re-enable the action buttons. */
-          reportMessage(UIStringKey.DIALOG_OPEN_FILE_RENAMED_MESSAGE,
-              new Object[] {Util.getPathString(clientFile), Util.getPathString(renameNewName) },
-              UIStringKey.DIALOG_OPEN_FILE_TITLE, JOptionPane.INFORMATION_MESSAGE);
-        }
       } catch (IOException e) {
         throw new StudyCasterException(e);
       } catch (InterruptedException e) {
@@ -659,17 +558,20 @@ public final class StudyCaster {
     private void processAction(final CallableExt<Boolean,StudyCasterException> callable) {
       new Thread(new Runnable() {
         public void run() {
+          Boolean success = false;
           try {
-            final Boolean success = callable.call();
-            if (success != null) {
-              SwingUtilities.invokeLater(new Runnable() {
-                public void run() {
-                  mainFrame.stopTask(success);
-                }
-              });
-            }
+            success = callable.call();
           } catch (final StudyCasterException e) {
-            reportError(e, false);
+            dialogHelper.showErrorDialog(e);
+            // Consider this error non-fatal; don't shut down.
+          }
+          if (success != null) {
+            final boolean successF = success;
+            SwingUtilities.invokeLater(new Runnable() {
+              public void run() {
+                mainFrame.stopTask(successF);
+              }
+            });
           }
         }
       }, "StudyCaster-action").start();
@@ -703,8 +605,7 @@ public final class StudyCaster {
       while (true) {
         final boolean firstF = first;
         first = false;
-        String selectedFilePath =
-            Util.checkedSwingInvokeAndWait(new Util.CallableExt<String,RuntimeException>()
+        String selectedFilePath = UIUtil.swingBlock(new UIUtil.CallableExt<String,RuntimeException>()
         {
           public String call() {
             if (firstF && openFileConfiguration != null)
@@ -714,10 +615,9 @@ public final class StudyCaster {
                      of the time), that causes the dialog contents not to get painted occasionally.
                      See http://bugs.sun.com/view_bug.do?bug_id=6859086 and
                      http://stackoverflow.com/questions/8391554 . */
-            LOG.info("Showing upload conclude dialog");
-            int res = JOptionPane.showOptionDialog(mainFrame.getPositionDialog(), udp,
-                getUIString(UIStringKey.DIALOG_CONCLUDE_TITLE), JOptionPane.OK_CANCEL_OPTION,
-                JOptionPane.QUESTION_MESSAGE, null, null, null);
+            int res = dialogHelper.showCustomOptionDialog("Conclude", udp,
+                UIStringKey.DIALOG_CONCLUDE_TITLE, JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE, null, null);
             if (res != JOptionPane.OK_OPTION)
               return null;
             mainFrame.startTask(UIStringKey.PROGRESS_UPLOAD_FILE, true);
@@ -727,25 +627,25 @@ public final class StudyCaster {
         if (selectedFilePath == null)
           return false;
         if (selectedFilePath.trim().length() == 0) {
-          reportMessage(UIStringKey.DIALOG_CONCLUDE_EMPTY_PATH_MESSAGE, null,
+          dialogHelper.showMessageDialog(UIStringKey.DIALOG_CONCLUDE_EMPTY_PATH_MESSAGE, null,
               UIStringKey.DIALOG_CONCLUDE_TITLE, JOptionPane.INFORMATION_MESSAGE);
           continue;
         }
         final File selectedFile = new File(selectedFilePath);
         if (!selectedFile.exists()) {
-          reportMessage(UIStringKey.DIALOG_CONCLUDE_FILE_NOT_EXISTS_MESSAGE,
+          dialogHelper.showMessageDialog(UIStringKey.DIALOG_CONCLUDE_FILE_NOT_EXISTS_MESSAGE,
               new Object[] { selectedFile.getAbsolutePath() },
               UIStringKey.DIALOG_CONCLUDE_TITLE, JOptionPane.WARNING_MESSAGE);
           continue;
         }
         if (!Util.fileAvailableExclusive(selectedFile)) {
-          reportMessage(UIStringKey.DIALOG_CONCLUDE_FILE_OPEN_MESSAGE,
+          dialogHelper.showMessageDialog(UIStringKey.DIALOG_CONCLUDE_FILE_OPEN_MESSAGE,
               new Object[] { selectedFile.getAbsolutePath() },
               UIStringKey.DIALOG_CONCLUDE_TITLE, JOptionPane.INFORMATION_MESSAGE);
           continue;
         }
         if (!fileIsModified(openFileConfiguration, selectedFile)) {
-          reportMessage(UIStringKey.DIALOG_CONCLUDE_FILE_NOT_MODIFIED_MESSAGE,
+          dialogHelper.showMessageDialog(UIStringKey.DIALOG_CONCLUDE_FILE_NOT_MODIFIED_MESSAGE,
               new Object[] { selectedFile.getAbsolutePath() },
               UIStringKey.DIALOG_CONCLUDE_TITLE, JOptionPane.INFORMATION_MESSAGE);
           continue;
@@ -764,9 +664,9 @@ public final class StudyCaster {
           mainFrame.stopTask(false);
           ConfirmationCodeDialogPanel ccdp = mainFrame.getConfirmationCodeDialogPanel();
           ccdp.setConfirmationCode(serverContext.getLaunchTicket());
-          LOG.info("Showing confirmation code dialog");
-          JOptionPane.showMessageDialog(mainFrame.getPositionDialog(), ccdp,
-              getUIString(UIStringKey.DIALOG_CONFIRMATION_TITLE), JOptionPane.PLAIN_MESSAGE);
+          dialogHelper.showCustomOptionDialog("Confirmation Code", ccdp,
+              UIStringKey.DIALOG_CONFIRMATION_TITLE, JOptionPane.DEFAULT_OPTION,
+              JOptionPane.PLAIN_MESSAGE, null, null);
           closeUI();
         }
       });
@@ -784,8 +684,8 @@ public final class StudyCaster {
           public Boolean call() throws StudyCasterException {
             OpenFileConfiguration originalFile = uploadConfiguration.getDefaultFile();
             if (originalFile != null && !getOpenFilePath(originalFile).exists()) {
-              reportMessage(UIStringKey.DIALOG_CONCLUDE_FILE_NOT_OPENED_MESSAGE, null,
-                  UIStringKey.DIALOG_CONCLUDE_TITLE, JOptionPane.INFORMATION_MESSAGE);
+              dialogHelper.showMessageDialog(UIStringKey.DIALOG_CONCLUDE_FILE_NOT_OPENED_MESSAGE,
+                  null, UIStringKey.DIALOG_CONCLUDE_TITLE, JOptionPane.INFORMATION_MESSAGE);
               return false;
             }
             try {
@@ -807,11 +707,9 @@ public final class StudyCaster {
           }
         });
       } else {
-        LOG.info("Showing conclude confirmation dialog");
-        int res = JOptionPane.showConfirmDialog(mainFrame.getPositionDialog(),
-            getUIString(UIStringKey.DIALOG_CONCLUDE_QUESTION),
-            getUIString(UIStringKey.DIALOG_CONCLUDE_TITLE), JOptionPane.OK_CANCEL_OPTION,
-            JOptionPane.QUESTION_MESSAGE);
+        int res = dialogHelper.showOptionDialog(UIStringKey.DIALOG_CONCLUDE_QUESTION, null,
+            UIStringKey.DIALOG_CONCLUDE_TITLE, JOptionPane.OK_CANCEL_OPTION,
+            JOptionPane.QUESTION_MESSAGE, null, null);
         if (res != JOptionPane.OK_OPTION)
           return;
         concludeHelperEDT();

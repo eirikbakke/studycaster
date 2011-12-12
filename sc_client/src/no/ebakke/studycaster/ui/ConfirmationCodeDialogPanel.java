@@ -11,9 +11,9 @@ public class ConfirmationCodeDialogPanel extends javax.swing.JPanel {
 
   public ConfirmationCodeDialogPanel(UIStrings strings) {
     initComponents();
-    boxLabel.setText(strings.getString(UIStringKey.DIALOG_CONFIRMATION_CODEBOX_LABEL));
+    boxLabel.setText(strings.get(UIStringKey.DIALOG_CONFIRMATION_CODEBOX_LABEL));
     boxLabel.setDisplayedMnemonic(strings.getMnemonic(UIStringKey.DIALOG_CONFIRMATION_CODEBOX_LABEL));
-    clipboardLabel.setText(strings.getString(UIStringKey.DIALOG_CONFIRMATION_CLIPBOARD_MESSAGE));
+    clipboardLabel.setText(strings.get(UIStringKey.DIALOG_CONFIRMATION_CLIPBOARD_MESSAGE));
   }
 
   public void setConfirmationCode(String code) {

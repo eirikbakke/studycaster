@@ -32,7 +32,6 @@ public class MainFrame extends javax.swing.JFrame {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private static final long serialVersionUID = 1L;
   private final UserActionListener userActionListener;
-  private final JDialog positionDialog;
   private StudyConfiguration configuration;
   private Integer pageIndex;
   private boolean taskInProgress;
@@ -42,16 +41,9 @@ public class MainFrame extends javax.swing.JFrame {
 
   public MainFrame(UserActionListener userActionListener) {
     this.userActionListener = userActionListener;
-    positionDialog = new JDialog(this);
     initComponents();
     initIcon();
     configure(null, null);
-  }
-
-  /** Returns a hidden child dialog that can be used as a parent of dialogs that need to be centered
-  on the screen while still being descendants of the normally off-center MainFrame dialog. */
-  public JDialog getPositionDialog() {
-    return positionDialog;
   }
 
   public UploadDialogPanel getUploadDialogPanel() {
@@ -114,15 +106,15 @@ public class MainFrame extends javax.swing.JFrame {
     try {
       if (configuration != null) {
         final UIStrings strings = configuration.getUIStrings();
-        openFileButton.setText(strings.getString(UIStringKey.MAINFRAME_OPEN_FILE_BUTTON));
+        openFileButton.setText(strings.get(UIStringKey.MAINFRAME_OPEN_FILE_BUTTON));
         openFileButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_OPEN_FILE_BUTTON));
-        openURIButton.setText(strings.getString(UIStringKey.MAINFRAME_OPEN_URI_BUTTON));
+        openURIButton.setText(strings.get(UIStringKey.MAINFRAME_OPEN_URI_BUTTON));
         openURIButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_OPEN_URI_BUTTON));
-        concludeButton.setText(strings.getString(UIStringKey.MAINFRAME_CONCLUDE_BUTTON));
+        concludeButton.setText(strings.get(UIStringKey.MAINFRAME_CONCLUDE_BUTTON));
         concludeButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_CONCLUDE_BUTTON));
-        backButton.setText(strings.getString(UIStringKey.MAINFRAME_BACK_BUTTON));
+        backButton.setText(strings.get(UIStringKey.MAINFRAME_BACK_BUTTON));
         backButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_BACK_BUTTON));
-        nextButton.setText(strings.getString(UIStringKey.MAINFRAME_NEXT_BUTTON));
+        nextButton.setText(strings.get(UIStringKey.MAINFRAME_NEXT_BUTTON));
         nextButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_NEXT_BUTTON));
 
         uploadDialogPanel           = new UploadDialogPanel(strings);
@@ -250,7 +242,7 @@ public class MainFrame extends javax.swing.JFrame {
     }
     taskInProgress = true;
     progressBar.setString(
-        messageKey == null ? "" : configuration.getUIStrings().getString(messageKey));
+        messageKey == null ? "" : configuration.getUIStrings().get(messageKey));
     progressBar.setValue(0);
     setProgressBarBounds(0, 100);
     progressBar.setIndeterminate(indeterminate);

@@ -74,8 +74,10 @@
 
     <target name="-pre-compile">
         <fail unless="studycaster.server.uri">Must set studycaster.server.uri</fail>
+        <fail unless="studycaster.config.id">Must set studycaster.config.id</fail>
 
         <echo message="Using development server URI '${studycaster.server.uri}' (studycaster.server.uri)"/>
-        <echo message="You can override this setting in nbproject/private/private.properties"/>
+        <echo message="Using study configuration ID '${studycaster.config.id}' (studycaster.config.id)"/>
+        <echo message="You can override these settings in nbproject/private/private.properties"/>
     </target>
 </project>

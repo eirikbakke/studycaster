@@ -311,10 +311,12 @@ public class ServerContext {
         Header errorMessageHeader = response.getFirstHeader("X-StudyCaster-ErrorMessage");
         boolean disableRetry =
             disableRetryHeader == null ? false : disableRetryHeader.getValue().equals("true");
-        String errorMessage =
-            errorMessageHeader == null ? getContentString(response) : errorMessageHeader.getValue();
+        final String SEPARATOR = "-------------------------------------";
+        String errorMessage = errorMessageHeader == null
+            ? (":\n" + SEPARATOR + "\n" + getContentString(response) + "\n" + SEPARATOR)
+            : ("; " + errorMessageHeader.getValue());
         String exceptionMessage = "Command " + cmd + " got bad status code " +
-            response.getStatusLine().getReasonPhrase() + "; " + errorMessage;
+            response.getStatusLine().getReasonPhrase() + errorMessage;
         if (disableRetry) {
           throw new NonRetriableException(exceptionMessage);
         } else {

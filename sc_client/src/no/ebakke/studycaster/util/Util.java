@@ -1,5 +1,6 @@
 package no.ebakke.studycaster.util;
 
+import java.awt.EventQueue;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.io.File;
@@ -210,49 +211,6 @@ public final class Util {
         break;
     }
     return ret.toString();
-  }
-
-  private static class Wrapper<T> {
-    T value;
-  }
-
-  @SuppressWarnings("unchecked")
-  public static <V,E extends Exception> V checkedSwingInvokeAndWait(final CallableExt<V,E> r)
-      throws E, InterruptedException
-  {
-    final Wrapper<V> ret = new Wrapper<V>();
-    final Wrapper<Exception> retE = new Wrapper<Exception>();
-    try {
-      SwingUtilities.invokeAndWait(new Runnable() {
-        public void run() {
-          try {
-            ret.value = r.call();
-          } catch (Exception e) {
-            retE.value = e;
-          }
-        }
-      });
-    } catch (InvocationTargetException e) {
-      if        (e.getCause() instanceof RuntimeException) {
-        throw ((RuntimeException) e.getCause());
-      } else if (e.getCause() instanceof Error) {
-        throw ((Error) e.getCause());
-      } else {
-        throw new RuntimeException("Unexpected exception on the EDT", e.getCause());
-      }
-    }
-    if (retE.value != null) {
-      if (retE.value instanceof RuntimeException) {
-        throw (RuntimeException) retE.value;
-      } else {
-        throw (E) retE.value;
-      }
-    }
-    return ret.value;
-  }
-
-  public interface CallableExt<V,E extends Exception> {
-    V call() throws E;
   }
 
   /* This function is based on the method with the same name in the 1.6 version of java.util.Arrays.
