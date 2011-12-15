@@ -22,12 +22,12 @@ public class ScreenRecorder {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private final NonBlockingOutputStream nbos;
   private final CaptureEncoder enc;
-  private final DesktopMetaListener desktopMetaListener;
-  private final DesktopMetaFactory desktopMetaFactory;
   private final AtomicBoolean stopped = new AtomicBoolean(true);
   private final ScreenRecorderConfiguration config;
   private final ScreenCensor censor;
   private volatile CaptureScheduler pointerRecorder, desktopMetaRecorder, frameRecorder;
+  private final DesktopMetaListener desktopMetaListener;
+  private final DesktopMetaFactory desktopMetaFactory;
 
   /* ******************************************************************************************** */
   private final CaptureTask pointerRecorderTask = new CaptureTask() {
@@ -52,7 +52,7 @@ public class ScreenRecorder {
   /* ******************************************************************************************** */
   private final CaptureTask desktopMetaRecorderTask = new CaptureTask() {
     public void capture() {
-      // TODO: Implement.
+      forceReportMeta(null);
     }
 
     public double getMaxFrequency() {
@@ -82,7 +82,10 @@ public class ScreenRecorder {
       } else {
         censorQuilt = censor.getPermittedRecordingArea(desktopMeta.getWindowList());
       }
+      pointerRecorder.registerCaptureTime();
       enc.captureFrame(censorQuilt);
+      pointerRecorder.registerCaptureTime();
+      forceReportMeta(desktopMeta);
     }
 
     public double getMaxFrequency() {
@@ -130,8 +133,7 @@ public class ScreenRecorder {
       // TODO: Use an exception instead here.
       DesktopLibrary desktopLibrary = Win32DesktopLibrary.create();
       if (desktopLibrary == null) {
-        LOG.log(Level.WARNING,
-            "Can't initialize native desktop library; applying mosaic to entire screen");
+        LOG.log(Level.WARNING, "Can't initialize native desktop library");
         desktopMetaFactory = null;
       } else {
         desktopMetaFactory = new DesktopMetaFactory(desktopLibrary, timeSource);
@@ -154,7 +156,7 @@ public class ScreenRecorder {
     pointerRecorder.start();
     frameRecorder   = new CaptureScheduler(frameRecorderTask);
     frameRecorder.start();
-    if (desktopMetaListener != null) {
+    if (desktopMetaListener != null && desktopMetaFactory != null) {
       desktopMetaRecorder = new CaptureScheduler(desktopMetaRecorderTask);
       desktopMetaRecorder.start();
     }
@@ -193,8 +195,14 @@ public class ScreenRecorder {
   }
 
   public void forceReportMeta() {
-    if (desktopMetaListener != null) {
-      // TODO: Implement.
+    forceReportMeta(null);
+  }
+
+  /** meta may be null. */
+  private void forceReportMeta(DesktopMeta meta) {
+    if (desktopMetaRecorder != null) {
+      desktopMetaRecorder.registerCaptureTime();
+      desktopMetaListener.reportMeta(meta != null ? meta : desktopMetaFactory.createMeta());
     }
   }
 

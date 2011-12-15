@@ -1,6 +1,5 @@
 package no.ebakke.studycaster.util;
 
-import java.awt.EventQueue;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.io.File;
@@ -16,9 +15,9 @@ import java.net.URI;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.SwingUtilities;
 import no.ebakke.studycaster.backend.StudyCasterException;
 
 public final class Util {
@@ -225,13 +224,26 @@ public final class Util {
 
   @SuppressWarnings("SleepWhileInLoop")
   public static void delayAtLeast(long nanos) throws InterruptedException {
-    final long startTime = System.nanoTime();
+    delayAtLeastUntil(System.nanoTime() + nanos);
+  }
+
+  @SuppressWarnings("SleepWhileInLoop")
+  public static boolean delayAtLeastUntil(long nanoTime) throws InterruptedException {
+    boolean ret = false;
     while (true) {
-      final long remaining = Math.round(nanos - (System.nanoTime() - startTime));
+      final long remaining = nanoTime - System.nanoTime();
       if (remaining <= 0)
-        break;
+        return ret;
+      ret = true;
       Thread.sleep(remaining / 1000000L, (int) (remaining % 1000000L));
     }
+  }
+
+  public static void atomicSetMax(AtomicLong toSet, long value) {
+    long previousValue;
+    do {
+      previousValue = toSet.get();
+    } while (!toSet.weakCompareAndSet(previousValue, Math.max(previousValue, value)));
   }
 
   public static void checkClosed(AtomicBoolean closed) throws IllegalStateException {

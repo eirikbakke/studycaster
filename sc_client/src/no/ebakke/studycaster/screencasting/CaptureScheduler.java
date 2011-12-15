@@ -2,6 +2,7 @@ package no.ebakke.studycaster.screencasting;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -18,6 +19,7 @@ public class CaptureScheduler {
   private final Thread captureThread;
   private final Lock interruptLock = new ReentrantLock();
   private volatile IOException storedException;
+  private final AtomicLong lastCapture = new AtomicLong(Long.MIN_VALUE);
 
   public CaptureScheduler(final CaptureTask task) {
     captureThread = new Thread(new Runnable() {
@@ -34,6 +36,7 @@ public class CaptureScheduler {
             beforeTime = System.nanoTime();
             task.capture();
             afterTime = System.nanoTime();
+            registerCaptureTime(afterTime);
           } catch (IOException e) {
             LOG.log(Level.WARNING, "Storing an exception in CaptureScheduler", e);
             storedException = e;
@@ -47,7 +50,11 @@ public class CaptureScheduler {
           final double minDelayDuty = avgDuration.get() * (1.0 / task.getMaxDutyCycle() - 1.0);
           final double minDelayFreq = 1000000000.0 / task.getMaxFrequency() - duration;
           try {
-            Util.delayAtLeast(Math.round(Math.max(minDelayDuty, minDelayFreq)));
+            while (Util.delayAtLeastUntil(
+                lastCapture.get() + Math.round(Math.max(minDelayDuty, minDelayFreq))))
+            {
+              // No action.
+            }
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
           }
@@ -56,6 +63,16 @@ public class CaptureScheduler {
     }, "CaptureScheduler-capture-" + task.toString());
     // Average duty cycle over a longer time if the frequency is low.
     avgDuration = new MovingAverage(30000.0 * 1000000.0 / task.getMaxFrequency());
+  }
+
+  private void registerCaptureTime(long nanoTime) {
+    Util.atomicSetMax(lastCapture, nanoTime);
+  }
+
+  /** May be called by the client to indicate an externally handled capture that should cause
+  scheduled captures to be delayed. */
+  public void registerCaptureTime() {
+    registerCaptureTime(System.nanoTime());
   }
 
   /* This used to happen automatically in the constructor, which is dangerous. See

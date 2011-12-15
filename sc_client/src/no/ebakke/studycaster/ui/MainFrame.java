@@ -26,6 +26,7 @@ public class MainFrame extends javax.swing.JFrame {
     public void openFileAction(OpenFileConfiguration openFileConfiguration);
     public void openURIAction(OpenURIConfiguration openURIConfiguration);
     public void concludeAction(ConcludeConfiguration concludeConfiguration);
+    public void pageChanged();
   }
 
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
@@ -159,10 +160,11 @@ public class MainFrame extends javax.swing.JFrame {
     return configuration.getPageConfigurations().get(getPageIndex());
   }
 
-  private void setPageIndex(Integer pageIndex, boolean doLog) {
-    if (doLog) {
+  private void setPageIndex(Integer pageIndex, boolean triggerEvent) {
+    if (triggerEvent) {
       LOG.log(Level.INFO, "Switching to page {0}/{1}",
           new Object[] { pageIndex, getPageConfiguration().getName() });
+      userActionListener.pageChanged();
     }
     final String instructions;
     final boolean navigationButtonsVisible;

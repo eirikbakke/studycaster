@@ -1,5 +1,6 @@
 package no.ebakke.studycaster.applications;
 
+import no.ebakke.studycaster.screencasting.jna.DesktopMeta;
 import no.ebakke.studycaster.ui.UIUtil;
 import no.ebakke.studycaster.backend.SingleInstanceHandler;
 import no.ebakke.studycaster.backend.EnvironmentHooks;
@@ -32,6 +33,7 @@ import no.ebakke.studycaster.screencasting.ScreenCensor;
 import no.ebakke.studycaster.ui.MainFrame;
 import no.ebakke.studycaster.ui.MainFrame.UserActionListener;
 import no.ebakke.studycaster.screencasting.ScreenRecorder;
+import no.ebakke.studycaster.screencasting.ScreenRecorder.DesktopMetaListener;
 import no.ebakke.studycaster.screencasting.ScreenRecorderConfiguration;
 import no.ebakke.studycaster.ui.ConfirmationCodeDialogPanel;
 import no.ebakke.studycaster.ui.DialogHelper;
@@ -139,6 +141,11 @@ public final class StudyCaster {
       }
     }
   }, "StudyCaster-stillAlive");
+  private final DesktopMetaListener desktopMetaListener = new DesktopMetaListener() {
+    public void reportMeta(DesktopMeta meta) {
+      // TODO: Implement.
+    }
+  };
 
   private StudyCaster(EnvironmentHooks hooks) {
     this.hooks = hooks;
@@ -333,7 +340,7 @@ public final class StudyCaster {
                 true, true, true);
             try {
               recorder = new ScreenRecorder(recordingStream, serverContext.getServerTimeSource(),
-                  ScreenRecorderConfiguration.DEFAULT, censor, null);
+                  ScreenRecorderConfiguration.DEFAULT, censor, desktopMetaListener);
             } catch (AWTException e) {
               throw new StudyCasterException("Failed to initialize screen recorder", e);
             }
@@ -715,6 +722,10 @@ public final class StudyCaster {
           return;
         concludeHelperEDT();
       }
+    }
+
+    public void pageChanged() {
+      recorder.forceReportMeta();
     }
   }
 }
