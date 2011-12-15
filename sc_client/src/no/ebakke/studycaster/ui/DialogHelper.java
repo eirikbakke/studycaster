@@ -95,7 +95,10 @@ public class DialogHelper {
   }
 
   public void showErrorDialog(Exception e) {
-    showDialogHelper("There was an unexpected error:\n" + e.getMessage(), "Error",
+    LOG.log(Level.SEVERE, "Unexpected error, showing dialog", e);
+    int ret = showDialogHelper("There was an unexpected error:\n" + e.getMessage(), "Error",
         JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, null, null);
+    LOG.log(Level.INFO, "User chose {0} at unexpected error dialog",
+        UIUtil.jOptionPaneChoiceString(ret));
   }
 }

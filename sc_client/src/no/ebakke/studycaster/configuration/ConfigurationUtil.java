@@ -57,7 +57,7 @@ final class ConfigurationUtil {
     String ret = elm.getAttribute(attrName);
     if (ret.length() == 0) {
       throw new StudyCasterException(
-          "Expected an attribute " + attrName + " in element <" + elm.getTagName() + ">");
+          "Expected an attribute \"" + attrName + "\" in element <" + elm.getTagName() + ">");
     }
     return ret;
   }

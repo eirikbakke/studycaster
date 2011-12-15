@@ -316,26 +316,27 @@ public final class StudyCaster {
               throw new StudyCasterException("Unspecified configuration ID");
             configuration = StudyConfiguration.parseConfiguration(
               serverContext.downloadFile("studyconfig.xml"), configurationID);
-            LOG.log(Level.INFO, "Loaded configuration with name \"{0}\"", configuration.getName());
+            LOG.log(Level.INFO, "Loaded configuration {0}/\"{1}\"",
+                new Object[] { configuration.getID(), configuration.getName() });
             dialogHelper.setStrings(configuration.getUIStrings());
 
             // Prepare the screen recorder without starting it yet.
             recordingStream = new NonBlockingOutputStream(RECORDING_BUFFER_SZ);
             recordingStream.connect(serverContext.uploadFile("screencast.ebc"));
-            try {
-              recorder = new ScreenRecorder(recordingStream, serverContext.getServerTimeSource(),
-                  ScreenRecorderConfiguration.DEFAULT);
-            } catch (AWTException e) {
-              throw new StudyCasterException("Failed to initialize screen recorder", e);
-            }
             List<String> screenCastBlacklist = configuration.getScreenCastBlacklist();
             screenCastBlacklist.add(
                 configuration.getUIStrings().get(UIStringKey.DIALOG_CONCLUDE_TITLE));
             screenCastBlacklist.add(
                 configuration.getUIStrings().get(UIStringKey.DIALOG_OPEN_FILE_TITLE));
-            recorder.setCensor(new ScreenCensor(
+            ScreenCensor censor = new ScreenCensor(
                 configuration.getScreenCastWhitelist(), screenCastBlacklist,
-                true, true, true));
+                true, true, true);
+            try {
+              recorder = new ScreenRecorder(recordingStream, serverContext.getServerTimeSource(),
+                  ScreenRecorderConfiguration.DEFAULT, censor, null);
+            } catch (AWTException e) {
+              throw new StudyCasterException("Failed to initialize screen recorder", e);
+            }
           } catch (IOException e) {
             throw new StudyCasterException("Unexpected I/O error", e);
           }

@@ -88,6 +88,8 @@ public final class Quilt<V> {
     }
   }
 
+  /* Intented to be immutable, but don't bother with encapsulation and defensive copying since this
+  is a small private class and since getPatchRun() should be fast. */
   private static final class Patch<V> {
     Rectangle rect;
     V         value;

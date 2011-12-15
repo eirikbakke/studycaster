@@ -34,7 +34,7 @@
       <th               ><span class="reportKey">remote&#173;Addr&#173;Hash</span></th>
       <th               ><span class="reportKey">geo&#173;Location</span></th>
       <th               ><span class="reportKey">version&#173;String</span></th>
-      <th               ><span class="reportKey">configuration&#173;ID</span></th>
+      <th               ><span class="reportKey">con&#173;figu&#173;ration&#173;ID</span></th>
       <!-- Launches -->
       <th               ><span class="reportKey">launch&#173;Ticket</span></th>
       <th               ><span class="reportKey">first&#173;Request</span></th>

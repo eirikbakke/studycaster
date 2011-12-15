@@ -15,7 +15,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import no.ebakke.studycaster.backend.ServerTimeLogFormatter;
-import no.ebakke.studycaster.screencasting.MetaStamp.FrameType;
+import no.ebakke.studycaster.screencasting.CodecMeta.FrameType;
 
 /** Not thread-safe. */
 public class CaptureDecoder {
@@ -98,7 +98,7 @@ public class CaptureDecoder {
   }
 
   private boolean readUntilFrame() throws IOException {
-    MetaStamp ms;
+    CodecMeta ms;
     byte headerMarker;
     while (true) {
       try {
@@ -109,7 +109,7 @@ public class CaptureDecoder {
       if        (headerMarker == CodecConstants.MARKER_FRAME) {
         return true;
       } else if (headerMarker == CodecConstants.MARKER_META) {
-        ms = MetaStamp.readFromStream(dis);
+        ms = CodecMeta.readFromStream(dis);
         switch (ms.getType()) {
           case        BEFORE_CAPTURE:
             lastBeforeCaptureTime = ms.getTimeMillis();
@@ -121,7 +121,7 @@ public class CaptureDecoder {
             lastBeforeCaptureTime = -1;
           break; case PERIODIC:
         }
-        state.addMetaStamp(ms);
+        state.addCodecMeta(ms);
       } else {
         throw new IOException("Invalid header marker");
       }
@@ -138,9 +138,9 @@ public class CaptureDecoder {
   }
 
   public boolean nextFrame(BufferedImage output) throws IOException {
-    MetaStamp ms;
+    CodecMeta ms;
     while (true) {
-      ms = state.peekMetaStamp();
+      ms = state.peekCodecMeta();
       if (ms == null || ms.getTimeMillis() >= nextCaptureTime) {
         if (reachedEOF) {
           return false;
@@ -156,7 +156,7 @@ public class CaptureDecoder {
           continue;
         }
       }
-      if (state.pollMetaStamp() == null)
+      if (state.pollCodecMeta() == null)
         throw new AssertionError();
       if (firstFrameRead && ms.getType() == FrameType.PERIODIC) {
         currentFrameTime +=

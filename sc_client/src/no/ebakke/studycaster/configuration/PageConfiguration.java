@@ -7,6 +7,7 @@ import no.ebakke.studycaster.backend.StudyCasterException;
 import org.w3c.dom.Element;
 
 public class PageConfiguration {
+  private final String                name;
   private final String                instructions;
   private final OpenFileConfiguration openFileConfiguration;
   private final ConcludeConfiguration concludeConfiguration;
@@ -15,6 +16,7 @@ public class PageConfiguration {
   public PageConfiguration(Map<String,OpenFileConfiguration> openFileConfigurations, Element elm)
       throws StudyCasterException
   {
+    name = ConfigurationUtil.getNonEmptyAttribute(elm, "name");
     instructions = ConfigurationUtil.getSwingCaption(elm, "instructions");
     Element openFileElm = ConfigurationUtil.getUniqueElement(elm, "openfile", true);
     openFileConfiguration = (openFileElm == null) ? null : new OpenFileConfiguration(openFileElm);
@@ -38,6 +40,10 @@ public class PageConfiguration {
         return new PageConfiguration(openFileConfigurations, elm);
       }
     });
+  }
+
+  public String getName() {
+    return name;
   }
 
   public String getInstructions() {

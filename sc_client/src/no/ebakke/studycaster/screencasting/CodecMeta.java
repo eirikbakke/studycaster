@@ -6,12 +6,12 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /** Thread-safe and immutable. */
-class MetaStamp {
+class CodecMeta {
   private final long      timeMillis;
   private final Point     pointerLocation;
   private final FrameType type;
 
-  MetaStamp(long timeMillis, Point pointerLocation, FrameType type) {
+  CodecMeta(long timeMillis, Point pointerLocation, FrameType type) {
     this.timeMillis = timeMillis;
     this.pointerLocation = pointerLocation;
     this.type = type;
@@ -24,7 +24,7 @@ class MetaStamp {
     dout.writeInt((pointerLocation == null) ? Integer.MIN_VALUE : pointerLocation.y);
   }
 
-  public static MetaStamp readFromStream(DataInputStream din) throws IOException {
+  public static CodecMeta readFromStream(DataInputStream din) throws IOException {
     byte type = din.readByte();
     if (type < 0 || type >= FrameType.values().length)
       throw new IOException("Invalid metadata stamp type");
@@ -33,7 +33,7 @@ class MetaStamp {
     int y = din.readInt();
     if (x == Integer.MIN_VALUE && y != Integer.MIN_VALUE)
       throw new IOException("Inconsistent inavailability of mouse coordinates");
-    return new MetaStamp(time,
+    return new CodecMeta(time,
         (x == Integer.MIN_VALUE) ? null : new Point(x, y), FrameType.values()[type]);
   }
 

@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 /** Thread-safe. */
 final class CodecState {
-  private final Queue<MetaStamp> metaStamps = new ConcurrentLinkedQueue<MetaStamp>();
+  private final Queue<CodecMeta> codecMetaStamps = new ConcurrentLinkedQueue<CodecMeta>();
   private final Dimension dimension;
   private volatile ScreenCastImage currentFrame, previousFrame;
 
@@ -34,16 +34,16 @@ final class CodecState {
     return currentFrame;
   }
 
-  public void addMetaStamp(MetaStamp stamp) {
-    metaStamps.add(stamp);
+  public void addCodecMeta(CodecMeta meta) {
+    codecMetaStamps.add(meta);
   }
 
-  public MetaStamp pollMetaStamp() {
-    return metaStamps.poll();
+  public CodecMeta pollCodecMeta() {
+    return codecMetaStamps.poll();
   }
 
   // TODO: Get rid of this method after the call site is rewritten.
-  public MetaStamp peekMetaStamp() {
-    return metaStamps.peek();
+  public CodecMeta peekCodecMeta() {
+    return codecMetaStamps.peek();
   }
 }

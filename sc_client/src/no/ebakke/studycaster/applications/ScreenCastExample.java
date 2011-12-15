@@ -30,7 +30,7 @@ public final class ScreenCastExample {
     /* Alternatively, a new ScreenRecorderConfiguration object can be created to set frame/pointer
     sampling rates and maximum CPU usage. */
     ScreenRecorder recorder = new ScreenRecorder(recordingStream,
-        serverContext.getServerTimeSource(), ScreenRecorderConfiguration.DEFAULT);
+        serverContext.getServerTimeSource(), ScreenRecorderConfiguration.DEFAULT, null, null);
 
     /* If you just want to record to a local file instead, don't bother with the ServerContext
     stuff, instead provide a FileOutputStream here. It's still probably a good idea to use the

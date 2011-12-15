@@ -1,7 +1,7 @@
 package no.ebakke.studycaster.backend;
 
 /** High-resolution timer guaranteed to increase monotonically, and which returns real time values.
-Thread-safe. */
+Immutable and thread-safe. */
 public final class TimeSource {
   private final long offsetNanos;
 
@@ -14,8 +14,12 @@ public final class TimeSource {
     this.offsetNanos = source.offsetNanos - timeAhead;
   }
 
+  public long convertNanoTimeToRealTimeNanos(long nanoTime) {
+    return nanoTime - offsetNanos;
+  }
+
   public long currentTimeNanos() {
-    return System.nanoTime() - offsetNanos;
+    return convertNanoTimeToRealTimeNanos(System.nanoTime());
   }
 
   public long currentTimeMillis() {

@@ -10,24 +10,24 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.UIManager;
 import no.ebakke.studycaster.backend.StudyCasterException;
 import no.ebakke.studycaster.screencasting.Quilt.ValueRun;
 import no.ebakke.studycaster.screencasting.jna.DesktopLibrary;
-import no.ebakke.studycaster.screencasting.jna.DesktopLibrary.WindowInfo;
+import no.ebakke.studycaster.screencasting.jna.WindowInfo;
+import no.ebakke.studycaster.ui.UIUtil;
 import no.ebakke.studycaster.util.ImageDebugFrame;
 
 /** Not thread-safe. */
 public final class ScreenCensor {
+  public static final Quilt<CensorType> NO_CENSOR  = new Quilt<CensorType>(CensorType.NONE);
+  public static final Quilt<CensorType> ALL_MOSAIC = new Quilt<CensorType>(CensorType.MOSAIC);
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   // TODO: Make this configurable.
   public static final int MOSAIC_WIDTH = 5;
 
   private final List<String> whitelist, blacklist;
-  private final Quilt<CensorType> nativeFail;
-  private final DesktopLibrary windowEnumerator;
   private final boolean blackoutDesktop;
 
   @SuppressWarnings("NestedAssignment")
@@ -42,30 +42,31 @@ public final class ScreenCensor {
       this.blacklist.add("Save");
       this.blacklist.add("Open");
       this.blacklist.add("Browse");
-      String localized;
-      if ((localized = UIManager.getString("FileChooser.saveDialogTitleText")) != null)
-        this.blacklist.add(localized);
-      if ((localized = UIManager.getString("FileChooser.openDialogTitleText")) != null)
-        this.blacklist.add(localized);
+      try {
+        this.blacklist.addAll(
+            UIUtil.swingBlock(new UIUtil.CallableExt<List<String>,RuntimeException>()
+        {
+          public List<String> call() {
+            List<String> ret = new ArrayList<String>();
+            String localized;
+            if ((localized = UIManager.getString("FileChooser.saveDialogTitleText")) != null)
+              ret.add(localized);
+            if ((localized = UIManager.getString("FileChooser.openDialogTitleText")) != null)
+              ret.add(localized);
+            return ret;
+          }
+        }));
+      } catch (InterruptedException e) {
+        throw new StudyCasterException(e);
+      }
     }
     if (whiteListStudyCasterDialogs)
       this.whitelist.add("StudyCaster");
-    windowEnumerator = Win32DesktopLibrary.create();
-    if (windowEnumerator == null) {
-      LOG.log(Level.WARNING, "Can't initialize native library; applying mosaic to entire screen");
-      nativeFail = new Quilt<CensorType>(CensorType.MOSAIC);
-    } else {
-      nativeFail = null;
-    }
   }
 
-  public Quilt<CensorType> getPermittedRecordingArea() {
-    if (nativeFail != null)
-      return nativeFail;
-
-    List<WindowInfo> windows = windowEnumerator.getWindowList();
+  public Quilt<CensorType> getPermittedRecordingArea(List<WindowInfo> windowList) {
     Set<Integer> pidWhiteList = new LinkedHashSet<Integer>();
-    for (WindowInfo wi : windows) {
+    for (WindowInfo wi : windowList) {
       for (String whiteListItem : whitelist) {
         if (wi.getTitle().toLowerCase().contains(whiteListItem.toLowerCase()))
           pidWhiteList.add(wi.getPID());
@@ -73,7 +74,7 @@ public final class ScreenCensor {
     }
     Quilt<CensorType> ret = new Quilt<CensorType>(
         blackoutDesktop ? CensorType.BLACKOUT : CensorType.MOSAIC);
-    for (WindowInfo wi : windows) {
+    for (WindowInfo wi : windowList) {
       boolean ok = pidWhiteList.contains(wi.getPID());
       if (ok) {
         for (String blackListItem : blacklist) {
@@ -95,7 +96,10 @@ public final class ScreenCensor {
       true, true, true);
     Rectangle screenRect = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
     BufferedImage image = new Robot().createScreenCapture(screenRect);
-    Quilt<CensorType> permitted = censor.getPermittedRecordingArea();
+    DesktopLibrary windowEnumerator = Win32DesktopLibrary.create();
+    if (windowEnumerator == null)
+      throw new StudyCasterException("Can't load window library");
+    Quilt<CensorType> permitted = censor.getPermittedRecordingArea(windowEnumerator.getWindowList());
 
     /*
     permitted = new Quilt();

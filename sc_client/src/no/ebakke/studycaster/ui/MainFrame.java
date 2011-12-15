@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JButton;
-import javax.swing.JDialog;
 import no.ebakke.studycaster.backend.ServerContext;
 import no.ebakke.studycaster.configuration.ConcludeConfiguration;
 import no.ebakke.studycaster.configuration.OpenFileConfiguration;
@@ -161,8 +160,10 @@ public class MainFrame extends javax.swing.JFrame {
   }
 
   private void setPageIndex(Integer pageIndex, boolean doLog) {
-    if (doLog)
-      LOG.log(Level.INFO, "Switching to page {0}", pageIndex);
+    if (doLog) {
+      LOG.log(Level.INFO, "Switching to page {0}/{1}",
+          new Object[] { pageIndex, getPageConfiguration().getName() });
+    }
     final String instructions;
     final boolean navigationButtonsVisible;
     final boolean openFileButtonVisible, openURIButtonVisible, concludeButtonVisible;

@@ -14,7 +14,7 @@ import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.GZIPOutputStream;
 import no.ebakke.studycaster.backend.TimeSource;
-import no.ebakke.studycaster.screencasting.MetaStamp.FrameType;
+import no.ebakke.studycaster.screencasting.CodecMeta.FrameType;
 import no.ebakke.studycaster.screencasting.Quilt.ValueRun;
 import no.ebakke.studycaster.screencasting.ScreenCensor.CensorType;
 import no.ebakke.studycaster.util.Util;
@@ -28,7 +28,6 @@ public class CaptureEncoder {
   private final CodecState state;
   // Used in the unsynchronized addMeta(), so must be declared volatile.
   private volatile TimeSource timeSource;
-  private ScreenCensor censor;
 
   public CaptureEncoder(OutputStream out, Rectangle screenRect) throws IOException, AWTException {
     this.screenRect = screenRect;
@@ -41,10 +40,6 @@ public class CaptureEncoder {
     dout.writeInt(dim.height);
   }
 
-  public synchronized void setCensor(ScreenCensor censor) {
-    this.censor = censor;
-  }
-
   public synchronized void setTimeSource(TimeSource timeSource) {
     this.timeSource = timeSource;
   }
@@ -54,12 +49,12 @@ public class CaptureEncoder {
     long time = timeSource.currentTimeMillis();
     PointerInfo pi = MouseInfo.getPointerInfo();
     Point mouseLoc = (pi == null) ? null : pi.getLocation();
-    state.addMetaStamp(new MetaStamp(time, mouseLoc, type));
+    state.addCodecMeta(new CodecMeta(time, mouseLoc, type));
   }
 
   private void flushMeta() throws IOException {
     while (true) {
-      final MetaStamp ms = state.pollMetaStamp();
+      final CodecMeta ms = state.pollCodecMeta();
       if (ms == null)
         break;
       dout.write(CodecConstants.MARKER_META);
@@ -88,19 +83,16 @@ public class CaptureEncoder {
     addMeta(FrameType.PERIODIC);
   }
 
-  public synchronized void captureFrame() throws IOException {
+  public synchronized void captureFrame(Quilt<CensorType> censorQuilt) throws IOException {
     Util.checkClosed(closed);
     addMeta(FrameType.BEFORE_CAPTURE);
     BufferedImage image = robot.createScreenCapture(screenRect);
-    Quilt<CensorType> censorQuilt = (censor == null) ?
-        new Quilt<CensorType>(CensorType.NONE) : censor.getPermittedRecordingArea();
     addMeta(FrameType.AFTER_CAPTURE);
     flushMeta();
     compressAndOutputFrame(image, censorQuilt);
   }
 
   private static byte mosaicPixel(byte buf[], int width, int x, int y) {
-    // TODO: What if the "color" is INDEX_NO_DIFF?
     return buf[y * width + (x / ScreenCensor.MOSAIC_WIDTH) * ScreenCensor.MOSAIC_WIDTH];
   }
 

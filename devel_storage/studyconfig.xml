@@ -194,7 +194,7 @@
 
   <configuration id="default" name="Recruiting">
     <macro id="configuration-common"/>
-    <page>
+    <page name="instructions">
       <macro id="instructions"/>
       <openfile> <!-- Optional -->
         <servername>currencies.xls</servername>
@@ -213,7 +213,7 @@
 
   <configuration id="testing" name="Test Configuration">
     <macro id="configuration-common"/>
-    <page>
+    <page name="firstPage">
       <instructions>
         <html xmlns="">
           This is the first page.
@@ -221,7 +221,7 @@
       </instructions>
     </page>
 
-    <page>
+    <page name="secondPage">
       <instructions>
         <html xmlns="">
           This is the second page. It has an open file button, and an open URI
@@ -241,7 +241,7 @@
     </page>
 
 <!--
-    <page>
+    <page name="tableTest">
       <instructions><html xmlns="">
         This is another page. This one demonstrates the use of an HTML table.<br/><br/>
         <table border="1">
@@ -267,7 +267,7 @@
     </page>
 -->
 
-    <page>
+    <page name="thirdPage">
       <instructions>
         <html xmlns="">
           <base href="http://www.mit.edu/~ebakke/" />
@@ -282,7 +282,7 @@
       </conclude>
     </page>
 
-    <page>
+    <page name="instructions">
       <macro id="instructions"/>
       <openfile> <!-- Optional -->
         <servername>currencies.xls</servername>
@@ -301,7 +301,7 @@
 
   <configuration id="6728" name="Main Excel">
     <macro id="configuration-common"/>
-    <page>
+    <page name="instructions">
       <macro id="instructions"/>
       <openfile>
         <servername>exflat.xls</servername>
@@ -320,7 +320,7 @@
 
   <configuration id="1093" name="Main Related Worksheets">
     <macro id="configuration-common"/>
-    <page>
+    <page name="instructions">
       <macro id="instructions"/>
       <openfile>
         <servername>rsnest.rzw</servername>

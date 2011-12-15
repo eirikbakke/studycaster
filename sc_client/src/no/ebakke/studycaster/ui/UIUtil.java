@@ -100,7 +100,7 @@ public final class UIUtil {
       return "null";
     } else if (frame.isVisible()) {
       return ((frame.getExtendedState() == Frame.ICONIFIED) ?
-          "iconified" : "visible and not minimized");
+          "minimized" : "visible and not minimized");
     } else if (frame.isDisplayable()) {
       return "invisible but displayable";
     } else {
@@ -123,9 +123,9 @@ public final class UIUtil {
       SwingUtilities.invokeAndWait(new Runnable() {
         public void run() {
           try {
-            ret.value = callable.call();
+            ret.setValue(callable.call());
           } catch (Exception e) {
-            retE.value = e;
+            retE.setValue(e);
           }
         }
       });
@@ -138,14 +138,14 @@ public final class UIUtil {
         throw new RuntimeException("Unexpected exception on the EDT", e.getCause());
       }
     }
-    if (retE.value != null) {
-      if (retE.value instanceof RuntimeException) {
-        throw (RuntimeException) retE.value;
+    if (retE.getValue() != null) {
+      if (retE.getValue() instanceof RuntimeException) {
+        throw (RuntimeException) retE.getValue();
       } else {
-        throw (E) retE.value;
+        throw (E) retE.getValue();
       }
     }
-    return ret.value;
+    return ret.getValue();
   }
 
   public interface CallableExt<V,E extends Exception> {
@@ -153,6 +153,14 @@ public final class UIUtil {
   }
 
   private static class Wrapper<T> {
-    T value;
+    private T value;
+
+    public synchronized T getValue() {
+      return value;
+    }
+
+    public synchronized void setValue(T value) {
+      this.value = value;
+    }
   }
 }

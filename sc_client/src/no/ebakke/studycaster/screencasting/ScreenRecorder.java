@@ -10,6 +10,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import no.ebakke.studycaster.backend.TimeSource;
 import no.ebakke.studycaster.screencasting.CaptureScheduler.CaptureTask;
+import no.ebakke.studycaster.screencasting.ScreenCensor.CensorType;
+import no.ebakke.studycaster.screencasting.jna.DesktopLibrary;
+import no.ebakke.studycaster.screencasting.jna.DesktopMeta;
+import no.ebakke.studycaster.screencasting.jna.DesktopMetaFactory;
+import no.ebakke.studycaster.screencasting.jna.Win32DesktopLibrary;
 import no.ebakke.studycaster.util.stream.NonBlockingOutputStream;
 
 /** Thread-safe. */
@@ -17,9 +22,12 @@ public class ScreenRecorder {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private final NonBlockingOutputStream nbos;
   private final CaptureEncoder enc;
+  private final DesktopMetaListener desktopMetaListener;
+  private final DesktopMetaFactory desktopMetaFactory;
   private final AtomicBoolean stopped = new AtomicBoolean(true);
   private final ScreenRecorderConfiguration config;
-  private volatile CaptureScheduler pointerRecorder, frameRecorder;
+  private final ScreenCensor censor;
+  private volatile CaptureScheduler pointerRecorder, desktopMetaRecorder, frameRecorder;
 
   /* ******************************************************************************************** */
   private final CaptureTask pointerRecorderTask = new CaptureTask() {
@@ -42,9 +50,39 @@ public class ScreenRecorder {
   };
 
   /* ******************************************************************************************** */
+  private final CaptureTask desktopMetaRecorderTask = new CaptureTask() {
+    public void capture() {
+      // TODO: Implement.
+    }
+
+    public double getMaxFrequency() {
+      return config.getMaxDesktopMetaSamplingFrequency();
+    }
+
+    public double getMaxDutyCycle() {
+      return config.getMaxDesktopMetaDutyCycle();
+    }
+
+    @Override
+    public String toString() {
+      return "desktopMetaRecorderTask";
+    }
+  };
+  /* ******************************************************************************************** */
+
   private final CaptureTask frameRecorderTask = new CaptureTask() {
     public void capture() throws IOException {
-      enc.captureFrame();
+      final DesktopMeta desktopMeta =
+          (desktopMetaFactory == null ? null : desktopMetaFactory.createMeta());
+      final Quilt<CensorType> censorQuilt;
+      if (censor == null) {
+        censorQuilt = ScreenCensor.NO_CENSOR;
+      } else if (desktopMeta == null) {
+        censorQuilt = ScreenCensor.ALL_MOSAIC;
+      } else {
+        censorQuilt = censor.getPermittedRecordingArea(desktopMeta.getWindowList());
+      }
+      enc.captureFrame(censorQuilt);
     }
 
     public double getMaxFrequency() {
@@ -76,21 +114,34 @@ public class ScreenRecorder {
       return "frameRecorderTask";
     }
   };
-
   /* ******************************************************************************************** */
-  public ScreenRecorder(OutputStream out, TimeSource timeSource,
-      ScreenRecorderConfiguration config) throws IOException, AWTException
+
+  /** If out is a NonBlockingOutputStream, the ScreenRecorder may use its fill level to influence
+  the targeted frame rate. Arguments censor and desktopMetaListener may each be null. */
+  public ScreenRecorder(OutputStream out, TimeSource timeSource, ScreenRecorderConfiguration config,
+      ScreenCensor censor, DesktopMetaListener desktopMetaListener) throws IOException, AWTException
   {
     this.config = config;
-    // TODO: Get rid of this abstraction violation.
+    this.censor = censor;
+    this.desktopMetaListener = desktopMetaListener;
+    if (censor == null && desktopMetaListener == null) {
+      desktopMetaFactory = null;
+    } else {
+      // TODO: Use an exception instead here.
+      DesktopLibrary desktopLibrary = Win32DesktopLibrary.create();
+      if (desktopLibrary == null) {
+        LOG.log(Level.WARNING,
+            "Can't initialize native desktop library; applying mosaic to entire screen");
+        desktopMetaFactory = null;
+      } else {
+        desktopMetaFactory = new DesktopMetaFactory(desktopLibrary, timeSource);
+      }
+    }
+    // An abstraction violation, but works cleanly in any case.
     nbos = (out instanceof NonBlockingOutputStream) ? ((NonBlockingOutputStream) out) : null;
     Rectangle screenRect = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
     enc = new CaptureEncoder(out, screenRect);
     enc.setTimeSource(timeSource);
-  }
-
-  public void setCensor(ScreenCensor censor) {
-    enc.setCensor(censor);
   }
 
   /** This method will not block unless a previous stop() or close() operation is in progress in a
@@ -103,6 +154,10 @@ public class ScreenRecorder {
     pointerRecorder.start();
     frameRecorder   = new CaptureScheduler(frameRecorderTask);
     frameRecorder.start();
+    if (desktopMetaListener != null) {
+      desktopMetaRecorder = new CaptureScheduler(desktopMetaRecorderTask);
+      desktopMetaRecorder.start();
+    }
   }
 
   public synchronized void stop() throws IOException {
@@ -112,21 +167,39 @@ public class ScreenRecorder {
     try {
       pointerRecorder.close();
     } catch (IOException e) {
-      LOG.log(Level.WARNING, "Unexpected error while closing pointerRecorder", e);
+      LOG.log(Level.SEVERE, "Unexpected error while closing pointerRecorder", e);
     } finally {
-      pointerRecorder = null;
-    }
-    try {
-      frameRecorder.close();
-    } finally {
-      frameRecorder = null;
+      try {
+        frameRecorder.close();
+      } catch (IOException e) {
+        LOG.log(Level.SEVERE, "Unexpected error while closing frameRecorder", e);
+      } finally {
+        if (desktopMetaRecorder != null)
+          desktopMetaRecorder.close();
+      }
     }
   }
 
   /** Closes the underlying OutputStream as well. */
   public synchronized void close() throws IOException {
     LOG.info("Closing screen recorder");
-    stop();
-    enc.close();
+    try {
+      stop();
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Unexpected error while stopping ScreenRecorder", e);
+    } finally {
+      enc.close();
+    }
+  }
+
+  public void forceReportMeta() {
+    if (desktopMetaListener != null) {
+      // TODO: Implement.
+    }
+  }
+
+  public interface DesktopMetaListener {
+    /** Must be thread-safe. */
+    public void reportMeta(DesktopMeta meta);
   }
 }
