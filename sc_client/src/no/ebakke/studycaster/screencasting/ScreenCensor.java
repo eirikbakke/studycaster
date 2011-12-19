@@ -1,5 +1,5 @@
 package no.ebakke.studycaster.screencasting;
-import no.ebakke.studycaster.screencasting.jna.Win32DesktopLibrary;
+import no.ebakke.studycaster.screencasting.desktop.Win32DesktopLibrary;
 import java.awt.AWTException;
 import java.awt.Rectangle;
 import java.awt.Robot;
@@ -14,8 +14,8 @@ import java.util.logging.Logger;
 import javax.swing.UIManager;
 import no.ebakke.studycaster.backend.StudyCasterException;
 import no.ebakke.studycaster.screencasting.Quilt.ValueRun;
-import no.ebakke.studycaster.screencasting.jna.DesktopLibrary;
-import no.ebakke.studycaster.screencasting.jna.WindowInfo;
+import no.ebakke.studycaster.screencasting.desktop.DesktopLibrary;
+import no.ebakke.studycaster.screencasting.desktop.WindowInfo;
 import no.ebakke.studycaster.ui.UIUtil;
 import no.ebakke.studycaster.util.ImageDebugFrame;
 

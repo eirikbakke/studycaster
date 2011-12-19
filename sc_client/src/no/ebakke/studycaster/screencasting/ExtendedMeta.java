@@ -9,7 +9,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-import no.ebakke.studycaster.screencasting.jna.DesktopMeta;
+import no.ebakke.studycaster.screencasting.desktop.DesktopMeta;
 
 /** Immutable. */
 public final class ExtendedMeta {

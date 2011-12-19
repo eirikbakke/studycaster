@@ -12,10 +12,10 @@ import java.util.logging.Logger;
 import no.ebakke.studycaster.backend.TimeSource;
 import no.ebakke.studycaster.screencasting.CaptureScheduler.CaptureTask;
 import no.ebakke.studycaster.screencasting.ScreenCensor.CensorType;
-import no.ebakke.studycaster.screencasting.jna.DesktopLibrary;
-import no.ebakke.studycaster.screencasting.jna.DesktopMeta;
-import no.ebakke.studycaster.screencasting.jna.DesktopMetaFactory;
-import no.ebakke.studycaster.screencasting.jna.Win32DesktopLibrary;
+import no.ebakke.studycaster.screencasting.desktop.DesktopLibrary;
+import no.ebakke.studycaster.screencasting.desktop.DesktopMeta;
+import no.ebakke.studycaster.screencasting.desktop.DesktopMetaFactory;
+import no.ebakke.studycaster.screencasting.desktop.Win32DesktopLibrary;
 import no.ebakke.studycaster.util.stream.NonBlockingOutputStream;
 
 /** Thread-safe. */

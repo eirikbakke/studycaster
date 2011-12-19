@@ -1,4 +1,4 @@
-package no.ebakke.studycaster.screencasting.jna;
+package no.ebakke.studycaster.screencasting.desktop;
 
 import com.sun.jna.win32.StdCallLibrary;
 

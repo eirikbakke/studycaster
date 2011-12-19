@@ -1,4 +1,4 @@
-package no.ebakke.studycaster.screencasting.jna;
+package no.ebakke.studycaster.screencasting.desktop;
 
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import no.ebakke.studycaster.screencasting.jna.MyUser32.LastInputInfo;
+import no.ebakke.studycaster.screencasting.desktop.MyUser32.LastInputInfo;
 
 /** Microsoft Windows implementation of the DesktopLibrary. */
 public final class Win32DesktopLibrary implements DesktopLibrary {

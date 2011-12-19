@@ -1,6 +1,6 @@
 package no.ebakke.studycaster.applications;
 
-import no.ebakke.studycaster.screencasting.jna.DesktopMeta;
+import no.ebakke.studycaster.screencasting.desktop.DesktopMeta;
 import no.ebakke.studycaster.ui.UIUtil;
 import no.ebakke.studycaster.backend.SingleInstanceHandler;
 import no.ebakke.studycaster.backend.EnvironmentHooks;

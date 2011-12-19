@@ -1,4 +1,4 @@
-package no.ebakke.studycaster.screencasting.jna;
+package no.ebakke.studycaster.screencasting.desktop;
 
 import java.util.List;
 import no.ebakke.studycaster.backend.TimeSource;
