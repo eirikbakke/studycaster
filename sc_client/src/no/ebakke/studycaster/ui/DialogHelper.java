@@ -94,6 +94,7 @@ public class DialogHelper {
         messageType, null, null);
   }
 
+  // TODO: Consider showing a confirmation code in this case.
   public void showErrorDialog(Exception e) {
     LOG.log(Level.SEVERE, "Unexpected error, showing dialog", e);
     int ret = showDialogHelper("There was an unexpected error:\n" + e.getMessage(), "Error",

@@ -44,7 +44,7 @@ public final class ExtendedMeta {
     private final DataOutputStream dout;
 
     public ExtendedMetaWriter(OutputStream out, String configurationID) throws IOException {
-      dout = new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(out)));;
+      dout = new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(out)));
       dout.writeUTF(MAGIC_STRING_START);
     }
 

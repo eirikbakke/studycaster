@@ -15,7 +15,7 @@
                        Please close it first if you wish to start over.</html>
       </uistring>
       <uistring key="MAINFRAME_OPEN_FILE_BUTTON"  mnemonic="D">Open Sample Document</uistring>
-      <uistring key="MAINFRAME_OPEN_URI_BUTTON"   mnemonic="W">Open Sample Web Page...</uistring>
+      <uistring key="MAINFRAME_OPEN_URI_BUTTON"   mnemonic="W">Open Sample Web Page</uistring>
       <uistring key="MAINFRAME_CONCLUDE_BUTTON"   mnemonic="C">Upload and Retrive Confirmation Code...</uistring>
       <uistring key="MAINFRAME_BACK_BUTTON"       mnemonic="B">&lt; Back</uistring>
       <uistring key="MAINFRAME_NEXT_BUTTON"       mnemonic="N">Next &gt;</uistring>

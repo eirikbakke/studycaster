@@ -152,20 +152,15 @@ public class MainFrame extends javax.swing.JFrame {
     }
   }
 
-  public Integer getPageIndex() {
+  private Integer getPageIndex() {
     return pageIndex;
   }
 
-  private PageConfiguration getPageConfiguration() {
+  public PageConfiguration getPageConfiguration() {
     return configuration.getPageConfigurations().get(getPageIndex());
   }
 
-  private void setPageIndex(Integer pageIndex, boolean triggerEvent) {
-    if (triggerEvent) {
-      LOG.log(Level.INFO, "Switching to page {0}/{1}",
-          new Object[] { pageIndex, getPageConfiguration().getName() });
-      userActionListener.pageChanged();
-    }
+  private void setPageIndex(final Integer pageIndex, final boolean triggerEvent) {
     final String instructions;
     final boolean navigationButtonsVisible;
     final boolean openFileButtonVisible, openURIButtonVisible, concludeButtonVisible;
@@ -217,6 +212,11 @@ public class MainFrame extends javax.swing.JFrame {
       advanceFocus();
     } else if (previouslyClicked != null){
       previouslyClicked.requestFocusInWindow();
+    }
+    if (triggerEvent) {
+      LOG.log(Level.INFO, "Switching to page {0}/{1}",
+          new Object[] { pageIndex, getPageConfiguration().getName() });
+      userActionListener.pageChanged();
     }
   }
 

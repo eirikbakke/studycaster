@@ -68,9 +68,9 @@ public final class Util {
     }
   }
 
-  /** Used to enclose operations which may throw InterruptedException but which are restartable,
-  when the contract of the enclosing method does not permit throwing an InterruptedException but
-  rather requires that the method blocks until completion. */
+  /** Attempt the operation op repedeately until it completes without throwing an
+  InterruptedException. If an InterruptedException is thrown at least once, the current thread's
+  interrupt flag will be set. */
   public static void ensureInterruptible(Interruptible op) {
     boolean interrupted = false;
     while (true) {
@@ -86,6 +86,7 @@ public final class Util {
   }
 
   public interface Interruptible {
+    /** This method must be restartable after throwing an InterruptedException. */
     public void run() throws InterruptedException;
   }
 
@@ -222,11 +223,11 @@ public final class Util {
     return ret;
   }
 
-  @SuppressWarnings("SleepWhileInLoop")
   public static void delayAtLeast(long nanos) throws InterruptedException {
     delayAtLeastUntil(System.nanoTime() + nanos);
   }
 
+  /** Return true iff any delay was required. */
   @SuppressWarnings("SleepWhileInLoop")
   public static boolean delayAtLeastUntil(long nanoTime) throws InterruptedException {
     boolean ret = false;

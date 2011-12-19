@@ -110,6 +110,7 @@ public class CaptureDecoder {
         return true;
       } else if (headerMarker == CodecConstants.MARKER_META) {
         ms = CodecMeta.readFromStream(dis);
+        // TODO: Simplify this once the file format is changed to get rid of FrameType.
         switch (ms.getType()) {
           case        BEFORE_CAPTURE:
             lastBeforeCaptureTime = ms.getTimeMillis();

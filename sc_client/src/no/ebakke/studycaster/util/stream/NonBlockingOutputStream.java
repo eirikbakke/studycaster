@@ -44,8 +44,7 @@ public class NonBlockingOutputStream extends OutputStream {
 
   /** Upon close, out will be closed as well (analogous to a BufferedOutputStream with out as the
   underlying stream). */
-  @SuppressWarnings("FinalMethod")
-  public final void connect(final OutputStream out) {
+  public void connect(final OutputStream out) {
     if (writerThread != null)
       throw new IllegalStateException("Already connected");
     writerThread = new Thread(new Runnable() {

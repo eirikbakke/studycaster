@@ -71,8 +71,8 @@ public final class Quilt<V> {
   }
 
   public static final class ValueRun<V> {
-    private V   value;
-    private int runLength;
+    private final V   value;
+    private final int runLength;
 
     public ValueRun(V value, int runLength) {
       this.value     = value;

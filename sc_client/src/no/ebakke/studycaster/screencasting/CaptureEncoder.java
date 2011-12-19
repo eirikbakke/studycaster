@@ -83,11 +83,18 @@ public class CaptureEncoder {
     addMeta(FrameType.PERIODIC);
   }
 
-  public synchronized void captureFrame(Quilt<CensorType> censorQuilt) throws IOException {
-    Util.checkClosed(closed);
+  /* TODO: Simplify this interface once the file format is changed to get rid of FrameType. */
+  public BufferedImage createScreenCapture() {
     addMeta(FrameType.BEFORE_CAPTURE);
-    BufferedImage image = robot.createScreenCapture(screenRect);
+    BufferedImage ret = robot.createScreenCapture(screenRect);
     addMeta(FrameType.AFTER_CAPTURE);
+    return ret;
+  }
+
+  public synchronized void encodeFrame(BufferedImage image, Quilt<CensorType> censorQuilt)
+      throws IOException
+  {
+    Util.checkClosed(closed);
     flushMeta();
     compressAndOutputFrame(image, censorQuilt);
   }
@@ -96,6 +103,7 @@ public class CaptureEncoder {
     return buf[y * width + (x / ScreenCensor.MOSAIC_WIDTH) * ScreenCensor.MOSAIC_WIDTH];
   }
 
+  /* External synchronization required. */
   private void compressAndOutputFrame(BufferedImage frame, Quilt<CensorType> censorQuilt)
       throws IOException
   {

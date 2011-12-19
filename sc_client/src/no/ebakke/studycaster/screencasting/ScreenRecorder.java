@@ -3,6 +3,7 @@ package no.ebakke.studycaster.screencasting;
 import java.awt.AWTException;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -51,8 +52,9 @@ public class ScreenRecorder {
 
   /* ******************************************************************************************** */
   private final CaptureTask desktopMetaRecorderTask = new CaptureTask() {
-    public void capture() {
-      forceReportMeta(null);
+    public void capture() throws IOException {
+      // TODO: As an optimization, used a stored meta stamp if available.
+      desktopMetaListener.reportMeta(desktopMetaFactory.createMeta());
     }
 
     public double getMaxFrequency() {
@@ -82,10 +84,12 @@ public class ScreenRecorder {
       } else {
         censorQuilt = censor.getPermittedRecordingArea(desktopMeta.getWindowList());
       }
-      pointerRecorder.registerCaptureTime();
-      enc.captureFrame(censorQuilt);
-      pointerRecorder.registerCaptureTime();
-      forceReportMeta(desktopMeta);
+      if (desktopMetaRecorder != null)
+        desktopMetaRecorder.forceCaptureNow();
+      BufferedImage image = enc.createScreenCapture();
+      if (desktopMetaRecorder != null)
+        desktopMetaRecorder.forceCaptureNow();
+      enc.encodeFrame(image, censorQuilt);
     }
 
     public double getMaxFrequency() {
@@ -195,19 +199,12 @@ public class ScreenRecorder {
   }
 
   public void forceReportMeta() {
-    forceReportMeta(null);
-  }
-
-  /** meta may be null. */
-  private void forceReportMeta(DesktopMeta meta) {
-    if (desktopMetaRecorder != null) {
-      desktopMetaRecorder.registerCaptureTime();
-      desktopMetaListener.reportMeta(meta != null ? meta : desktopMetaFactory.createMeta());
-    }
+    if (desktopMetaRecorder != null)
+      desktopMetaRecorder.forceCaptureNow();
   }
 
   public interface DesktopMetaListener {
     /** Must be thread-safe. */
-    public void reportMeta(DesktopMeta meta);
+    public void reportMeta(DesktopMeta meta) throws IOException;
   }
 }

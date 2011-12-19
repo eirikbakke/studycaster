@@ -13,66 +13,84 @@ import no.ebakke.studycaster.util.Util;
 /** Thread-safe. */
 public class CaptureScheduler {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
+  private static final int CAPTURE_AVERAGE_PERIODS = 30;
   private final MovingAverage avgDuration;
-  private final AtomicBoolean started   = new AtomicBoolean(false);
-  private final AtomicBoolean finished  = new AtomicBoolean(false);
-  private final Thread captureThread;
-  private final Lock interruptLock = new ReentrantLock();
-  private volatile IOException storedException;
+  private final AtomicBoolean started  = new AtomicBoolean(false);
+  private final AtomicBoolean finished = new AtomicBoolean(false);
+  private final CaptureTask task;
+  private final Lock captureLock = new ReentrantLock();
+  /* The following fields may only be updated while holding captureLock, but may be read by any
+  thread at any time. */
   private final AtomicLong lastCapture = new AtomicLong(Long.MIN_VALUE);
+  private volatile IOException storedException;
 
-  public CaptureScheduler(final CaptureTask task) {
-    captureThread = new Thread(new Runnable() {
-      public void run() {
+  private final Thread captureThread = new Thread(new Runnable() {
+    public void run() {
+      try {
         while (true) {
-          final long beforeTime, afterTime;
-          /* Give the thread running close() a way to wait with its interrupt until the last
-          capture has completed successfully. Otherwise the underlying I/O operations might fail
-          with an InterruptedIOException in rare cases. */
-          interruptLock.lock();
-          try {
-            if (Thread.interrupted())
-              break;
-            beforeTime = System.nanoTime();
-            task.capture();
-            afterTime = System.nanoTime();
-            registerCaptureTime(afterTime);
-          } catch (IOException e) {
-            LOG.log(Level.WARNING, "Storing an exception in CaptureScheduler", e);
-            storedException = e;
+          final Long duration = oneCapture(task);
+          if (duration == null)
             break;
-          } finally {
-            interruptLock.unlock();
-          }
-
-          final double duration = afterTime - beforeTime;
-          avgDuration.enterReading(duration);
           final double minDelayDuty = avgDuration.get() * (1.0 / task.getMaxDutyCycle() - 1.0);
           final double minDelayFreq = 1000000000.0 / task.getMaxFrequency() - duration;
-          try {
-            while (Util.delayAtLeastUntil(
-                lastCapture.get() + Math.round(Math.max(minDelayDuty, minDelayFreq))))
-            {
-              // No action.
-            }
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+          while (Util.delayAtLeastUntil(
+              lastCapture.get() + Math.round(Math.max(minDelayDuty, minDelayFreq))))
+          {
+            // No action, but recompute delay after each sleep, since lastCapture may change.
           }
         }
+      } catch (InterruptedException e) {
+        // Exit thread.
       }
-    }, "CaptureScheduler-capture-" + task.toString());
-    // Average duty cycle over a longer time if the frequency is low.
-    avgDuration = new MovingAverage(30000.0 * 1000000.0 / task.getMaxFrequency());
+    }
+  });
+
+  public CaptureScheduler(final CaptureTask task) {
+    this.task = task;
+    captureThread.setName("CaptureScheduler-capture-" + task.toString());
+    avgDuration = new MovingAverage(
+        CAPTURE_AVERAGE_PERIODS * (1000000000.0 / task.getMaxFrequency()));
   }
 
-  private void registerCaptureTime(long nanoTime) {
-    Util.atomicSetMax(lastCapture, nanoTime);
+  /** Returns the duration of the operation in nanoseconds, or null if a stored error occurred or
+  the CaptureScheduler has been closed. */
+  private Long oneCapture(final CaptureTask task) throws InterruptedException {
+    captureLock.lock();
+    try {
+      /* Check for this condition now, before starting any I/O operations. See the corresponding
+      call to interrupt() in close(). */
+      if (Thread.interrupted())
+        throw new InterruptedException();
+      if (storedException != null || finished.get())
+        return null;
+      final long beforeTime = System.nanoTime();
+      task.capture();
+      final long afterTime = System.nanoTime();
+      // Doesn't strictly need to be atomic, but let's be safe.
+      Util.atomicSetMax(lastCapture, afterTime);
+      final long duration = afterTime - beforeTime;
+      avgDuration.enterReading(duration);
+      return duration;
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Storing an exception in CaptureScheduler", e);
+      if (storedException != null)
+        throw new AssertionError();
+      storedException = e;
+      return null;
+    } finally {
+      captureLock.unlock();
+    }
   }
 
-  /** May be called by the client to indicate an externally handled capture that should cause
-  scheduled captures to be delayed. */
-  public void registerCaptureTime() {
-    registerCaptureTime(System.nanoTime());
+  public void forceCaptureNow() {
+    try {
+      // Ignore return value.
+      oneCapture(task);
+    } catch (InterruptedException e) {
+      /* An interrupt detected here would be unrelated to any interrupt triggered by close(), since
+      this function should only be called from client threads. */
+      Thread.currentThread().interrupt();
+    }
   }
 
   /* This used to happen automatically in the constructor, which is dangerous. See
@@ -87,11 +105,13 @@ public class CaptureScheduler {
     if (finished.getAndSet(true))
       return;
 
-    interruptLock.lock();
+    /* Wait with the interrupt until the last capture has completed successfully. Otherwise the
+    underlying I/O operations might fail with an InterruptedIOException in rare cases. */
+    captureLock.lock();
     try {
       captureThread.interrupt();
     } finally {
-      interruptLock.unlock();
+      captureLock.unlock();
     }
 
     Util.ensureInterruptible(new Util.Interruptible() {

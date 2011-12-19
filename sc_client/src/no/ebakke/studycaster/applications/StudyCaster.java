@@ -29,6 +29,8 @@ import no.ebakke.studycaster.configuration.OpenURIConfiguration;
 import no.ebakke.studycaster.configuration.StudyConfiguration;
 import no.ebakke.studycaster.configuration.UIStringKey;
 import no.ebakke.studycaster.configuration.UploadConfiguration;
+import no.ebakke.studycaster.screencasting.ExtendedMeta;
+import no.ebakke.studycaster.screencasting.ExtendedMeta.ExtendedMetaWriter;
 import no.ebakke.studycaster.screencasting.ScreenCensor;
 import no.ebakke.studycaster.ui.MainFrame;
 import no.ebakke.studycaster.ui.MainFrame.UserActionListener;
@@ -103,10 +105,13 @@ public final class StudyCaster {
   private final EnvironmentHooks hooks;
   private final WindowListener windowClosingListener;
   private final DialogHelper dialogHelper;
+  /* TODO: Consider moving initialization code to the constructor to allow more fields to be
+           declared final. */
   /** Some variables are accessed from multiple threads. Rather than try to remember which ones,
   declare them all volatile. */
   private volatile Thread initializerThread, failsafeCloseThread, backendCloseThread;
   private volatile ScreenRecorder recorder;
+  private volatile ExtendedMetaWriter extendedMetaWriter;
   private volatile ServerContext serverContext;
   private volatile StudyConfiguration configuration;
   private volatile NonBlockingOutputStream recordingStream;
@@ -142,8 +147,9 @@ public final class StudyCaster {
     }
   }, "StudyCaster-stillAlive");
   private final DesktopMetaListener desktopMetaListener = new DesktopMetaListener() {
-    public void reportMeta(DesktopMeta meta) {
-      // TODO: Implement.
+    public void reportMeta(DesktopMeta meta) throws IOException {
+      extendedMetaWriter.writeOne(
+          new ExtendedMeta(meta, mainFrame.getPageConfiguration().getName()));
     }
   };
 
@@ -238,15 +244,19 @@ public final class StudyCaster {
         }
         if (recorder != null) {
           try {
-            if (onEndEDT != null) {
-              recorder.stop();
+            recorder.stop();
+            if (onEndEDT != null)
               recordingStream.addObserver(streamProgressObserver);
-            }
             recorder.close();
             if (onEndEDT != null)
               recordingStream.removeObserver(streamProgressObserver);
           } catch (IOException e) {
             LOG.log(Level.SEVERE, "Error while closing screen recorder", e);
+          }
+          try {
+            extendedMetaWriter.close();
+          } catch (IOException e) {
+            LOG.log(Level.SEVERE, "Error while closing metadata writer", e);
           }
         }
         Util.ensureInterruptible(new Util.Interruptible() {
@@ -328,6 +338,9 @@ public final class StudyCaster {
             dialogHelper.setStrings(configuration.getUIStrings());
 
             // Prepare the screen recorder without starting it yet.
+            final NonBlockingOutputStream extendedMetaStream = new NonBlockingOutputStream();
+            extendedMetaStream.connect(serverContext.uploadFile("screencast.ebm"));
+            extendedMetaWriter = new ExtendedMetaWriter(extendedMetaStream, configurationID);
             recordingStream = new NonBlockingOutputStream(RECORDING_BUFFER_SZ);
             recordingStream.connect(serverContext.uploadFile("screencast.ebc"));
             List<String> screenCastBlacklist = configuration.getScreenCastBlacklist();

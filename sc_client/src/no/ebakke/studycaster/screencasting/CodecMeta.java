@@ -49,6 +49,7 @@ class CodecMeta {
     return type;
   }
 
+  /* TODO: At next opportunity to change the file format, get rid of this distinction. */
   public static enum FrameType {
     PERIODIC, BEFORE_CAPTURE, AFTER_CAPTURE
   }
