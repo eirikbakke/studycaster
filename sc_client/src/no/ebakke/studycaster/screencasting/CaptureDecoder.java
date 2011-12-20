@@ -34,11 +34,16 @@ public class CaptureDecoder {
   private long currentMetaTime = -1, currentFrameTime = 0, firstMetaTime = -1;
   private long nextCaptureTime = -1, lastBeforeCaptureTime = -1;
   private boolean firstFrameRead = false;
-  private boolean statFrameChanged, statFrameIndicator, statMetaIndicator;
+  private boolean statFrameChanged, statFrameIndicator, statMetaIndicator, statUserInput;
+  private ExtendedMeta currentExtendedMeta, nextExtendedMeta;
+  private long lastUserInputNanos = Long.MIN_VALUE;
 
   /** Argument extendedMetaReader may be null. */
   public CaptureDecoder(InputStream is, ExtendedMetaReader extendedMetaReader) throws IOException {
     this.extendedMetaReader = extendedMetaReader;
+    // TODO: Can this odd read be avoided?
+    if (extendedMetaReader != null)
+      nextExtendedMeta = extendedMetaReader.readOne();
     dis = new DataInputStream(new BufferedInputStream(new GZIPInputStream(is), 4 * 1024 * 1024));
     if (!dis.readUTF().equals(CodecConstants.MAGIC_STRING))
       throw new IOException("File not in StudyCaster screencast format");
@@ -52,8 +57,11 @@ public class CaptureDecoder {
 
   public void close() throws IOException {
     try {
-      if (extendedMetaReader != null)
+      if (extendedMetaReader != null) {
+        // As a sanity check, make sure we get to the end of the metadata without errors.
+        forwardExtendedMeta(Long.MAX_VALUE);
         extendedMetaReader.close();
+      }
     } finally {
       dis.close();
     }
@@ -142,6 +150,22 @@ public class CaptureDecoder {
     }
   }
 
+  private void forwardExtendedMeta(long toTimeNanos) throws IOException {
+    if (extendedMetaReader == null)
+      return;
+    while (nextExtendedMeta != null &&
+           nextExtendedMeta.getDesktopMeta().getTimeNanos() <= toTimeNanos)
+    {
+      currentExtendedMeta = nextExtendedMeta;
+      nextExtendedMeta    = extendedMetaReader.readOne();
+    }
+    if (currentExtendedMeta != null) {
+      long newLastUserInputNanos = currentExtendedMeta.getDesktopMeta().getLastUserInputNanos();
+      statUserInput |= newLastUserInputNanos > lastUserInputNanos;
+      lastUserInputNanos = newLastUserInputNanos;
+    }
+  }
+
   /** The decoder overlays a blinking visual indication of when new frames and metastamps are
   encountered. For this to work properly, the method below must be called after each call to
   nextFrame(), except in the case of frames that are discarded by the client. */
@@ -149,8 +173,10 @@ public class CaptureDecoder {
     statMetaIndicator  = !statMetaIndicator;
     statFrameIndicator = statFrameChanged ? !statFrameIndicator : statFrameIndicator;
     statFrameChanged = false;
+    statUserInput    = false;
   }
 
+  /** Returns false iff the regular end of the stream was reached. */
   public boolean nextFrame(BufferedImage output) throws IOException {
     CodecMeta ms;
     while (true) {
@@ -173,6 +199,7 @@ public class CaptureDecoder {
       if (state.pollCodecMeta() == null)
         throw new AssertionError();
       if (firstFrameRead && ms.getType() == FrameType.PERIODIC) {
+        forwardExtendedMeta(ms.getTimeMillis() * 1000000L);
         currentFrameTime +=
             (currentMetaTime < 0) ? 0 : Math.max(1L, ms.getTimeMillis() - currentMetaTime);
         currentMetaTime = ms.getTimeMillis();
@@ -184,6 +211,7 @@ public class CaptureDecoder {
           overlay.drawPointer(g, p.x, p.y);
         }
         final String formattedTimestamp =
+            (statUserInput      ? "U" : " ") +
             (statFrameIndicator ? "F" : " ") +
             (statMetaIndicator  ? "M" : " ") + " / " +
             ServerTimeLogFormatter.getServerDateFormat().format(new Date(currentMetaTime)) +
