@@ -49,7 +49,8 @@ class CodecMeta {
     return type;
   }
 
-  /* TODO: At next opportunity to change the file format, get rid of this distinction. */
+  /* TODO: At next opportunity to change the file format, get rid of this distinction. Also
+  introduce an end-of-file marker. */
   public static enum FrameType {
     PERIODIC, BEFORE_CAPTURE, AFTER_CAPTURE
   }

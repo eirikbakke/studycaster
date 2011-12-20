@@ -10,6 +10,8 @@ public final class WindowInfo {
   private final boolean   foreground;
 
   public WindowInfo(Rectangle bounds, String title, int pid, boolean foreground) {
+    if (bounds.width < 0 || bounds.height < 0)
+        throw new IllegalArgumentException("Invalid window bounds");
     this.bounds     = new Rectangle(bounds);
     this.title      = title;
     this.pid        = pid;

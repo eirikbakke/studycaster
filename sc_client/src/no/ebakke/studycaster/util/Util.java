@@ -68,7 +68,7 @@ public final class Util {
     }
   }
 
-  /** Attempt the operation op repedeately until it completes without throwing an
+  /** Attempt the operation op repeatedly until it completes without throwing an
   InterruptedException. If an InterruptedException is thrown at least once, the current thread's
   interrupt flag will be set. */
   public static void ensureInterruptible(Interruptible op) {
