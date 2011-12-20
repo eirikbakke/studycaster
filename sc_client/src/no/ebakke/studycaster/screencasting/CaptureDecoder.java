@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import no.ebakke.studycaster.backend.ServerTimeLogFormatter;
 import no.ebakke.studycaster.screencasting.CodecMeta.FrameType;
+import no.ebakke.studycaster.screencasting.ExtendedMeta.ExtendedMetaReader;
 
 /** Not thread-safe. */
 public class CaptureDecoder {
@@ -28,13 +29,16 @@ public class CaptureDecoder {
   private final DataInputStream dis;
   private final ScreenCastOverlay overlay;
   private final Dimension outputDimension;
+  private final ExtendedMetaReader extendedMetaReader;
   private boolean reachedEOF = false, atFrame = false;
   private long currentMetaTime = -1, currentFrameTime = 0, firstMetaTime = -1;
   private long nextCaptureTime = -1, lastBeforeCaptureTime = -1;
   private boolean firstFrameRead = false;
   private boolean statFrameChanged, statFrameIndicator, statMetaIndicator;
 
-  public CaptureDecoder(InputStream is) throws IOException {
+  /** Argument extendedMetaReader may be null. */
+  public CaptureDecoder(InputStream is, ExtendedMetaReader extendedMetaReader) throws IOException {
+    this.extendedMetaReader = extendedMetaReader;
     dis = new DataInputStream(new BufferedInputStream(new GZIPInputStream(is), 4 * 1024 * 1024));
     if (!dis.readUTF().equals(CodecConstants.MAGIC_STRING))
       throw new IOException("File not in StudyCaster screencast format");
@@ -44,6 +48,15 @@ public class CaptureDecoder {
     overlay = new ScreenCastOverlay(new Dimension(width, height));
     outputDimension = CodecUtil.makeEven(new Dimension(width,
         (int) ((height + overlay.getStatusAreaHeight()) * (1 + EXTRA_BOTTOM))));
+  }
+
+  public void close() throws IOException {
+    try {
+      if (extendedMetaReader != null)
+        extendedMetaReader.close();
+    } finally {
+      dis.close();
+    }
   }
 
   public Dimension getDimension() {

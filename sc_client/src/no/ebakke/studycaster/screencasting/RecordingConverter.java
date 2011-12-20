@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 import java.util.logging.Logger;
+import no.ebakke.studycaster.screencasting.ExtendedMeta.ExtendedMetaReader;
 
 public final class RecordingConverter {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
@@ -25,23 +26,28 @@ public final class RecordingConverter {
 
   private RecordingConverter() { }
 
+  /** The argument extendedMetaStream may be null. */
   @SuppressWarnings("CallToThreadDumpStack")
-  public static void convert(InputStream input, String fileTo, int speedUpFactor)
-      throws IOException
+  public static void convert(InputStream input, String fileTo, InputStream extendedMetaStream,
+      int speedUpFactor) throws IOException
   {
-    CaptureDecoder dec = new CaptureDecoder(input);
+    final ExtendedMetaReader extendedMetaReader =
+        extendedMetaStream == null ? null : new ExtendedMetaReader(extendedMetaStream);
+    if (extendedMetaReader != null)
+      System.out.println("Recorded configurationID: " + extendedMetaReader.getConfigurationID());
+    final CaptureDecoder dec = new CaptureDecoder(input, extendedMetaReader);
     boolean hadError = false;
-    IContainer outContainer = IContainer.make();
+    final IContainer outContainer = IContainer.make();
     if (outContainer.open(fileTo, IContainer.Type.WRITE, null) < 0)
       throw new IOException("Could not open output file");
 
-    IStream outStream = outContainer.addNewStream(0);
-    IStreamCoder outStreamCoder = outStream.getStreamCoder();
+    final IStream outStream = outContainer.addNewStream(0);
+    final IStreamCoder outStreamCoder = outStream.getStreamCoder();
 
     outStreamCoder.setCodec(ICodec.ID.CODEC_ID_H264);
 
     // TODO: Allow a preset file to be specified on the command line.
-    InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(
+    final InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(
         "no/ebakke/studycaster/screencasting/libx264.ffpreset");
     if (in == null)
       throw new IOException("Could not find bundled ffmpeg preset file.");
@@ -89,11 +95,12 @@ public final class RecordingConverter {
         e.printStackTrace();
       hadError = true;
       LOG.warning("Incomplete screencast file");
+    } finally {
+      dec.close();
     }
     outContainer.writeTrailer();
     outStreamCoder.close();
     outContainer.close();
-    input.close();
     if (!hadError)
       System.err.println("ok");
   }

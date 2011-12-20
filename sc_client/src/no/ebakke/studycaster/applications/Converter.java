@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import no.ebakke.studycaster.screencasting.RecordingConverter;
 
 /*
@@ -35,10 +36,11 @@ public final class Converter {
       System.err.println("Input file extension should be '.ebc'");
       return;
     }
-    String outputFileName = inputFileName.substring(0, inputFileName.length() - 4) + "_" +
-        speedUpFactor + "x." + RecordingConverter.FILE_EXTENSION;
-    File outFile = new File(outputFileName);
+    final String fileNameBase = inputFileName.substring(0, inputFileName.length() - 4);
+    File outFile = new File(fileNameBase + "_" +
+        speedUpFactor + "x." + RecordingConverter.FILE_EXTENSION);
     File tmpFile = new File(outFile.getParentFile(), "~" + outFile.getName());
+    File metaFile = new File(fileNameBase + ".ebm");
     try {
       // Optimistic optimalization to avoid creating the temporary file most of the time.
       if (outFile.exists()) {
@@ -54,15 +56,22 @@ public final class Converter {
         tmpFile.delete();
         return;
       }
-      FileInputStream fis;
+      InputStream input;
       try {
-        fis = new FileInputStream(inputFileName);
+        input = new FileInputStream(inputFileName);
       } catch (FileNotFoundException e) {
         System.err.println("File not found: " + inputFileName);
         return;
       }
+      InputStream extendedMetaStream = null;
+      try {
+        extendedMetaStream = new FileInputStream(metaFile);
+        System.err.println("Found extended metadata file " + metaFile.toString());
+      } catch (FileNotFoundException e) {
+        System.err.println("No extended metadata file found");
+      }
       System.err.format("Converting to %s at %dx speedup: \n", outFile, speedUpFactor);
-      RecordingConverter.convert(fis, tmpFile.toString(), speedUpFactor);
+      RecordingConverter.convert(input, tmpFile.toString(), extendedMetaStream, speedUpFactor);
       tmpFile.renameTo(outFile);
     } catch (IOException e) {
       System.err.println("Got an error: " + e.getMessage());

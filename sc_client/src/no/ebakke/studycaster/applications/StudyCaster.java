@@ -349,8 +349,7 @@ public final class StudyCaster {
             screenCastBlacklist.add(
                 configuration.getUIStrings().get(UIStringKey.DIALOG_OPEN_FILE_TITLE));
             ScreenCensor censor = new ScreenCensor(
-                configuration.getScreenCastWhitelist(), screenCastBlacklist,
-                true, true, true);
+                configuration.getScreenCastWhitelist(), screenCastBlacklist, true, true, true);
             try {
               recorder = new ScreenRecorder(recordingStream, serverContext.getServerTimeSource(),
                   ScreenRecorderConfiguration.DEFAULT, censor, desktopMetaListener);
