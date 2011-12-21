@@ -13,19 +13,23 @@ import java.awt.Toolkit;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import no.ebakke.studycaster.screencasting.desktop.DesktopMeta;
+import no.ebakke.studycaster.screencasting.desktop.WindowInfo;
 import no.ebakke.studycaster.ui.UIUtil;
 import no.ebakke.studycaster.util.ImageDebugFrame;
 
 public class ScreenCastOverlay {
-  private static final String POINTER_IMAGE_FILE = "pointer_shine_weaker.png";
-  private static final String FILEPATH           = "icon32.png";
-  private static final Point  POINTER_HOTSPOT    = new Point(41, 40);
-  private static final String FONT_MONO_FILE     = "LiberationMono-Bold.ttf";
-  private static final String FONT_SANS_FILE     = "LiberationSans-Bold.ttf";
-  private static final int    STATUS_MARGIN = 6;
-  private static final float  FONT_SIZE = 28.0f;
+  private static final String POINTER_IMAGE_FILE     = "pointer_shine_weaker.png";
+  private static final String FILEPATH               = "icon22.png";
+  private static final Point  POINTER_HOTSPOT        = new Point(41, 40);
+  private static final String FONT_MONO_FILE         = "LiberationMono-Bold.ttf";
+  private static final String FONT_SANS_BOLD_FILE    = "LiberationSans-Bold.ttf";
+  private static final String FONT_SANS_REGULAR_FILE = "LiberationSans-Regular.ttf";
+  private static final int    STATUS_MARGIN = 3;
+  private static final float  FONT_SIZE_LARGE = 22.0f;
+  private static final float  FONT_SIZE_SMALL = 15.0f;
   private final Image pointerImage, iconImage;
-  private final Font fontMono, fontSans;
+  private final Font fontMono, fontSansBold, fontSansRegular;
   private final int fontCapHeight;
   private final Dimension outputDimension, iconDimensions;
 
@@ -35,14 +39,15 @@ public class ScreenCastOverlay {
   }
 
   public ScreenCastOverlay(Dimension inputDimension) throws IOException {
-    iconImage    = UIUtil.loadImage(FILEPATH, true);
-    pointerImage = UIUtil.loadImage(POINTER_IMAGE_FILE, true);
-    fontMono     = UIUtil.createFont(FONT_MONO_FILE, FONT_SIZE);
-    fontSans     = UIUtil.createFont(FONT_SANS_FILE, FONT_SIZE);
+    iconImage       = UIUtil.loadImage(FILEPATH, true);
+    pointerImage    = UIUtil.loadImage(POINTER_IMAGE_FILE, true);
+    fontMono        = UIUtil.createFont(FONT_MONO_FILE, FONT_SIZE_LARGE);
+    fontSansBold    = UIUtil.createFont(FONT_SANS_BOLD_FILE, FONT_SIZE_LARGE);
+    fontSansRegular = UIUtil.createFont(FONT_SANS_REGULAR_FILE, FONT_SIZE_SMALL);
 
     Graphics2D g = new ScreenCastImage(inputDimension).createGraphics();
     fontCapHeight = (int) Math.round(
-        Math.max(getStringHeight(g, "H", fontMono), getStringHeight(g, "H", fontSans)));
+        Math.max(getStringHeight(g, "H", fontMono), getStringHeight(g, "H", fontSansBold)));
     g.dispose();
 
     int iconWidth  = iconImage.getWidth(null);
@@ -65,7 +70,7 @@ public class ScreenCastOverlay {
       throw new AssertionError("Expected immediate image conversion");
   }
 
-  /** For align < 0, left-aligned, for align > 0, right-aligned, for align == 0, centered. */
+  /** For align &lt; 0, left-aligned, for align &gt; 0, right-aligned, for align == 0, centered. */
   private Rectangle2D drawString(
       Graphics2D g, String str, Color color, Font font, int align, double x, double y)
   {
@@ -85,21 +90,37 @@ public class ScreenCastOverlay {
     return stringBounds;
   }
 
-  public void drawStatus(Graphics2D g, String formattedTimestamp) {
+  /** Argument extendedMeta may be null. */
+  public void drawStatus(Graphics2D g, String formattedStatus) {
     g.setColor(Color.BLACK);
     g.fillRect(0, outputDimension.height - getStatusAreaHeight(),
-        outputDimension.width, getStatusAreaHeight());
+        outputDimension.width, Integer.MAX_VALUE);
     final int baseLine = outputDimension.height - STATUS_MARGIN;
-    drawString(g, formattedTimestamp, Color.WHITE, fontMono, -1, STATUS_MARGIN, baseLine);
-    Rectangle2D titleBounds = drawString(g, "StudyCaster", Color.WHITE, fontSans, 1,
+    drawString(g, formattedStatus, Color.WHITE, fontMono, -1, STATUS_MARGIN, baseLine);
+    Rectangle2D titleBounds = drawString(g, "StudyCaster", Color.WHITE, fontSansBold, 1,
         outputDimension.width - STATUS_MARGIN, baseLine);
     drawImage(g, iconImage,
         outputDimension.width - (titleBounds.getWidth() + iconDimensions.width + 2 * STATUS_MARGIN),
         baseLine - fontCapHeight / 2 - iconDimensions.height / 2);
   }
 
+  public void drawDesktopMeta(Graphics2D g, DesktopMeta meta) {
+    final Font FONT     = fontSansRegular;
+    final int  MARGIN_Y = 3, MARGIN_X = 6;
+    final int  OFFSET_Y = g.getFontMetrics(FONT).getAscent();
+    for (WindowInfo windowInfo : meta.getWindowList()) {
+      Rectangle rect = windowInfo.getBounds();
+      g.setColor(new Color(255, 255, 255, 128));
+      g.fill(new Rectangle(rect.x, rect.y, rect.width, MARGIN_Y * 2 + OFFSET_Y));
+      drawString(g, windowInfo.getTitle(), Color.BLACK, FONT, -1,
+          MARGIN_X + rect.getX(), MARGIN_Y + rect.getY() + OFFSET_Y);
+      g.setColor(Color.BLACK);
+      g.draw(rect);
+    }
+  }
+
   public void drawWarning(Graphics2D g, String str) {
-    drawString(g, str, Color.RED, fontSans, 0,
+    drawString(g, str, Color.RED, fontSansBold, 0,
         outputDimension.width / 2, fontCapHeight + STATUS_MARGIN);
   }
 
@@ -116,7 +137,7 @@ public class ScreenCastOverlay {
         new Dimension(screenRect.width, screenRect.height + overlay.getStatusAreaHeight())));
     CodecUtil.copyImage(capture, target);
     Graphics2D g = target.createGraphics();
-    overlay.drawStatus(g, "FM / 0000-00-00 00:00:00.000 /      0");
+    overlay.drawStatus(g, "UFM / 0000-00-00 00:00:00.000 /      0");
     overlay.drawWarning(g, "This is a test warning.");
     g.dispose();
     ImageDebugFrame.showImage(target);

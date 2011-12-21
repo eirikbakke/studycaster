@@ -210,12 +210,15 @@ public class CaptureDecoder {
           final Point p = ms.getMouseLocation();
           overlay.drawPointer(g, p.x, p.y);
         }
+        if (currentExtendedMeta != null)
+          overlay.drawDesktopMeta(g, currentExtendedMeta.getDesktopMeta());
         final String formattedTimestamp =
             (statUserInput      ? "U" : " ") +
             (statFrameIndicator ? "F" : " ") +
             (statMetaIndicator  ? "M" : " ") + " / " +
             ServerTimeLogFormatter.getServerDateFormat().format(new Date(currentMetaTime)) +
-            String.format(" / %6.1fs", (currentMetaTime - firstMetaTime) / 1000.0);
+            String.format(" / %6.1fs", (currentMetaTime - firstMetaTime) / 1000.0) +
+            (currentExtendedMeta == null ? "" : (" / " + currentExtendedMeta.getPageName()));
         overlay.drawStatus(g, formattedTimestamp);
         g.dispose();
         return true;
