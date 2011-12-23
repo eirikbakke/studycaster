@@ -10,11 +10,9 @@ import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
-import no.ebakke.studycaster.backend.ServerTimeLogFormatter;
 import no.ebakke.studycaster.screencasting.CodecMeta.FrameType;
 import no.ebakke.studycaster.screencasting.ExtendedMeta.ExtendedMetaReader;
 
@@ -31,12 +29,13 @@ public class CaptureDecoder {
   private final Dimension outputDimension;
   private final ExtendedMetaReader extendedMetaReader;
   private boolean reachedEOF = false, atFrame = false;
-  private long currentMetaTime = -1, currentFrameTime = 0, firstMetaTime = -1;
-  private long nextCaptureTime = -1, lastBeforeCaptureTime = -1;
+  private long currentFrameTime = 0;
+  private Long firstMetaTime, nextCaptureTime, lastBeforeCaptureTime;
   private boolean firstFrameRead = false;
   private boolean statFrameChanged, statFrameIndicator, statMetaIndicator, statUserInput;
   private ExtendedMeta currentExtendedMeta, nextExtendedMeta;
   private long lastUserInputNanos = Long.MIN_VALUE;
+  private CodecMeta currentCodecMeta;
 
   /** Argument extendedMetaReader may be null. */
   public CaptureDecoder(InputStream is, ExtendedMetaReader extendedMetaReader) throws IOException {
@@ -72,7 +71,7 @@ public class CaptureDecoder {
   }
 
   public long getCurrentTimeMillis() {
-    if (currentMetaTime < -1)
+    if (currentCodecMeta == null)
       throw new IllegalStateException("No frame retrieved yet.");
     return currentFrameTime;
   }
@@ -81,7 +80,6 @@ public class CaptureDecoder {
   recover data in corrupted streams. */
   private void resync() throws IOException {
     // TODO: Avoid losing the metadata read to sync.
-    // TODO: Consider removing all of this once we have found the bug that led us to write it.
     /* TODO: At the next opportunity for changing the file format, include an explicit magic word at
              at the beginning of each MetaStamp, so that resync can be implemented in two lines of
              code instead of the madness below. */
@@ -119,7 +117,7 @@ public class CaptureDecoder {
   }
 
   private boolean readUntilFrame() throws IOException {
-    CodecMeta ms;
+    CodecMeta codecMeta;
     byte headerMarker;
     while (true) {
       try {
@@ -130,20 +128,20 @@ public class CaptureDecoder {
       if        (headerMarker == CodecConstants.MARKER_FRAME) {
         return true;
       } else if (headerMarker == CodecConstants.MARKER_META) {
-        ms = CodecMeta.readFromStream(dis);
+        codecMeta = CodecMeta.readFromStream(dis);
         // TODO: Simplify this once the file format is changed to get rid of FrameType.
-        switch (ms.getType()) {
+        switch (codecMeta.getType()) {
           case        BEFORE_CAPTURE:
-            lastBeforeCaptureTime = ms.getTimeMillis();
+            lastBeforeCaptureTime = codecMeta.getTimeMillis();
           break; case AFTER_CAPTURE:
-            if (lastBeforeCaptureTime < 0)
+            if (lastBeforeCaptureTime == null)
               throw new IOException("Missing before-capture timestamp");
             //nextCaptureTime = lastBeforeCaptureTime / 2 + ms.getTimeMillis() / 2;
             nextCaptureTime = lastBeforeCaptureTime;
-            lastBeforeCaptureTime = -1;
+            lastBeforeCaptureTime = null;
           break; case PERIODIC:
         }
-        state.addCodecMeta(ms);
+        state.addCodecMeta(codecMeta);
       } else {
         throw new IOException("Invalid header marker");
       }
@@ -166,22 +164,13 @@ public class CaptureDecoder {
     }
   }
 
-  /** The decoder overlays a blinking visual indication of when new frames and metastamps are
-  encountered. For this to work properly, the method below must be called after each call to
-  nextFrame(), except in the case of frames that are discarded by the client. */
-  public void blinkIndicators() {
-    statMetaIndicator  = !statMetaIndicator;
-    statFrameIndicator = statFrameChanged ? !statFrameIndicator : statFrameIndicator;
-    statFrameChanged = false;
-    statUserInput    = false;
-  }
-
   /** Returns false iff the regular end of the stream was reached. */
-  public boolean nextFrame(BufferedImage output) throws IOException {
-    CodecMeta ms;
+  public boolean nextFrame() throws IOException {
+    CodecMeta readCodecMeta = null;
     while (true) {
-      ms = state.peekCodecMeta();
-      if (ms == null || ms.getTimeMillis() >= nextCaptureTime) {
+      if (readCodecMeta == null)
+        readCodecMeta = state.pollCodecMeta();
+      if (readCodecMeta == null || readCodecMeta.getTimeMillis() >= nextCaptureTime) {
         if (reachedEOF) {
           return false;
         } else if (atFrame) {
@@ -196,34 +185,41 @@ public class CaptureDecoder {
           continue;
         }
       }
-      if (state.pollCodecMeta() == null)
-        throw new AssertionError();
-      if (firstFrameRead && ms.getType() == FrameType.PERIODIC) {
-        forwardExtendedMeta(ms.getTimeMillis() * 1000000L);
-        currentFrameTime +=
-            (currentMetaTime < 0) ? 0 : Math.max(1L, ms.getTimeMillis() - currentMetaTime);
-        currentMetaTime = ms.getTimeMillis();
-        firstMetaTime = (firstMetaTime >= 0) ? firstMetaTime : currentMetaTime;
-        CodecUtil.copyImage(state.getCurrentFrame(), output);
-        Graphics2D g = output.createGraphics();
-        if (ms.getMouseLocation() != null) {
-          final Point p = ms.getMouseLocation();
-          overlay.drawPointer(g, p.x, p.y);
-        }
-        if (currentExtendedMeta != null)
-          overlay.drawDesktopMeta(g, currentExtendedMeta.getDesktopMeta());
-        final String formattedTimestamp =
-            (statUserInput      ? "U" : " ") +
-            (statFrameIndicator ? "F" : " ") +
-            (statMetaIndicator  ? "M" : " ") + " / " +
-            ServerTimeLogFormatter.getServerDateFormat().format(new Date(currentMetaTime)) +
-            String.format(" / %6.1fs", (currentMetaTime - firstMetaTime) / 1000.0) +
-            (currentExtendedMeta == null ? "" : (" / " + currentExtendedMeta.getPageName()));
-        overlay.drawStatus(g, formattedTimestamp);
-        g.dispose();
+      if (firstFrameRead && readCodecMeta.getType() == FrameType.PERIODIC) {
+        forwardExtendedMeta(readCodecMeta.getTimeMillis() * 1000000L);
+        currentFrameTime += (currentCodecMeta == null) ? 0 :
+            Math.max(1L, readCodecMeta.getTimeMillis() - currentCodecMeta.getTimeMillis());
+        currentCodecMeta = readCodecMeta;
+        if (firstMetaTime == null)
+          firstMetaTime = currentCodecMeta.getTimeMillis();
         return true;
       }
+      readCodecMeta = null;
     }
+  }
+
+  /** Draws the frame previously loaded by nextFrame(), and inverts the state of any blinking status
+  indicators. */
+  public void drawFrame(BufferedImage output) {
+    CodecUtil.copyImage(state.getCurrentFrame(), output);
+    Graphics2D g = output.createGraphics();
+    if (currentCodecMeta.getMouseLocation() != null) {
+      final Point p = currentCodecMeta.getMouseLocation();
+      overlay.drawPointer(g, p.x, p.y);
+    }
+    if (currentExtendedMeta != null)
+      overlay.drawDesktopMeta(g, currentExtendedMeta.getDesktopMeta());
+    overlay.drawStatus(g, currentCodecMeta.getTimeMillis(),
+        currentCodecMeta.getTimeMillis() - firstMetaTime, statUserInput, statFrameIndicator,
+        statMetaIndicator,
+        (currentExtendedMeta == null ? null : (currentExtendedMeta.getPageName())));
+    g.dispose();
+
+    // Blink indicator flags.
+    statMetaIndicator  = !statMetaIndicator;
+    statFrameIndicator = statFrameChanged ? !statFrameIndicator : statFrameIndicator;
+    statFrameChanged = false;
+    statUserInput    = false;
   }
 
   @SuppressWarnings("AssignmentToForLoopParameter")

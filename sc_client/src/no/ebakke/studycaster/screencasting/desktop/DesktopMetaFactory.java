@@ -3,8 +3,6 @@ package no.ebakke.studycaster.screencasting.desktop;
 import java.util.List;
 import no.ebakke.studycaster.backend.TimeSource;
 
-// TODO: Rename this package to "desktop".
-
 /** Thread-safe. */
 public class DesktopMetaFactory {
   private final DesktopLibrary desktopLibrary;

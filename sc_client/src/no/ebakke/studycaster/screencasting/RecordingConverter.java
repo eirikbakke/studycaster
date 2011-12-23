@@ -69,7 +69,7 @@ public final class RecordingConverter {
     final BufferedImage image = new BufferedImage(
         dec.getDimension().width, dec.getDimension().height, BufferedImage.TYPE_3BYTE_BGR);
     try {
-      while (dec.nextFrame(image)) {
+      while (dec.nextFrame()) {
         final long currentTimeStampMicros = (dec.getCurrentTimeMillis() * 1000L) / speedUpFactor;
         if (speedUpFactor > 1 && previousTimeStampMicros >= 0 &&
             currentTimeStampMicros - previousTimeStampMicros < 1000000L / FRAMERATE_LIMIT)
@@ -78,7 +78,7 @@ public final class RecordingConverter {
           continue;
         } else {
           System.err.print(".");
-          dec.blinkIndicators();
+          dec.drawFrame(image);
         }
 
         final IPacket packet = IPacket.make();

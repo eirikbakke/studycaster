@@ -4,7 +4,7 @@ import java.awt.Dimension;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-/** Thread-safe. */
+/** Keeps track of state that is common to both the encoder and the decoder. Thread-safe. */
 final class CodecState {
   private final Queue<CodecMeta> codecMetaStamps = new ConcurrentLinkedQueue<CodecMeta>();
   private final Dimension dimension;
@@ -40,10 +40,5 @@ final class CodecState {
 
   public CodecMeta pollCodecMeta() {
     return codecMetaStamps.poll();
-  }
-
-  // TODO: Get rid of this method after the call site is rewritten.
-  public CodecMeta peekCodecMeta() {
-    return codecMetaStamps.peek();
   }
 }
