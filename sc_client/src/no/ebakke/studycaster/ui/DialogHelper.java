@@ -63,13 +63,13 @@ public class DialogHelper {
     if (options != null) {
       optionsObj = new Object[options.length];
       for (int i = 0; i < options.length; i++) {
-        optionsObj[i] = strings.get(options[i]);
+        optionsObj[i] = strings.getString(options[i]);
         if (options[i].equals(initialValue))
           initialValueObj = optionsObj[i];
       }
     }
     int ret = showDialogHelper(
-        message, strings.get(titleKey), optionType, messageType, optionsObj, initialValueObj);
+        message, strings.getString(titleKey), optionType, messageType, optionsObj, initialValueObj);
     final String choiceString =
         (options != null && ret >= 0 && ret < options.length) ? options[ret].toString() :
         UIUtil.jOptionPaneChoiceString(ret);
@@ -82,7 +82,7 @@ public class DialogHelper {
       UIStringKey[] options, UIStringKey initialValue)
   {
     final String message = (messageParameters != null) ?
-        strings.get(messageKey, messageParameters) : strings.get(messageKey);
+        strings.getString(messageKey, messageParameters) : strings.getString(messageKey);
     return showCustomOptionDialog(messageKey.toString(), message, titleKey, optionType, messageType,
         options, initialValue);
   }

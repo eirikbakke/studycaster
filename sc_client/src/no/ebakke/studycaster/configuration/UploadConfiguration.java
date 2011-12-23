@@ -9,7 +9,6 @@ import org.w3c.dom.Element;
 public class UploadConfiguration {
   private final OpenFileConfiguration defaultFile;
   private final FileFilter fileFilter;
-  private final String     unchangedWarning;
 
   public UploadConfiguration(Map<String,OpenFileConfiguration> openFileConfigurations, Element elm)
       throws StudyCasterException
@@ -30,9 +29,6 @@ public class UploadConfiguration {
             defaultFileName + "\"");
       }
     }
-    Element unchangedWarningElm = ConfigurationUtil.getUniqueElement(elm, "unchangedwarning", true);
-    unchangedWarning = unchangedWarningElm == null ? null :
-        ConfigurationUtil.getSwingCaption(unchangedWarningElm);
   }
 
   public FileFilter getFileFilter() {
@@ -42,10 +38,5 @@ public class UploadConfiguration {
   /** May be null. */
   public OpenFileConfiguration getDefaultFile() {
     return defaultFile;
-  }
-
-  /** May be null. */
-  public String getUnchangedWarning() {
-    return unchangedWarning;
   }
 }

@@ -12,11 +12,9 @@ public class UploadDialogPanel extends javax.swing.JPanel {
   public UploadDialogPanel(UIStrings strings) {
     initComponents();
     // TODO: Figure out why the path label mnemonic doesn't always work.
-    pathLabel.setText(strings.get(UIStringKey.DIALOG_CONCLUDE_FILE_PATH_LABEL));
-    pathLabel.setDisplayedMnemonic(strings.getMnemonic(UIStringKey.DIALOG_CONCLUDE_FILE_PATH_LABEL));
-    infoLabel.setText(strings.get(UIStringKey.DIALOG_CONCLUDE_FILE_INFO_LABEL));
-    browseButton.setText(strings.get(UIStringKey.DIALOG_CONCLUDE_FILE_BROWSE_BUTTON));
-    browseButton.setMnemonic(strings.getMnemonic(UIStringKey.DIALOG_CONCLUDE_FILE_BROWSE_BUTTON));
+    strings.get(UIStringKey.DIALOG_CONCLUDE_FILE_PATH_LABEL).setOnLabel(pathLabel);
+    strings.get(UIStringKey.DIALOG_CONCLUDE_FILE_INFO_LABEL).setOnLabel(infoLabel);
+    strings.get(UIStringKey.DIALOG_CONCLUDE_FILE_BROWSE_BUTTON).setOnButton(browseButton);
     fileChooser = new JFileChooser();
   }
 

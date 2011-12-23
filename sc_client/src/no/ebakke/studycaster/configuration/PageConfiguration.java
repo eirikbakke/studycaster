@@ -8,7 +8,7 @@ import org.w3c.dom.Element;
 
 public class PageConfiguration {
   private final String                name;
-  private final String                instructions;
+  private final UIString              instructions;
   private final OpenFileConfiguration openFileConfiguration;
   private final ConcludeConfiguration concludeConfiguration;
   private final OpenURIConfiguration  openURIConfiguration;
@@ -17,7 +17,8 @@ public class PageConfiguration {
       throws StudyCasterException
   {
     name = ConfigurationUtil.getNonEmptyAttribute(elm, "name");
-    instructions = ConfigurationUtil.getSwingCaption(elm, "instructions");
+    instructions = UIString.readOne(
+        ConfigurationUtil.getUniqueElement(elm, "instructions"), true, false);
     Element openFileElm = ConfigurationUtil.getUniqueElement(elm, "openfile", true);
     openFileConfiguration = (openFileElm == null) ? null : new OpenFileConfiguration(openFileElm);
     if (openFileConfiguration != null)
@@ -46,7 +47,7 @@ public class PageConfiguration {
     return name;
   }
 
-  public String getInstructions() {
+  public UIString getInstructions() {
     return instructions;
   }
 

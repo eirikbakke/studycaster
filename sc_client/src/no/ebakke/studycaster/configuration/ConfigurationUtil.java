@@ -115,10 +115,6 @@ final class ConfigurationUtil {
     return getUniqueElement(parent, localName, false);
   }
 
-  public static String getSwingCaption(Node parent, String localName) throws StudyCasterException {
-    return getSwingCaption(getUniqueElement(parent, localName, false));
-  }
-
   public static String getTextContent(Element elm) throws StudyCasterException {
     String ret = XMLUtil.getTextContent(elm);
     if (ret == null)
@@ -166,5 +162,24 @@ final class ConfigurationUtil {
 
   public static interface ElementParser<R> {
     R parseElement(Element elm) throws StudyCasterException;
+  }
+
+  // Copied from the package-private method with the same name in SwingUtilities.
+  public static int findDisplayedMnemonicIndex(String text, int mnemonic) {
+    if (text == null || mnemonic == '\0')
+        return -1;
+    char uc = Character.toUpperCase((char) mnemonic);
+    char lc = Character.toLowerCase((char) mnemonic);
+
+    int uci = text.indexOf(uc);
+    int lci = text.indexOf(lc);
+
+    if        (uci == -1) {
+      return lci;
+    } else if (lci == -1) {
+      return uci;
+    } else {
+      return (lci < uci) ? lci : uci;
+    }
   }
 }

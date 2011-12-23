@@ -14,9 +14,6 @@
         <html xmlns="">The StudyCaster client is already running in a different window.<br/>
                        Please close it first if you wish to start over.</html>
       </uistring>
-      <uistring key="MAINFRAME_OPEN_FILE_BUTTON"  mnemonic="D">Open Sample Document</uistring>
-      <uistring key="MAINFRAME_OPEN_URI_BUTTON"   mnemonic="W">Open Sample Web Page</uistring>
-      <uistring key="MAINFRAME_CONCLUDE_BUTTON"   mnemonic="C">Upload and Retrive Confirmation Code...</uistring>
       <uistring key="MAINFRAME_BACK_BUTTON"       mnemonic="B">&lt; Back</uistring>
       <uistring key="MAINFRAME_NEXT_BUTTON"       mnemonic="N">Next &gt;</uistring>
       <uistring key="DIALOG_CLOSE_TITLE"  >Exit Without Uploading?</uistring>
@@ -95,7 +92,7 @@
         If necessary, open the file again using the "Open Sample Document" button.</html>
       </uistring>
       <uistring key="DIALOG_CONFIRMATION_TITLE">Upload Successful</uistring>
-      <uistring key="DIALOG_CONFIRMATION_CODEBOX_LABEL" mnemonic="U">
+      <uistring key="DIALOG_CONFIRMATION_CODEBOX_LABEL" mnemonicindex="24">
         Upload Successful! Your confirmation code is...
       </uistring>
       <uistring key="DIALOG_CONFIRMATION_CLIPBOARD_MESSAGE">
@@ -187,25 +184,21 @@
   <macrodef id="openfile-error-excel">
     Do you have Excel or a compatible spreadsheet application installed?
   </macrodef>
-  <macrodef id="upload-unchanged">
-    <html xmlns="">Please edit, save, and close the file, then try again.<br/><br/>
-                   The file should have opened in a new window, possibly in the background.</html>
-  </macrodef>
-
   <configuration id="default" name="Recruiting">
     <macro id="configuration-common"/>
     <page name="instructions">
       <macro id="instructions"/>
       <openfile> <!-- Optional -->
+        <buttontext mnemonic="D">Open Sample Document</buttontext>
         <servername>currencies.xls</servername>
         <clientname>userstudyHIT_currencies.xls</clientname>
         <errormessage><macro id="openfile-error-excel"/></errormessage>
       </openfile>
       <conclude> <!-- Optional -->
+        <buttontext mnemonic="U">Upload and Retrive Confirmation Code...</buttontext>
         <uploadfile> <!-- Optional -->
           <macro id="filefilter-excel"/>
           <default>userstudyHIT_currencies.xls</default> <!-- Optional -->
-          <unchangedwarning><macro id="upload-unchanged"/></unchangedwarning> <!-- Optional -->
         </uploadfile>
       </conclude>
     </page>
@@ -230,12 +223,14 @@
         </html>
       </instructions>
       <openfile> <!-- Optional -->
+        <buttontext mnemonic="D">Open Sample Document</buttontext>
         <servername>testfile.pdf</servername>
         <clientname>StudyCaster testfile with spaces in name.pdf</clientname>
         <errormessage>Do you have a program that can open PDF files
                       (e.g. Acrobat Reader) installed?</errormessage>
       </openfile>
       <openuri> <!-- Optional -->
+        <buttontext mnemonic="W">Open Sample Web Page</buttontext>
         <uri>http://www.youtube.com/watch?v=dQw4w9WgXcQ</uri>
       </openuri>
     </page>
@@ -279,21 +274,23 @@
         </html>
       </instructions>
       <conclude> <!-- Optional -->
+        <buttontext mnemonic="U">Upload and Retrive Confirmation Code...</buttontext>
       </conclude>
     </page>
 
     <page name="instructions">
       <macro id="instructions"/>
       <openfile> <!-- Optional -->
+        <buttontext mnemonic="D">Open Sample Document</buttontext>
         <servername>currencies.xls</servername>
         <clientname>userstudyHIT_currencies.xls</clientname>
         <errormessage><macro id="openfile-error-excel"/></errormessage>
       </openfile>
       <conclude> <!-- Optional -->
+        <buttontext mnemonic="U">Upload and Retrive Confirmation Code...</buttontext>
         <uploadfile> <!-- Optional -->
           <macro id="filefilter-excel"/>
           <default>userstudyHIT_currencies.xls</default> <!-- Optional -->
-          <unchangedwarning><macro id="upload-unchanged"/></unchangedwarning> <!-- Optional -->
         </uploadfile>
       </conclude>
     </page>
@@ -304,15 +301,16 @@
     <page name="instructions">
       <macro id="instructions"/>
       <openfile>
+        <buttontext mnemonic="D">Open Sample Document</buttontext>
         <servername>exflat.xls</servername>
         <clientname>userstudyHIT_coursecatalog.xls</clientname>
         <errormessage><macro id="openfile-error-excel"/></errormessage>
       </openfile>
       <conclude>
+        <buttontext mnemonic="U">Upload and Retrive Confirmation Code...</buttontext>
         <uploadfile>
           <macro id="filefilter-excel"/>
           <default>userstudyHIT_coursecatalog.xls</default>
-          <unchangedwarning><macro id="upload-unchanged"/></unchangedwarning>
         </uploadfile>
       </conclude>
     </page>
@@ -323,15 +321,16 @@
     <page name="instructions">
       <macro id="instructions"/>
       <openfile>
+        <buttontext mnemonic="D">Open Sample Document</buttontext>
         <servername>rsnest.rzw</servername>
         <clientname>userstudyHIT_coursecatalog.rzw</clientname>
         <errormessage>Unexpected error.</errormessage>
       </openfile>
       <conclude>
+        <buttontext mnemonic="U">Upload and Retrive Confirmation Code...</buttontext>
         <uploadfile>
           <macro id="filefilter-relspread"/>
           <default>userstudyHIT_coursecatalog.rzw</default>
-          <unchangedwarning><macro id="upload-unchanged"/></unchangedwarning>
         </uploadfile>
       </conclude>
     </page>

@@ -106,16 +106,8 @@ public class MainFrame extends javax.swing.JFrame {
     try {
       if (configuration != null) {
         final UIStrings strings = configuration.getUIStrings();
-        openFileButton.setText(strings.get(UIStringKey.MAINFRAME_OPEN_FILE_BUTTON));
-        openFileButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_OPEN_FILE_BUTTON));
-        openURIButton.setText(strings.get(UIStringKey.MAINFRAME_OPEN_URI_BUTTON));
-        openURIButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_OPEN_URI_BUTTON));
-        concludeButton.setText(strings.get(UIStringKey.MAINFRAME_CONCLUDE_BUTTON));
-        concludeButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_CONCLUDE_BUTTON));
-        backButton.setText(strings.get(UIStringKey.MAINFRAME_BACK_BUTTON));
-        backButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_BACK_BUTTON));
-        nextButton.setText(strings.get(UIStringKey.MAINFRAME_NEXT_BUTTON));
-        nextButton.setMnemonic(strings.getMnemonic(UIStringKey.MAINFRAME_NEXT_BUTTON));
+        strings.get(UIStringKey.MAINFRAME_BACK_BUTTON).setOnButton(backButton);
+        strings.get(UIStringKey.MAINFRAME_NEXT_BUTTON).setOnButton(nextButton);
 
         uploadDialogPanel           = new UploadDialogPanel(strings);
         confirmationCodeDialogPanel = new ConfirmationCodeDialogPanel(strings);
@@ -167,7 +159,7 @@ public class MainFrame extends javax.swing.JFrame {
     final boolean changed = this.pageIndex != pageIndex;
     this.pageIndex = pageIndex;
     if (this.pageIndex == null) {
-      instructions = "Please wait...";
+      instructionLabel.setText("Please wait...");
       openFileButtonVisible    = false;
       openURIButtonVisible     = false;
       concludeButtonVisible    = false;
@@ -180,15 +172,20 @@ public class MainFrame extends javax.swing.JFrame {
       OpenURIConfiguration  openURIConfiguration  = page.getOpenURIConfiguration();
       ConcludeConfiguration concludeConfiguration = page.getConcludeConfiguration();
 
-      instructions             = page.getInstructions();
       openFileButtonVisible    = openFileConfiguration != null;
       openURIButtonVisible     = openURIConfiguration  != null;
       concludeButtonVisible    = concludeConfiguration != null;
       navigationButtonsVisible = configuration.getPageConfigurations().size() > 1;
       backButton.setEnabled(pageIndex > 0);
       nextButton.setEnabled(pageIndex < configuration.getPageConfigurations().size() - 1);
+      if (openFileConfiguration != null)
+        openFileConfiguration.getButtonText().setOnButton(openFileButton);
+      if (openURIConfiguration != null)
+        openURIConfiguration.getButtonText().setOnButton(openURIButton);
+      if (concludeConfiguration != null)
+        concludeConfiguration.getButtonText().setOnButton(concludeButton);
+      page.getInstructions().setOnLabel(instructionLabel);
     }
-    instructionLabel.setText(instructions);
 
     openFileButton.setEnabled(openFileButtonVisible);
     openFileButton.setVisible(openFileButtonVisible);
@@ -245,7 +242,7 @@ public class MainFrame extends javax.swing.JFrame {
     }
     taskInProgress = true;
     progressBar.setString(
-        messageKey == null ? "" : configuration.getUIStrings().get(messageKey));
+        messageKey == null ? "" : configuration.getUIStrings().getString(messageKey));
     progressBar.setValue(0);
     setProgressBarBounds(0, 100);
     progressBar.setIndeterminate(indeterminate);

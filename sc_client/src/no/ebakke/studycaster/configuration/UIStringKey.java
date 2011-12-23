@@ -5,9 +5,6 @@ public enum UIStringKey {
   DIALOG_CONSENT_QUESTION(false, true, false),
   DIALOG_ALREADY_RUNNING_TITLE(false, false, false),
   DIALOG_ALREADY_RUNNING_MESSAGE(false, true, false),
-  MAINFRAME_OPEN_FILE_BUTTON(true, true, false),
-  MAINFRAME_OPEN_URI_BUTTON(true, true, false),
-  MAINFRAME_CONCLUDE_BUTTON(true, true, false),
   MAINFRAME_BACK_BUTTON(true, true, false),
   MAINFRAME_NEXT_BUTTON(true, true, false),
   DIALOG_CLOSE_TITLE(false, false, false),
@@ -39,16 +36,16 @@ public enum UIStringKey {
   DIALOG_CONFIRMATION_CODEBOX_LABEL(true, true, false),
   DIALOG_CONFIRMATION_CLIPBOARD_MESSAGE(false, true, false);
 
-  private boolean usesMnemonic, htmlAllowed, usesMessageFormat;
+  private boolean mnemonicAllowed, htmlAllowed, usesMessageFormat;
 
-  private UIStringKey(boolean usesMnemonic, boolean htmlAllowed, boolean usesMessageFormat) {
-    this.usesMnemonic      = usesMnemonic;
+  private UIStringKey(boolean mnemonicAllowed, boolean htmlAllowed, boolean usesMessageFormat) {
+    this.mnemonicAllowed   = mnemonicAllowed;
     this.htmlAllowed       = htmlAllowed;
     this.usesMessageFormat = usesMessageFormat;
   }
 
-  public boolean usesMnemonic() {
-    return usesMnemonic;
+  public boolean isMnemonicAllowed() {
+    return mnemonicAllowed;
   }
 
   public boolean isHtmlAllowed() {

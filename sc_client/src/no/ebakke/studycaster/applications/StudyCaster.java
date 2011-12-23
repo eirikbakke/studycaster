@@ -345,9 +345,9 @@ public final class StudyCaster {
             recordingStream.connect(serverContext.uploadFile("screencast.ebc"));
             List<String> screenCastBlacklist = configuration.getScreenCastBlacklist();
             screenCastBlacklist.add(
-                configuration.getUIStrings().get(UIStringKey.DIALOG_CONCLUDE_TITLE));
+                configuration.getUIStrings().getString(UIStringKey.DIALOG_CONCLUDE_TITLE));
             screenCastBlacklist.add(
-                configuration.getUIStrings().get(UIStringKey.DIALOG_OPEN_FILE_TITLE));
+                configuration.getUIStrings().getString(UIStringKey.DIALOG_OPEN_FILE_TITLE));
             ScreenCensor censor = new ScreenCensor(
                 configuration.getScreenCastWhitelist(), screenCastBlacklist, true, true, true);
             try {
