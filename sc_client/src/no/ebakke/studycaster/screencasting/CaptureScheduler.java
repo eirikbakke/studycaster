@@ -31,6 +31,10 @@ public class CaptureScheduler {
           final Long duration = oneCapture(task);
           if (duration == null)
             break;
+          /* The maximum duty cycle is taken as a per-thread limit without regard to the number of
+          processor cores available. Otherwise a curious user with several cores might notice 100%
+          utilization in one core and mistake it for an error in the StudyCaster client, even if a
+          maximum duty cycle is set. */
           final double minDelayDuty = avgDuration.get() * (1.0 / task.getMaxDutyCycle() - 1.0);
           final double minDelayFreq = 1000000000.0 / task.getMaxFrequency() - duration;
           while (Util.delayAtLeastUntil(

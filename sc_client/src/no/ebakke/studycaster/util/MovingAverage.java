@@ -13,7 +13,7 @@ public class MovingAverage {
   }
 
   public synchronized void enterReading(double timeSinceLastReading, double newReading) {
-    double alpha = 1 - Math.exp(-timeSinceLastReading / periodNanos);
+    double alpha = 1.0 - Math.exp(-timeSinceLastReading / periodNanos);
     average = alpha * newReading + (1.0 - alpha) * average;
   }
 

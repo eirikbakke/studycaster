@@ -1,14 +1,11 @@
 package no.ebakke.studycaster.servlets;
 
 import java.io.IOException;
-import java.util.Date;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import no.ebakke.studycaster.backend.BackendUtil;
-import no.ebakke.studycaster.backend.Request;
 import org.apache.commons.lang3.StringEscapeUtils;
 
 @WebServlet(name = "JNLPServlet",

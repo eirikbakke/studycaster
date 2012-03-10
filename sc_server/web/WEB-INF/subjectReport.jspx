@@ -20,7 +20,9 @@
 
 <h2>Subject Report</h2>
 <p>Note: Screencast mp4 files are only available after manual conversion on the server.
-   All timestamps are in UTC.</p>
+   All timestamps are in UTC.<br/>
+   <a href="subjectreport.tsv">Simplified <code>tsv</code> version.</a>
+</p>
 <table>
   <thead>
     <tr>
