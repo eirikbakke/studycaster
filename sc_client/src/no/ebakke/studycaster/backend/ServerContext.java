@@ -1,15 +1,6 @@
 package no.ebakke.studycaster.backend;
 
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.StringWriter;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -255,8 +246,7 @@ public class ServerContext {
     InputStream errContent = resp.getEntity().getContent();
     try {
       Header encoding = resp.getEntity().getContentEncoding();
-      IOUtils.copy(errContent, ret,
-          (encoding == null) ? "UTF-8" : encoding.getValue());
+      IOUtils.copy(errContent, ret, (encoding == null) ? "UTF-8" : encoding.getValue());
     } finally {
       errContent.close();
     }

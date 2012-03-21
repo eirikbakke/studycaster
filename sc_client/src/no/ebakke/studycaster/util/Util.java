@@ -2,12 +2,7 @@ package no.ebakke.studycaster.util;
 
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -148,7 +143,6 @@ public final class Util {
     final String command[];
     // See http://www.rgagnon.com/javadetails/java-0014.html
     // See http://frank.neatstep.com/node/84
-    // The "PlaceHolderTitle" argument is necessary to support files that might contain spaces.
     /* While it may appear possible to omit the Windows "start" command from the implementations
     below, this let to subtle bugs in which proc.waitFor() would block for certain applications (in
     particular, Adobe Acrobat Professional, but not Microsoft Excel). The /MAX argument should not

@@ -2,10 +2,7 @@ package no.ebakke.studycaster.configuration;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -44,7 +41,7 @@ public class StudyConfiguration {
     }
     Element root = ConfigurationUtil.getUniqueElement(configDoc, "study");
 
-    ConfigurationUtil.resolveMacros(root);
+    ConfigurationUtil.resolveMacros(new LinkedHashMap<String,Element>(), root);
     if (DEBUG_MACROS) {
       System.err.println("========================================================");
       try {

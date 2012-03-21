@@ -16,40 +16,39 @@ final class ConfigurationUtil {
 
   private ConfigurationUtil() { }
 
-  public static void resolveMacrosInternal(Map<String,Element> macroDefs, Node parent)
+  private static void insertChildrenBefore(Node target, Node parentOfNewChildren, Node refChild) {
+    NodeList nl = parentOfNewChildren.getChildNodes();
+    for (int i = 0; i < nl.getLength(); i++)
+      target.insertBefore(nl.item(i).cloneNode(true), refChild);
+  }
+
+  public static void resolveMacros(Map<String,Element> macroDefs, Node parent)
       throws StudyCasterException
   {
-    for (Element macroElm : getElements(parent, "macro", false)) {
-      String macroID = macroElm.getAttribute("id");
-      Element macroDef = macroDefs.get(macroID);
-      // TODO: Escape error messages.
-      if (macroDef == null)
-        throw new StudyCasterException("Unknown configuration macro \"" + macroID + "\"");
-      NodeList nl = macroDef.getChildNodes();
-      for (int i = 0; i < nl.getLength(); i++)
-        parent.insertBefore(nl.item(i).cloneNode(true), macroElm);
-      parent.removeChild(macroElm);
-    }
     NodeList nl = parent.getChildNodes();
     for (int i = 0; i < nl.getLength(); i++) {
       Node node = nl.item(i);
       if (node instanceof Element) {
         Element elm = (Element) node;
-        resolveMacrosInternal(macroDefs, elm);
+        resolveMacros(new LinkedHashMap<String,Element>(macroDefs), elm);
+        if (XMLNS_SC.equals(elm.getNamespaceURI()) && "macrodef".equals(elm.getTagName())) {
+          Element stored = (Element) elm.cloneNode(true);
+          parent.removeChild(elm);
+          macroDefs.put(elm.getAttribute("id"), stored);
+        }
+        if (XMLNS_SC.equals(elm.getNamespaceURI()) && "macro".equals(elm.getTagName())) {
+          String macroID = elm.getAttribute("id");
+          Element macroDef = macroDefs.get(macroID);
+          // TODO: Escape error messages.
+          if (macroDef == null)
+            throw new StudyCasterException("Unknown configuration macro \"" + macroID + "\"");
+          insertChildrenBefore(parent, macroDef, elm);
+          parent.removeChild(elm);
+        }
       }
     }
   }
 
-  public static void resolveMacros(Element root) throws StudyCasterException {
-    Map<String,Element> macroDefs = new LinkedHashMap<String,Element>();
-    for (Element elm : getElements(root, "macrodef", false)) {
-      Element stored = (Element) elm.cloneNode(true);
-      root.removeChild(elm);
-      resolveMacrosInternal(macroDefs, stored);
-      macroDefs.put(elm.getAttribute("id"), stored);
-    }
-    resolveMacrosInternal(macroDefs, root);
-  }
 
   public static String getNonEmptyAttribute(Element elm, String attrName)
       throws StudyCasterException
