@@ -22,33 +22,52 @@ final class ConfigurationUtil {
       target.insertBefore(nl.item(i).cloneNode(true), refChild);
   }
 
-  public static void resolveMacros(Map<String,Element> macroDefs, Node parent)
+  private static boolean hasTagNameInNS(Element elm, String tagName) {
+    return XMLNS_SC.equals(elm.getNamespaceURI()) && tagName.equals(elm.getLocalName());
+  }
+
+  public static void resolveMacros(Map<String,Element> context, Node parent)
       throws StudyCasterException
   {
     NodeList nl = parent.getChildNodes();
     for (int i = 0; i < nl.getLength(); i++) {
       Node node = nl.item(i);
-      if (node instanceof Element) {
-        Element elm = (Element) node;
-        resolveMacros(new LinkedHashMap<String,Element>(macroDefs), elm);
-        if (XMLNS_SC.equals(elm.getNamespaceURI()) && "macrodef".equals(elm.getTagName())) {
-          Element stored = (Element) elm.cloneNode(true);
-          parent.removeChild(elm);
-          macroDefs.put(elm.getAttribute("id"), stored);
+      if (!(node instanceof Element))
+        continue;
+      Element elm = (Element) node;
+      if        (hasTagNameInNS(elm, "macrodef")) {
+        /* Store the macro definition unresolved. Disallow variable name shadowing (otherwise I'd
+        have to implement variable capture avoidance, and it's likely not what the user wants
+        anyway). */
+        final String macroID = elm.getAttribute("id");
+        if (context.put(elm.getAttribute("id"), (Element) elm.cloneNode(true)) != null) {
+          throw new StudyCasterException(
+              "The configuration macro \"" + macroID + "\" was already defined in this context");
         }
-        if (XMLNS_SC.equals(elm.getNamespaceURI()) && "macro".equals(elm.getTagName())) {
-          String macroID = elm.getAttribute("id");
-          Element macroDef = macroDefs.get(macroID);
-          // TODO: Escape error messages.
-          if (macroDef == null)
-            throw new StudyCasterException("Unknown configuration macro \"" + macroID + "\"");
-          insertChildrenBefore(parent, macroDef, elm);
-          parent.removeChild(elm);
-        }
+        parent.removeChild(elm);
+      } else if (hasTagNameInNS(elm, "macro")) {
+        // Add to the context any macros defined inside the <macro> element, to serve as arguments.
+        Map<String,Element> contextWithArguments = new LinkedHashMap<String,Element>(context);
+        resolveMacros(contextWithArguments, elm);
+
+        final String macroID = elm.getAttribute("id");
+        Element macroDef = context.get(macroID);
+        if (macroDef == null)
+          throw new StudyCasterException("Unknown configuration macro \"" + macroID + "\"");
+
+        // Evaluate macros in the macro definition itself.
+        macroDef = (Element) macroDef.cloneNode(true);
+        resolveMacros(new LinkedHashMap<String,Element>(contextWithArguments), macroDef);
+
+        // Replace the <macro> element with the resolved contents of the <macrodef> defintion.
+        insertChildrenBefore(parent, macroDef, elm);
+        parent.removeChild(elm);
+      } else {
+        // Resolve other children immediately.
+        resolveMacros(new LinkedHashMap<String,Element>(context), elm);
       }
     }
   }
-
 
   public static String getNonEmptyAttribute(Element elm, String attrName)
       throws StudyCasterException

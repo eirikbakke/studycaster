@@ -118,10 +118,11 @@ public class ServerContext {
     final TimeSource localTimeSource = new TimeSource();
     final int    MIN_ATTEMPTS        = 5;
     final int    MAX_ATTEMPTS        = 15;
-    final double MAX_STDEV_NANOS     =   50 * 1000000.0;
+    final double MAX_SEM_NANOS       =   50 * 1000000.0;
     final double MAX_ROUNDTRIP_NANOS = 1000 * 1000000.0;
-    // Running average, sum of squares, last number of samples, and last standard deviation.
-    double A = 0, Q = 0, N = 0, stdev = Double.POSITIVE_INFINITY;
+    /* Running average, sum of squares, last number of samples, and last standard error of the
+    mean. */
+    double A = 0, Q = 0, N = 0, sem = Double.POSITIVE_INFINITY;
     for (int i = 1, attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
       // A single measurement.
       final double x;
@@ -147,13 +148,14 @@ public class ServerContext {
       A = A + (x - A) / i;
       N = i;
       i++;
-      stdev = (N == 1) ? Double.POSITIVE_INFINITY : Math.sqrt(Q / (N - 1.0));
-      if (N >= MIN_ATTEMPTS && stdev < MAX_STDEV_NANOS)
+      final double stdev = (N == 1) ? Double.POSITIVE_INFINITY : Math.sqrt(Q / (N - 1.0));
+      sem = stdev / Math.sqrt(N);
+      if (N >= MIN_ATTEMPTS && sem < MAX_SEM_NANOS)
         break;
     }
     LOG.log(Level.INFO,
         "Measured server time ahead by {0,number,#}+/-{1,number,#}ms with {2} samples",
-        new Object[]{ A / 1000000.0, stdev / 1000000.0, N});
+        new Object[]{ A / 1000000.0, sem / 1000000.0, N});
     return new TimeSource(localTimeSource, Math.round(A));
   }
 

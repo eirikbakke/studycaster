@@ -9,9 +9,9 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import no.ebakke.studycaster.backend.StudyCasterException;
 import no.ebakke.studycaster.util.XMLUtil;
-import org.xml.sax.SAXException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
 
 // TODO: Have a way for the server to test-parse the configuration.
 public class StudyConfiguration {
