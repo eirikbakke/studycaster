@@ -1,134 +1,132 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- TODO: Fix this namespace ugliness -->
-<study xmlns   ="namespace://ebakke.no/studycaster-configuration"
-       xmlns:sc="namespace://ebakke.no/studycaster-configuration">
+<sc:study xmlns:sc="namespace://ebakke.no/studycaster-configuration">
   <!-- TODO: Document this configuration file format. -->
-  <macrodef id="uistrings-english">
-    <uistrings>
-      <uistring key="DIALOG_CONSENT_TITLE">Screencasting</uistring>
-      <uistring key="DIALOG_CONSENT_QUESTION"><html xmlns="">
+  <sc:macrodef id="uistrings-english">
+    <sc:uistrings>
+      <sc:uistring key="DIALOG_CONSENT_TITLE">Screencasting</sc:uistring>
+      <sc:uistring key="DIALOG_CONSENT_QUESTION"><html>
         This tool will record the contents of your screen while you perform the HIT,<br/>
         so we can learn about how different people approached the task.<br/><br/>
         OK to start recording?</html>
-      </uistring>
-      <uistring key="DIALOG_ALREADY_RUNNING_TITLE">Already Running</uistring>
-      <uistring key="DIALOG_ALREADY_RUNNING_MESSAGE">
-        <html xmlns="">The StudyCaster client is already running in a different window.<br/>
+      </sc:uistring>
+      <sc:uistring key="DIALOG_ALREADY_RUNNING_TITLE">Already Running</sc:uistring>
+      <sc:uistring key="DIALOG_ALREADY_RUNNING_MESSAGE">
+        <html>The StudyCaster client is already running in a different window.<br/>
                        Please close it first if you wish to start over.</html>
-      </uistring>
-      <uistring key="MAINFRAME_BACK_BUTTON"       mnemonic="B">&lt; Back</uistring>
-      <uistring key="MAINFRAME_NEXT_BUTTON"       mnemonic="N">Next &gt;</uistring>
-      <uistring key="DIALOG_CLOSE_TITLE"  >Exit Without Uploading?</uistring>
-      <uistring key="DIALOG_CLOSE_MESSAGE">
+      </sc:uistring>
+      <sc:uistring key="MAINFRAME_BACK_BUTTON"       mnemonic="B">&lt; Back</sc:uistring>
+      <sc:uistring key="MAINFRAME_NEXT_BUTTON"       mnemonic="N">Next &gt;</sc:uistring>
+      <sc:uistring key="DIALOG_CLOSE_TITLE"  >Exit Without Uploading?</sc:uistring>
+      <sc:uistring key="DIALOG_CLOSE_MESSAGE">
         If you exit the StudyCaster client without uploading first, your changes will be lost.
-      </uistring>
-      <uistring key="PROGRESS_OPEN_FILE">Opening file...</uistring>
-      <uistring key="PROGRESS_OPEN_URI">Opening web page...</uistring>
-      <uistring key="PROGRESS_UPLOAD_FILE">Uploading file...</uistring>
-      <uistring key="PROGRESS_UPLOAD_SCREENCAST">Finishing screencast upload...</uistring>
+      </sc:uistring>
+      <sc:uistring key="PROGRESS_OPEN_FILE">Opening file...</sc:uistring>
+      <sc:uistring key="PROGRESS_OPEN_URI">Opening web page...</sc:uistring>
+      <sc:uistring key="PROGRESS_UPLOAD_FILE">Uploading file...</sc:uistring>
+      <sc:uistring key="PROGRESS_UPLOAD_SCREENCAST">Finishing screencast upload...</sc:uistring>
 
-      <uistring key="DIALOG_OPEN_FILE_TITLE">Open Sample Document</uistring>
-      <uistring key="DIALOG_OPEN_FILE_EXISTING_MESSAGE"><html xmlns="">
+      <sc:uistring key="DIALOG_OPEN_FILE_TITLE">Open Sample Document</sc:uistring>
+      <sc:uistring key="DIALOG_OPEN_FILE_EXISTING_MESSAGE"><html>
         The StudyCaster client found a modified file from an old session:<br/>
         {0}<br/><br/>
         Would you like to keep working on the existing file, or download a new one?</html>
-      </uistring>
-      <uistring key="DIALOG_OPEN_FILE_MODIFIED_MESSAGE"><html xmlns="">
+      </sc:uistring>
+      <sc:uistring key="DIALOG_OPEN_FILE_MODIFIED_MESSAGE"><html>
         The file was previously opened and modified:<br/>
         {0}<br/><br/>
         Would you like to keep working on the existing file, or download a new one?</html>
-      </uistring>
-      <uistring key="DIALOG_OPEN_FILE_RENAMED_MESSAGE"><html xmlns="">
+      </sc:uistring>
+      <sc:uistring key="DIALOG_OPEN_FILE_RENAMED_MESSAGE"><html>
         The old file<br/>
         {0}<br/>
         was renamed to<br/>
         {1}</html>
-      </uistring>
-      <uistring key="DIALOG_OPEN_FILE_RENAME_FAILED_MESSAGE"><html xmlns="">
+      </sc:uistring>
+      <sc:uistring key="DIALOG_OPEN_FILE_RENAME_FAILED_MESSAGE"><html>
         Failed to rename the file<br/>
         {0}<br/><br/>
         If the file is still open, please close it and try again.</html>
-      </uistring>
+      </sc:uistring>
       <!-- The message below is shown on a best-effort basis, currently never on JRE 1.5. The second
-      message parameter is a string from the <errormessage> element in the <openfile> configuration.
+      message parameter is a string from the <sc:errormessage> element in the <sc:openfile> configuration.
       -->
-      <uistring key="DIALOG_OPEN_FILE_ASSOCIATION_FAILED_MESSAGE"><html xmlns="">
+      <sc:uistring key="DIALOG_OPEN_FILE_ASSOCIATION_FAILED_MESSAGE"><html>
         Failed to open the file<br/>{0}<br/><br/>
         {1}</html>
-      </uistring>
+      </sc:uistring>
       <!-- The message below is shown on a best-effort basis; it is not always possible to detect
       whether a file is already open in a different program. -->
-      <uistring key="DIALOG_OPEN_FILE_ALREADY_MESSAGE"><html xmlns="">
+      <sc:uistring key="DIALOG_OPEN_FILE_ALREADY_MESSAGE"><html>
         The file already appears to be open:<br/>
         {0}<br/><br/>
         The file should have opened in a new window, possibly in the background.</html>
-      </uistring>
-      <uistring key="DIALOG_OPEN_FILE_NEW_BUTTON">Download New File</uistring>
-      <uistring key="DIALOG_OPEN_FILE_KEEP_BUTTON">Keep Existing File</uistring>
-      <uistring key="DIALOG_CONCLUDE_TITLE">Upload and Retrieve Confirmation Code</uistring>
-      <uistring key="DIALOG_CONCLUDE_FILE_PATH_LABEL" mnemonic="F">File to upload:</uistring>
-      <uistring key="DIALOG_CONCLUDE_FILE_INFO_LABEL">
+      </sc:uistring>
+      <sc:uistring key="DIALOG_OPEN_FILE_NEW_BUTTON">Download New File</sc:uistring>
+      <sc:uistring key="DIALOG_OPEN_FILE_KEEP_BUTTON">Keep Existing File</sc:uistring>
+      <sc:uistring key="DIALOG_CONCLUDE_TITLE">Upload and Retrieve Confirmation Code</sc:uistring>
+      <sc:uistring key="DIALOG_CONCLUDE_FILE_PATH_LABEL" mnemonic="F">File to upload:</sc:uistring>
+      <sc:uistring key="DIALOG_CONCLUDE_FILE_INFO_LABEL">
         If you saved the file to a different location, select the new location here. Otherwise, just click OK.
-      </uistring>
-      <uistring key="DIALOG_CONCLUDE_FILE_BROWSE_BUTTON" mnemonic="B">Browse...</uistring>
-      <uistring key="DIALOG_CONCLUDE_QUESTION">
+      </sc:uistring>
+      <sc:uistring key="DIALOG_CONCLUDE_FILE_BROWSE_BUTTON" mnemonic="B">Browse...</sc:uistring>
+      <sc:uistring key="DIALOG_CONCLUDE_QUESTION">
         OK to conclude study and retrieve a confirmation code?
-      </uistring>
-      <uistring key="DIALOG_CONCLUDE_FILE_NOT_OPENED_MESSAGE">
+      </sc:uistring>
+      <sc:uistring key="DIALOG_CONCLUDE_FILE_NOT_OPENED_MESSAGE">
         To upload an edited file, please open it first using the "Open Sample Document" button.
-      </uistring>
-      <uistring key="DIALOG_CONCLUDE_EMPTY_PATH_MESSAGE">
+      </sc:uistring>
+      <sc:uistring key="DIALOG_CONCLUDE_EMPTY_PATH_MESSAGE">
         Please select a file to upload.
-      </uistring>
-      <uistring key="DIALOG_CONCLUDE_FILE_NOT_EXISTS_MESSAGE"><html xmlns="">
+      </sc:uistring>
+      <sc:uistring key="DIALOG_CONCLUDE_FILE_NOT_EXISTS_MESSAGE"><html>
         The file does not exist:<br/>
         {0}</html>
-      </uistring>
-      <uistring key="DIALOG_CONCLUDE_FILE_OPEN_MESSAGE"><html xmlns="">
+      </sc:uistring>
+      <sc:uistring key="DIALOG_CONCLUDE_FILE_OPEN_MESSAGE"><html>
         Please close the file, then try again.<br/>
         {0}</html>
-      </uistring>
-      <uistring key="DIALOG_CONCLUDE_FILE_NOT_MODIFIED_MESSAGE"><html xmlns="">
+      </sc:uistring>
+      <sc:uistring key="DIALOG_CONCLUDE_FILE_NOT_MODIFIED_MESSAGE"><html>
         Please edit, save, and close the file before uploading it:<br/>
         {0}<br/><br/>
         If necessary, open the file again using the "Open Sample Document" button.</html>
-      </uistring>
-      <uistring key="DIALOG_CONFIRMATION_TITLE">Upload Successful</uistring>
-      <uistring key="DIALOG_CONFIRMATION_CODEBOX_LABEL" mnemonicindex="24">
+      </sc:uistring>
+      <sc:uistring key="DIALOG_CONFIRMATION_TITLE">Upload Successful</sc:uistring>
+      <sc:uistring key="DIALOG_CONFIRMATION_CODEBOX_LABEL" mnemonicindex="24">
         Upload Successful! Your confirmation code is...
-      </uistring>
-      <uistring key="DIALOG_CONFIRMATION_CLIPBOARD_MESSAGE">
+      </sc:uistring>
+      <sc:uistring key="DIALOG_CONFIRMATION_CLIPBOARD_MESSAGE">
         (The code has been copied to the clipboard so you can paste it into the HIT.)
-      </uistring>
+      </sc:uistring>
 
-    </uistrings>
-  </macrodef>
+    </sc:uistrings>
+  </sc:macrodef>
   <!-- Foreign language example, to test UI string settings. -->
-  <macrodef id="uistrings-norwegian">
-    <uistrings>
-      <uistring key="DIALOG_ALREADY_RUNNING_TITLE">Allerede åpnet</uistring>
-      <uistring key="DIALOG_ALREADY_RUNNING_MESSAGE">
-        <html xmlns="">StudyCaster-klienten kjører allerede i et annet vindu.<br/>
+  <sc:macrodef id="uistrings-norwegian">
+    <sc:uistrings>
+      <sc:uistring key="DIALOG_ALREADY_RUNNING_TITLE">Allerede åpnet</sc:uistring>
+      <sc:uistring key="DIALOG_ALREADY_RUNNING_MESSAGE">
+        <html>StudyCaster-klienten kjører allerede i et annet vindu.<br/>
                        Vennligst lukk det gamle vinduet først dersom du vil begynne på nytt.</html>
-      </uistring>
-      <uistring key="MAINFRAME_OPEN_FILE_BUTTON" mnemonic="Å">Åpne eksempeldokument...</uistring>
-      <uistring key="MAINFRAME_CONCLUDE_BUTTON" mnemonic="L">Last opp og motta bekreftelseskode...</uistring>
-      <uistring key="MAINFRAME_BACK_BUTTON"     mnemonic="T">&lt; Tilbake</uistring>
-      <uistring key="MAINFRAME_NEXT_BUTTON"     mnemonic="N">Neste &gt;</uistring>
-      <uistring key="DIALOG_CLOSE_TITLE"  >Avslutt uten å laste opp?</uistring>
-      <uistring key="DIALOG_CLOSE_MESSAGE">
+      </sc:uistring>
+      <sc:uistring key="MAINFRAME_OPEN_FILE_BUTTON" mnemonic="Å">Åpne eksempeldokument...</sc:uistring>
+      <sc:uistring key="MAINFRAME_CONCLUDE_BUTTON" mnemonic="L">Last opp og motta bekreftelseskode...</sc:uistring>
+      <sc:uistring key="MAINFRAME_BACK_BUTTON"     mnemonic="T">&lt; Tilbake</sc:uistring>
+      <sc:uistring key="MAINFRAME_NEXT_BUTTON"     mnemonic="N">Neste &gt;</sc:uistring>
+      <sc:uistring key="DIALOG_CLOSE_TITLE"  >Avslutt uten å laste opp?</sc:uistring>
+      <sc:uistring key="DIALOG_CLOSE_MESSAGE">
         Hvis du avslutter StudyCaster uten å laste opp først, går endringene dine tapt.
-      </uistring>
-      <uistring key="PROGRESS_OPEN">Åpner fil...</uistring>
+      </sc:uistring>
+      <sc:uistring key="PROGRESS_OPEN">Åpner fil...</sc:uistring>
       <!-- TODO: Translate remaining strings. -->
-    </uistrings>
-  </macrodef>
+    </sc:uistrings>
+  </sc:macrodef>
 
-  <macrodef id="spreadsheet-instructions-page">
-    <page>
-      <name>instructions</name>
-      <instructions>
-        <html xmlns="">
+  <sc:macrodef id="spreadsheet-instructions-page">
+    <sc:page>
+      <sc:name>instructions</sc:name>
+      <sc:instructions>
+        <html>
           <b>Instructions:</b>
           <ol>
             <li>Click "Open Sample Document" below.</li>
@@ -143,117 +141,117 @@
             <a href="mailto:ebakke@mit.edu">ebakke@mit.edu</a>
           </p>
         </html>
-      </instructions>
-      <openfile>
-        <buttontext mnemonic="D">Open Sample Document</buttontext>
-        <servername><macro id="param-servername"/></servername>
-        <clientname><macro id="param-clientname"/></clientname>
-        <errormessage><macro id="param-errormessage"/></errormessage>
-      </openfile>
-      <conclude>
-        <buttontext mnemonic="U">Upload and Retrive Confirmation Code...</buttontext>
-        <uploadfile>
-          <macro id="param-filefilter"/>
-          <default><macro id="param-clientname"/></default>
-        </uploadfile>
-      </conclude>
-    </page>
-  </macrodef>
+      </sc:instructions>
+      <sc:openfile>
+        <sc:buttontext mnemonic="D">Open Sample Document</sc:buttontext>
+        <sc:servername><sc:macro id="param-servername"/></sc:servername>
+        <sc:clientname><sc:macro id="param-clientname"/></sc:clientname>
+        <sc:errormessage><sc:macro id="param-errormessage"/></sc:errormessage>
+      </sc:openfile>
+      <sc:conclude>
+        <sc:buttontext mnemonic="U">Upload and Retrive Confirmation Code...</sc:buttontext>
+        <sc:uploadfile>
+          <sc:macro id="param-filefilter"/>
+          <sc:default><sc:macro id="param-clientname"/></sc:default>
+        </sc:uploadfile>
+      </sc:conclude>
+    </sc:page>
+  </sc:macrodef>
 
-  <macrodef id="spreadsheet-screencast">
-    <screencast>
-      <whitelist>Excel</whitelist>
-      <whitelist>Calc</whitelist>
-      <whitelist>Numbers</whitelist>
-      <whitelist>Gnumeric</whitelist>
-      <whitelist>KSpread</whitelist>
-      <whitelist>Quattro</whitelist>
-      <whitelist>Mesa</whitelist>
-      <whitelist>Spreadsheet Study Application</whitelist>
-      <blacklist>Firefox</blacklist>
-      <blacklist>Internet Explorer</blacklist>
-      <blacklist>Chrome</blacklist>
-      <blacklist>Safari</blacklist>
-      <blacklist>Opera</blacklist>
-      <blacklist>Thunderbird</blacklist>
-      <blacklist>Outlook</blacklist>
-    </screencast>
-  </macrodef>
+  <sc:macrodef id="spreadsheet-screencast">
+    <sc:screencast>
+      <sc:whitelist>Excel</sc:whitelist>
+      <sc:whitelist>Calc</sc:whitelist>
+      <sc:whitelist>Numbers</sc:whitelist>
+      <sc:whitelist>Gnumeric</sc:whitelist>
+      <sc:whitelist>KSpread</sc:whitelist>
+      <sc:whitelist>Quattro</sc:whitelist>
+      <sc:whitelist>Mesa</sc:whitelist>
+      <sc:whitelist>Spreadsheet Study Application</sc:whitelist>
+      <sc:blacklist>Firefox</sc:blacklist>
+      <sc:blacklist>Internet Explorer</sc:blacklist>
+      <sc:blacklist>Chrome</sc:blacklist>
+      <sc:blacklist>Safari</sc:blacklist>
+      <sc:blacklist>Opera</sc:blacklist>
+      <sc:blacklist>Thunderbird</sc:blacklist>
+      <sc:blacklist>Outlook</sc:blacklist>
+    </sc:screencast>
+  </sc:macrodef>
 
-  <macrodef id="filefilter-excel">
-    <filefilter>
-      <description>Microsoft Excel Workbook</description>
-      <extension>xls</extension>
-      <extension>xml</extension>
-      <extension>xlsx</extension>
-      <extension>xlsm</extension>
-      <extension>xlsb</extension>
-    </filefilter>
-  </macrodef>
+  <sc:macrodef id="filefilter-excel">
+    <sc:filefilter>
+      <sc:description>Microsoft Excel Workbook</sc:description>
+      <sc:extension>xls</sc:extension>
+      <sc:extension>xml</sc:extension>
+      <sc:extension>xlsx</sc:extension>
+      <sc:extension>xlsm</sc:extension>
+      <sc:extension>xlsb</sc:extension>
+    </sc:filefilter>
+  </sc:macrodef>
 
-  <macrodef id="filefilter-relspread">
-    <filefilter>
-      <description>Spreadsheet Study Application files</description>
-      <extension>rzw</extension>
-    </filefilter>
-  </macrodef>
+  <sc:macrodef id="filefilter-relspread">
+    <sc:filefilter>
+      <sc:description>Spreadsheet Study Application files</sc:description>
+      <sc:extension>rzw</sc:extension>
+    </sc:filefilter>
+  </sc:macrodef>
 
-  <macrodef id="openfile-error-excel">
+  <sc:macrodef id="openfile-error-excel">
     Do you have Excel or a compatible spreadsheet application installed?
-  </macrodef>
-  <configuration>
-    <id>default</id>
-    <name>Recruiting</name>
-    <macro id="uistrings-english"/>
-    <macro id="spreadsheet-screencast"/>
-    <macro id="spreadsheet-instructions-page">
-      <macrodef id="param-servername">currencies.xls</macrodef>
-      <macrodef id="param-clientname">userstudyHIT_currencies.xls</macrodef>
-      <macrodef id="param-filefilter"><macro id="filefilter-excel"/></macrodef>
-      <macrodef id="param-errormessage"><macro id="openfile-error-excel"/></macrodef>
-    </macro>
-  </configuration>
+  </sc:macrodef>
+  <sc:configuration>
+    <sc:id>default</sc:id>
+    <sc:name>Recruiting</sc:name>
+    <sc:macro id="uistrings-english"/>
+    <sc:macro id="spreadsheet-screencast"/>
+    <sc:macro id="spreadsheet-instructions-page">
+      <sc:macrodef id="param-servername">currencies.xls</sc:macrodef>
+      <sc:macrodef id="param-clientname">userstudyHIT_currencies.xls</sc:macrodef>
+      <sc:macrodef id="param-filefilter"><sc:macro id="filefilter-excel"/></sc:macrodef>
+      <sc:macrodef id="param-errormessage"><sc:macro id="openfile-error-excel"/></sc:macrodef>
+    </sc:macro>
+  </sc:configuration>
 
-  <configuration>
-    <id>testing</id>
-    <name>Test Configuration</name>
-    <macro id="uistrings-english"/>
-    <macro id="spreadsheet-screencast"/>
-    <page>
-      <name>firstPage</name>
-      <instructions>
-        <html xmlns="">
+  <sc:configuration>
+    <sc:id>testing</sc:id>
+    <sc:name>Test Configuration</sc:name>
+    <sc:macro id="uistrings-english"/>
+    <sc:macro id="spreadsheet-screencast"/>
+    <sc:page>
+      <sc:name>firstPage</sc:name>
+      <sc:instructions>
+        <html>
           This is the first page.
         </html>
-      </instructions>
-    </page>
+      </sc:instructions>
+    </sc:page>
 
-    <page>
-      <name>secondPage</name>
-      <instructions>
-        <html xmlns="">
+    <sc:page>
+      <sc:name>secondPage</sc:name>
+      <sc:instructions>
+        <html>
           This is the second page. It has an open file button, and an open URI
           button.<br/><br/>
           This is a second paragraph (actually, just after some BR tags).
         </html>
-      </instructions>
-      <openfile>
-        <buttontext mnemonic="D">Open Sample Document</buttontext>
-        <servername>testfile.pdf</servername>
-        <clientname>StudyCaster testfile with spaces in name.pdf</clientname>
-        <errormessage>Do you have a program that can open PDF files
-                      (e.g. Acrobat Reader) installed?</errormessage>
-      </openfile>
-      <openuri>
-        <buttontext mnemonic="W">Open Sample Web Page</buttontext>
-        <uri>http://www.youtube.com/watch?v=dQw4w9WgXcQ</uri>
-      </openuri>
-    </page>
+      </sc:instructions>
+      <sc:openfile>
+        <sc:buttontext mnemonic="D">Open Sample Document</sc:buttontext>
+        <sc:servername>testfile.pdf</sc:servername>
+        <sc:clientname>StudyCaster testfile with spaces in name.pdf</sc:clientname>
+        <sc:errormessage>Do you have a program that can open PDF files
+                      (e.g. Acrobat Reader) installed?</sc:errormessage>
+      </sc:openfile>
+      <sc:openuri>
+        <sc:buttontext mnemonic="W">Open Sample Web Page</sc:buttontext>
+        <sc:uri>http://www.youtube.com/watch?v=dQw4w9WgXcQ</sc:uri>
+      </sc:openuri>
+    </sc:page>
 
 <!--
-    <page>
-      <name>tableTest</name>
-      <instructions><html xmlns="">
+    <sc:page>
+      <sc:name>tableTest</sc:name>
+      <sc:instructions><html>
         This is another page. This one demonstrates the use of an HTML table.<br/><br/>
         <table border="1">
         <thead>
@@ -274,14 +272,14 @@
         <tr><td>12</td><td>Paper-Out</td><td>Status</td><td>No</td><td><code>&lt;-</code>|</td><td></td></tr>
         </tbody>
         </table>
-      </html></instructions>
-    </page>
+      </html></sc:instructions>
+    </sc:page>
 -->
 
-    <page>
-      <name>ThirdPage</name>
-      <instructions>
-        <html xmlns="">
+    <sc:page>
+      <sc:name>ThirdPage</sc:name>
+      <sc:instructions>
+        <html>
           <base href="http://www.mit.edu/~ebakke/" />
           This is the third page. It has a conclude study button, with no upload.<br/>
           <br/>
@@ -289,67 +287,67 @@
           <img src="meet/limecat.jpg" alt="limecat" border="1" />
           </center>
         </html>
-      </instructions>
-      <conclude>
-        <buttontext mnemonic="U">Upload and Retrive Confirmation Code...</buttontext>
-      </conclude>
-    </page>
+      </sc:instructions>
+      <sc:conclude>
+        <sc:buttontext mnemonic="U">Upload and Retrive Confirmation Code...</sc:buttontext>
+      </sc:conclude>
+    </sc:page>
 
-    <macro id="spreadsheet-instructions-page">
-      <macrodef id="param-servername">currencies.xls</macrodef>
-      <macrodef id="param-clientname">userstudyHIT_currencies.xls</macrodef>
-      <macrodef id="param-filefilter"><macro id="filefilter-excel"/></macrodef>
-      <macrodef id="param-errormessage"><macro id="openfile-error-excel"/></macrodef>
-    </macro>
-  </configuration>
+    <sc:macro id="spreadsheet-instructions-page">
+      <sc:macrodef id="param-servername">currencies.xls</sc:macrodef>
+      <sc:macrodef id="param-clientname">userstudyHIT_currencies.xls</sc:macrodef>
+      <sc:macrodef id="param-filefilter"><sc:macro id="filefilter-excel"/></sc:macrodef>
+      <sc:macrodef id="param-errormessage"><sc:macro id="openfile-error-excel"/></sc:macrodef>
+    </sc:macro>
+  </sc:configuration>
 
-  <configuration>
-    <id>6728</id>
-    <name>Main Excel</name>
-    <macro id="uistrings-english"/>
-    <macro id="spreadsheet-screencast"/>
-    <macro id="spreadsheet-instructions-page">
-      <macrodef id="param-servername">exflat.xls</macrodef>
-      <macrodef id="param-clientname">userstudyHIT_coursecatalog.xls</macrodef>
-      <macrodef id="param-filefilter"><macro id="filefilter-excel"/></macrodef>
-      <macrodef id="param-errormessage"><macro id="openfile-error-excel"/></macrodef>
-    </macro>
-  </configuration>
+  <sc:configuration>
+    <sc:id>6728</sc:id>
+    <sc:name>Main Excel</sc:name>
+    <sc:macro id="uistrings-english"/>
+    <sc:macro id="spreadsheet-screencast"/>
+    <sc:macro id="spreadsheet-instructions-page">
+      <sc:macrodef id="param-servername">exflat.xls</sc:macrodef>
+      <sc:macrodef id="param-clientname">userstudyHIT_coursecatalog.xls</sc:macrodef>
+      <sc:macrodef id="param-filefilter"><sc:macro id="filefilter-excel"/></sc:macrodef>
+      <sc:macrodef id="param-errormessage"><sc:macro id="openfile-error-excel"/></sc:macrodef>
+    </sc:macro>
+  </sc:configuration>
 
-  <configuration>
-    <id>1093</id>
-    <name>Main Related Worksheets</name>
-    <macro id="uistrings-english"/>
-    <macro id="spreadsheet-screencast"/>
-    <macro id="spreadsheet-instructions-page">
-      <macrodef id="param-servername">rsnest.rzw</macrodef>
-      <macrodef id="param-clientname">userstudyHIT_coursecatalog.rzw</macrodef>
-      <macrodef id="param-filefilter"><macro id="filefilter-relspread"/></macrodef>
-      <macrodef id="param-errormessage">Unexpected error.</macrodef>
-    </macro>
-  </configuration>
+  <sc:configuration>
+    <sc:id>1093</sc:id>
+    <sc:name>Main Related Worksheets</sc:name>
+    <sc:macro id="uistrings-english"/>
+    <sc:macro id="spreadsheet-screencast"/>
+    <sc:macro id="spreadsheet-instructions-page">
+      <sc:macrodef id="param-servername">rsnest.rzw</sc:macrodef>
+      <sc:macrodef id="param-clientname">userstudyHIT_coursecatalog.rzw</sc:macrodef>
+      <sc:macrodef id="param-filefilter"><sc:macro id="filefilter-relspread"/></sc:macrodef>
+      <sc:macrodef id="param-errormessage">Unexpected error.</sc:macrodef>
+    </sc:macro>
+  </sc:configuration>
 
-<macrodef id="layoutstudy-configuration">
-  <configuration>
-    <id><macro id="param-id"/></id>
-    <name>Layout Manager Study
-    (<macro id="param-layouttype1"/>-<macro id="param-layouttype2"/>-<macro id="param-layouttype3"/>)</name>
-    <macro id="uistrings-english"/>
-    <screencast>
-      <whitelist>Acrobat</whitelist>
-      <whitelist>Reader</whitelist>
-      <whitelist>PDF</whitelist>
-      <blacklist>Firefox</blacklist>
-      <blacklist>Internet Explorer</blacklist>
-      <blacklist>Chrome</blacklist>
-      <blacklist>Safari</blacklist>
-      <blacklist>Opera</blacklist>
-      <blacklist>Thunderbird</blacklist>
-      <blacklist>Outlook</blacklist>
-    </screencast>
+<sc:macrodef id="layoutstudy-configuration">
+  <sc:configuration>
+    <sc:id><sc:macro id="param-id"/></sc:id>
+    <sc:name>Layout Manager Study
+    (<sc:macro id="param-layouttype1"/>-<sc:macro id="param-layouttype2"/>-<sc:macro id="param-layouttype3"/>)</sc:name>
+    <sc:macro id="uistrings-english"/>
+    <sc:screencast>
+      <sc:whitelist>Acrobat</sc:whitelist>
+      <sc:whitelist>Reader</sc:whitelist>
+      <sc:whitelist>PDF</sc:whitelist>
+      <sc:blacklist>Firefox</sc:blacklist>
+      <sc:blacklist>Internet Explorer</sc:blacklist>
+      <sc:blacklist>Chrome</sc:blacklist>
+      <sc:blacklist>Safari</sc:blacklist>
+      <sc:blacklist>Opera</sc:blacklist>
+      <sc:blacklist>Thunderbird</sc:blacklist>
+      <sc:blacklist>Outlook</sc:blacklist>
+    </sc:screencast>
 
-    <macrodef id="layoutquestion-style">
-      <style xmlns="" type="text/css">
+    <sc:macrodef id="layoutquestion-style">
+      <style type="text/css">
         body {
           width: 280px;
         }
@@ -369,13 +367,13 @@
           margin-bottom: 12pt;
         }
       </style>
-    </macrodef>
+    </sc:macrodef>
 
-    <macrodef id="layoutquestion-page">
-      <page>
-        <name>question<sc:macro id="param-number"/><sc:macro id="param-subletter"/></name>
-        <instructions>
-          <html xmlns="">
+    <sc:macrodef id="layoutquestion-page">
+      <sc:page>
+        <sc:name>question<sc:macro id="param-number"/><sc:macro id="param-subletter"/></sc:name>
+        <sc:instructions>
+          <html>
             <sc:macro id="layoutquestion-style"/>
             <p>
               The question below is based on the PDF file you opened previously. <sc:macro id="param-pdfdescription"/>
@@ -390,16 +388,16 @@
               Please type your answer into the HIT form in your browser, then click "Next" to continue to the next question.
             </p>
           </html>
-        </instructions>
-      </page>
-    </macrodef>
+        </sc:instructions>
+      </sc:page>
+    </sc:macrodef>
 
-    <macrodef id="layoutquestionset">
-      <page>
-        <name>question<sc:macro id="param-number"/>-instructions</name>
+    <sc:macrodef id="layoutquestionset">
+      <sc:page>
+        <sc:name>question<sc:macro id="param-number"/>-instructions</sc:name>
         <sc:macrodef id="pdftitle">PDF File for Questions <sc:macro id="param-number"/>A and <sc:macro id="param-number"/>B</sc:macrodef>
-        <instructions>
-          <html xmlns="">
+        <sc:instructions>
+          <html>
             <sc:macro id="layoutquestion-style"/>
             <p>Please click the button below to open the PDF file that will be used for the next two questions.</p>
             <p class="description">
@@ -409,39 +407,39 @@
             </p>
             <p>When the PDF file has opened, click "Next" to proceed to the questions.</p>
           </html>
-        </instructions>
-        <openfile>
-          <buttontext mnemonic="O">Open <macro id="pdftitle"/></buttontext>
-          <servername>
-            layoutstudy/<macro id="param-corpuskey"/>_<macro id="param-layouttype"/>.pdf
-          </servername>
-          <clientname>HIT_Q<sc:macro id="param-number"/>_userstudy.pdf</clientname>
-          <errormessage>Do you have a PDF reader installed?</errormessage>
-        </openfile>
-      </page>
+        </sc:instructions>
+        <sc:openfile>
+          <sc:buttontext mnemonic="O">Open <sc:macro id="pdftitle"/></sc:buttontext>
+          <sc:servername>
+            layoutstudy/<sc:macro id="param-corpuskey"/>_<sc:macro id="param-layouttype"/>.pdf
+          </sc:servername>
+          <sc:clientname>HIT_Q<sc:macro id="param-number"/>_userstudy.pdf</sc:clientname>
+          <sc:errormessage>Do you have a PDF reader installed?</sc:errormessage>
+        </sc:openfile>
+      </sc:page>
 
-      <macro id="layoutquestion-page">
-        <macrodef id="param-question">
-          <macro id="param-basequestion">
-            <macrodef id="param-variation"><span xmlns="" class="varying"><sc:macro id="param-variationA"/></span></macrodef>
-          </macro>
-        </macrodef>
-        <macrodef id="param-subletter">A</macrodef>
-      </macro>
-      <macro id="layoutquestion-page">
-        <macrodef id="param-question">
-          <macro id="param-basequestion">
-            <macrodef id="param-variation"><span xmlns="" class="varying"><sc:macro id="param-variationB"/></span></macrodef>
-          </macro>
-        </macrodef>
-        <macrodef id="param-subletter">B</macrodef>
-      </macro>
-    </macrodef>
+      <sc:macro id="layoutquestion-page">
+        <sc:macrodef id="param-question">
+          <sc:macro id="param-basequestion">
+            <sc:macrodef id="param-variation"><span class="varying"><sc:macro id="param-variationA"/></span></sc:macrodef>
+          </sc:macro>
+        </sc:macrodef>
+        <sc:macrodef id="param-subletter">A</sc:macrodef>
+      </sc:macro>
+      <sc:macro id="layoutquestion-page">
+        <sc:macrodef id="param-question">
+          <sc:macro id="param-basequestion">
+            <sc:macrodef id="param-variation"><span class="varying"><sc:macro id="param-variationB"/></span></sc:macrodef>
+          </sc:macro>
+        </sc:macrodef>
+        <sc:macrodef id="param-subletter">B</sc:macrodef>
+      </sc:macro>
+    </sc:macrodef>
 
-    <page>
-      <name>instructions</name>
-      <instructions>
-        <html xmlns="">
+    <sc:page>
+      <sc:name>instructions</sc:name>
+      <sc:instructions>
+        <html>
           <sc:macro id="layoutquestion-style"/>
           <h1>Instructions:</h1>
           <ul>
@@ -455,84 +453,84 @@
           </ul>
           <p>Please click "Next" to proceed to the questions.</p>
         </html>
-      </instructions>
-    </page>
+      </sc:instructions>
+    </sc:page>
 
-    <macro id="layoutquestionset">
-      <macrodef id="param-number">1</macrodef>
-      <macrodef id="param-corpuskey">Auction321Gone</macrodef>
-      <macrodef id="param-layouttype"><macro id="param-layouttype1"/></macrodef>
-      <macrodef id="param-pdfdescription">
+    <sc:macro id="layoutquestionset">
+      <sc:macrodef id="param-number">1</sc:macrodef>
+      <sc:macrodef id="param-corpuskey">Auction321Gone</sc:macrodef>
+      <sc:macrodef id="param-layouttype"><sc:macro id="param-layouttype1"/></sc:macrodef>
+      <sc:macrodef id="param-pdfdescription">
         This PDF lists computers for sale at an online auction site, and some data about each auction.
-      </macrodef>
-      <macrodef id="param-basequestion">
-        What is the size of the hard drive of the computer with the <macro id="param-variation"/> "Time Left" on the auction?
-      </macrodef>
-      <macrodef id="param-variationA">shortest</macrodef>
-      <macrodef id="param-variationB">longest</macrodef>
-      <macrodef id="param-answerexample">15GB</macrodef>
-      <macrodef id="openfile-servername">layoutstudy/Auction321Gone_hybrid.pdf</macrodef>
-    </macro>
-    <macro id="layoutquestionset">
-      <macrodef id="param-number">2</macrodef>
-      <macrodef id="param-corpuskey">SigmodRecord</macrodef>
-      <macrodef id="param-layouttype"><macro id="param-layouttype2"/></macrodef>
-      <macrodef id="param-pdfdescription">
+      </sc:macrodef>
+      <sc:macrodef id="param-basequestion">
+        What is the size of the hard drive of the computer with the <sc:macro id="param-variation"/> "Time Left" on the auction?
+      </sc:macrodef>
+      <sc:macrodef id="param-variationA">shortest</sc:macrodef>
+      <sc:macrodef id="param-variationB">longest</sc:macrodef>
+      <sc:macrodef id="param-answerexample">15GB</sc:macrodef>
+      <sc:macrodef id="openfile-servername">layoutstudy/Auction321Gone_hybrid.pdf</sc:macrodef>
+    </sc:macro>
+    <sc:macro id="layoutquestionset">
+      <sc:macrodef id="param-number">2</sc:macrodef>
+      <sc:macrodef id="param-corpuskey">SigmodRecord</sc:macrodef>
+      <sc:macrodef id="param-layouttype"><sc:macro id="param-layouttype2"/></sc:macrodef>
+      <sc:macrodef id="param-pdfdescription">
         This PDF lists articles published in a series of academic journals, and their authors.
-      </macrodef>
-      <macrodef id="param-basequestion">
-        How many articles were published in <macro id="param-variation"/>?
-      </macrodef>
-      <macrodef id="param-variationA">Volume 12, Number 3</macrodef>
-      <macrodef id="param-variationB">Volume 14, Number 1</macrodef>
-      <macrodef id="param-answerexample">9</macrodef>
-    </macro>
-    <macro id="layoutquestionset">
-      <macrodef id="param-number">XXX</macrodef>
-      <macrodef id="param-corpuskey">XXX</macrodef>
+      </sc:macrodef>
+      <sc:macrodef id="param-basequestion">
+        How many articles were published in <sc:macro id="param-variation"/>?
+      </sc:macrodef>
+      <sc:macrodef id="param-variationA">Volume 12, Number 3</sc:macrodef>
+      <sc:macrodef id="param-variationB">Volume 14, Number 1</sc:macrodef>
+      <sc:macrodef id="param-answerexample">9</sc:macrodef>
+    </sc:macro>
+    <sc:macro id="layoutquestionset">
+      <sc:macrodef id="param-number">XXX</sc:macrodef>
+      <sc:macrodef id="param-corpuskey">XXX</sc:macrodef>
       <!-- TODO: Change layouttype -->
-      <macrodef id="param-layouttype"><macro id="param-layouttype3"/></macrodef>
-      <macrodef id="param-pdfdescription">
+      <sc:macrodef id="param-layouttype"><sc:macro id="param-layouttype3"/></sc:macrodef>
+      <sc:macrodef id="param-pdfdescription">
         XXX
-      </macrodef>
-      <macrodef id="param-basequestion">
-        XXX <macro id="param-variation"/>?
-      </macrodef>
-      <macrodef id="param-variationA">XXX</macrodef>
-      <macrodef id="param-variationB">XXX</macrodef>
-      <macrodef id="param-answerexample">XXX</macrodef>
-    </macro>
+      </sc:macrodef>
+      <sc:macrodef id="param-basequestion">
+        XXX <sc:macro id="param-variation"/>?
+      </sc:macrodef>
+      <sc:macrodef id="param-variationA">XXX</sc:macrodef>
+      <sc:macrodef id="param-variationB">XXX</sc:macrodef>
+      <sc:macrodef id="param-answerexample">XXX</sc:macrodef>
+    </sc:macro>
 
-    <page>
-      <name>conclude</name>
-      <instructions>
-        <html xmlns="">
+    <sc:page>
+      <sc:name>conclude</sc:name>
+      <sc:instructions>
+        <html>
           <sc:macro id="layoutquestion-style"/>
           <p>Once you've entered answers into the HIT form to all the preceding questions, press the button below to upload your screencast and retrieve a confirmation code. You can then paste the confirmation code into the last question of the HIT.</p>
           <p>Thank you for doing this HIT!</p>
         </html>
-      </instructions>
-      <conclude>
-        <buttontext mnemonic="U">Upload and Retrive Confirmation Code...</buttontext>
-      </conclude>
+      </sc:instructions>
+      <sc:conclude>
+        <sc:buttontext mnemonic="U">Upload and Retrive Confirmation Code...</sc:buttontext>
+      </sc:conclude>
 
-    </page>
-  </configuration>
-</macrodef>
+    </sc:page>
+  </sc:configuration>
+</sc:macrodef>
 
-  <macro id="layoutstudy-configuration">
-    <macrodef id="param-id">L5823</macrodef>
-    <macrodef id="param-layouttype1">hybrid</macrodef>
-    <macrodef id="param-layouttype2">outline</macrodef>
-    <macrodef id="param-layouttype3">tabular</macrodef>
-  </macro>
+  <sc:macro id="layoutstudy-configuration">
+    <sc:macrodef id="param-id">L5823</sc:macrodef>
+    <sc:macrodef id="param-layouttype1">hybrid</sc:macrodef>
+    <sc:macrodef id="param-layouttype2">outline</sc:macrodef>
+    <sc:macrodef id="param-layouttype3">tabular</sc:macrodef>
+  </sc:macro>
 
-  <macro id="layoutstudy-configuration">
-    <macrodef id="param-id">allhybrid</macrodef>
-    <macrodef id="param-layouttype1">hybrid</macrodef>
-    <macrodef id="param-layouttype2">hybrid</macrodef>
-    <macrodef id="param-layouttype3">hybrid</macrodef>
-  </macro>
+  <sc:macro id="layoutstudy-configuration">
+    <sc:macrodef id="param-id">allhybrid</sc:macrodef>
+    <sc:macrodef id="param-layouttype1">hybrid</sc:macrodef>
+    <sc:macrodef id="param-layouttype2">hybrid</sc:macrodef>
+    <sc:macrodef id="param-layouttype3">hybrid</sc:macrodef>
+  </sc:macro>
 
-</study>
+</sc:study>
 
