@@ -316,7 +316,7 @@ public final class StudyCaster {
           try {
             hooks.getConsoleStream().connect(serverContext.uploadFile("console.txt"));
             final String configurationID = System.getProperty(CONFIGID_PROP_NAME);
-            if (configurationID == null)
+            if (configurationID == null || configurationID.length() == 0)
               throw new StudyCasterException("Unspecified configuration ID");
             configuration = StudyConfiguration.parseConfiguration(
               serverContext.downloadFile("studyconfig.xml"), configurationID);

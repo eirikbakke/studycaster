@@ -75,7 +75,7 @@
     <p>Static link version:</p>
     <p><a href="${fn:escapeXml(urlJNLP)}sl">${fn:escapeXml(urlJNLP)}sl</a></p>
 
-    <p>You can replace the word <code>default</code> in the JavaScript code (last line) or the
+    <p>You can replace the word <code>example</code> in the JavaScript code (last line) or the
     static link above with any configuration ID defined in the <code>studyconfig.xml</code> file in
     the storage directory.</p>
 

@@ -47,8 +47,7 @@ public class AdminServlet extends HttpServlet {
       support them. */
       req.setAttribute("serverURL", ServletUtil.ensureSafeString(serverURL));
       req.setAttribute("urlJNLP", ServletUtil.ensureSafeString(
-          serverURL + JNLPServlet.JNLP_PATH + "?ci=" +
-          JNLPServlet.DEFAULT_CONFIGURATION_ID + "&ver="));
+          serverURL + JNLPServlet.JNLP_PATH + "?ci=example&ver="));
       // TODO: Synchronize with JNLP file.
       req.setAttribute("minJavaVer", ServletUtil.ensureSafeString("1.5"));
       req.setAttribute("currentTime", ServletUtil.getServerDateFormat().format(new Date()));

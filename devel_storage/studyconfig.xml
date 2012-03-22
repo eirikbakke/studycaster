@@ -127,6 +127,7 @@
       <sc:name>instructions</sc:name>
       <sc:instructions>
         <html>
+          <sc:macro id="param-banner"/>
           <b>Instructions:</b>
           <ol>
             <li>Click "Open Sample Document" below.</li>
@@ -200,11 +201,28 @@
     Do you have Excel or a compatible spreadsheet application installed?
   </sc:macrodef>
   <sc:configuration>
-    <sc:id>default</sc:id>
+    <sc:id>example</sc:id>
+    <sc:name>Example Configuration</sc:name>
+    <sc:macro id="uistrings-english"/>
+    <sc:macro id="spreadsheet-screencast"/>
+    <sc:macro id="spreadsheet-instructions-page">
+      <sc:macrodef id="param-banner">
+        <p><font color="red"><b>Example StudyCaster Configuration</b></font></p>
+      </sc:macrodef>
+      <sc:macrodef id="param-servername">currencies.xls</sc:macrodef>
+      <sc:macrodef id="param-clientname">userstudyHIT_currencies.xls</sc:macrodef>
+      <sc:macrodef id="param-filefilter"><sc:macro id="filefilter-excel"/></sc:macrodef>
+      <sc:macrodef id="param-errormessage"><sc:macro id="openfile-error-excel"/></sc:macrodef>
+    </sc:macro>
+  </sc:configuration>
+
+  <sc:configuration>
+    <sc:id>recruiting</sc:id>
     <sc:name>Recruiting</sc:name>
     <sc:macro id="uistrings-english"/>
     <sc:macro id="spreadsheet-screencast"/>
     <sc:macro id="spreadsheet-instructions-page">
+      <sc:macrodef id="param-banner"></sc:macrodef>
       <sc:macrodef id="param-servername">currencies.xls</sc:macrodef>
       <sc:macrodef id="param-clientname">userstudyHIT_currencies.xls</sc:macrodef>
       <sc:macrodef id="param-filefilter"><sc:macro id="filefilter-excel"/></sc:macrodef>
@@ -294,6 +312,7 @@
     </sc:page>
 
     <sc:macro id="spreadsheet-instructions-page">
+      <sc:macrodef id="param-banner"></sc:macrodef>
       <sc:macrodef id="param-servername">currencies.xls</sc:macrodef>
       <sc:macrodef id="param-clientname">userstudyHIT_currencies.xls</sc:macrodef>
       <sc:macrodef id="param-filefilter"><sc:macro id="filefilter-excel"/></sc:macrodef>
@@ -307,6 +326,7 @@
     <sc:macro id="uistrings-english"/>
     <sc:macro id="spreadsheet-screencast"/>
     <sc:macro id="spreadsheet-instructions-page">
+      <sc:macrodef id="param-banner"></sc:macrodef>
       <sc:macrodef id="param-servername">exflat.xls</sc:macrodef>
       <sc:macrodef id="param-clientname">userstudyHIT_coursecatalog.xls</sc:macrodef>
       <sc:macrodef id="param-filefilter"><sc:macro id="filefilter-excel"/></sc:macrodef>
@@ -320,6 +340,7 @@
     <sc:macro id="uistrings-english"/>
     <sc:macro id="spreadsheet-screencast"/>
     <sc:macro id="spreadsheet-instructions-page">
+      <sc:macrodef id="param-banner"></sc:macrodef>
       <sc:macrodef id="param-servername">rsnest.rzw</sc:macrodef>
       <sc:macrodef id="param-clientname">userstudyHIT_coursecatalog.rzw</sc:macrodef>
       <sc:macrodef id="param-filefilter"><sc:macro id="filefilter-relspread"/></sc:macrodef>

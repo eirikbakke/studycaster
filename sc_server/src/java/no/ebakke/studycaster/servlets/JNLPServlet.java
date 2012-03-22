@@ -17,7 +17,6 @@ public class JNLPServlet extends HttpServlet {
   public static final String JNLP_DIR  = "/client";
   public static final String JNLP_FILE = "sc_client.jnlp";
   public static final String JNLP_PATH = JNLPServlet.JNLP_DIR + "/" + JNLPServlet.JNLP_FILE;
-  public static final String DEFAULT_CONFIGURATION_ID = "default";
 
   @Override
   protected void service(HttpServletRequest req, HttpServletResponse resp)
@@ -32,19 +31,24 @@ public class JNLPServlet extends HttpServlet {
     resp.setHeader("Content-Disposition", "attachment; filename=\"" +
         StringEscapeUtils.escapeJava(JNLPServlet.JNLP_FILE) + "\"");
 
-    final String configurationID = req.getParameter("ci");
-    req.setAttribute("configurationID",
-        configurationID == null ? DEFAULT_CONFIGURATION_ID : configurationID);
-    /* TODO: Consider whether the server URL should be a configuration
-    parameter rather than being derived dynamically. */
-    final String serverURL = ServletUtil.getApplicationBase(req);
-    req.setAttribute("codebaseURL", serverURL + JNLPServlet.JNLP_DIR);
-    req.setAttribute("jnlpFile", JNLPServlet.JNLP_FILE);
-    getServletContext().getRequestDispatcher("/WEB-INF/generatedJNLP.jspx").forward(req, resp);
+    try {
+      final String configurationID = ServletUtil.getStringParam(req, "ci");
+      req.setAttribute("configurationID", configurationID);
+      /* TODO: Consider whether the server URL should be a configuration
+      parameter rather than being derived dynamically. */
+      final String serverURL = ServletUtil.getApplicationBase(req);
+      req.setAttribute("codebaseURL", serverURL + JNLPServlet.JNLP_DIR);
+      req.setAttribute("jnlpFile",
+        ServletUtil.ensureSafeString(JNLPServlet.JNLP_FILE + "?ci=" + configurationID + "&ver=jnlp"));
+      getServletContext().getRequestDispatcher("/WEB-INF/generatedJNLP.jspx").forward(req, resp);
 
-    // TODO: Redesign request schema to avoid fields with either compound values or mostly nulls.
-    // TODO: Avoid having to log two separate requests here, or rename "jws".
-    ServletUtil.logRequest(req, "jws", null, null, null, req.getParameter("ver"));
-    ServletUtil.logRequest(req, "cid", null, null, null, configurationID);
+      // TODO: Redesign request schema to avoid fields with either compound values or mostly nulls.
+      // TODO: Avoid having to log two separate requests here, or rename "jws".
+      ServletUtil.logRequest(req, "jws", null, null, null, req.getParameter("ver"));
+      ServletUtil.logRequest(req, "cid", null, null, null, configurationID);
+    } catch (BadRequestException e) {
+      ServletUtil.logRequest(req, "jrr", null, null, null, req.getParameter("ver"));
+      e.sendError(resp);
+    }
   }
 }
