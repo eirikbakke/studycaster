@@ -125,36 +125,39 @@
   </macrodef>
 
   <macrodef id="spreadsheet-instructions-page">
-    <instructions>
-      <html xmlns="">
-        <b>Instructions:</b>
-        <ol>
-          <li>Click "Open Sample Document" below.</li>
-          <li>Edit the spreadsheet that opened in a different window<br/>
-              (according to the instructions in the HIT).</li>
-          <li>Save and close the spreadsheet.</li>
-          <li>Click "Upload and Retrieve Confirmation Code" below.</li>
-          <li>Paste the confirmation code into the HIT.</li>
-        </ol>
-        <p align="right">
-          Thanks!<br/>
-          <a href="mailto:ebakke@mit.edu">ebakke@mit.edu</a>
-        </p>
-      </html>
-    </instructions>
-    <openfile>
-      <buttontext mnemonic="D">Open Sample Document</buttontext>
-      <servername><macro id="param-servername"/></servername>
-      <clientname><macro id="param-clientname"/></clientname>
-      <errormessage><macro id="param-errormessage"/></errormessage>
-    </openfile>
-    <conclude>
-      <buttontext mnemonic="U">Upload and Retrive Confirmation Code...</buttontext>
-      <uploadfile>
-        <macro id="param-filefilter"/>
-        <default><macro id="param-clientname"/></default>
-      </uploadfile>
-    </conclude>
+    <page>
+      <name>instructions</name>
+      <instructions>
+        <html xmlns="">
+          <b>Instructions:</b>
+          <ol>
+            <li>Click "Open Sample Document" below.</li>
+            <li>Edit the spreadsheet that opened in a different window<br/>
+                (according to the instructions in the HIT).</li>
+            <li>Save and close the spreadsheet.</li>
+            <li>Click "Upload and Retrieve Confirmation Code" below.</li>
+            <li>Paste the confirmation code into the HIT.</li>
+          </ol>
+          <p align="right">
+            Thanks!<br/>
+            <a href="mailto:ebakke@mit.edu">ebakke@mit.edu</a>
+          </p>
+        </html>
+      </instructions>
+      <openfile>
+        <buttontext mnemonic="D">Open Sample Document</buttontext>
+        <servername><macro id="param-servername"/></servername>
+        <clientname><macro id="param-clientname"/></clientname>
+        <errormessage><macro id="param-errormessage"/></errormessage>
+      </openfile>
+      <conclude>
+        <buttontext mnemonic="U">Upload and Retrive Confirmation Code...</buttontext>
+        <uploadfile>
+          <macro id="param-filefilter"/>
+          <default><macro id="param-clientname"/></default>
+        </uploadfile>
+      </conclude>
+    </page>
   </macrodef>
 
   <macrodef id="spreadsheet-screencast">
@@ -201,20 +204,18 @@
   </macrodef>
   <configuration id="default" name="Recruiting">
     <macro id="spreadsheet-screencast"/>
-
-    <page name="instructions">
-      <macro id="spreadsheet-instructions-page">
-        <macrodef id="param-servername">currencies.xls</macrodef>
-        <macrodef id="param-clientname">userstudyHIT_currencies.xls</macrodef>
-        <macrodef id="param-filefilter"><macro id="filefilter-excel"/></macrodef>
-        <macrodef id="param-errormessage"><macro id="openfile-error-excel"/></macrodef>
-      </macro>
-    </page>
+    <macro id="spreadsheet-instructions-page">
+      <macrodef id="param-servername">currencies.xls</macrodef>
+      <macrodef id="param-clientname">userstudyHIT_currencies.xls</macrodef>
+      <macrodef id="param-filefilter"><macro id="filefilter-excel"/></macrodef>
+      <macrodef id="param-errormessage"><macro id="openfile-error-excel"/></macrodef>
+    </macro>
   </configuration>
 
   <configuration id="testing" name="Test Configuration">
     <macro id="spreadsheet-screencast"/>
-    <page name="firstPage">
+    <page>
+      <name>firstPage</name>
       <instructions>
         <html xmlns="">
           This is the first page.
@@ -222,7 +223,8 @@
       </instructions>
     </page>
 
-    <page name="secondPage">
+    <page>
+      <name>secondPage</name>
       <instructions>
         <html xmlns="">
           This is the second page. It has an open file button, and an open URI
@@ -244,7 +246,8 @@
     </page>
 
 <!--
-    <page name="tableTest">
+    <page>
+      <name>tableTest</name>
       <instructions><html xmlns="">
         This is another page. This one demonstrates the use of an HTML table.<br/><br/>
         <table border="1">
@@ -270,7 +273,8 @@
     </page>
 -->
 
-    <page name="thirdPage">
+    <page>
+      <name>ThirdPage</name>
       <instructions>
         <html xmlns="">
           <base href="http://www.mit.edu/~ebakke/" />
@@ -286,38 +290,32 @@
       </conclude>
     </page>
 
-    <page name="spreadsheet-instructions">
-      <macro id="spreadsheet-instructions-page">
-        <macrodef id="param-servername">currencies.xls</macrodef>
-        <macrodef id="param-clientname">userstudyHIT_currencies.xls</macrodef>
-        <macrodef id="param-filefilter"><macro id="filefilter-excel"/></macrodef>
-        <macrodef id="param-errormessage"><macro id="openfile-error-excel"/></macrodef>
-      </macro>
-    </page>
+    <macro id="spreadsheet-instructions-page">
+      <macrodef id="param-servername">currencies.xls</macrodef>
+      <macrodef id="param-clientname">userstudyHIT_currencies.xls</macrodef>
+      <macrodef id="param-filefilter"><macro id="filefilter-excel"/></macrodef>
+      <macrodef id="param-errormessage"><macro id="openfile-error-excel"/></macrodef>
+    </macro>
   </configuration>
 
   <configuration id="6728" name="Main Excel">
     <macro id="spreadsheet-screencast"/>
-    <page name="instructions">
-      <macro id="spreadsheet-instructions-page">
-        <macrodef id="param-servername">exflat.xls</macrodef>
-        <macrodef id="param-clientname">userstudyHIT_coursecatalog.xls</macrodef>
-        <macrodef id="param-filefilter"><macro id="filefilter-excel"/></macrodef>
-        <macrodef id="param-errormessage"><macro id="openfile-error-excel"/></macrodef>
-      </macro>
-    </page>
+    <macro id="spreadsheet-instructions-page">
+      <macrodef id="param-servername">exflat.xls</macrodef>
+      <macrodef id="param-clientname">userstudyHIT_coursecatalog.xls</macrodef>
+      <macrodef id="param-filefilter"><macro id="filefilter-excel"/></macrodef>
+      <macrodef id="param-errormessage"><macro id="openfile-error-excel"/></macrodef>
+    </macro>
   </configuration>
 
   <configuration id="1093" name="Main Related Worksheets">
     <macro id="spreadsheet-screencast"/>
-    <page name="instructions">
-      <macro id="spreadsheet-instructions-page">
-        <macrodef id="param-servername">rsnest.rzw</macrodef>
-        <macrodef id="param-clientname">userstudyHIT_coursecatalog.rzw</macrodef>
-        <macrodef id="param-filefilter"><macro id="filefilter-relspread"/></macrodef>
-        <macrodef id="param-errormessage">Unexpected error.</macrodef>
-      </macro>
-    </page>
+    <macro id="spreadsheet-instructions-page">
+      <macrodef id="param-servername">rsnest.rzw</macrodef>
+      <macrodef id="param-clientname">userstudyHIT_coursecatalog.rzw</macrodef>
+      <macrodef id="param-filefilter"><macro id="filefilter-relspread"/></macrodef>
+      <macrodef id="param-errormessage">Unexpected error.</macrodef>
+    </macro>
   </configuration>
 
   <configuration id="layout" name="Main Related Worksheets">
@@ -334,51 +332,42 @@
       <blacklist>Outlook</blacklist>
     </screencast>
     <macro id="uistrings-english"/>
-    <page name="Q1Instructions">
-      <instructions>
-        <html xmlns="">
-          Please click "Open PDF File for Questions 1A/1B" below.<br/><br/>
-          Then click "Next".<br/>
-        </html>
-      </instructions>
-      <openfile>
-        <buttontext mnemonic="O">Open PDF File for Questions 1A/1B</buttontext>
-        <servername>layoutstudy/RelationalPrinceton_hybrid.pdf</servername>
-        <clientname>HIT_Q1_userstudy.pdf</clientname>
-        <errormessage>Do you have a PDF reader installed?</errormessage>
-      </openfile>
-    </page>
 
-    <macrodef id="layoutquestion">
-      <page name="instructions">
+    <macrodef id="layoutquestion-style">
+      <style xmlns="" type="text/css">
+        body {
+          width: 280px;
+        }
+        .description {
+          font-size: 15pt;
+          margin-left: 12pt;
+        }
+        .varying {
+          text-decoration: underline;
+        }
+        .dheading {
+          font-weight: bold;
+        }
+        p {
+          margin-bottom: 12pt;
+        }
+      </style>
+    </macrodef>
+
+    <macrodef id="layoutquestion-page">
+      <page>
+        <name>question<sc:macro id="param-number"/><sc:macro id="param-subletter"/></name>
         <instructions>
           <html xmlns="">
-            <style type="text/css">
-              body {
-                width: 300px;
-              }
-              .question {
-                font-size: 15pt;
-                margin-left: 12pt;
-              }
-              .varying {
-                font-style: italic;
-              }
-              .qheading {
-                font-weight: bold;
-              }
-              p {
-                margin-bottom: 12pt;
-              }
-            </style>
+            <sc:macro id="layoutquestion-style"/>
             <p>
-              The question below is based on the PDF file you opened previously. The PDF lists computers for sale at an online auction site, and some data about each auction.
+              The question below is based on the PDF file you opened previously. <sc:macro id="param-pdfdescription"/>
             </p>
-            <p class="question">
-              <span class="qheading">Question 1A:</span> What is the size of the hard drive of the computer with the <span class="varying">shortest</span> "Time Left" on the auction? (E.g. "15GB".)
-            </p>
-            <p>
-              <sc:macro id="testparam"/>
+            <p class="description">
+              <span class="dheading">Question
+              <sc:macro id="param-number"/><sc:macro id="param-subletter"/>:</span>
+              <sc:macro id="param-question"/>
+              (E.g. "<sc:macro id="param-answerexample"/>")
             </p>
             <p>
               Please type your answer in the HIT form, then click "Next" to continue to the next question.
@@ -387,21 +376,76 @@
         </instructions>
       </page>
     </macrodef>
-    <macro id="layoutquestion">
-      <macrodef id="testparam">
-        This is the first test!
+
+    <macrodef id="layoutquestionset">
+      <page>
+        <name>question<sc:macro id="param-number"/>-instructions</name>
+        <sc:macrodef id="pdftitle">PDF File for Questions <sc:macro id="param-number"/>A and <sc:macro id="param-number"/>B</sc:macrodef>
+        <instructions>
+          <html xmlns="">
+            <sc:macro id="layoutquestion-style"/>
+            <p>Please click the button below to open the PDF file that will be used for the next two questions.</p>
+            <p class="description">
+              <span class="dheading">
+              PDF File for Questions <sc:macro id="param-number"/>A and <sc:macro id="param-number"/>B:</span><br/>
+              <sc:macro id="param-pdfdescription"/>
+            </p>
+            <p>When the PDF file has opened, click "Next" to proceed to the questions.</p>
+          </html>
+        </instructions>
+        <openfile>
+          <buttontext mnemonic="O">Open <macro id="pdftitle"/></buttontext>
+          <servername><macro id="openfile-servername"/></servername>
+          <clientname>HIT_Q<sc:macro id="param-number"/>_userstudy.pdf</clientname>
+          <errormessage>Do you have a PDF reader installed?</errormessage>
+        </openfile>
+      </page>
+
+      <macro id="layoutquestion-page">
+        <macrodef id="param-question">
+          <macro id="param-basequestion">
+            <macrodef id="param-variation"><span xmlns="" class="varying"><sc:macro id="param-variationA"/></span></macrodef>
+          </macro>
+        </macrodef>
+        <macrodef id="param-subletter">A</macrodef>
+      </macro>
+      <macro id="layoutquestion-page">
+        <macrodef id="param-question">
+          <macro id="param-basequestion">
+            <macrodef id="param-variation"><span xmlns="" class="varying"><sc:macro id="param-variationB"/></span></macrodef>
+          </macro>
+        </macrodef>
+        <macrodef id="param-subletter">B</macrodef>
+      </macro>
+    </macrodef>
+
+    <macro id="layoutquestionset">
+      <macrodef id="param-number">1</macrodef>
+      <macrodef id="param-pdfdescription">
+        This PDF lists computers for sale at an online auction site, and some data about each auction.
       </macrodef>
-    </macro>
-    <macro id="layoutquestion">
-      <macrodef id="testparam">
-        This is the second test!
+      <macrodef id="param-basequestion">
+        What is the size of the hard drive of the computer with the <macro id="param-variation"/> "Time Left" on the auction?
       </macrodef>
+      <macrodef id="param-variationA">shortest</macrodef>
+      <macrodef id="param-variationB">longest</macrodef>
+      <macrodef id="param-answerexample">15GB</macrodef>
+      <macrodef id="openfile-servername">layoutstudy/Auction321Gone_hybrid.pdf</macrodef>
     </macro>
-    <macro id="layoutquestion">
-      <macrodef id="testparam">
-        This is the third test!
+    <macro id="layoutquestionset">
+      <macrodef id="param-number">2</macrodef>
+      <macrodef id="param-pdfdescription">
+        This PDF lists articles published in a series of academic journals, and their authors.
       </macrodef>
+      <macrodef id="param-basequestion">
+        How many articles were published in <macro id="param-variation"/>?
+      </macrodef>
+      <macrodef id="param-variationA">Volume 12, Number 3</macrodef>
+      <macrodef id="param-variationB">Volume 14, Number 1</macrodef>
+      <macrodef id="param-answerexample">9</macrodef>
+      <macrodef id="openfile-servername">layoutstudy/SigmodRecord_hybrid.pdf</macrodef>
     </macro>
+
   </configuration>
 </study>
 
