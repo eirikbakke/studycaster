@@ -376,7 +376,10 @@
           <html>
             <sc:macro id="layoutquestion-style"/>
             <p>
-              The question below is based on the PDF file you opened previously. <sc:macro id="param-pdfdescription"/>
+              The question below is based on the PDF file you opened previously.
+            </p>
+            <p class="description">
+              <sc:macro id="param-pdfdescription"/>
             </p>
             <p class="description">
               <span class="dheading">Question
@@ -399,7 +402,9 @@
         <sc:instructions>
           <html>
             <sc:macro id="layoutquestion-style"/>
-            <p>Please click the button below to open the PDF file that will be used for the next two questions.</p>
+            <p>If you have any PDF files currently open, please close them.</p>
+
+            <p>Then, please click the button below to open the PDF file that will be used for the next two questions.</p>
             <p class="description">
               <span class="dheading">
               PDF File for Questions <sc:macro id="param-number"/>A and <sc:macro id="param-number"/>B:</span><br/>
@@ -444,12 +449,11 @@
           <h1>Instructions:</h1>
           <ul>
             <li>This HIT contains 9 two-part questions.</li>
-            <li>Each two-part question is based on information in a PDF file (instructions to open will follow).</li>
+            <li>Each two-part question is based on information in separate PDF file, which this software will open for you.</li>
             <li>The questions will be shown in this window.</li>
             <li>Please type your answers into the HIT form in your browser as you would for any other HIT.</li>
             <li>You can go back and forth between the questions with the "Next" and "Back" buttons below.</li>
-            <li>At the end, you will be able to retrieve a confirmation code.
-            </li>
+            <li>At the end, you will be able to retrieve a confirmation code.</li>
           </ul>
           <p>Please click "Next" to proceed to the questions.</p>
         </html>
@@ -460,9 +464,7 @@
       <sc:macrodef id="param-number">1</sc:macrodef>
       <sc:macrodef id="param-corpuskey">Auction321Gone</sc:macrodef>
       <sc:macrodef id="param-layouttype"><sc:macro id="param-layouttype1"/></sc:macrodef>
-      <sc:macrodef id="param-pdfdescription">
-        This PDF lists computers for sale at an online auction site, and some data about each auction.
-      </sc:macrodef>
+      <sc:macrodef id="param-pdfdescription">This PDF lists computers for sale at an online auction site, and some data about each auction.</sc:macrodef>
       <sc:macrodef id="param-basequestion">
         What is the size of the hard drive of the computer with the <sc:macro id="param-variation"/> "Time Left" on the auction?
       </sc:macrodef>
@@ -475,9 +477,7 @@
       <sc:macrodef id="param-number">2</sc:macrodef>
       <sc:macrodef id="param-corpuskey">SigmodRecord</sc:macrodef>
       <sc:macrodef id="param-layouttype"><sc:macro id="param-layouttype2"/></sc:macrodef>
-      <sc:macrodef id="param-pdfdescription">
-        This PDF lists articles published in a series of academic journals, and their authors.
-      </sc:macrodef>
+      <sc:macrodef id="param-pdfdescription">This PDF lists articles published in a series of academic journals, and their authors.</sc:macrodef>
       <sc:macrodef id="param-basequestion">
         How many articles were published in <sc:macro id="param-variation"/>?
       </sc:macrodef>
@@ -486,19 +486,92 @@
       <sc:macrodef id="param-answerexample">9</sc:macrodef>
     </sc:macro>
     <sc:macro id="layoutquestionset">
-      <sc:macrodef id="param-number">XXX</sc:macrodef>
-      <sc:macrodef id="param-corpuskey">XXX</sc:macrodef>
-      <!-- TODO: Change layouttype -->
+      <sc:macrodef id="param-number">3</sc:macrodef>
+      <sc:macrodef id="param-corpuskey">SwissProt</sc:macrodef>
       <sc:macrodef id="param-layouttype"><sc:macro id="param-layouttype3"/></sc:macrodef>
-      <sc:macrodef id="param-pdfdescription">
-        XXX
-      </sc:macrodef>
+      <sc:macrodef id="param-pdfdescription">This PDF file shows scientific data for a number of biological organisms.</sc:macrodef>
       <sc:macrodef id="param-basequestion">
-        XXX <sc:macro id="param-variation"/>?
+        What organism ("Species") has an author with the last name "<sc:macro id="param-variation"/>" listed among its references? Only the English name is required in the answer.
       </sc:macrodef>
-      <sc:macrodef id="param-variationA">XXX</sc:macrodef>
-      <sc:macrodef id="param-variationB">XXX</sc:macrodef>
-      <sc:macrodef id="param-answerexample">XXX</sc:macrodef>
+      <sc:macrodef id="param-variationA">Poovaiah</sc:macrodef>
+      <sc:macrodef id="param-variationB">Cognetti</sc:macrodef>
+      <sc:macrodef id="param-answerexample">Rice</sc:macrodef>
+    </sc:macro>
+    <sc:macro id="layoutquestionset">
+      <sc:macrodef id="param-number">4</sc:macrodef>
+      <sc:macrodef id="param-corpuskey">DBLP</sc:macrodef>
+      <sc:macrodef id="param-layouttype"><sc:macro id="param-layouttype1"/></sc:macrodef>
+      <sc:macrodef id="param-pdfdescription">This PDF file shows a list of scientific publications under various categories.</sc:macrodef>
+      <sc:macrodef id="param-basequestion">
+        How many articles are listed under the "<sc:macro id="param-variation"/>" category?
+      </sc:macrodef>
+      <sc:macrodef id="param-variationA">Inproceedings</sc:macrodef>
+      <sc:macrodef id="param-variationB">Mastersthesis</sc:macrodef>
+      <sc:macrodef id="param-answerexample">25</sc:macrodef>
+    </sc:macro>
+    <sc:macro id="layoutquestionset">
+      <sc:macrodef id="param-number">5</sc:macrodef>
+      <sc:macrodef id="param-corpuskey">Mondial</sc:macrodef>
+      <sc:macrodef id="param-layouttype"><sc:macro id="param-layouttype2"/></sc:macrodef>
+      <sc:macrodef id="param-pdfdescription">This PDF file lists geographic and demographic data for a number of countries.</sc:macrodef>
+      <sc:macrodef id="param-basequestion">
+        What percentage of the population of <sc:macro id="param-variation"/> is listed with "Roman Catholic" as their religion?
+      </sc:macrodef>
+      <sc:macrodef id="param-variationA">Germany</sc:macrodef>
+      <sc:macrodef id="param-variationB">Gibraltar</sc:macrodef>
+      <sc:macrodef id="param-answerexample">28%</sc:macrodef>
+    </sc:macro>
+    <sc:macro id="layoutquestionset">
+      <sc:macrodef id="param-number">6</sc:macrodef>
+      <sc:macrodef id="param-corpuskey">NASA</sc:macrodef>
+      <sc:macrodef id="param-layouttype"><sc:macro id="param-layouttype3"/></sc:macrodef>
+      <sc:macrodef id="param-pdfdescription">This PDF contains an index of historical astronomical observations from 1936 to 1974. The data was digitalized in the mid-1990s.</sc:macrodef>
+      <sc:macrodef id="param-basequestion">
+        What is the name of the person who was responsible for digitalizing
+        ("Ingesting") the earlier work by authors <sc:macro id="param-variation"/>?
+      </sc:macrodef>
+      <sc:macrodef id="param-variationA">Spencer and Jackson</sc:macrodef>
+      <sc:macrodef id="param-variationB">Larink, Bohrmann, Kox,
+        Groeneveld, and Klauder</sc:macrodef>
+      <sc:macrodef id="param-answerexample">John Smith</sc:macrodef>
+    </sc:macro>
+    <sc:macro id="layoutquestionset">
+      <sc:macrodef id="param-number">7</sc:macrodef>
+      <sc:macrodef id="param-corpuskey">TPCHPart</sc:macrodef>
+      <sc:macrodef id="param-layouttype"><sc:macro id="param-layouttype1"/></sc:macrodef>
+      <sc:macrodef id="param-pdfdescription">This PDF contains a list of products from a hardware supplier, listed from least to most expensive ("Retailprice").</sc:macrodef>
+      <sc:macrodef id="param-basequestion">
+        What is the "Brand" number of the product sold in a "Jumbo Bag"
+        container at a "Retailprice" of <sc:macro id="param-variation"/> than $950?
+      </sc:macrodef>
+      <sc:macrodef id="param-variationA">less</sc:macrodef>
+      <sc:macrodef id="param-variationB">more</sc:macrodef>
+      <sc:macrodef id="param-answerexample">Brand #60</sc:macrodef>
+    </sc:macro>
+    <sc:macro id="layoutquestionset">
+      <sc:macrodef id="param-number">8</sc:macrodef>
+      <sc:macrodef id="param-corpuskey">ProteinSequence</sc:macrodef>
+      <sc:macrodef id="param-layouttype"><sc:macro id="param-layouttype2"/></sc:macrodef>
+      <sc:macrodef id="param-pdfdescription">This PDF contains scientific data about various proteins.</sc:macrodef>
+      <sc:macrodef id="param-basequestion">
+        What is the last name of the first author listed in the references for
+        the protein identified by the "Id" code "<sc:macro id="param-variation"/>"?
+      </sc:macrodef>
+      <sc:macrodef id="param-variationA">CCMQR</sc:macrodef>
+      <sc:macrodef id="param-variationB">CCWHC</sc:macrodef>
+      <sc:macrodef id="param-answerexample">Chung</sc:macrodef>
+    </sc:macro>
+    <sc:macro id="layoutquestionset">
+      <sc:macrodef id="param-number">9</sc:macrodef>
+      <sc:macrodef id="param-corpuskey">CoursesReed</sc:macrodef>
+      <sc:macrodef id="param-layouttype"><sc:macro id="param-layouttype3"/></sc:macrodef>
+      <sc:macrodef id="param-pdfdescription">This PDF shows a list of university courses and their various meeting times.</sc:macrodef>
+      <sc:macrodef id="param-basequestion">
+        How many 0.5-unit <sc:macro id="param-variation"/> courses are mentioned in the list?
+      </sc:macrodef>
+      <sc:macrodef id="param-variationA">Chemistry ("CHEM")</sc:macrodef>
+      <sc:macrodef id="param-variationB">Biology ("BIOL")</sc:macrodef>
+      <sc:macrodef id="param-answerexample">8</sc:macrodef>
     </sc:macro>
 
     <sc:page>
@@ -507,7 +580,10 @@
         <html>
           <sc:macro id="layoutquestion-style"/>
           <p>Once you've entered answers into the HIT form to all the preceding questions, press the button below to upload your screencast and retrieve a confirmation code. You can then paste the confirmation code into the last question of the HIT.</p>
-          <p>Thank you for doing this HIT!</p>
+          <p align="right">
+            Thank you for doing this HIT!<br/>
+            <a href="mailto:ebakke@mit.edu">ebakke@mit.edu</a>
+          </p>
         </html>
       </sc:instructions>
       <sc:conclude>
