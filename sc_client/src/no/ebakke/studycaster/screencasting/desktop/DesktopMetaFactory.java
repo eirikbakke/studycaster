@@ -14,11 +14,12 @@ public class DesktopMetaFactory {
   }
 
   public DesktopMeta createMeta() {
-    List<WindowInfo> windowList = desktopLibrary.getWindowList();
+    List<WindowInfo> windowList = desktopLibrary.getTopLevelWindows();
     /* Fetch this value before calling currentTimeNanos() so the latter is never smaller. For best
     accuracy, still do it after the potentially time-consuming getWindowList() operation. */
     long lastUserInputNanos =
         timeSource.convertNanoTimeToRealTimeNanos(desktopLibrary.getLastInputTimeNanos());
-    return new DesktopMeta(timeSource.currentTimeNanos(), windowList, lastUserInputNanos);
+    return new DesktopMeta(timeSource.currentTimeNanos(), windowList,
+        desktopLibrary.getFocusWindow(), lastUserInputNanos);
   }
 }

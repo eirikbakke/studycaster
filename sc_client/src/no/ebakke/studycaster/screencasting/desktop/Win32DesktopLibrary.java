@@ -2,6 +2,7 @@ package no.ebakke.studycaster.screencasting.desktop;
 
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
+import com.sun.jna.platform.win32.WinDef.DWORD;
 import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.platform.win32.WinDef.RECT;
 import com.sun.jna.platform.win32.WinUser;
@@ -19,7 +20,8 @@ public final class Win32DesktopLibrary implements DesktopLibrary {
   private static boolean    SIMULATE_WRAPAROUND = false;
   // 2^32ms * 1000000ns/ms = 49.7 days
   private static final long WRAP_NANOS = 4294967296L * 1000000L;
-  private static final int  STR_BUF_SZ = 32768;
+  // GetClassName got confused when using 32768 or more, so go one step lower.
+  private static final int  STR_BUF_SZ = 16384;
   private final long        DEBUG_OFFSET;
   private final MyUser32    user32;
   private final MyKernel32  kernel32;
@@ -36,7 +38,8 @@ public final class Win32DesktopLibrary implements DesktopLibrary {
       DEBUG_OFFSET = 0;
     }
     // Fail-fast by exercising all library calls.
-    getWindowList();
+    getFocusWindow();
+    getTopLevelWindows();
     getLastInputTimeNanos();
   }
 
@@ -52,8 +55,32 @@ public final class Win32DesktopLibrary implements DesktopLibrary {
     }
   }
 
+  private WindowInfo createWindowInfo(HWND hWnd, HWND foreground) {
+    return new WindowInfo(getWindowBounds(hWnd), getWindowTitle(hWnd), getClassName(hWnd),
+        getWindowPID(hWnd), hWnd.equals(foreground));
+  }
+
+  /** May return null. */
+  public WindowInfo getFocusWindow() {
+    final HWND  foreground = user32.GetForegroundWindow();
+    if (foreground == null)
+      return null;
+    final DWORD idAttach   = kernel32.GetCurrentThreadId();
+    final DWORD idAttachTo = user32.GetWindowThreadProcessId(foreground, null);
+    if (!user32.AttachThreadInput(idAttach, idAttachTo, true))
+      return null;
+    try {
+      HWND focusWindow = user32.GetFocus();
+      if (focusWindow == null)
+        return null;
+      return createWindowInfo(focusWindow, foreground);
+    } finally {
+      user32.AttachThreadInput(idAttach, idAttachTo, false);
+    }
+  }
+
   /* See http://stackoverflow.com/questions/4478624 . */
-  public List<WindowInfo> getWindowList() {
+  public List<WindowInfo> getTopLevelWindows() {
     final HWND foreground = user32.GetForegroundWindow();
     final List<WindowInfo> ret = new ArrayList<WindowInfo>();
     user32.EnumWindows(new WinUser.WNDENUMPROC() {
@@ -61,8 +88,7 @@ public final class Win32DesktopLibrary implements DesktopLibrary {
         if (!user32.IsWindowVisible(hWnd))
           return true;
         // Add in reverse order.
-        ret.add(0, new WindowInfo(getWindowBounds(hWnd), getWindowTitle(hWnd), getWindowPID(hWnd),
-            hWnd.equals(foreground)));
+        ret.add(0, createWindowInfo(hWnd, foreground));
         return true;
       }
     }, null);
@@ -85,8 +111,17 @@ public final class Win32DesktopLibrary implements DesktopLibrary {
     in any case, so don't bother. */
     char ret[] = new char[STR_BUF_SZ];
     // This seems to work even with Chinese or other wide characters.
-    // Note: JNA's own User32 class defines this method as GetWindowText()
+    // TODO: Consider using W32APIOptions.DEFAULT_OPTIONS instead of naming the W suffix here.
     user32.GetWindowTextW(hWnd, ret, ret.length);
+    return Native.toString(ret);
+  }
+
+  private String getClassName(HWND hWnd) {
+    /* "The maximum length for lpszClassName is 256", and GetClassNameW had trouble with buffers of
+    size 32768 and above, so set a small buffer here to be safe. See
+    http://msdn.microsoft.com/en-us/library/windows/desktop/ms633577(v=vs.85).aspx . */
+    char ret[] = new char[1024];
+    user32.GetClassNameW(hWnd, ret, ret.length);
     return Native.toString(ret);
   }
 
@@ -110,6 +145,7 @@ public final class Win32DesktopLibrary implements DesktopLibrary {
 
   /** Wraps around at WRAP_NANOS. */
   private long getKernelTimeNanos() {
+    // Note: GetTickCount64 does not exist in Windows XP.
     return (toSigned(kernel32.GetTickCount()) * 1000000L + DEBUG_OFFSET) % WRAP_NANOS;
   }
 
@@ -142,14 +178,15 @@ public final class Win32DesktopLibrary implements DesktopLibrary {
 
   public static void main(String args[]) throws InterruptedException {
     DesktopLibrary desktopLibrary = create();
-    for (WindowInfo wi : desktopLibrary.getWindowList())
+    System.out.println("Focus: " + desktopLibrary.getFocusWindow());
+    for (WindowInfo wi : desktopLibrary.getTopLevelWindows())
       System.out.println(wi);
     long timeBefore = System.nanoTime();
     final long ITERATIONS = 1000;
     for (int i = 0; i < ITERATIONS; i++) {
       if (i % 100 == 0)
         System.out.println(i);
-      desktopLibrary.getWindowList();
+      desktopLibrary.getTopLevelWindows();
       desktopLibrary.getLastInputTimeNanos();
     }
     long timeAfter = System.nanoTime();

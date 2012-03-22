@@ -1,9 +1,5 @@
 package no.ebakke.studycaster.applications;
 
-import no.ebakke.studycaster.screencasting.desktop.DesktopMeta;
-import no.ebakke.studycaster.ui.UIUtil;
-import no.ebakke.studycaster.backend.SingleInstanceHandler;
-import no.ebakke.studycaster.backend.EnvironmentHooks;
 import java.awt.AWTException;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -20,27 +16,18 @@ import javax.jnlp.SingleInstanceListener;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-import no.ebakke.studycaster.backend.ServerContext;
-import no.ebakke.studycaster.backend.ServerContextUtil;
-import no.ebakke.studycaster.backend.StudyCasterException;
-import no.ebakke.studycaster.configuration.ConcludeConfiguration;
-import no.ebakke.studycaster.configuration.OpenFileConfiguration;
-import no.ebakke.studycaster.configuration.OpenURIConfiguration;
-import no.ebakke.studycaster.configuration.StudyConfiguration;
-import no.ebakke.studycaster.configuration.UIStringKey;
-import no.ebakke.studycaster.configuration.UploadConfiguration;
+import no.ebakke.studycaster.backend.*;
+import no.ebakke.studycaster.configuration.*;
 import no.ebakke.studycaster.screencasting.ExtendedMeta;
 import no.ebakke.studycaster.screencasting.ExtendedMeta.ExtendedMetaWriter;
 import no.ebakke.studycaster.screencasting.ScreenCensor;
-import no.ebakke.studycaster.ui.MainFrame;
-import no.ebakke.studycaster.ui.MainFrame.UserActionListener;
 import no.ebakke.studycaster.screencasting.ScreenRecorder;
 import no.ebakke.studycaster.screencasting.ScreenRecorder.DesktopMetaListener;
 import no.ebakke.studycaster.screencasting.ScreenRecorderConfiguration;
-import no.ebakke.studycaster.ui.ConfirmationCodeDialogPanel;
-import no.ebakke.studycaster.ui.DialogHelper;
+import no.ebakke.studycaster.screencasting.desktop.DesktopMeta;
+import no.ebakke.studycaster.ui.MainFrame.UserActionListener;
 import no.ebakke.studycaster.ui.UIUtil.CallableExt;
-import no.ebakke.studycaster.ui.UploadDialogPanel;
+import no.ebakke.studycaster.ui.*;
 import no.ebakke.studycaster.util.Util;
 import no.ebakke.studycaster.util.stream.NonBlockingOutputStream;
 import no.ebakke.studycaster.util.stream.NonBlockingOutputStream.StreamProgressObserver;
@@ -339,7 +326,8 @@ public final class StudyCaster {
 
             // Prepare the screen recorder without starting it yet.
             final NonBlockingOutputStream extendedMetaStream = new NonBlockingOutputStream();
-            extendedMetaStream.connect(serverContext.uploadFile("screencast.ebm"));
+            extendedMetaStream.connect(
+                serverContext.uploadFile("screencast." + ExtendedMeta.FILE_EXTENSION));
             extendedMetaWriter = new ExtendedMetaWriter(extendedMetaStream, configurationID);
             recordingStream = new NonBlockingOutputStream(RECORDING_BUFFER_SZ);
             recordingStream.connect(serverContext.uploadFile("screencast.ebc"));

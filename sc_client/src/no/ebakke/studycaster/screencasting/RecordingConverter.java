@@ -1,14 +1,6 @@
 package no.ebakke.studycaster.screencasting;
 
-import com.xuggle.xuggler.Configuration;
-import com.xuggle.xuggler.ICodec;
-import com.xuggle.xuggler.IContainer;
-import com.xuggle.xuggler.IPacket;
-import com.xuggle.xuggler.IPixelFormat;
-import com.xuggle.xuggler.IRational;
-import com.xuggle.xuggler.IStream;
-import com.xuggle.xuggler.IStreamCoder;
-import com.xuggle.xuggler.IVideoPicture;
+import com.xuggle.xuggler.*;
 import com.xuggle.xuggler.video.ConverterFactory;
 import com.xuggle.xuggler.video.IConverter;
 import java.awt.image.BufferedImage;

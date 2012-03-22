@@ -337,6 +337,7 @@
       <sc:whitelist>Acrobat</sc:whitelist>
       <sc:whitelist>Reader</sc:whitelist>
       <sc:whitelist>PDF</sc:whitelist>
+      <sc:whitelist>userstudy</sc:whitelist>
       <sc:blacklist>Firefox</sc:blacklist>
       <sc:blacklist>Internet Explorer</sc:blacklist>
       <sc:blacklist>Chrome</sc:blacklist>

@@ -6,16 +6,18 @@ import java.awt.Rectangle;
 public final class WindowInfo {
   private final Rectangle bounds;
   private final String    title;
+  private final String    type;
   private final int       pid;
   private final boolean   foreground;
 
-  public WindowInfo(Rectangle bounds, String title, int pid, boolean foreground) {
+  public WindowInfo(Rectangle bounds, String title, String type, int pid, boolean foreground) {
     if (bounds.width < 0 || bounds.height < 0)
         throw new IllegalArgumentException("Invalid window bounds");
-    this.bounds     = new Rectangle(bounds);
-    this.title      = title;
-    this.pid        = pid;
-    this.foreground = foreground;
+    this.bounds      = new Rectangle(bounds);
+    this.title       = title;
+    this.type        = type;
+    this.pid         = pid;
+    this.foreground  = foreground;
   }
 
   /** Returns the bounds of the window, in other words, where on the screen it is located. */
@@ -26,6 +28,12 @@ public final class WindowInfo {
   /** Returns the title of the window. */
   public String getTitle() {
     return title;
+  }
+
+  /** Returns a platform-dependent string representing the type of the window. For instance, on
+  Win32, this would be the "class name" of the window. */
+  public String getType() {
+    return type;
   }
 
   /** Returns an identifier for the process that created this window, for the purposes of
@@ -45,6 +53,6 @@ public final class WindowInfo {
 
   @Override
   public String toString() {
-    return pid + "\t" + (foreground ? "F" : " ") + "\t" + bounds + "\t\"" + title + "\"";
+    return pid + "\t" + (foreground ? "F" : " ") + "\t" + bounds + "\t[" + type + "] \"" + title + "\"";
   }
 }

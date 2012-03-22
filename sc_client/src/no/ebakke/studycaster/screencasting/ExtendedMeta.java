@@ -1,13 +1,7 @@
 package no.ebakke.studycaster.screencasting;
 
 import java.awt.Rectangle;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
@@ -17,7 +11,8 @@ import no.ebakke.studycaster.screencasting.desktop.WindowInfo;
 
 /** Immutable. */
 public final class ExtendedMeta {
-  private static final String MAGIC_STRING_START = "StudyCaster Extended Metadata";
+  public  static final String FILE_EXTENSION = "em2";
+  private static final String MAGIC_STRING_START = "StudyCaster Extended Metadata V2";
   private static final String MAGIC_STRING_END   = "End";
   private final DesktopMeta desktopMeta;
   private final String      pageName;
@@ -35,47 +30,71 @@ public final class ExtendedMeta {
     return pageName;
   }
 
+  private static void writeWindowInfoToStream(DataOutputStream dout, WindowInfo windowInfo)
+      throws IOException
+  {
+    dout.writeInt(windowInfo.getPID());
+    // TODO: Anonymize.
+    dout.writeUTF(windowInfo.getTitle());
+    dout.writeUTF(windowInfo.getType());
+    dout.writeBoolean(windowInfo.isForeground());
+    final Rectangle bounds = windowInfo.getBounds();
+    dout.writeInt(bounds.x);
+    dout.writeInt(bounds.y);
+    dout.writeInt(bounds.width);
+    dout.writeInt(bounds.height);
+  }
+
+  private static WindowInfo readWindowInfoFromStream(DataInputStream din) throws IOException {
+    final int pid = din.readInt();
+    final String title = din.readUTF();
+    final String type = din.readUTF();
+    final boolean isForeground = din.readBoolean();
+    final int boundsX = din.readInt();
+    final int boundsY = din.readInt();
+    final int boundsW = din.readInt();
+    final int boundsH = din.readInt();
+    if (boundsW < 0 || boundsH < 0)
+      throw new IOException("Read invalid window bounds");
+    return new WindowInfo(new Rectangle(boundsX, boundsY, boundsW, boundsH),
+        title, type, pid, isForeground);
+  }
+
   private void writeToStream(DataOutputStream dout) throws IOException {
     dout.writeLong(desktopMeta.getTimeNanos());
     dout.writeLong(desktopMeta.getLastUserInputNanos());
+    final WindowInfo focusWindow = desktopMeta.getFocusWindow();
+    if (focusWindow != null) {
+      dout.writeBoolean(true);
+      writeWindowInfoToStream(dout, focusWindow);
+    } else {
+      dout.writeBoolean(false);
+    }
     final List<WindowInfo> windowList = desktopMeta.getWindowList();
     dout.writeInt(windowList.size());
-    for (WindowInfo windowInfo : windowList) {
-      dout.writeInt(windowInfo.getPID());
-      // TODO: Anonymize.
-      dout.writeUTF(windowInfo.getTitle());
-      dout.writeBoolean(windowInfo.isForeground());
-      final Rectangle bounds = windowInfo.getBounds();
-      dout.writeInt(bounds.x);
-      dout.writeInt(bounds.y);
-      dout.writeInt(bounds.width);
-      dout.writeInt(bounds.height);
-    }
+    for (WindowInfo windowInfo : windowList)
+      writeWindowInfoToStream(dout, windowInfo);
     dout.writeUTF(pageName);
   }
 
   private static ExtendedMeta readFromStream(DataInputStream din) throws IOException {
-    long timeNanos          = din.readLong();
-    long lastUserInputNanos = din.readLong();
-    int windowListSize = din.readInt();
+    final long timeNanos          = din.readLong();
+    final long lastUserInputNanos = din.readLong();
+    final WindowInfo focusWindow;
+    if (din.readBoolean()) {
+      focusWindow = readWindowInfoFromStream(din);
+    } else {
+      focusWindow = null;
+    }
+    final int windowListSize = din.readInt();
     if (windowListSize < 0)
       throw new IOException("Read invalid window list size");
-    List<WindowInfo> windowList = new ArrayList<WindowInfo>();
-    for (int i = 0; i < windowListSize; i++) {
-      int pid = din.readInt();
-      String title = din.readUTF();
-      boolean isForeground = din.readBoolean();
-      int boundsX = din.readInt();
-      int boundsY = din.readInt();
-      int boundsW = din.readInt();
-      int boundsH = din.readInt();
-      if (boundsW < 0 || boundsH < 0)
-        throw new IOException("Read invalid window bounds");
-      windowList.add(new WindowInfo(new Rectangle(boundsX, boundsY, boundsW, boundsH),
-          title, pid, isForeground));
-    }
-    String pageName = din.readUTF();
-    return new ExtendedMeta(new DesktopMeta(timeNanos, windowList, lastUserInputNanos), pageName);
+    final List<WindowInfo> windowList = new ArrayList<WindowInfo>();
+    for (int i = 0; i < windowListSize; i++)
+      windowList.add(readWindowInfoFromStream(din));
+    final String pageName = din.readUTF();
+    return new ExtendedMeta(
+        new DesktopMeta(timeNanos, windowList, focusWindow, lastUserInputNanos), pageName);
   }
 
   /** Thread-safe. */

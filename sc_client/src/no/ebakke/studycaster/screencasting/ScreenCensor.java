@@ -99,7 +99,7 @@ public final class ScreenCensor {
     DesktopLibrary windowEnumerator = Win32DesktopLibrary.create();
     if (windowEnumerator == null)
       throw new StudyCasterException("Can't load window library");
-    Quilt<CensorType> permitted = censor.getPermittedRecordingArea(windowEnumerator.getWindowList());
+    Quilt<CensorType> permitted = censor.getPermittedRecordingArea(windowEnumerator.getTopLevelWindows());
 
     /*
     permitted = new Quilt();

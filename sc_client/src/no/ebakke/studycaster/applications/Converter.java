@@ -1,10 +1,7 @@
 package no.ebakke.studycaster.applications;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import no.ebakke.studycaster.screencasting.ExtendedMeta;
 import no.ebakke.studycaster.screencasting.RecordingConverter;
 
 /*
@@ -40,7 +37,7 @@ public final class Converter {
     File outFile = new File(fileNameBase + "_" +
         speedUpFactor + "x." + RecordingConverter.FILE_EXTENSION);
     File tmpFile = new File(outFile.getParentFile(), "~" + outFile.getName());
-    File metaFile = new File(fileNameBase + ".ebm");
+    File metaFile = new File(fileNameBase + "." + ExtendedMeta.FILE_EXTENSION);
     try {
       // Optimistic optimalization to avoid creating the temporary file most of the time.
       if (outFile.exists()) {

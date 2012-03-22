@@ -35,7 +35,7 @@ public class ScreenCastOverlay {
   private static final String FONT_SANS_REGULAR_FILE = "LiberationSans-Regular.ttf";
   private static final int    STATUS_MARGIN = 3;
   private static final float  FONT_SIZE_LARGE = 22.0f;
-  private static final float  FONT_SIZE_SMALL = 15.0f;
+  private static final float  FONT_SIZE_SMALL = 13.0f;
   private final Image pointerImage, iconImage;
   private final Font fontMono, fontSansBold, fontSansRegular;
   private final int fontCapHeight;
@@ -127,39 +127,48 @@ public class ScreenCastOverlay {
         baseLine - fontCapHeight / 2 - iconDimensions.height / 2);
   }
 
-  public void drawDesktopMeta(Graphics2D g, DesktopMeta meta) {
+  private void drawWindowOverlay(Graphics2D og, WindowInfo windowInfo, boolean highlight) {
+    final Rectangle rect = windowInfo.getBounds();
     final Font FONT = fontSansRegular;
     final int MARGIN_Y = 3, MARGIN_X = 6;
-    final FontMetrics fontMetrics = g.getFontMetrics(FONT);
+    final FontMetrics fontMetrics = og.getFontMetrics(FONT);
     final int ASCENT       = fontMetrics.getAscent();
     final int TITLE_HEIGHT = MARGIN_Y * 2 + ASCENT + fontMetrics.getDescent();
 
+    // Erase any overlapping portions of previously drawn window overlay graphics (see above).
+    og.clearRect(rect.x, rect.y, rect.width, rect.height);
+    // Paint title text and its lightened background, clipped to the title bar area only.
+    og.setColor(highlight ? new Color(255, 255, 128, 196) :
+                            new Color(255, 255, 255, 196));
+    og.fillRect(rect.x, rect.y, rect.width, TITLE_HEIGHT);
+    final Shape oldClip = og.getClip();
+    og.setClip(rect.x, rect.y, rect.width - MARGIN_X, TITLE_HEIGHT);
+    drawString(og,
+        (windowInfo.getTitle().length() == 0 ? "" : windowInfo.getTitle() + " ") +
+        "(PID " + windowInfo.getPID() +
+          (windowInfo.getType().length() == 0 ? "" : (" type " + windowInfo.getType())) +
+        ")", Color.BLACK,
+        FONT, -1, MARGIN_X + rect.getX(), MARGIN_Y + rect.getY() + ASCENT);
+    og.setClip(oldClip);
+    // Paint window boundary and title bar border.
+    og.setColor(new Color(0, 0, 0, 196));
+    og.setStroke(new BasicStroke(windowInfo.isForeground() ? 3.0f : 1.0f));
+    og.drawRect(rect.x, rect.y, rect.width, rect.height);
+    og.drawLine(rect.x, rect.y + TITLE_HEIGHT, rect.x + rect.width, rect.y + TITLE_HEIGHT);
+
+  }
+
+  public void drawDesktopMeta(Graphics2D g, DesktopMeta meta) {
     /* Prepare the overlay graphics in a separate buffer before copying it to the main buffer, such
     that the clearRect() function can be used to erase covered portions of lower Z-order windows.
     The buffer is recycled between invocations, so erase it first. */
     final Graphics2D og = desktopMetaOverlayImage.createGraphics();
     og.setBackground(new Color(0, 0, 0, 0));
     og.clearRect(0, 0, desktopMetaOverlayImage.getWidth(), desktopMetaOverlayImage.getHeight());
-    for (WindowInfo windowInfo : meta.getWindowList()) {
-      final Rectangle rect = windowInfo.getBounds();
-      // Erase any overlapping portions of previously drawn window overlay graphics (see above).
-      og.clearRect(rect.x, rect.y, rect.width, rect.height);
-      // Paint title text and its lightened background, clipped to the title bar area only.
-      og.setColor(new Color(255, 255, 255, 196));
-      og.fillRect(rect.x, rect.y, rect.width, TITLE_HEIGHT);
-      final Shape oldClip = og.getClip();
-      og.setClip(rect.x, rect.y, rect.width - MARGIN_X, TITLE_HEIGHT);
-      drawString(og,
-          (windowInfo.getTitle().length() == 0 ? "" : windowInfo.getTitle() + " ") +
-          "(PID " + windowInfo.getPID() + ")", Color.BLACK,
-          FONT, -1, MARGIN_X + rect.getX(), MARGIN_Y + rect.getY() + ASCENT);
-      og.setClip(oldClip);
-      // Paint window boundary and title bar border.
-      og.setColor(new Color(0, 0, 0, 196));
-      og.setStroke(new BasicStroke(windowInfo.isForeground() ? 3.0f : 1.0f));
-      og.drawRect(rect.x, rect.y, rect.width, rect.height);
-      og.drawLine(rect.x, rect.y + TITLE_HEIGHT, rect.x + rect.width, rect.y + TITLE_HEIGHT);
-    }
+    for (WindowInfo windowInfo : meta.getWindowList())
+      drawWindowOverlay(og, windowInfo, false);
+    if (meta.getFocusWindow() != null && !meta.getFocusWindow().isForeground())
+      drawWindowOverlay(og, meta.getFocusWindow(), true);
     // Finally, draw the overlay onto the main image buffer.
     if (!g.drawImage(desktopMetaOverlayImage, 0, 0, null))
       throw new AssertionError("Expected drawImage() to complete immediately");
