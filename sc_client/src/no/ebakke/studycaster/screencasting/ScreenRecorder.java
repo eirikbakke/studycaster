@@ -196,6 +196,8 @@ public class ScreenRecorder {
     } finally {
       enc.close();
     }
+    if (desktopMetaFactory != null)
+      desktopMetaFactory.getDesktopLibrary().close();
   }
 
   public void forceReportMeta() {

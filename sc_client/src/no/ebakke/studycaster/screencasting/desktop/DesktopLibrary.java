@@ -17,4 +17,7 @@ public interface DesktopLibrary {
   keyboard input from the user. The time base is such that
   (System.nanoTime() - getLastInputTimeNanos()) will yield the time since the last input event. */
   public long getLastInputTimeNanos();
+
+  /** Perform any cleanup operations that the platform-specific implementation might require. */
+  public void close();
 }

@@ -22,4 +22,8 @@ public class DesktopMetaFactory {
     return new DesktopMeta(timeSource.currentTimeNanos(), windowList,
         desktopLibrary.getFocusWindow(), lastUserInputNanos);
   }
+
+  public DesktopLibrary getDesktopLibrary() {
+    return desktopLibrary;
+  }
 }

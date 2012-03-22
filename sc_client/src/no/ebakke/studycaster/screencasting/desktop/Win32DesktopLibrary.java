@@ -10,6 +10,8 @@ import com.sun.jna.ptr.IntByReference;
 import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import no.ebakke.studycaster.screencasting.desktop.MyUser32.LastInputInfo;
@@ -17,7 +19,7 @@ import no.ebakke.studycaster.screencasting.desktop.MyUser32.LastInputInfo;
 /** Microsoft Windows implementation of the DesktopLibrary. */
 public final class Win32DesktopLibrary implements DesktopLibrary {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
-  private static boolean    SIMULATE_WRAPAROUND = false;
+  private static final boolean SIMULATE_WRAPAROUND = false;
   // 2^32ms * 1000000ns/ms = 49.7 days
   private static final long WRAP_NANOS = 4294967296L * 1000000L;
   // GetClassName got confused when using 32768 or more, so go one step lower.
@@ -27,6 +29,42 @@ public final class Win32DesktopLibrary implements DesktopLibrary {
   private final MyKernel32  kernel32;
   private Long              lastInputKernelTimeNanos;
   private long              lastInputJavaTimeNanos = 0;
+  private final Map<DWORD,DWORD> attachedInputThreads = new ConcurrentHashMap<DWORD,DWORD>();
+
+  void detachExistingThreadInput(DWORD idAttach) {
+    if (idAttach == null)
+      throw new NullPointerException();
+    final DWORD idAttachToExisting = attachedInputThreads.remove(idAttach);
+    if (idAttachToExisting == null)
+      return;
+    // Ignore failed detaches; normal for instance when a process exits.
+    user32.AttachThreadInput(idAttach, idAttachToExisting, false);
+  }
+
+  void detachExistingThreadInput() {
+    detachExistingThreadInput(kernel32.GetCurrentThreadId());
+  }
+
+  boolean attachThreadInput(DWORD idAttachTo) {
+    if (idAttachTo == null)
+      throw new NullPointerException();
+    final DWORD idAttach = kernel32.GetCurrentThreadId();
+    if (idAttach == null)
+      throw new NullPointerException();
+    /* TODO: Avoid attaching immediately when a window gains focus, in case the user is trying to
+             double-click it (e.g. to close or maximize it). */
+    /* Avoid a high frequency of unnecessary attach/detach cycles, as this is known to interfere
+    with double-clicking. */
+    final DWORD idAttachToExisting = attachedInputThreads.get(idAttach);
+    if (idAttachToExisting != null && idAttachTo.equals(idAttachToExisting))
+      return true;
+    detachExistingThreadInput();
+    if (!user32.AttachThreadInput(idAttach, idAttachTo, true))
+      return false;
+    attachedInputThreads.put(idAttach, idAttachTo);
+    return true;
+  }
+
 
   private Win32DesktopLibrary() {
     user32   = (MyUser32)   Native.loadLibrary("user32"  , MyUser32.class  );
@@ -65,18 +103,12 @@ public final class Win32DesktopLibrary implements DesktopLibrary {
     final HWND  foreground = user32.GetForegroundWindow();
     if (foreground == null)
       return null;
-    final DWORD idAttach   = kernel32.GetCurrentThreadId();
-    final DWORD idAttachTo = user32.GetWindowThreadProcessId(foreground, null);
-    if (!user32.AttachThreadInput(idAttach, idAttachTo, true))
+    if (!attachThreadInput(user32.GetWindowThreadProcessId(foreground, null)))
       return null;
-    try {
-      HWND focusWindow = user32.GetFocus();
-      if (focusWindow == null)
-        return null;
-      return createWindowInfo(focusWindow, foreground);
-    } finally {
-      user32.AttachThreadInput(idAttach, idAttachTo, false);
-    }
+    HWND focusWindow = user32.GetFocus();
+    if (focusWindow == null)
+      return null;
+    return createWindowInfo(focusWindow, foreground);
   }
 
   /* See http://stackoverflow.com/questions/4478624 . */
@@ -176,9 +208,17 @@ public final class Win32DesktopLibrary implements DesktopLibrary {
     return lastInputJavaTimeNanos;
   }
 
+  public void close() {
+    for (DWORD idAttach : attachedInputThreads.keySet())
+      detachExistingThreadInput(idAttach);
+  }
+
   public static void main(String args[]) throws InterruptedException {
     DesktopLibrary desktopLibrary = create();
-    System.out.println("Focus: " + desktopLibrary.getFocusWindow());
+    boolean testFocus = false;
+    do {
+      System.out.println("Focus: " + desktopLibrary.getFocusWindow());
+    } while (testFocus);
     for (WindowInfo wi : desktopLibrary.getTopLevelWindows())
       System.out.println(wi);
     long timeBefore = System.nanoTime();
@@ -201,5 +241,6 @@ public final class Win32DesktopLibrary implements DesktopLibrary {
           nowKernel / 1000000L + "\t" + lastJava / 1000000L + "\t" + since / 1000000L);
       Thread.sleep(1000);
     }
+    desktopLibrary.close();
   }
 }
