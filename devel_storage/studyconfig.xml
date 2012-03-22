@@ -178,7 +178,6 @@
       <blacklist>Thunderbird</blacklist>
       <blacklist>Outlook</blacklist>
     </screencast>
-    <macro id="uistrings-english"/>
   </macrodef>
 
   <macrodef id="filefilter-excel">
@@ -202,7 +201,10 @@
   <macrodef id="openfile-error-excel">
     Do you have Excel or a compatible spreadsheet application installed?
   </macrodef>
-  <configuration id="default" name="Recruiting">
+  <configuration>
+    <id>default</id>
+    <name>Recruiting</name>
+    <macro id="uistrings-english"/>
     <macro id="spreadsheet-screencast"/>
     <macro id="spreadsheet-instructions-page">
       <macrodef id="param-servername">currencies.xls</macrodef>
@@ -212,7 +214,10 @@
     </macro>
   </configuration>
 
-  <configuration id="testing" name="Test Configuration">
+  <configuration>
+    <id>testing</id>
+    <name>Test Configuration</name>
+    <macro id="uistrings-english"/>
     <macro id="spreadsheet-screencast"/>
     <page>
       <name>firstPage</name>
@@ -298,7 +303,10 @@
     </macro>
   </configuration>
 
-  <configuration id="6728" name="Main Excel">
+  <configuration>
+    <id>6728</id>
+    <name>Main Excel</name>
+    <macro id="uistrings-english"/>
     <macro id="spreadsheet-screencast"/>
     <macro id="spreadsheet-instructions-page">
       <macrodef id="param-servername">exflat.xls</macrodef>
@@ -308,7 +316,10 @@
     </macro>
   </configuration>
 
-  <configuration id="1093" name="Main Related Worksheets">
+  <configuration>
+    <id>1093</id>
+    <name>Main Related Worksheets</name>
+    <macro id="uistrings-english"/>
     <macro id="spreadsheet-screencast"/>
     <macro id="spreadsheet-instructions-page">
       <macrodef id="param-servername">rsnest.rzw</macrodef>
@@ -318,7 +329,12 @@
     </macro>
   </configuration>
 
-  <configuration id="layout" name="Main Related Worksheets">
+<macrodef id="layoutstudy-configuration">
+  <configuration>
+    <id><macro id="param-id"/></id>
+    <name>Layout Manager Study
+    (<macro id="param-layouttype1"/>-<macro id="param-layouttype2"/>-<macro id="param-layouttype3"/>)</name>
+    <macro id="uistrings-english"/>
     <screencast>
       <whitelist>Acrobat</whitelist>
       <whitelist>Reader</whitelist>
@@ -331,7 +347,6 @@
       <blacklist>Thunderbird</blacklist>
       <blacklist>Outlook</blacklist>
     </screencast>
-    <macro id="uistrings-english"/>
 
     <macrodef id="layoutquestion-style">
       <style xmlns="" type="text/css">
@@ -345,8 +360,10 @@
         .varying {
           text-decoration: underline;
         }
-        .dheading {
+        .dheading, h1 {
           font-weight: bold;
+          font-size: 15pt;
+          margin: 0px;
         }
         p {
           margin-bottom: 12pt;
@@ -370,7 +387,7 @@
               (E.g. "<sc:macro id="param-answerexample"/>")
             </p>
             <p>
-              Please type your answer in the HIT form, then click "Next" to continue to the next question.
+              Please type your answer into the HIT form in your browser, then click "Next" to continue to the next question.
             </p>
           </html>
         </instructions>
@@ -395,7 +412,9 @@
         </instructions>
         <openfile>
           <buttontext mnemonic="O">Open <macro id="pdftitle"/></buttontext>
-          <servername><macro id="openfile-servername"/></servername>
+          <servername>
+            layoutstudy/<macro id="param-corpuskey"/>_<macro id="param-layouttype"/>.pdf
+          </servername>
           <clientname>HIT_Q<sc:macro id="param-number"/>_userstudy.pdf</clientname>
           <errormessage>Do you have a PDF reader installed?</errormessage>
         </openfile>
@@ -419,8 +438,30 @@
       </macro>
     </macrodef>
 
+    <page>
+      <name>instructions</name>
+      <instructions>
+        <html xmlns="">
+          <sc:macro id="layoutquestion-style"/>
+          <h1>Instructions:</h1>
+          <ul>
+            <li>This HIT contains 9 two-part questions.</li>
+            <li>Each two-part question is based on information in a PDF file (instructions to open will follow).</li>
+            <li>The questions will be shown in this window.</li>
+            <li>Please type your answers into the HIT form in your browser as you would for any other HIT.</li>
+            <li>You can go back and forth between the questions with the "Next" and "Back" buttons below.</li>
+            <li>At the end, you will be able to retrieve a confirmation code.
+            </li>
+          </ul>
+          <p>Please click "Next" to proceed to the questions.</p>
+        </html>
+      </instructions>
+    </page>
+
     <macro id="layoutquestionset">
       <macrodef id="param-number">1</macrodef>
+      <macrodef id="param-corpuskey">Auction321Gone</macrodef>
+      <macrodef id="param-layouttype"><macro id="param-layouttype1"/></macrodef>
       <macrodef id="param-pdfdescription">
         This PDF lists computers for sale at an online auction site, and some data about each auction.
       </macrodef>
@@ -434,6 +475,8 @@
     </macro>
     <macro id="layoutquestionset">
       <macrodef id="param-number">2</macrodef>
+      <macrodef id="param-corpuskey">SigmodRecord</macrodef>
+      <macrodef id="param-layouttype"><macro id="param-layouttype2"/></macrodef>
       <macrodef id="param-pdfdescription">
         This PDF lists articles published in a series of academic journals, and their authors.
       </macrodef>
@@ -443,9 +486,53 @@
       <macrodef id="param-variationA">Volume 12, Number 3</macrodef>
       <macrodef id="param-variationB">Volume 14, Number 1</macrodef>
       <macrodef id="param-answerexample">9</macrodef>
-      <macrodef id="openfile-servername">layoutstudy/SigmodRecord_hybrid.pdf</macrodef>
+    </macro>
+    <macro id="layoutquestionset">
+      <macrodef id="param-number">XXX</macrodef>
+      <macrodef id="param-corpuskey">XXX</macrodef>
+      <!-- TODO: Change layouttype -->
+      <macrodef id="param-layouttype"><macro id="param-layouttype3"/></macrodef>
+      <macrodef id="param-pdfdescription">
+        XXX
+      </macrodef>
+      <macrodef id="param-basequestion">
+        XXX <macro id="param-variation"/>?
+      </macrodef>
+      <macrodef id="param-variationA">XXX</macrodef>
+      <macrodef id="param-variationB">XXX</macrodef>
+      <macrodef id="param-answerexample">XXX</macrodef>
     </macro>
 
+    <page>
+      <name>conclude</name>
+      <instructions>
+        <html xmlns="">
+          <sc:macro id="layoutquestion-style"/>
+          <p>Once you've entered answers into the HIT form to all the preceding questions, press the button below to upload your screencast and retrieve a confirmation code. You can then paste the confirmation code into the last question of the HIT.</p>
+          <p>Thank you for doing this HIT!</p>
+        </html>
+      </instructions>
+      <conclude>
+        <buttontext mnemonic="U">Upload and Retrive Confirmation Code...</buttontext>
+      </conclude>
+
+    </page>
   </configuration>
+</macrodef>
+
+  <macro id="layoutstudy-configuration">
+    <macrodef id="param-id">L5823</macrodef>
+    <macrodef id="param-layouttype1">hybrid</macrodef>
+    <macrodef id="param-layouttype2">outline</macrodef>
+    <macrodef id="param-layouttype3">tabular</macrodef>
+  </macro>
+
+  <macro id="layoutstudy-configuration">
+    <macrodef id="param-id">allhybrid</macrodef>
+    <macrodef id="param-layouttype1">hybrid</macrodef>
+    <macrodef id="param-layouttype2">hybrid</macrodef>
+    <macrodef id="param-layouttype3">hybrid</macrodef>
+  </macro>
+
 </study>
 

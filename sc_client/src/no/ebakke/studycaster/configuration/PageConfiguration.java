@@ -16,8 +16,6 @@ public class PageConfiguration {
   public PageConfiguration(Map<String,OpenFileConfiguration> openFileConfigurations, Element elm)
       throws StudyCasterException
   {
-    /* TODO: Go over other attributes, and make them elements instead to facilitate macro
-             parameterization. */
     name = ConfigurationUtil.getTextContent(ConfigurationUtil.getUniqueElement(elm, "name"));
     instructions = UIString.readOne(
         ConfigurationUtil.getUniqueElement(elm, "instructions"), true, false);

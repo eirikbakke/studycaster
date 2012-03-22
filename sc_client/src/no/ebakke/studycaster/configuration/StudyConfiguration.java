@@ -70,8 +70,8 @@ public class StudyConfiguration {
 
   private StudyConfiguration(Element conf) throws StudyCasterException {
     final Element screencast = ConfigurationUtil.getUniqueElement(conf, "screencast");
-    name                = ConfigurationUtil.getNonEmptyAttribute(conf, "name");
-    id                  = ConfigurationUtil.getNonEmptyAttribute(conf, "id"  );
+    name = ConfigurationUtil.getTextContent(ConfigurationUtil.getUniqueElement(conf, "name"));
+    id   = ConfigurationUtil.getTextContent(ConfigurationUtil.getUniqueElement(conf, "id"));
     pageConfigurations  = PageConfiguration.parse(conf);
     if (pageConfigurations.size() < 1)
       throw new StudyCasterException("At least one page configuration required");
