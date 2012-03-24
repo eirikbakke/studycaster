@@ -623,7 +623,7 @@
     <sc:macrodef id="param-layouttype3">hybrid</sc:macrodef>
   </sc:macro>
 
-  <!-- --------------------------------------------------------------------- -->
+  <!-- ===================================================================== -->
   <sc:macro id="layoutstudy-configuration">
     <sc:macrodef id="param-id">L5823</sc:macrodef>
     <sc:macrodef id="param-layouttype1">hybrid</sc:macrodef>
@@ -665,6 +665,6 @@
     <sc:macrodef id="param-layouttype2">tabular</sc:macrodef>
     <sc:macrodef id="param-layouttype3">outline</sc:macrodef>
   </sc:macro>
-  <!-- --------------------------------------------------------------------- -->
+  <!-- ===================================================================== -->
 </sc:study>
 
