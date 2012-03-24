@@ -355,6 +355,7 @@
     (<sc:macro id="param-layouttype1"/>-<sc:macro id="param-layouttype2"/>-<sc:macro id="param-layouttype3"/>)</sc:name>
     <sc:macro id="uistrings-english"/>
     <sc:screencast>
+      <sc:whitelist>HIT_Q</sc:whitelist>
       <sc:whitelist>Acrobat</sc:whitelist>
       <sc:whitelist>Reader</sc:whitelist>
       <sc:whitelist>PDF</sc:whitelist>
