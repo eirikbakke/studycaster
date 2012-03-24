@@ -18,7 +18,7 @@
       <sc:uistring key="MAINFRAME_NEXT_BUTTON"       mnemonic="N">Next &gt;</sc:uistring>
       <sc:uistring key="DIALOG_CLOSE_TITLE"  >Exit Without Uploading?</sc:uistring>
       <sc:uistring key="DIALOG_CLOSE_MESSAGE">
-        If you exit the StudyCaster client without uploading first, your changes will be lost.
+        If you exit the StudyCaster client without uploading first, your changes will be lost. OK to quit?
       </sc:uistring>
       <sc:uistring key="PROGRESS_OPEN_FILE">Opening file...</sc:uistring>
       <sc:uistring key="PROGRESS_OPEN_URI">Opening web page...</sc:uistring>
@@ -617,6 +617,14 @@
 </sc:macrodef>
 
   <sc:macro id="layoutstudy-configuration">
+    <sc:macrodef id="param-id">allhybrid</sc:macrodef>
+    <sc:macrodef id="param-layouttype1">hybrid</sc:macrodef>
+    <sc:macrodef id="param-layouttype2">hybrid</sc:macrodef>
+    <sc:macrodef id="param-layouttype3">hybrid</sc:macrodef>
+  </sc:macro>
+
+  <!-- --------------------------------------------------------------------- -->
+  <sc:macro id="layoutstudy-configuration">
     <sc:macrodef id="param-id">L5823</sc:macrodef>
     <sc:macrodef id="param-layouttype1">hybrid</sc:macrodef>
     <sc:macrodef id="param-layouttype2">outline</sc:macrodef>
@@ -624,11 +632,39 @@
   </sc:macro>
 
   <sc:macro id="layoutstudy-configuration">
-    <sc:macrodef id="param-id">allhybrid</sc:macrodef>
-    <sc:macrodef id="param-layouttype1">hybrid</sc:macrodef>
+    <sc:macrodef id="param-id">L1952</sc:macrodef>
+    <sc:macrodef id="param-layouttype1">tabular</sc:macrodef>
     <sc:macrodef id="param-layouttype2">hybrid</sc:macrodef>
+    <sc:macrodef id="param-layouttype3">outline</sc:macrodef>
+  </sc:macro>
+
+  <sc:macro id="layoutstudy-configuration">
+    <sc:macrodef id="param-id">L9652</sc:macrodef>
+    <sc:macrodef id="param-layouttype1">outline</sc:macrodef>
+    <sc:macrodef id="param-layouttype2">tabular</sc:macrodef>
     <sc:macrodef id="param-layouttype3">hybrid</sc:macrodef>
   </sc:macro>
 
+  <sc:macro id="layoutstudy-configuration">
+    <sc:macrodef id="param-id">L1211</sc:macrodef>
+    <sc:macrodef id="param-layouttype1">outline</sc:macrodef>
+    <sc:macrodef id="param-layouttype2">hybrid</sc:macrodef>
+    <sc:macrodef id="param-layouttype3">tabular</sc:macrodef>
+  </sc:macro>
+
+  <sc:macro id="layoutstudy-configuration">
+    <sc:macrodef id="param-id">L5933</sc:macrodef>
+    <sc:macrodef id="param-layouttype1">tabular</sc:macrodef>
+    <sc:macrodef id="param-layouttype2">outline</sc:macrodef>
+    <sc:macrodef id="param-layouttype3">hybrid</sc:macrodef>
+  </sc:macro>
+
+  <sc:macro id="layoutstudy-configuration">
+    <sc:macrodef id="param-id">L3406</sc:macrodef>
+    <sc:macrodef id="param-layouttype1">hybrid</sc:macrodef>
+    <sc:macrodef id="param-layouttype2">tabular</sc:macrodef>
+    <sc:macrodef id="param-layouttype3">outline</sc:macrodef>
+  </sc:macro>
+  <!-- --------------------------------------------------------------------- -->
 </sc:study>
 

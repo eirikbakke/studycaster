@@ -16,6 +16,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import no.ebakke.studycaster.screencasting.desktop.MyUser32.LastInputInfo;
 
+/* TODO: Move complexity out of the platform-specific classes, for instance by handling time base
+         conversion in a platform-independent helper class, and by guaranteeing methods in this
+         class will all be from the same thread. */
 /** Microsoft Windows implementation of the DesktopLibrary. */
 public final class Win32DesktopLibrary implements DesktopLibrary {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
@@ -31,7 +34,7 @@ public final class Win32DesktopLibrary implements DesktopLibrary {
   private long              lastInputJavaTimeNanos = 0;
   private final Map<DWORD,DWORD> attachedInputThreads = new ConcurrentHashMap<DWORD,DWORD>();
 
-  void detachExistingThreadInput(DWORD idAttach) {
+  private void detachExistingThreadInput(DWORD idAttach) {
     if (idAttach == null)
       throw new NullPointerException();
     final DWORD idAttachToExisting = attachedInputThreads.remove(idAttach);
@@ -41,11 +44,11 @@ public final class Win32DesktopLibrary implements DesktopLibrary {
     user32.AttachThreadInput(idAttach, idAttachToExisting, false);
   }
 
-  void detachExistingThreadInput() {
+  private void detachExistingThreadInput() {
     detachExistingThreadInput(kernel32.GetCurrentThreadId());
   }
 
-  boolean attachThreadInput(DWORD idAttachTo) {
+  private boolean attachThreadInput(DWORD idAttachTo) {
     if (idAttachTo == null)
       throw new NullPointerException();
     final DWORD idAttach = kernel32.GetCurrentThreadId();
@@ -64,7 +67,6 @@ public final class Win32DesktopLibrary implements DesktopLibrary {
     attachedInputThreads.put(idAttach, idAttachTo);
     return true;
   }
-
 
   private Win32DesktopLibrary() {
     user32   = (MyUser32)   Native.loadLibrary("user32"  , MyUser32.class  );
@@ -100,7 +102,7 @@ public final class Win32DesktopLibrary implements DesktopLibrary {
 
   /** May return null. */
   public WindowInfo getFocusWindow() {
-    final HWND  foreground = user32.GetForegroundWindow();
+    final HWND foreground = user32.GetForegroundWindow();
     if (foreground == null)
       return null;
     if (!attachThreadInput(user32.GetWindowThreadProcessId(foreground, null)))
