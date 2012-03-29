@@ -1,6 +1,7 @@
 package no.ebakke.studycaster.applications;
 
 import java.applet.Applet;
+import java.awt.Color;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
@@ -14,12 +15,12 @@ import no.ebakke.studycaster.ui.UIUtil;
 
 public class StudyCasterApplet extends Applet {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
-  // Wrap in Swing HTML tags to ensure proper line breaking.
-  private final String STATUS_RUNNING = "<html>StudyCaster is running in a separate window.</html>";
-  private final String STATUS_CLOSED  = "<html>The StudyCaster window was closed. Click here to reopen.</html>";
+  private final String STATUS_RUNNING = "StudyCaster is running in a separate window.";
+  private final String STATUS_CLOSED  = "The StudyCaster window was closed. Click here to reopen.";
   private volatile EnvironmentHooks hooks;
   // Access from EHT only.
   private StudyCaster studyCaster;
+  private boolean mouseOver = false;
 
   @Override
   public void init() {
@@ -63,6 +64,22 @@ public class StudyCasterApplet extends Applet {
                 studyCaster.restoreLocationAndRequestFocus();
               }
             }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+              if (!mouseOver) {
+                mouseOver = true;
+                updateLabelText();
+              }
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+              if (mouseOver) {
+                mouseOver = false;
+                updateLabelText();
+              }
+            }
           });
           return null;
         }
@@ -70,6 +87,15 @@ public class StudyCasterApplet extends Applet {
     } catch (InterruptedException e) {
       LOG.log(Level.SEVERE, "Interrupted while initializing study from applet", e);
     }
+  }
+
+  private void updateLabelText() {
+    String message = (studyCaster == null) ? STATUS_CLOSED : STATUS_RUNNING;
+    if (mouseOver)
+      message = "<font color='blue'><u>" + message + "</u></font>";
+    // Wrapping in Swing HTML tags also ensures proper line breaking.
+    message = "<html>" + message + "</html>";
+    appletLabel.setText(message);
   }
 
   @Override
@@ -93,15 +119,17 @@ public class StudyCasterApplet extends Applet {
         public Void call() {
           if (studyCaster != null)
             return null;
-          appletLabel.setText(STATUS_RUNNING);
           studyCaster = new StudyCaster(hooks, false, new Runnable() {
             public void run() {
               hooks = EnvironmentHooks.create();
               LOG.info("Reconnected EnvironmentHooks after StudyCaster shutdown");
-              appletLabel.setText(STATUS_CLOSED);
               studyCaster = null;
+              updateLabelText();
             }
           });
+          // Make it less likely to get "stuck" due to a modal dialog box appearing at this point.
+          mouseOver = false;
+          updateLabelText();
           studyCaster.runStudy();
           return null;
         }
