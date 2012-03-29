@@ -25,10 +25,10 @@ import org.apache.http.util.EntityUtils;
 /** Represents a connection to the StudyCaster server, and handles all details of the server API.
 Thread-safe. */
 public class ServerContext {
+  public static final String SERVERURI_PROP_NAME = "studycaster.server.uri";
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private static final long   SIMULATE_SERVER_AHEAD_NANOS = 0 * 1000000L;
   private static final long   SIMULATE_LATENCY_NANOS      = 0 * 1000000L;
-  private static final String SERVERURI_PROP_NAME = "studycaster.server.uri";
   private static final int    DEF_UPLOAD_CHUNK_SZ = 64 * 1024;
   // TODO: Rename this (legacy from earlier experiments).
   private static final String TICKET_STORE_FILENAME = "sc_7403204709139484951.tmp";

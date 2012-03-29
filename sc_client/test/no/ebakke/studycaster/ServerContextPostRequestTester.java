@@ -1,7 +1,7 @@
 package no.ebakke.studycaster;
-import no.ebakke.studycaster.backend.ServerContext;
 import java.io.InputStream;
 import java.io.OutputStream;
+import no.ebakke.studycaster.backend.ServerContext;
 import org.junit.Test;
 
 public class ServerContextPostRequestTester {

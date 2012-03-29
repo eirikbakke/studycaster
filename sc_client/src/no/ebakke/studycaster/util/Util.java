@@ -2,6 +2,7 @@ package no.ebakke.studycaster.util;
 
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.awt.Rectangle;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -56,8 +57,11 @@ public final class Util {
     LOG.log(Level.INFO, "Environment: {0}", props);
 
     for (GraphicsDevice gd : GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()) {
+      /* In one case on Windows 7, gd.getDisplayMode().getWidth()/.getHeight() did not work as
+      expected, but the following did. */
+      Rectangle bounds = gd.getDefaultConfiguration().getBounds();
       LOG.log(Level.INFO, "Found a screen {0}x{1}{2}",
-          new Object[]{gd.getDisplayMode().getWidth(), gd.getDisplayMode().getHeight(),
+          new Object[]{bounds.getWidth(), bounds.getHeight(),
           (gd.equals(GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice())) ?
           " (default)" : ""});
     }

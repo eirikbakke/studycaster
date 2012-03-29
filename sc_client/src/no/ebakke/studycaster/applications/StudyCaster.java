@@ -84,14 +84,15 @@ import no.ebakke.studycaster.util.stream.NonBlockingOutputStream.StreamProgressO
 /** Except where noted, methods in this class, including private ones, must be called from the
 event-dispatching thread (EDT) only. */
 public final class StudyCaster {
+  public static final String CONFIGID_PROP_NAME = "studycaster.config.id";
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private static final long STILL_ALIVE_INTERVAL_NANOS = 60 * 1000 * 1000000L;
   private static final int RECORDING_BUFFER_SZ = 4 * 1024 * 1024;
-  private static final String CONFIGID_PROP_NAME = "studycaster.config.id";
   private final MainFrame mainFrame;
   private final EnvironmentHooks hooks;
   private final WindowListener windowClosingListener;
   private final DialogHelper dialogHelper;
+  private final boolean doSystemExitOnFailsafe;
   /* TODO: Consider moving initialization code to the constructor to allow more fields to be
            declared final. */
   /** Some variables are accessed from multiple threads. Rather than try to remember which ones,
@@ -140,8 +141,9 @@ public final class StudyCaster {
     }
   };
 
-  private StudyCaster(EnvironmentHooks hooks) {
+  public StudyCaster(EnvironmentHooks hooks, boolean doSystemExitOnFailsafe) {
     this.hooks = hooks;
+    this.doSystemExitOnFailsafe = doSystemExitOnFailsafe;
     mainFrame = new MainFrame(new PrivateUserActionListener());
     windowClosingListener = new WindowAdapter() {
       @Override
@@ -171,7 +173,7 @@ public final class StudyCaster {
     closeBackend(null);
   }
 
-  private boolean isClosed() {
+  public boolean isClosed() {
     return failsafeCloseThread != null;
   }
 
@@ -200,7 +202,9 @@ public final class StudyCaster {
           /* Note: This will forcibly exit the Java Web Start console as well, if enabled. This is
           normal and preferable to alternative approaches which might not guarantee that the VM
           terminates in all cases. */
-          System.exit(1);
+          // TODO: Exclude this entire thread instead.
+          if (doSystemExitOnFailsafe)
+            System.exit(1);
         }
       }
     }, "StudyCaster-failsafeClose");
@@ -304,7 +308,7 @@ public final class StudyCaster {
   }
 
   /** This method may only be called once during the lifetime of a StudyUI object. */
-  public void runStudy(final String args[]) {
+  public void runStudy() {
     if (initializerThread != null)
       throw new IllegalStateException("Already started");
     initializerThread = new Thread(new Runnable() {
@@ -367,23 +371,6 @@ public final class StudyCaster {
     mainFrame.startTask(null, true);
     mainFrame.setVisible(true);
     initializerThread.start();
-  }
-
-  public static void main(final String args[]) {
-    final EnvironmentHooks hooks = EnvironmentHooks.create();
-
-    // Must be called before any UI components are rendered.
-    try {
-      UIUtil.setSystemLookAndFeel();
-    } catch (StudyCasterException e) {
-      LOG.log(Level.INFO, "Couldn't set system L&F", e);
-    }
-
-    SwingUtilities.invokeLater(new Runnable() {
-      public void run() {
-        new StudyCaster(hooks).runStudy(args);
-      }
-    });
   }
 
   private class PrivateUserActionListener implements UserActionListener {
