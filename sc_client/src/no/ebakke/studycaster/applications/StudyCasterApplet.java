@@ -1,19 +1,18 @@
 package no.ebakke.studycaster.applications;
 
-import java.applet.Applet;
-import java.awt.Color;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
+import javax.swing.JApplet;
 import no.ebakke.studycaster.backend.EnvironmentHooks;
 import no.ebakke.studycaster.backend.ServerContext;
 import no.ebakke.studycaster.backend.StudyCasterException;
 import no.ebakke.studycaster.ui.UIUtil;
 
-public class StudyCasterApplet extends Applet {
+public class StudyCasterApplet extends JApplet {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
   private final String STATUS_RUNNING = "StudyCaster is running in a separate window.";
   private final String STATUS_CLOSED  = "The StudyCaster window was closed. Click here to reopen.";
@@ -173,9 +172,12 @@ public class StudyCasterApplet extends Applet {
 
         setLayout(new java.awt.BorderLayout());
 
+        appletLabel.setBackground(java.awt.Color.white);
         appletLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         appletLabel.setText("Status here.");
+        appletLabel.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         appletLabel.setFocusable(false);
+        appletLabel.setOpaque(true);
         add(appletLabel, java.awt.BorderLayout.CENTER);
     }// </editor-fold>//GEN-END:initComponents
     // Variables declaration - do not modify//GEN-BEGIN:variables
