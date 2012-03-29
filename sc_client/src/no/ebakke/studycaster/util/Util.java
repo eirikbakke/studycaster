@@ -185,6 +185,12 @@ public final class Util {
       if (callDesktopMethod("open", File.class, fileToOpen))
         return true;
     } catch (IOException e) {
+      /* Internet Explorer may prohibit applets from opening certain kinds of files, notably
+      including Excel documents, but not PDFs. In this case, the exception message will contain the
+      phrase "Access is denied" (at least on a US English locale), and the platform dependent
+      version would have failed as well. Don't attempt to work around this, just assume the UI tells
+      the user they can try manually if they want. */
+      LOG.log(Level.WARNING, "callDesktopMethod() threw an exception", e);
       return false;
     }
     return desktopOpenURIPlatformDependent(fileToOpen.toURI());

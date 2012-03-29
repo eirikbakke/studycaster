@@ -51,7 +51,8 @@
       message parameter is a string from the <sc:errormessage> element in the <sc:openfile> configuration.
       -->
       <sc:uistring key="DIALOG_OPEN_FILE_ASSOCIATION_FAILED_MESSAGE"><html>
-        Failed to open the file<br/>{0}<br/><br/>
+        Failed to open the file<br/>{0}<br/>
+        You can try to open it manually.<br/><br/>
         {1}</html>
       </sc:uistring>
       <!-- The message below is shown on a best-effort basis; it is not always possible to detect
