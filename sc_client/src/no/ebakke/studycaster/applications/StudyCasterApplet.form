@@ -19,7 +19,8 @@
     <Component class="javax.swing.JLabel" name="appletLabel">
       <Properties>
         <Property name="horizontalAlignment" type="int" value="0"/>
-        <Property name="text" type="java.lang.String" value="(StudyCaster is running in a separate window.)"/>
+        <Property name="text" type="java.lang.String" value="Status here."/>
+        <Property name="focusable" type="boolean" value="false"/>
       </Properties>
       <Constraints>
         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">

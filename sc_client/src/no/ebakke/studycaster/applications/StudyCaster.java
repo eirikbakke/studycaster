@@ -1,6 +1,7 @@
 package no.ebakke.studycaster.applications;
 
 import java.awt.AWTException;
+import java.awt.Frame;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
@@ -10,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.jnlp.SingleInstanceListener;
@@ -92,7 +94,9 @@ public final class StudyCaster {
   private final EnvironmentHooks hooks;
   private final WindowListener windowClosingListener;
   private final DialogHelper dialogHelper;
-  private final boolean doSystemExitOnFailsafe;
+  private final boolean useFailsafeThread;
+  private final AtomicBoolean closed = new AtomicBoolean();
+  private final Runnable closeRunnable;
   /* TODO: Consider moving initialization code to the constructor to allow more fields to be
            declared final. */
   /** Some variables are accessed from multiple threads. Rather than try to remember which ones,
@@ -141,9 +145,10 @@ public final class StudyCaster {
     }
   };
 
-  public StudyCaster(EnvironmentHooks hooks, boolean doSystemExitOnFailsafe) {
+  public StudyCaster(EnvironmentHooks hooks, boolean useFailsafeThread, Runnable closeRunnable) {
     this.hooks = hooks;
-    this.doSystemExitOnFailsafe = doSystemExitOnFailsafe;
+    this.closeRunnable = closeRunnable;
+    this.useFailsafeThread = useFailsafeThread;
     mainFrame = new MainFrame(new PrivateUserActionListener());
     windowClosingListener = new WindowAdapter() {
       @Override
@@ -174,7 +179,15 @@ public final class StudyCaster {
   }
 
   public boolean isClosed() {
-    return failsafeCloseThread != null;
+    return closed.get();
+  }
+
+  public void restoreLocationAndRequestFocus() {
+    if (mainFrame.isVisible()) {
+      mainFrame.updateLocation();
+      mainFrame.setExtendedState(Frame.NORMAL);
+      mainFrame.requestFocus();
+    }
   }
 
   private void closeUI() {
@@ -184,6 +197,7 @@ public final class StudyCaster {
     LOG.info("Closing UI");
     mainFrame.removeWindowListener(windowClosingListener);
     mainFrame.setVisible(false);
+    closed.set(true);
     failsafeCloseThread = new Thread(new Runnable() {
       public void run() {
         try {
@@ -202,15 +216,15 @@ public final class StudyCaster {
           /* Note: This will forcibly exit the Java Web Start console as well, if enabled. This is
           normal and preferable to alternative approaches which might not guarantee that the VM
           terminates in all cases. */
-          // TODO: Exclude this entire thread instead.
-          if (doSystemExitOnFailsafe)
-            System.exit(1);
+          System.exit(1);
         }
       }
     }, "StudyCaster-failsafeClose");
-    // Don't keep the VM running just because of the failsafe thread.
-    failsafeCloseThread.setDaemon(true);
-    failsafeCloseThread.start();
+    if (useFailsafeThread) {
+      // Don't keep the VM running just because of the failsafe thread.
+      failsafeCloseThread.setDaemon(true);
+      failsafeCloseThread.start();
+    }
     /* Attempt to avoid race conditions that might make the window displayable again after the
     call to dispose() by putting the call at the end of the event queue. */
     SwingUtilities.invokeLater(new Runnable() {
@@ -262,8 +276,14 @@ public final class StudyCaster {
         // In the case of an error, serverContext may still not be defined.
         if (serverContext != null)
           serverContext.close();
-        if (onEndEDT != null)
-          SwingUtilities.invokeLater(onEndEDT);
+        SwingUtilities.invokeLater(new Runnable() {
+          public void run() {
+            if (onEndEDT != null)
+              onEndEDT.run();
+            if (closeRunnable != null)
+              closeRunnable.run();
+          }
+        });
       }
     }, "StudyCaster-backendClose");
     backendCloseThread.start();

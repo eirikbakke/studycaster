@@ -22,7 +22,7 @@ public class StudyCasterApplication {
           LOG.log(Level.INFO, "Couldn't set system L&F", e);
         }
 
-        new StudyCaster(hooks, true).runStudy();
+        new StudyCaster(hooks, true, null).runStudy();
       }
     });
   }

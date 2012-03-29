@@ -277,7 +277,7 @@ public class MainFrame extends javax.swing.JFrame {
   }
 
   /** Relocate the window to a suitable position in the lower right-hand corner of the screen. */
-  private void updateLocation() {
+  public void updateLocation() {
     /* The following incantations were carefully derived through experimentation to work well with
     a variety of screen resultions and window sizes. */
     Dimension sdim = Toolkit.getDefaultToolkit().getScreenSize();

@@ -1,24 +1,29 @@
 package no.ebakke.studycaster.applications;
 
 import java.applet.Applet;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.ImageIcon;
 import no.ebakke.studycaster.backend.EnvironmentHooks;
 import no.ebakke.studycaster.backend.ServerContext;
 import no.ebakke.studycaster.backend.StudyCasterException;
 import no.ebakke.studycaster.ui.UIUtil;
 
-// TODO: Make it possible to reopen window if closed.
 public class StudyCasterApplet extends Applet {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
-  private final AtomicBoolean started = new AtomicBoolean();
+  // Wrap in Swing HTML tags to ensure proper line breaking.
+  private final String STATUS_RUNNING = "<html>StudyCaster is running in a separate window.</html>";
+  private final String STATUS_CLOSED  = "<html>The StudyCaster window was closed. Click here to reopen.</html>";
+  private volatile EnvironmentHooks hooks;
   // Access from EHT only.
   private StudyCaster studyCaster;
 
   @Override
   public void init() {
-    final EnvironmentHooks hooks = EnvironmentHooks.create();
+    hooks = EnvironmentHooks.create();
     LOG.info("Applet init (after hooks created)");
 
     {
@@ -41,9 +46,24 @@ public class StudyCasterApplet extends Applet {
             LOG.log(Level.INFO, "Couldn't set system L&F", e);
           }
           initComponents();
+          try {
+            appletLabel.setIcon(new ImageIcon(UIUtil.loadImage("icon32.png", true)));
+          } catch (IOException e) {
+            LOG.log(Level.WARNING, "Failed to load applet label icon", e);
+          }
           validate();
-          studyCaster = new StudyCaster(hooks, false);
-
+          addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+              if (studyCaster == null) {
+                LOG.info("Starting StudyCaster after mouse click in applet");
+                startStudyCaster();
+              } else {
+                LOG.info("Restoring/focusing StudyCaster window after mouse click in applet");
+                studyCaster.restoreLocationAndRequestFocus();
+              }
+            }
+          });
           return null;
         }
       });
@@ -53,46 +73,66 @@ public class StudyCasterApplet extends Applet {
   }
 
   @Override
-	public void destroy() {
+  public void setSize(int width, int height) {
+    super.setSize(width,height);
+    validate();
+  }
+
+  @Override
+  public void destroy() {
     LOG.info("Applet destroy");
-		super.destroy();
-	}
+    super.destroy();
+  }
 
   /* TODO: Make StudyCaster lifecycle interface more suitable for use either with applets or
            applications. */
 
-  @Override
-	public void start() {
-    LOG.info("Applet start");
-    if (started.getAndSet(true))
-      return;
+  private void startStudyCaster() {
     try {
       UIUtil.swingBlock(new UIUtil.CallableExt<Void,RuntimeException>() {
         public Void call() {
+          if (studyCaster != null)
+            return null;
+          appletLabel.setText(STATUS_RUNNING);
+          studyCaster = new StudyCaster(hooks, false, new Runnable() {
+            public void run() {
+              hooks = EnvironmentHooks.create();
+              LOG.info("Reconnected EnvironmentHooks after StudyCaster shutdown");
+              appletLabel.setText(STATUS_CLOSED);
+              studyCaster = null;
+            }
+          });
           studyCaster.runStudy();
           return null;
         }
       });
     } catch (InterruptedException e) {
-      LOG.log(Level.SEVERE, "Interrupted while running study from applet", e);
+      LOG.log(Level.SEVERE, "Interrupted while starting study from applet", e);
     }
-	}
+  }
 
   @Override
-	public void stop() {
+  public void start() {
+    LOG.info("Applet start");
+    startStudyCaster();
+  }
+
+  @Override
+  public void stop() {
     LOG.info("Applet stop");
     try {
       UIUtil.swingBlock(new UIUtil.CallableExt<Void,RuntimeException>() {
         public Void call() {
-          if (!studyCaster.isClosed())
+          if (studyCaster != null && !studyCaster.isClosed())
             studyCaster.close();
+          studyCaster = null;
           return null;
         }
       });
     } catch (InterruptedException e) {
       LOG.log(Level.SEVERE, "Interrupted while stopping study from applet", e);
     }
-	}
+  }
 
   /**
    * This method is called from within the init() method to initialize the form. WARNING: Do NOT
@@ -106,7 +146,8 @@ public class StudyCasterApplet extends Applet {
         setLayout(new java.awt.BorderLayout());
 
         appletLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        appletLabel.setText("(StudyCaster is running in a separate window.)");
+        appletLabel.setText("Status here.");
+        appletLabel.setFocusable(false);
         add(appletLabel, java.awt.BorderLayout.CENTER);
     }// </editor-fold>//GEN-END:initComponents
     // Variables declaration - do not modify//GEN-BEGIN:variables
