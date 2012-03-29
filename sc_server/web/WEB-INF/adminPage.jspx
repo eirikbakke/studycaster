@@ -12,13 +12,9 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8"/>
-    <link rel="icon" href="client/icons/icon22.png"  sizes="22x22"   type="image/png"/>
-    <link rel="icon" href="client/icons/icon24.png"  sizes="24x24"   type="image/png"/>
-    <link rel="icon" href="client/icons/icon32.png"  sizes="32x32"   type="image/png"/>
-    <link rel="icon" href="client/icons/icon48.png"  sizes="48x48"   type="image/png"/>
-    <link rel="icon" href="client/icons/icon64.png"  sizes="64x64"   type="image/png"/>
-    <link rel="icon" href="client/icons/icon128.png" sizes="128x128" type="image/png"/>
-    <link rel="icon" href="client/icons/icon256.png" sizes="256x256" type="image/png"/>
+    <c:forEach items="${fn:split('22,24,32,48,64,128,256', ',')}" var="size">
+      <link rel="icon" href="client/icons/icon${size}.png" sizes="${size}x${size}" type="image/png"/>
+    </c:forEach>
     <title>StudyCaster Admin Page</title>
     <link href="style.css" rel="stylesheet" title="Normal"/>
   </head>
