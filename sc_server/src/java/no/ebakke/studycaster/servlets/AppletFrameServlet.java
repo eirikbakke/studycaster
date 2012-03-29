@@ -33,6 +33,7 @@ public class AppletFrameServlet extends HttpServlet {
       req.setAttribute("serverURL", ServletUtil.ensureSafeString(serverURL));
       req.setAttribute("codebaseURL", serverURL + JNLPServlet.JNLP_DIR);
       req.setAttribute("configurationID", configurationID);
+      req.setAttribute("prompt", req.getParameter("prompt") != null);
       getServletContext().getRequestDispatcher("/WEB-INF/appletFrame.jspx").forward(req, resp);
       // TODO: Fix logging ugliness, see JNLPServlet.
       ServletUtil.logRequest(req, "apl", null, null, null, null);

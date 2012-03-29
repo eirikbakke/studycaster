@@ -49,7 +49,7 @@
     <h2>Reports</h2>
     <a href="?page=subjectReport">Generate Subject Report</a>
 
-    <h2>Launch Button</h2>
+    <h2>Launch Examples</h2>
     <p>Access URL for this request:
       <a href="${fn:escapeXml(serverURL)}"><c:out value="${serverURL}"/></a>.
     </p>
@@ -63,20 +63,27 @@
         </c:otherwise>
       </c:choose>.
     </p>
-    <p>JWS button for launching the StudyCaster client (based on the absolute
+    <p>Java Web Start button for launching the StudyCaster client (based on the absolute
       access URL above):</p>
-      ${scriptCode}
+      ${scriptCodeJWS}
     <p>The code used to generate the button above can be copied and pasted as
     follows: </p>
     <pre>
-      <c:out value="${scriptCode}"/>
+      <c:out value="${scriptCodeJWS}"/>
     </pre>
 
-    <p>Static link version:</p>
+    <p>Static link version (also Java Web Start):</p>
     <p><a href="${fn:escapeXml(urlJNLP)}sl">${fn:escapeXml(urlJNLP)}sl</a></p>
 
-    <p>You can replace the word <code>example</code> in the JavaScript code (last line) or the
-    static link above with any configuration ID defined in the <code>studyconfig.xml</code> file in
-    the storage directory.</p>
+    <p>Applet-based launcher:</p>
+      ${scriptCodeApplet}
+    <p>The code used to generate the Applet-based launcher can be copied and pasted as follows:</p>
+    <pre>
+      <c:out value="${scriptCodeApplet}"/>
+    </pre>
+
+    <p>You can replace the word <code>${fn:escapeXml(exampleCID)}</code> in the code or static link
+    above with any configuration ID defined in the <code>studyconfig.xml</code> file in the storage
+    directory.</p>
 
 </jsp:root>

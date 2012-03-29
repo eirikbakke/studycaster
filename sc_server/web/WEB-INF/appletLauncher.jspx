@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<jsp:root 
+  xmlns:jsp="http://java.sun.com/JSP/Page"
+  xmlns:c="http://java.sun.com/jsp/jstl/core"
+  xmlns:fn="http://java.sun.com/jsp/jstl/functions"
+  version="2.0">
+<!-- See appletFrame.jspx for related hard-coded dimensions. -->
+<!-- Wrap in CDATA to preserve newlines. -->
+<![CDATA[
+<iframe src="${fn:escapeXml(serverURL)}/client/applet_frame.html?ci=${fn:escapeXml(exampleCID)}&amp;prompt=yes"
+        width="600" height="66" scrolling="no"
+        style="width: 100%; border-width: 1px; border-color: darkgray;">${""}</iframe>
+]]>
+
+</jsp:root>

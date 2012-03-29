@@ -20,8 +20,8 @@
   </head>
   <body>
     <h1><img src="client/icons/icon32.png" alt="Icon" id="mainIcon"/>
-      StudyCaster Admin Page</h1>
-    <h2>Login</h2>
+      StudyCaster</h1>
+    <h2>Administrative Login</h2>
 <c:choose>
   <c:when test="${pageType != 'loggedOut'}">
     You are logged in. <a href="?logout">Log out.</a>
@@ -41,9 +41,11 @@
       <input type="password" name="pwd" id="passwordField"/><br/>
       <input type="submit" value="Submit"/>
     </form>
-    <h2>Launch Button</h2>
-    <p>JWS button for launching the StudyCaster client:</p>
-      ${scriptCode}
+    <h2>Launch Examples</h2>
+    <p>Java Web Start button for launching the StudyCaster client:</p>
+      ${scriptCodeJWS}
+    <p>Applet-based launcher:</p>
+      ${scriptCodeApplet}
   </c:otherwise>
 </c:choose>
 

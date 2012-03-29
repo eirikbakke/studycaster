@@ -14,6 +14,7 @@ import no.ebakke.studycaster.reporting.Reports;
 // TODO: Does this root mapping work on all containers?
 @WebServlet(name = "AdminServlet", urlPatterns = {"/index.html"})
 public class AdminServlet extends HttpServlet {
+  public static final String EXAMPLE_CONFIGURATION_ID = "example";
   private static final long serialVersionUID = 1L;
 
   @Override
@@ -46,8 +47,9 @@ public class AdminServlet extends HttpServlet {
       /* Don't allow strings with characters that would need escaping, since deployJava.js doesn't
       support them. */
       req.setAttribute("serverURL", ServletUtil.ensureSafeString(serverURL));
+      req.setAttribute("exampleCID", EXAMPLE_CONFIGURATION_ID);
       req.setAttribute("urlJNLP", ServletUtil.ensureSafeString(
-          serverURL + JNLPServlet.JNLP_PATH + "?ci=example&ver="));
+          serverURL + JNLPServlet.JNLP_PATH + "?ci=" + EXAMPLE_CONFIGURATION_ID + "&ver="));
       // TODO: Synchronize with JNLP file.
       req.setAttribute("minJavaVer", ServletUtil.ensureSafeString("1.5"));
       req.setAttribute("currentTime", ServletUtil.getServerDateFormat().format(new Date()));
@@ -71,8 +73,10 @@ public class AdminServlet extends HttpServlet {
       }
 
       // TODO: Consider if there's a better way to do this.
-      String scriptCode = ServletUtil.renderServletToString("/WEB-INF/jwsButton.jspx", req, resp);
-      req.setAttribute("scriptCode", scriptCode);
+      String scriptCodeJWS = ServletUtil.renderServletToString("/WEB-INF/jwsLauncher.jspx", req, resp);
+      req.setAttribute("scriptCodeJWS", scriptCodeJWS);
+      String scriptCodeApplet = ServletUtil.renderServletToString("/WEB-INF/appletLauncher.jspx", req, resp);
+      req.setAttribute("scriptCodeApplet", scriptCodeApplet);
       getServletContext().getRequestDispatcher("/WEB-INF/adminPage.jspx").forward(req, resp);
 
     } catch (BadRequestException e) {

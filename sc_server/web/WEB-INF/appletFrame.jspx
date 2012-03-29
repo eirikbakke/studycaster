@@ -22,6 +22,9 @@
       body {
         margin: 0px;
         padding: 0px;
+        background: white;
+        font-family: arial, sans-serif;
+        font-size: 14px;
       }
       applet, object, embed {
         width: 100%;
@@ -29,9 +32,24 @@
       #deployJavaPlugin {
         display: none;
       }
+      p {
+        text-align: center;
+      }
+      img {
+        vertical-align: middle;
+        padding: 4px;
+      }
     </style>
   </head>
   <body>
+<c:choose>
+  <c:when test="${prompt}">
+    <p>
+      <img src="icons/icon32.png" alt="[StudyCaster icon]"/>
+      <a href="applet_frame.html?ci=${fn:escapeXml(configurationID)}">Click here to start the StudyCaster applet</a>
+    </p>
+  </c:when>
+  <c:otherwise>
     <script type="text/javascript" src="${fn:escapeXml(serverURL)}/deployJava.min.js">${""}</script>
     <!-- Hack to get a newline: -->${""}
     <script type="text/javascript">
@@ -43,7 +61,7 @@ var attributes = {
   height: 66 /* Smaller may obscure error messages. Bigger will cause uglier Java progress wheel. */
 };
 var version = "1.5";
-// TODO: Avoid hardcoding al_jars.
+// TODO: Avoid hardcoding al_jars. Also avoid having to lug javaws.jar along even to the applets.
 var parameters = {
   al_title: "StudyCaster Client Applet",
   al_main: "no.ebakke.studycaster.applications.StudyCasterApplet",
@@ -62,6 +80,8 @@ var parameters = {
 };
 deployJava.runApplet(attributes, parameters, version);
     </script>
+  </c:otherwise>
+</c:choose>
   </body>
 </html>
 
