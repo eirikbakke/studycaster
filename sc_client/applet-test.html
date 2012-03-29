@@ -6,7 +6,7 @@
   </head>
   <body>
 
-  <applet code="org.lwjgl.util.applet.AppletLoader" archive="lib/lwjgl_util_applet.jar" codebase="dist" width="640" height="480">
+  <applet code="org.lwjgl.util.applet.AppletLoader" archive="lib/lwjgl_util_applet.jar, lib/resources_loader.jar" codebase="dist" width="640" height="480">
     <!-- The following tags are mandatory -->
 
     <!-- Name of Applet, will be used as name of directory it is saved in, and will uniquely identify it in cache -->
@@ -49,13 +49,13 @@
     <!-- <param name="boxfgcolor" value="#ffffff"> -->
     
     <!-- logo to paint while loading, will be centered, defaults to "appletlogo.gif" -->
-    <!-- <param name="al_logo" value="appletlogo.gif"> -->
+    <param name="al_logo" value="sc_appletlogo.png">
     
     <!-- progressbar to paint while loading. Will be painted on top of logo, width clipped to percentage done, defaults to "appletprogress.gif" -->
-    <!-- <param name="al_progressbar" value="appletprogress.gif"> -->
+    <param name="al_progressbar" value="sc_appletprogress.png">
     
     <!-- whether to run in debug mode -->
-    <!-- <param name="al_debug" value="true"> -->
+    <param name="al_debug" value="true">
     
     <!-- whether to prepend host to cache path - defaults to true -->
     <!-- <param name="al_prepend_host" value="true"> -->
@@ -66,10 +66,6 @@
 
     <param name="separate_jvm" value="true">
   </applet>
-
-  <p>
-    if <code>al_debug</code> is true the applet will load and extract resources with a delay, to be able to see the loader process.
-  </p>
 
   </body>
 </html>
