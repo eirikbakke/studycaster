@@ -1,20 +1,17 @@
 package no.ebakke.studycaster.servlets;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.Map;
 import java.util.Random;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import no.ebakke.studycaster.util.IOUtilsExt;
 import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 
 @WebServlet(name = "APIServlet", urlPatterns = {"/client/api"})
@@ -105,17 +102,16 @@ public class APIServlet extends HttpServlet {
       } else if (cmd.equals("upa")) {
         // Idempotent.
         String argS = ServletUtil.getMultipartStringParam(multiPart, "arg");
-        long writtenArg;
+        final long offsetArg;
         try {
-          writtenArg = Long.parseLong(argS);
+          offsetArg = Long.parseLong(argS);
         } catch (NumberFormatException e) {
           throw new BadRequestException("Malformed integer argument");
         }
         FileItem content = ServletUtil.getParam(multiPart, "content");
         logEntry = content.getName();
         File outFile = ServletUtil.getSaneFile(ticketDir, content.getName(), false);
-        long existingLength = outFile.length();
-        if (existingLength + content.getSize() > MAX_FILE_SIZE) {
+        if (offsetArg + content.getSize() > MAX_FILE_SIZE) {
           throw new BadRequestException("File size reached limit",
               HttpServletResponse.SC_FORBIDDEN, true);
         }
@@ -124,19 +120,25 @@ public class APIServlet extends HttpServlet {
           throw new BadRequestException("Server low on disk space",
               HttpServletResponse.SC_FORBIDDEN, true);
         }
+        {
+          final long existingLength = outFile.length();
+          if (existingLength != offsetArg) {
+            LOG.log(Level.WARNING, "Non-sequential write; may occur normally due to repeated " +
+                "idempotent requests (existing length {0}B, seeking to {1}B)",
+                new Object[] { existingLength, offsetArg });
+          }
+        }
+        // This statistic may overshoot in the case of failed or repeated writes.
+        wroteContent = content.getSize();
         InputStream is = content.getInputStream();
         try {
-          // This test ensures idempotency.
-          if (writtenArg == existingLength) {
-            wroteContent = content.getSize();
-            OutputStream os = new FileOutputStream(outFile, true);
-            try {
-              IOUtils.copy(is, os);
-            } finally {
-              os.close();
-            }
-          } else {
-            LOG.warning("Ignored double append");
+          RandomAccessFile raf = new RandomAccessFile(outFile, "rw");
+          try {
+            raf.seek(offsetArg);
+            IOUtilsExt.copy(is, raf);
+            raf.getChannel().force(false);
+          } finally {
+            raf.close();
           }
         } finally {
           is.close();

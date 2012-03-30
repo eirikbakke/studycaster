@@ -27,6 +27,7 @@ Thread-safe. */
 public class ServerContext {
   public static final String SERVERURI_PROP_NAME = "studycaster.server.uri";
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
+  private static boolean SIMULATE_REPEATED_REQUESTS = false;
   private static final long   SIMULATE_SERVER_AHEAD_NANOS = 0 * 1000000L;
   private static final long   SIMULATE_LATENCY_NANOS      = 0 * 1000000L;
   private static final int    DEF_UPLOAD_CHUNK_SZ = 64 * 1024;
@@ -277,6 +278,11 @@ public class ServerContext {
           throw new IOException("HTTP request retry thread interrupted");
         }
       }
+      if (SIMULATE_REPEATED_REQUESTS && ret != null && Math.random() > 0.5) {
+        LOG.log(Level.INFO, "Simulating a repeated request ({0})", new Object[] { cmd });
+        EntityUtils.consume(ret.getEntity());
+        ret = null;
+      }
     } while (ret == null);
     return ret;
   }
@@ -413,7 +419,9 @@ public class ServerContext {
   }
 
   public static void main(String args[]) throws StudyCasterException {
+    LOG.info("Constructing ServerContext");
     ServerContext serverContext = new ServerContext();
+    LOG.info("Closing");
     serverContext.close();
   }
 }
