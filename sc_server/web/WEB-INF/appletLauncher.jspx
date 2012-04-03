@@ -8,7 +8,7 @@
 <!-- Wrap in CDATA to preserve newlines. -->
 <![CDATA[
 <iframe src="${fn:escapeXml(serverURL)}/client/applet_frame.html?ci=${fn:escapeXml(exampleCID)}&amp;prompt=yes"
-        width="600" height="66" scrolling="no"
+        width="600" height="70"
         style="width: 100%; border-width: 1px; border-color: darkgray;">${""}</iframe>
 ]]>
 

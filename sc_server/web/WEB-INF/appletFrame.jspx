@@ -32,6 +32,9 @@
       #deployJavaPlugin {
         display: none;
       }
+      .error {
+        color: red;
+      }
       p {
         text-align: center;
       }
@@ -53,32 +56,66 @@
     <script type="text/javascript" src="${fn:escapeXml(serverURL)}/deployJava.min.js">${""}</script>
     <!-- Hack to get a newline: -->${""}
     <script type="text/javascript">
-var attributes = {
-  code: "org.lwjgl.util.applet.AppletLoader",
-  codebase: "${fn:escapeXml(codebaseURL)}",
-  archive: "lib/lwjgl_util_applet.jar,lib/resources_loader.jar",
-  width: 600,
-  height: 66 /* Smaller may obscure error messages. Bigger will cause uglier Java progress wheel. */
-};
-var version = "1.5";
-// TODO: Avoid hardcoding al_jars. Also avoid having to lug javaws.jar along even to the applets.
-var parameters = {
-  al_title: "StudyCaster Client Applet",
-  al_main: "no.ebakke.studycaster.applications.StudyCasterApplet",
-  al_jars: "sc_client.jar, lib/jna.jar, lib/platform.jar, lib/commons-io-2.0.1.jar, lib/httpcore-4.1.3.jar, lib/commons-codec-1.4.jar, lib/commons-logging-1.1.1.jar, lib/httpclient-4.1.2.jar, lib/httpclient-cache-4.1.2.jar, lib/httpcore-4.1.2.jar, lib/httpmime-4.1.2.jar, lib/resources.jar, lib/commons-lang3-3.0.1.jar, lib/javaws.jar",
-  al_windows: "",
-  al_linux: "",
-  al_mac: "",
-  al_solaris: "",
-  al_cache: "false",
-  al_logo: "sc_appletlogo.png",
-  al_progressbar: "sc_appletprogress.png",
-  "studycaster.server.uri": "${fn:escapeXml(codebaseURL)}",
-  "studycaster.config.id": "${fn:escapeXml(configurationID)}",
-  separate_jvm: "true",
-  name: "StudyCaster Client Applet"
-};
-deployJava.runApplet(attributes, parameters, version);
+/*jslint devel: true, browser: true, indent: 2 */
+(function () {
+  "use strict";
+
+  // Based on runApplet() in deployJava.js.
+  function runAppletWithoutRedirect(attributes, parameters, minimumVersion) {
+    if (minimumVersion == 'undefined' || minimumVersion == null) {
+      minimumVersion = '1.1';
+    }
+    var regex = "^(\\d+)(?:\\.(\\d+)(?:\\.(\\d+)(?:_(\\d+))?)?)?$";
+    var matchData = minimumVersion.match(regex);
+
+    if (matchData != null) {
+      var browser = deployJava.getBrowser();
+      if (!((browser == '?') || ('Safari' == deployJava.browserName2))) {
+        if (deployJava.versionCheck(minimumVersion + '+')) {
+          deployJava.writeAppletTag(attributes, parameters);
+        } else {
+          document.write('<p class="error">' +
+            '<img src="icons/icon32.png" alt="[StudyCaster icon]"/>The Java plugin was not found ' +
+            'The StudyCaster applet requires Java 1.5 or above to run.</p>');
+        }
+      } else {
+        // for unknown or Safari - just try to show applet
+        deployJava.writeAppletTag(attributes, parameters);
+      }
+    } else {
+      if (deployJava.debug) {
+        alert('Invalid minimumVersion argument to runApplet():' + minimumVersion);
+      }
+    }
+  }
+
+  var attributes = {
+    code: "org.lwjgl.util.applet.AppletLoader",
+    codebase: "${fn:escapeXml(codebaseURL)}",
+    archive: "lib/lwjgl_util_applet.jar,lib/resources_loader.jar",
+    width: 600,
+    height: 66 /* Smaller may obscure error messages. Bigger will cause uglier Java progress wheel. */
+  };
+  var version = "1.5";
+  // TODO: Avoid hardcoding al_jars. Also avoid having to lug javaws.jar along even to the applets.
+  var parameters = {
+    al_title: "StudyCaster Client Applet",
+    al_main: "no.ebakke.studycaster.applications.StudyCasterApplet",
+    al_jars: "sc_client.jar, lib/jna.jar, lib/platform.jar, lib/commons-io-2.0.1.jar, lib/httpcore-4.1.3.jar, lib/commons-codec-1.4.jar, lib/commons-logging-1.1.1.jar, lib/httpclient-4.1.2.jar, lib/httpclient-cache-4.1.2.jar, lib/httpcore-4.1.2.jar, lib/httpmime-4.1.2.jar, lib/resources.jar, lib/commons-lang3-3.0.1.jar, lib/javaws.jar",
+    al_windows: "",
+    al_linux: "",
+    al_mac: "",
+    al_solaris: "",
+    al_cache: "false",
+    al_logo: "sc_appletlogo.png",
+    al_progressbar: "sc_appletprogress.png",
+    "studycaster.server.uri": "${fn:escapeXml(codebaseURL)}",
+    "studycaster.config.id": "${fn:escapeXml(configurationID)}",
+    separate_jvm: "true",
+    name: "StudyCaster Client Applet"
+  };
+  runAppletWithoutRedirect(attributes, parameters, version);
+}());
     </script>
   </c:otherwise>
 </c:choose>
