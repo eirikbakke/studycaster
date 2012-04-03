@@ -75,8 +75,8 @@
           deployJava.writeAppletTag(attributes, parameters);
         } else {
           document.write('<p class="error">' +
-            '<img src="icons/icon32.png" alt="[StudyCaster icon]"/>The Java plugin was not found ' +
-            'The StudyCaster applet requires Java 1.5 or above to run.</p>');
+            '<img src="icons/icon32.png" alt="[StudyCaster icon]"/>The Java plugin was not found.' +
+            ' The StudyCaster applet requires Java 1.5 or above to run.</p>');
         }
       } else {
         // for unknown or Safari - just try to show applet
