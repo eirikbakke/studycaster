@@ -25,6 +25,7 @@
         background: white;
         font-family: arial, sans-serif;
         font-size: 14px;
+        text-align: center;
       }
       applet, object, embed {
         width: 100%;
@@ -47,10 +48,12 @@
   <body>
 <c:choose>
   <c:when test="${prompt}">
-    <p>
+    <!-- TODO: Get rid of the button; inserted just to be consistent with the HIT wording. -->
+    <form action="applet_frame.html" method="get">
       <img src="icons/icon32.png" alt="[StudyCaster icon]"/>
-      <a href="applet_frame.html?ci=${fn:escapeXml(configurationID)}">Click here to start the StudyCaster applet</a>
-    </p>
+      <button type="submit">Launch the StudyCaster applet</button>
+      <input type="hidden" name="ci" value="${fn:escapeXml(configurationID)}"/>
+    </form>
   </c:when>
   <c:otherwise>
     <script type="text/javascript" src="${fn:escapeXml(serverURL)}/deployJava.min.js">${""}</script>
