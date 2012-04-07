@@ -300,8 +300,6 @@ public class ServerContext {
       params.addPart("arg", new StringBody(arg));
     httpPost.setEntity(params);
     HttpResponse response = httpClient.execute(httpPost);
-    if (response.getEntity() == null)
-      throw new IOException("Failed to get response entity.");
     boolean error = true;
     try {
       if (response.getStatusLine().getStatusCode() != 200) {
@@ -325,9 +323,11 @@ public class ServerContext {
       if (!okHeader.equals(cmd))
         throw new IOException("Got invalid StudyCaster response header: " + okHeader);
       error = false;
+      if (response.getEntity() == null)
+        throw new IOException("Missing response entity");
       return response;
     } finally {
-      if (error)
+      if (error && response.getEntity() != null)
         EntityUtils.consume(response.getEntity());
     }
   }
