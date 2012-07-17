@@ -1,0 +1,39 @@
+*.java       text
+*.xml        text
+*.properties text
+*.txt        text
+*.conf       text
+*.jnlp       text
+*.mf         text
+*.form       text
+*.html       text
+*.xhtml      text
+*.jsp        text
+*.jspx       text
+*.bash       text
+*.js         text
+*.css        text
+*.ffpreset   text
+*.policy     text
+*.tex        text
+*.bib        text
+*.sty        text
+
+.gitignore     text
+.gitattributes text
+
+*.jar        -text
+*.png        -text
+*.gif        -text
+*.class      -text
+*.pack       -text
+*.psd        -text
+*.zip        -text
+*.pdf        -text
+*.psd        -text
+*.xls        -text
+*.xlsx       -text
+*.doc        -text
+*.docx       -text
+*.ppt        -text
+
