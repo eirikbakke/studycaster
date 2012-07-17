@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# To call from .git/hooks/pre-commit:
+# $GIT_DIR/../check_git_settings.bash
+
 AUTHORS=Authors.txt
 cd `dirname "${BASH_SOURCE[0]}"`
 

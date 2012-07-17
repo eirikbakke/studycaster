@@ -1,3 +1,6 @@
+# To list all extensions currently in use:
+# find -type f -exec basename {} \; | sed 's/^[^.]*//' | sort -u
+
 *.java       text
 *.xml        text
 *.properties text
