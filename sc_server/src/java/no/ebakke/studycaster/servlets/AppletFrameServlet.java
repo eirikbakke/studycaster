@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package no.ebakke.studycaster.servlets;
 
 import java.io.IOException;
@@ -11,10 +7,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-/**
- *
- * @author Eirik Bakke
- */
 @WebServlet(name = "AppletFrameServlet", urlPatterns = {"/client/applet_frame.html"})
 public class AppletFrameServlet extends HttpServlet {
   @Override

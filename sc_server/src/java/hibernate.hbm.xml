@@ -5,14 +5,14 @@
     <id column="r_id" name="id">
       <generator class="native"/>
     </id>
-    <property column="r_time"           name="time" type="timestamp"/>
-    <property column="r_type"           name="type"          />
-    <property column="r_contentSize"    name="contentSize"   />
-    <property column="r_remoteAddrHash" name="remoteAddrHash"/>
-    <property column="r_geoLocation"    name="geoLocation"   />
-    <property column="r_launchTicket"   name="launchTicket"  />
-    <property column="r_clientCookie"   name="clientCookie"  />
-    <property column="r_logEntry"       name="logEntry"      />
+    <property column="r_time"           name="time"           index="r_time_idx" type="timestamp" />
+    <property column="r_type"           name="type"                                        />
+    <property column="r_contentSize"    name="contentSize"                                 />
+    <property column="r_remoteAddrHash" name="remoteAddrHash" index="r_remoteAddrHash_idx" />
+    <property column="r_geoLocation"    name="geoLocation"                                 />
+    <property column="r_launchTicket"   name="launchTicket"   index="r_launchTicket_idx"   />
+    <property column="r_clientCookie"   name="clientCookie"   index="r_clientCookie_idx"   />
+    <property column="r_logEntry"       name="logEntry"                                    />
   </class>
 
   <class name="ConfigurationProperty" table="ConfigurationProperties">

@@ -11,10 +11,6 @@ import no.ebakke.studycaster.reporting.Reports;
 import no.ebakke.studycaster.reporting.Reports.Launch;
 import no.ebakke.studycaster.reporting.Reports.Subject;
 
-/**
- *
- * @author ebakke
- */
 @WebServlet(name = "PlainSubjectReportServlet", urlPatterns = {"/subjectreport.tsv"})
 public class PlainSubjectReportServlet extends HttpServlet {
   @Override
