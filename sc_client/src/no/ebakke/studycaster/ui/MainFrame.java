@@ -19,6 +19,7 @@ import no.ebakke.studycaster.configuration.PageConfiguration;
 import no.ebakke.studycaster.configuration.StudyConfiguration;
 import no.ebakke.studycaster.configuration.UIStringKey;
 import no.ebakke.studycaster.configuration.UIStrings;
+import no.ebakke.studycaster.util.Util;
 
 public class MainFrame extends javax.swing.JFrame {
   /** Public methods on this interface will be called on the EDT. */
@@ -73,14 +74,14 @@ public class MainFrame extends javax.swing.JFrame {
       } else {
         // Running JRE >= 1.6
         List<Image> icons = new ArrayList<Image>();
-        icons.add(UIUtil.loadImage("icon16.png", false));
-        icons.add(UIUtil.loadImage("icon22.png", false));
-        icons.add(UIUtil.loadImage("icon24.png", false));
-        icons.add(UIUtil.loadImage("icon32.png", false));
-        icons.add(UIUtil.loadImage("icon48.png", false));
-        icons.add(UIUtil.loadImage("icon64.png", false));
-        icons.add(UIUtil.loadImage("icon128.png", false));
-        icons.add(UIUtil.loadImage("icon256.png", false));
+        icons.add(Util.loadImage("icon16.png", false));
+        icons.add(Util.loadImage("icon22.png", false));
+        icons.add(Util.loadImage("icon24.png", false));
+        icons.add(Util.loadImage("icon32.png", false));
+        icons.add(Util.loadImage("icon48.png", false));
+        icons.add(Util.loadImage("icon64.png", false));
+        icons.add(Util.loadImage("icon128.png", false));
+        icons.add(Util.loadImage("icon256.png", false));
         try {
           setIconImagesMethod.invoke(this, icons);
         } catch (IllegalAccessException e) {

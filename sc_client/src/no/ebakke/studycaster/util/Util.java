@@ -1,13 +1,18 @@
 package no.ebakke.studycaster.util;
 
+import java.awt.Canvas;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.awt.Image;
+import java.awt.MediaTracker;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -18,7 +23,35 @@ import no.ebakke.studycaster.backend.StudyCasterException;
 
 public final class Util {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
+  private static final String RESOURCE_DIR = "no/ebakke/studycaster/resources/";
   private Util() { }
+
+  public static InputStream getResource(final String fileName) throws IOException {
+    InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(
+        RESOURCE_DIR + fileName);
+    if (is == null)
+      throw new FileNotFoundException("Could not locate resource \"" + fileName + "\"");
+    return is;
+  }
+
+  public static Image loadImage(final String fileName, boolean wait) throws IOException {
+    /* Do this to properly catch an error which may otherwise cause waitForAll() below to hang with
+    an "Uncaught error fetching image" output. */
+    //getResource(fileName).close();
+    final URL pointerImageURL = Thread.currentThread().getContextClassLoader().getResource(
+        RESOURCE_DIR + fileName);
+    final Image ret = Toolkit.getDefaultToolkit().getImage(pointerImageURL);
+    if (wait) {
+      final MediaTracker mt = new MediaTracker(new Canvas());
+      mt.addImage(ret, 0);
+      try {
+        mt.waitForAll();
+      } catch (InterruptedException e) {
+        throw new InterruptedIOException();
+      }
+    }
+    return ret;
+  }
 
   public static boolean fileAvailableExclusive(File f) {
     // Without this check, the file would be created below if it didn't already exist.

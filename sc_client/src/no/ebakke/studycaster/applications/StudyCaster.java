@@ -342,8 +342,9 @@ public final class StudyCaster {
             final String configurationID = System.getProperty(CONFIGID_PROP_NAME);
             if (configurationID == null || configurationID.length() == 0)
               throw new StudyCasterException("Unspecified configuration ID");
+            // TODO: Don't compile in the study configuration.
             configuration = StudyConfiguration.parseConfiguration(
-              serverContext.downloadFile("studyconfig.xml"), configurationID);
+                Util.getResource("studyconfig.xml"), configurationID);
             LOG.log(Level.INFO, "Loaded configuration {0}/\"{1}\"",
                 new Object[] { configuration.getID(), configuration.getName() });
             dialogHelper.setStrings(configuration.getUIStrings());
@@ -369,7 +370,7 @@ public final class StudyCaster {
               throw new StudyCasterException("Failed to initialize screen recorder", e);
             }
           } catch (IOException e) {
-            throw new StudyCasterException("Unexpected I/O error", e);
+            throw new StudyCasterException(e.getMessage(), e);
           }
           stillAliveThread.start();
         } catch (StudyCasterException e) {

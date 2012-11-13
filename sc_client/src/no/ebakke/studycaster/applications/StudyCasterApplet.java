@@ -11,6 +11,7 @@ import no.ebakke.studycaster.backend.EnvironmentHooks;
 import no.ebakke.studycaster.backend.ServerContext;
 import no.ebakke.studycaster.backend.StudyCasterException;
 import no.ebakke.studycaster.ui.UIUtil;
+import no.ebakke.studycaster.util.Util;
 
 public class StudyCasterApplet extends JApplet {
   private static final Logger LOG = Logger.getLogger("no.ebakke.studycaster");
@@ -47,7 +48,7 @@ public class StudyCasterApplet extends JApplet {
           }
           initComponents();
           try {
-            appletLabel.setIcon(new ImageIcon(UIUtil.loadImage("icon32.png", true)));
+            appletLabel.setIcon(new ImageIcon(Util.loadImage("icon32.png", true)));
           } catch (IOException e) {
             LOG.log(Level.WARNING, "Failed to load applet label icon", e);
           }

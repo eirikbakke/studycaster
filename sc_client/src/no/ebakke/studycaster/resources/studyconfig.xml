@@ -108,7 +108,7 @@
       <sc:uistring key="DIALOG_ALREADY_RUNNING_TITLE">Allerede åpnet</sc:uistring>
       <sc:uistring key="DIALOG_ALREADY_RUNNING_MESSAGE">
         <html>StudyCaster-klienten kjører allerede i et annet vindu.<br/>
-                       Vennligst lukk det gamle vinduet først dersom du vil begynne på nytt.</html>
+              Vennligst lukk det gamle vinduet først dersom du vil begynne på nytt.</html>
       </sc:uistring>
       <sc:uistring key="MAINFRAME_OPEN_FILE_BUTTON" mnemonic="Å">Åpne eksempeldokument...</sc:uistring>
       <sc:uistring key="MAINFRAME_CONCLUDE_BUTTON" mnemonic="L">Last opp og motta bekreftelseskode...</sc:uistring>
@@ -259,7 +259,7 @@
         <sc:servername>testfile.pdf</sc:servername>
         <sc:clientname>StudyCaster testfile with spaces in name.pdf</sc:clientname>
         <sc:errormessage>Do you have a program that can open PDF files
-                      (e.g. Acrobat Reader) installed?</sc:errormessage>
+                         (e.g. Acrobat Reader) installed?</sc:errormessage>
       </sc:openfile>
       <sc:openuri>
         <sc:buttontext mnemonic="W">Open Sample Web Page</sc:buttontext>

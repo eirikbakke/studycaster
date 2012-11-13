@@ -101,6 +101,7 @@
   };
   var version = "1.5";
   // TODO: Avoid hardcoding al_jars. Also avoid having to lug javaws.jar along even to the applets.
+  // TODO: Add an image parameter.
   var parameters = {
     al_title: "StudyCaster Client Applet",
     al_main: "no.ebakke.studycaster.applications.StudyCasterApplet",
@@ -115,6 +116,7 @@
     "studycaster.server.uri": "${fn:escapeXml(codebaseURL)}",
     "studycaster.config.id": "${fn:escapeXml(configurationID)}",
     separate_jvm: "true",
+    codebase_lookup: "false",
     name: "StudyCaster Client Applet"
   };
   runAppletWithoutRedirect(attributes, parameters, version);

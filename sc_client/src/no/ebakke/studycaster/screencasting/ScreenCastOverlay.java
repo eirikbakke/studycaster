@@ -25,6 +25,7 @@ import no.ebakke.studycaster.screencasting.desktop.Win32DesktopLibrary;
 import no.ebakke.studycaster.screencasting.desktop.WindowInfo;
 import no.ebakke.studycaster.ui.UIUtil;
 import no.ebakke.studycaster.util.ImageDebugFrame;
+import no.ebakke.studycaster.util.Util;
 
 public class ScreenCastOverlay {
   private static final String POINTER_IMAGE_FILE     = "pointer_shine_weaker.png";
@@ -48,8 +49,8 @@ public class ScreenCastOverlay {
   }
 
   public ScreenCastOverlay(Dimension inputDimension) throws IOException {
-    iconImage       = UIUtil.loadImage(LOGO_IMAGE_FILE, true);
-    pointerImage    = UIUtil.loadImage(POINTER_IMAGE_FILE, true);
+    iconImage       = Util.loadImage(LOGO_IMAGE_FILE, true);
+    pointerImage    = Util.loadImage(POINTER_IMAGE_FILE, true);
     fontMono        = UIUtil.createFont(FONT_MONO_FILE, FONT_SIZE_LARGE);
     fontSansBold    = UIUtil.createFont(FONT_SANS_BOLD_FILE, FONT_SIZE_LARGE);
     fontSansRegular = UIUtil.createFont(FONT_SANS_REGULAR_FILE, FONT_SIZE_SMALL);
