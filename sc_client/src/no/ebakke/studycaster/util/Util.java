@@ -253,11 +253,11 @@ public final class Util {
   /* This function is based on the method with the same name in the 1.6 version of java.util.Arrays.
   Include it here to work for 1.5. */
   public static byte[] copyOfRange(byte[] original, int from, int to) {
-    if (from > to)
-      throw new IndexOutOfBoundsException();
-    final byte[] ret = new byte[to - from];
-    System.arraycopy(original, from, ret, 0, Math.min(original.length - from, ret.length));
-    return ret;
+    // (third-party content removed)
+    //
+    //
+    //
+    //
   }
 
   public static void delayAtLeast(long nanos) throws InterruptedException {

@@ -65,31 +65,31 @@
 
   // Based on runApplet() in deployJava.js.
   function runAppletWithoutRedirect(attributes, parameters, minimumVersion) {
-    if (minimumVersion == 'undefined' || minimumVersion == null) {
-      minimumVersion = '1.1';
-    }
-    var regex = "^(\\d+)(?:\\.(\\d+)(?:\\.(\\d+)(?:_(\\d+))?)?)?$";
-    var matchData = minimumVersion.match(regex);
-
-    if (matchData != null) {
-      var browser = deployJava.getBrowser();
-      if (!((browser == '?') || ('Safari' == deployJava.browserName2))) {
-        if (deployJava.versionCheck(minimumVersion + '+')) {
-          deployJava.writeAppletTag(attributes, parameters);
-        } else {
-          document.write('<p class="error">' +
-            '<img src="icons/icon32.png" alt="[StudyCaster icon]"/>The Java plugin was not found.' +
-            ' The StudyCaster applet requires Java 1.5 or above to run.</p>');
-        }
-      } else {
-        // for unknown or Safari - just try to show applet
-        deployJava.writeAppletTag(attributes, parameters);
-      }
-    } else {
-      if (deployJava.debug) {
-        alert('Invalid minimumVersion argument to runApplet():' + minimumVersion);
-      }
-    }
+    // (third-party content removed)
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
   }
 
   var attributes = {

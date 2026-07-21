@@ -184,20 +184,20 @@ final class ConfigurationUtil {
 
   // Copied from the package-private method with the same name in SwingUtilities.
   public static int findDisplayedMnemonicIndex(String text, int mnemonic) {
-    if (text == null || mnemonic == '\0')
-        return -1;
-    char uc = Character.toUpperCase((char) mnemonic);
-    char lc = Character.toLowerCase((char) mnemonic);
-
-    int uci = text.indexOf(uc);
-    int lci = text.indexOf(lc);
-
-    if        (uci == -1) {
-      return lci;
-    } else if (lci == -1) {
-      return uci;
-    } else {
-      return (lci < uci) ? lci : uci;
-    }
+    // (third-party content removed)
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
   }
 }

@@ -115,23 +115,23 @@ public final class Win32DesktopLibrary implements DesktopLibrary {
 
   /* See http://stackoverflow.com/questions/4478624 . */
   public List<WindowInfo> getTopLevelWindows() {
-    final HWND foreground = user32.GetForegroundWindow();
-    final List<WindowInfo> ret = new ArrayList<WindowInfo>();
-    user32.EnumWindows(new WinUser.WNDENUMPROC() {
-      public boolean callback(HWND hWnd, Pointer pntr) {
-        if (!user32.IsWindowVisible(hWnd))
-          return true;
-        // Add in reverse order.
-        ret.add(0, createWindowInfo(hWnd, foreground));
-        return true;
-      }
-    }, null);
-
-    /* Don't include the desktop window. "Program Manager" is the correct name on at least
-    Windows XP and Windows 7. */
-    if (!ret.isEmpty() && ret.get(0).getTitle().equals("Program Manager"))
-      ret.remove(0);
-    return ret;
+    // (third-party content removed)
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
   }
 
   private Rectangle getWindowBounds(HWND hWnd) {
